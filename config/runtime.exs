@@ -114,4 +114,28 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+
+  appsignal_app_env =
+    System.get_env("APPSIGNAL_APP_ENV") ||
+      raise """
+      environment variable APPSIGNAL_APP_ENV is missing.
+      """
+
+  appsignal_push_api_key =
+    System.get_env("APPSIGNAL_PUSH_API_KEY") ||
+      raise """
+      environment variable APPSIGNAL_PUSH_API_KEY is missing.
+      """
+
+  revision_file = Path.join([:code.priv_dir(:elixir_drops), "REVISION"])
+
+  appsignal_revision =
+    revision_file
+    |> File.read!()
+    |> String.trim()
+
+  config :appsignal, :config,
+    env: appsignal_app_env,
+    push_api_key: appsignal_push_api_key,
+    revision: appsignal_revision
 end

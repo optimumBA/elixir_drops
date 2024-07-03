@@ -61,6 +61,15 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# AppSignal
+config :appsignal, :config,
+  active: false,
+  ecto_repos: [ElixirDrops.Repo],
+  env: config_env(),
+  ignore_actions: ["ElixirDropsWeb.HealthController#index"],
+  name: "elixir_drops",
+  otp_app: :elixir_drops
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

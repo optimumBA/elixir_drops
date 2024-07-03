@@ -1,18 +1,28 @@
 # ElixirDrops
 
-To start your Phoenix server:
+## Setup
 
-  * Run `mix setup` to install and setup dependencies
-  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+- install Elixir, Erlang and Node using [mise](https://mise.jdx.dev)
+  - install mise using either `curl https://mise.run | sh` or `brew install mise`
+  - make sure to activate it
+  - run `mise install`
+- start PostgreSQL server
+- set environment variables in `.env` (see: [.env.sample](.env.sample))
+- run `mix setup`
+- start Phoenix server with `mix phx.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## Docs
 
-## Learn more
+- execute `mix docs --formatter html --open`
 
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+It will open documentation in your browser.
+
+## Running tests
+
+- run `mix coveralls` or `mix coveralls.html`
+
+## Contributing
+
+Make sure to execute `make ci` in order to run all the checks before committing the code.

@@ -35,3 +35,11 @@ elixir_drops-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Optimum development/test artifacts
+/node_modules/
+/priv/plts/
+/screenshots/
+.DS_Store
+.env
+package.json
+package-lock.json

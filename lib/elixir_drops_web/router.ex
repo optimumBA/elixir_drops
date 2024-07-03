@@ -41,4 +41,6 @@ defmodule ElixirDropsWeb.Router do
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
+
+  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
 end
