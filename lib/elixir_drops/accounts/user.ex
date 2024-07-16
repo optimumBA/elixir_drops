@@ -19,7 +19,6 @@ defmodule ElixirDrops.Accounts.User do
   @foreign_key_type :binary_id
   schema "users" do
     field :avatar, :string
-    field :confirmed_at, :naive_datetime
     field :email, :string
     field :github_id, :integer
     field :github_username, :string

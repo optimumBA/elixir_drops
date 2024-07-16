@@ -11,7 +11,6 @@ defmodule ElixirDrops.Repo.Migrations.CreateUsersAuthTables do
       add :github_id, :integer, null: false
       add :github_username, :string
       add :name, :string, null: false
-      add :confirmed_at, :naive_datetime
 
       timestamps()
     end
