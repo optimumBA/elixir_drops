@@ -26,10 +26,10 @@ defmodule ElixirDropsWeb.Router do
   scope "/auth", ElixirDropsWeb do
     pipe_through :browser
 
+    get "/logout", GithubAuthController, :logout
+
     get "/:provider", GithubAuthController, :request
     get "/:provider/callback", GithubAuthController, :callback
-
-    get "/logout", GithubAuthController, :logout
   end
 
   # Other scopes may use custom stacks.
