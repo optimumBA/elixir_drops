@@ -20,7 +20,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
   @ueberauth_auth %{
     credentials: %{token: "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"},
     info: %{
-      avatar: "http://github.com/dano_csharp_avatar.jpg",
+      image: "http://github.com/dano_csharp_avatar.jpg",
       email: "dano.csharp@gmail.com",
       first_name: "Tony",
       last_name: "Picula",

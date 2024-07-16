@@ -1,10 +1,9 @@
 {
   "coverage_options": {
-    "minimum_coverage": 71.0
+    "minimum_coverage": 777.8
   },
   "skip_files": [
     "lib/elixir_drops/release.ex",
     "lib/elixir_drops_web/components/core_components.ex"
   ]
-
 }

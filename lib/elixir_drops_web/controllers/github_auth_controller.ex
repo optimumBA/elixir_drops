@@ -66,8 +66,7 @@ defmodule ElixirDropsWeb.GithubAuthController do
         {
           :ok,
           %{
-            # TODO: confirm avatar
-            avatar: auth.info.avatar,
+            avatar: auth.info.image,
             github_id: auth.uid,
             github_username: auth.info.nickname,
             name: name_from_auth(auth),
