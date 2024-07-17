@@ -1,7 +1,5 @@
 defmodule ElixirDrops.Accounts.User do
-  @moduledoc """
-  User Ecto Schema 
-  """
+  @moduledoc false
 
   use Ecto.Schema
 

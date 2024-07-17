@@ -1,7 +1,5 @@
 defmodule ElixirDropsWeb.UserAuth do
-  @moduledoc """
-  UserAuth module responsible for user authentication
-  """
+  @moduledoc false
 
   use ElixirDropsWeb, :verified_routes
 

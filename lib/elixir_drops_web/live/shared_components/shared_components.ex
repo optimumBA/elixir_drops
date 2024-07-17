@@ -11,7 +11,7 @@ defmodule ElixirDropsWeb.SharedComponents do
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
-    <header class="content-grid shadow-md shadow-[#dedede] py-3 w-full">
+    <header class="content-grid border-b-2 border-b-[#B2B2B2] py-2 w-full">
       <nav class="flex items-center justify-between">
         <div>
           <.link href={~p"/"}>
@@ -31,9 +31,10 @@ defmodule ElixirDropsWeb.SharedComponents do
           <% else %>
             <.link
               href={~p"/auth/github"}
-              class="font-semibold text-[#eae8fd] bg-blue_primary px-5 py-2 rounded-md"
+              class="font-semibold text-[#eae8fd] bg-blue_primary px-5 py-2 rounded-md flex gap-x-2"
             >
-              Log in with GitHub
+              <span><Icons.github_icon /></span>
+              <span> Log in with GitHub</span>
             </.link>
           <% end %>
         </div>

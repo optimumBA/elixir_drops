@@ -1,8 +1,5 @@
 defmodule ElixirDrops.Accounts.UserToken do
-  @moduledoc """
-  UserToken module
-  Implements functions for user token manipulation.
-  """
+  @moduledoc false
 
   use Ecto.Schema
 

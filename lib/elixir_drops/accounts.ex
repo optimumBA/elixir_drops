@@ -11,8 +11,10 @@ defmodule ElixirDrops.Accounts do
   alias ElixirDrops.Repo
 
   @type changeset :: Ecto.Changeset.t()
+  @type github_id :: Integer
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
+  @type token :: binary()
 
   @doc """
   Returns the list of users.
@@ -78,7 +80,7 @@ defmodule ElixirDrops.Accounts do
         {:error, "User not found!"}
 
   """
-  @spec get_user_by_github_id(String.t()) :: {:ok, user()} | {:error, binary()}
+  @spec get_user_by_github_id(github_id()) :: {:ok, user()} | {:error, binary()}
   def get_user_by_github_id(github_id) do
     case Repo.get_by(User, github_id: github_id) do
       nil -> {:error, "User not found!"}
@@ -157,6 +159,13 @@ defmodule ElixirDrops.Accounts do
 
   @doc """
   Generates a session token for user.
+
+    ## Examples
+
+       iex> generate_user_session_token(user)
+       <<43, 31, 68, 123, 207, 25, 230, 145, 231, 37, 255, 19, 202, 97, 185, 208, 211, 12, 250, 234,
+         146, 220, 49, 98, 66, 156, 233, 191, 119, 77, 80, 251>>
+
   """
   @spec generate_user_session_token(user()) :: binary()
   def generate_user_session_token(user) do
@@ -167,8 +176,17 @@ defmodule ElixirDrops.Accounts do
 
   @doc """
   Gets the user with the given signed token.
+
+    ## Examples
+
+        iex> get_user_by_session_token(token)
+        %ElixirDrops.Accounts.User{}
+
+        iex> get_user_by_session_token(nil)
+        nil
+
   """
-  @spec get_user_by_session_token(any()) :: user() | nil
+  @spec get_user_by_session_token(token() | nil) :: user() | nil
   def get_user_by_session_token(nil), do: nil
 
   def get_user_by_session_token(token) do
@@ -178,6 +196,12 @@ defmodule ElixirDrops.Accounts do
 
   @doc """
   Deletes all remaining tokens from db that belong to user.
+
+    ## Examples
+
+        iex> clear_all_tokens_for_user(%ElixirDrops.Accounts.User{})
+        :ok
+    
   """
   @spec clear_all_tokens_for_user(user()) :: :ok
   def clear_all_tokens_for_user(user) do
@@ -188,8 +212,14 @@ defmodule ElixirDrops.Accounts do
 
   @doc """
   Deletes the signed token with the given context.
+
+    ## Examples
+
+        iex> delete_user_session_token(token)
+        :ok
+
   """
-  @spec delete_user_session_token(any()) :: :ok
+  @spec delete_user_session_token(token()) :: :ok
   def delete_user_session_token(token) do
     query = UserToken.token_and_context_query(token, "session")
     Repo.delete_all(query)
