@@ -12,7 +12,6 @@ defmodule ElixirDrops.Accounts.UserToken do
 
   @type t :: %__MODULE__{
           context: String.t(),
-          sent_to: String.t(),
           token: token()
         }
 
@@ -23,7 +22,6 @@ defmodule ElixirDrops.Accounts.UserToken do
   @foreign_key_type :binary_id
   schema "users_tokens" do
     field :context, :string
-    field :sent_to, :string
     field :token, :binary
 
     belongs_to :user, User
