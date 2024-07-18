@@ -35,3 +35,16 @@
 .content-grid > :not(.full-width) {
   grid-column: content;
 }
+
+.nav-list-border {
+  --bg-color: #b2b2b2;
+
+  background: var(--bg-color);
+  height: 0.05em;
+  width: 100%;
+}
+
+.full-bleed {
+  box-shadow: 0 0 0 inherit var(--bg-color);
+  clip-path: inset(0 inherit);
+}

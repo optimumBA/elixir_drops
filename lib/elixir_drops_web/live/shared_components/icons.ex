@@ -33,6 +33,42 @@ defmodule ElixirDropsWeb.SharedComponents.Icons do
     """
   end
 
+  @spec drops_icon(assigns()) :: rendered()
+  def drops_icon(assigns) do
+    ~H"""
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g clip-path="url(#clip0_194_1080)">
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M12 4.30662C10.8701 5.29938 9.82513 6.38482 8.876 7.55162C7.305 9.50662 6 11.8166 6 13.9996C6 15.5909 6.63214 17.117 7.75736 18.2423C8.88258 19.3675 10.4087 19.9996 12 19.9996C13.5913 19.9996 15.1174 19.3675 16.2426 18.2423C17.3679 17.117 18 15.5909 18 13.9996C18 11.8166 16.695 9.50662 15.124 7.55162C14.1749 6.38482 13.1299 5.29938 12 4.30662ZM11.249 2.32062C11.4604 2.14619 11.7259 2.05078 12 2.05078C12.2741 2.05078 12.5396 2.14619 12.751 2.32062C14.1882 3.51533 15.5048 4.84803 16.682 6.29962C18.322 8.33862 20 11.1056 20 13.9996C20 16.1213 19.1571 18.1562 17.6569 19.6565C16.1566 21.1568 14.1217 21.9996 12 21.9996C9.87827 21.9996 7.84344 21.1568 6.34315 19.6565C4.84285 18.1562 4 16.1213 4 13.9996C4 11.1056 5.678 8.33862 7.318 6.29862C8.49491 4.84743 9.8122 3.51506 11.249 2.32062Z"
+          fill="#252525"
+        />
+      </g>
+      <defs>
+        <clipPath id="clip0_194_1080">
+          <rect width="24" height="24" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+    """
+  end
+
+  @spec sign_out_icon(assigns()) :: rendered()
+  def sign_out_icon(assigns) do
+    ~H"""
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M17 16L21 12M21 12L17 8M21 12L7 12M13 16V17C13 18.6569 11.6569 20 10 20H6C4.34315 20 3 18.6569 3 17V7C3 5.34315 4.34315 4 6 4H10C11.6569 4 13 5.34315 13 7V8"
+        stroke="#444343"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+    """
+  end
+
   @spec elixir_drops_icon(assigns()) :: rendered()
   def elixir_drops_icon(assigns) do
     ~H"""
