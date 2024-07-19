@@ -157,10 +157,6 @@ defmodule ElixirDrops.AccountsTest do
   describe "get or list users" do
     setup [:create_user_and_token]
 
-    test "list_users/0 returns all users", %{user: user} do
-      assert Accounts.list_users() == [user]
-    end
-
     test "get_user!/1 returns the user with given id", %{user: user} do
       assert Accounts.get_user!(user.id) == user
     end

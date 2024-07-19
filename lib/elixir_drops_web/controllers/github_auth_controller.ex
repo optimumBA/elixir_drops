@@ -35,16 +35,18 @@ defmodule ElixirDropsWeb.GithubAuthController do
   end
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
-    {:ok, user_params} = user_info_from_auth(auth)
+    user_info_from_auth =
+      auth
+      |> Map.has_key?(:info)
+      |> user_info_from_auth(auth)
 
-    github_token = auth.credentials.token
-
-    case Accounts.get_or_create_user(user_params) do
-      {:ok, user} ->
-        Accounts.clear_all_tokens_for_user(user)
-        UserAuth.log_in_user(conn, user, github_token)
-
-      {:error, %Ecto.Changeset{} = _changeset} ->
+    with {:ok, user_params} <- user_info_from_auth,
+         github_token <- Map.get(auth.credentials, :token),
+         {:ok, user} <- Accounts.get_or_create_user(user_params) do
+      Accounts.clear_all_tokens_for_user(user)
+      UserAuth.log_in_user(conn, user, github_token)
+    else
+      _error ->
         redirect(conn, to: ~p"/")
     end
   end
@@ -57,41 +59,37 @@ defmodule ElixirDropsWeb.GithubAuthController do
     UserAuth.log_out_user(conn)
   end
 
-  defp user_info_from_auth(auth) do
-    case Map.has_key?(auth, :info) do
-      false ->
-        {:error, "Auth error"}
-
-      true ->
-        {
-          :ok,
-          %{
-            avatar: auth.info.image,
-            github_id: auth.uid,
-            github_username: auth.info.nickname,
-            name: name_from_auth(auth),
-            email: email_from_auth(auth)
-          }
-        }
-    end
+  defp user_info_from_auth(true, auth) do
+    {:ok,
+     %{
+       avatar: auth.info.image,
+       email: auth.info.email,
+       github_id: auth.uid,
+       github_username: auth.info.nickname,
+       name: name_from_auth(auth)
+     }}
   end
+
+  defp user_info_from_auth(_false, _auth), do: {:error, "Auth error"}
 
   defp name_from_auth(auth) do
-    if auth.info.name do
-      auth.info.name
-    else
-      name =
-        Enum.filter([auth.info.first_name, auth.info.last_name], fn name ->
-          name != nil and name != ""
-        end)
-
-      if Enum.empty?(name) do
-        auth.info.nickname
-      else
-        Enum.join(name, " ")
-      end
-    end
+    auth
+    |> Map.get(:name)
+    |> name_from_auth(auth)
   end
 
-  defp email_from_auth(%{info: %{email: email}}), do: email
+  defp name_from_auth(nil, auth),
+    do:
+      process_name_from_auth(
+        auth.info.first_name,
+        auth.info.last_name,
+        auth
+      )
+
+  defp name_from_auth(_name, auth), do: auth.info.name
+
+  defp process_name_from_auth(nil, nil, auth), do: auth.info.nickname
+  defp process_name_from_auth(nil, last_name, _auth), do: last_name
+  defp process_name_from_auth(first_name, nil, _auth), do: first_name
+  defp process_name_from_auth(first_name, last_name, _auth), do: ~s/#{first_name} #{last_name}/
 end

@@ -17,20 +17,6 @@ defmodule ElixirDrops.Accounts do
   @type token :: binary()
 
   @doc """
-  Returns the list of users.
-
-  ## Examples
-
-      iex> list_users()
-      [%User{}, ...]
-
-  """
-  @spec list_users() :: [user()]
-  def list_users do
-    Repo.all(User)
-  end
-
-  @doc """
     Gets a single user.
     Raises `Ecto.NoResultsError` if the User does not exist.
 

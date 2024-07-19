@@ -7,10 +7,10 @@ defmodule ElixirDrops.Repo.Migrations.CreateUsersAuthTables do
     create table(:users, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :avatar, :string
-      add :email, :citext, null: false
-      add :github_id, :integer, null: false
+      add :email, :citext
+      add :github_id, :integer
       add :github_username, :string
-      add :name, :string, null: false
+      add :name, :string
 
       timestamps()
     end
@@ -19,9 +19,9 @@ defmodule ElixirDrops.Repo.Migrations.CreateUsersAuthTables do
 
     create table(:users_tokens, primary_key: false) do
       add :id, :binary_id, primary_key: true
-      add :context, :string, null: false
-      add :token, :binary, null: false
-      add :user_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false
+      add :context, :string
+      add :token, :binary
+      add :user_id, references(:users, type: :binary_id, on_delete: :delete_all)
 
       timestamps(updated_at: false)
     end
