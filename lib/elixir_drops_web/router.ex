@@ -20,7 +20,10 @@ defmodule ElixirDropsWeb.Router do
   scope "/", ElixirDropsWeb do
     pipe_through :browser
 
-    live "/", DropsLive, :index
+    live_session :default,
+      on_mount: {ElixirDropsWeb.UserAuth, :mount_current_user} do
+      live "/", DropsLive, :index
+    end
   end
 
   scope "/auth", ElixirDropsWeb do
