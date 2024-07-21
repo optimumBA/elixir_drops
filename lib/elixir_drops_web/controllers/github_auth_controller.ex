@@ -35,12 +35,7 @@ defmodule ElixirDropsWeb.GithubAuthController do
   end
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
-    user_info_from_auth =
-      auth
-      |> Map.has_key?(:info)
-      |> user_info_from_auth(auth)
-
-    with {:ok, user_params} <- user_info_from_auth,
+    with {:ok, user_params} <- user_info_from_auth(auth),
          github_token <- Map.get(auth.credentials, :token),
          {:ok, user} <- Accounts.get_or_create_user(user_params) do
       Accounts.clear_all_tokens_for_user(user)
@@ -59,37 +54,30 @@ defmodule ElixirDropsWeb.GithubAuthController do
     UserAuth.log_out_user(conn)
   end
 
-  defp user_info_from_auth(true, auth) do
+  defp user_info_from_auth(%{info: info} = auth) when is_map(info) do
     {:ok,
      %{
-       avatar: auth.info.image,
-       email: auth.info.email,
+       avatar: info.image,
+       email: info.email,
        github_id: auth.uid,
-       github_username: auth.info.nickname,
+       github_username: info.nickname,
        name: name_from_auth(auth)
      }}
   end
 
-  defp user_info_from_auth(_false, _auth), do: {:error, "Auth error"}
+  defp user_info_from_auth(_auth), do: {:error, "Auth error"}
+
+  defp name_from_auth(%{info: %{name: name}}) when is_binary(name), do: name
+
+  defp name_from_auth(%{info: %{first_name: nil, last_name: nil, nicknane: nickname}}),
+    do: nickname
 
   defp name_from_auth(auth) do
     auth
-    |> Map.get(:name)
-    |> name_from_auth(auth)
+    |> Map.get(:info, %{})
+    |> Map.take([:first_name, :last_name])
+    |> Map.values()
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
   end
-
-  defp name_from_auth(nil, auth),
-    do:
-      process_name_from_auth(
-        auth.info.first_name,
-        auth.info.last_name,
-        auth
-      )
-
-  defp name_from_auth(_name, auth), do: auth.info.name
-
-  defp process_name_from_auth(nil, nil, auth), do: auth.info.nickname
-  defp process_name_from_auth(nil, last_name, _auth), do: last_name
-  defp process_name_from_auth(first_name, nil, _auth), do: first_name
-  defp process_name_from_auth(first_name, last_name, _auth), do: ~s/#{first_name} #{last_name}/
 end

@@ -120,7 +120,7 @@ defmodule ElixirDropsWeb.UserAuth do
 
   ## `on_mount` arguments
 
-    * `:mount_current_user` - Assigns current_user
+    * `:assign_current_user` - Assigns current_user
       to socket assigns based on user_token, or nil if
       there's no user_token or no matching user.
 
@@ -140,7 +140,7 @@ defmodule ElixirDropsWeb.UserAuth do
       defmodule ElixirDropsWeb.PageLive do
         use ElixirDropsWeb, :live_view
 
-        on_mount {ElixirDropsWeb.UserAuth, :mount_current_user}
+        on_mount {ElixirDropsWeb.UserAuth, :assign_current_user}
         ...
       end
 
@@ -154,12 +154,12 @@ defmodule ElixirDropsWeb.UserAuth do
   @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t()) ::
           {:cont, Phoenix.LiveView.Socket.t()}
           | {:halt, Phoenix.LiveView.Socket.t()}
-  def on_mount(:mount_current_user, _params, session, socket) do
-    {:cont, mount_current_user(socket, session)}
+  def on_mount(:assign_current_user, _params, session, socket) do
+    {:cont, assign_current_user(socket, session)}
   end
 
   def on_mount(:ensure_authenticated, _params, session, socket) do
-    socket = mount_current_user(socket, session)
+    socket = assign_current_user(socket, session)
 
     if socket.assigns.current_user do
       {:cont, socket}
@@ -174,7 +174,7 @@ defmodule ElixirDropsWeb.UserAuth do
   end
 
   def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
-    socket = mount_current_user(socket, session)
+    socket = assign_current_user(socket, session)
 
     if socket.assigns.current_user do
       {:halt, Phoenix.LiveView.redirect(socket, to: signed_in_path(socket))}
@@ -183,7 +183,7 @@ defmodule ElixirDropsWeb.UserAuth do
     end
   end
 
-  defp mount_current_user(socket, session) do
+  defp assign_current_user(socket, session) do
     Phoenix.Component.assign_new(socket, :current_user, fn ->
       if user_token = session["user_token"] do
         Accounts.get_user_by_session_token(user_token)

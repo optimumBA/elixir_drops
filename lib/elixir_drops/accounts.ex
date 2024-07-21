@@ -187,7 +187,7 @@ defmodule ElixirDrops.Accounts do
 
         iex> clear_all_tokens_for_user(%ElixirDrops.Accounts.User{})
         :ok
-    
+
   """
   @spec clear_all_tokens_for_user(user()) :: :ok
   def clear_all_tokens_for_user(user) do

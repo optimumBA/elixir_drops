@@ -5,13 +5,7 @@ defmodule ElixirDrops.Accounts.User do
 
   import Ecto.Changeset
 
-  @type t :: %__MODULE__{
-          avatar: String.t() | nil,
-          email: String.t() | nil,
-          github_id: Integer | nil,
-          github_username: String.t() | nil,
-          name: String.t() | nil
-        }
+  @type t :: %__MODULE__{}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -33,7 +27,7 @@ defmodule ElixirDrops.Accounts.User do
   def user_changeset(user, attrs, _opts \\ []) do
     user
     |> cast(attrs, [:avatar, :email, :github_id, :github_username, :name])
-    |> validate_required([:email, :github_id, :github_username, :name])
+    |> validate_required([:avatar, :email, :github_id, :github_username, :name])
     |> unique_constraint(:github_id)
   end
 end

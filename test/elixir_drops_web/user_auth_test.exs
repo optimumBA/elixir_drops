@@ -143,7 +143,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
     end
   end
 
-  describe "on_mount :mount_current_user" do
+  describe "on_mount :assign_current_user" do
     test "assigns current_user based on a valid user_token", %{conn: conn, user: user} do
       user_token = Accounts.generate_user_session_token(user)
 
@@ -153,7 +153,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
         |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_user, %{}, session, %Socket{})
+        UserAuth.on_mount(:assign_current_user, %{}, session, %Socket{})
 
       assert updated_socket.assigns.current_user.id == user.id
     end
@@ -167,7 +167,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
         |> get_session()
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_user, %{}, session, %Socket{})
+        UserAuth.on_mount(:assign_current_user, %{}, session, %Socket{})
 
       assert updated_socket.assigns.current_user == nil
     end
@@ -176,7 +176,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
       session = get_session(conn)
 
       {:cont, updated_socket} =
-        UserAuth.on_mount(:mount_current_user, %{}, session, %Socket{})
+        UserAuth.on_mount(:assign_current_user, %{}, session, %Socket{})
 
       assert updated_socket.assigns.current_user == nil
     end
