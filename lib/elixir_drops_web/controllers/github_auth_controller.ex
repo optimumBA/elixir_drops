@@ -35,8 +35,9 @@ defmodule ElixirDropsWeb.GithubAuthController do
   end
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
+    github_token = auth.credentials.token
+
     with {:ok, user_params} <- user_info_from_auth(auth),
-         github_token <- Map.get(auth.credentials, :token),
          {:ok, user} <- Accounts.get_or_create_user(user_params) do
       Accounts.clear_all_tokens_for_user(user)
       UserAuth.log_in_user(conn, user, github_token)
@@ -69,7 +70,7 @@ defmodule ElixirDropsWeb.GithubAuthController do
 
   defp name_from_auth(%{info: %{name: name}}) when is_binary(name), do: name
 
-  defp name_from_auth(%{info: %{first_name: nil, last_name: nil, nicknane: nickname}}),
+  defp name_from_auth(%{info: %{first_name: nil, last_name: nil, nickname: nickname}}),
     do: nickname
 
   defp name_from_auth(auth) do

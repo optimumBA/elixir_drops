@@ -8,7 +8,7 @@ defmodule ElixirDrops.AccountsTest do
   alias ElixirDrops.Accounts.UserToken
 
   @valid_attrs %{
-    avatar: "github.com/github_user/avatar",
+    avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
     email: "some_email@gmail.com",
     github_username: "github_username",
     github_id: 1_456_872,
@@ -42,7 +42,7 @@ defmodule ElixirDrops.AccountsTest do
       _user = user_fixture()
 
       new_user = %{
-        avatar: "github.com/github_user/avatar",
+        avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
         email: "new@gmail.com",
         github_id: 1_456_872,
         github_username: "new_username",
@@ -56,7 +56,7 @@ defmodule ElixirDrops.AccountsTest do
     test "register_user/1 with valid data creates a user" do
       {:ok, %User{} = user} = Accounts.register_user(@valid_attrs)
 
-      assert user.avatar == "github.com/github_user/avatar"
+      assert user.avatar == "https://avatars.githubusercontent.com/u/1456872?v=4"
       assert user.email == "some_email@gmail.com"
       assert user.github_username == "github_username"
       assert user.github_id == 1_456_872
@@ -181,14 +181,14 @@ defmodule ElixirDrops.AccountsTest do
     test "get_or_create_user/1 creates new user with valid params" do
       {:ok, retur_user} =
         Accounts.get_or_create_user(%{
-          avatar: "http//:github.com/user_avatar.png",
+          avatar: "https://avatars.githubusercontent.com/u/12345678?v=4",
           email: "user@email.com",
           github_username: "gt_username",
           github_id: 12_345_678,
           name: "username"
         })
 
-      assert retur_user.avatar == "http//:github.com/user_avatar.png"
+      assert retur_user.avatar == "https://avatars.githubusercontent.com/u/12345678?v=4"
       assert retur_user.email == "user@email.com"
       assert retur_user.github_username == "gt_username"
       assert retur_user.github_id == 12_345_678

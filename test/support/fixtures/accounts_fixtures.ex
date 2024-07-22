@@ -21,7 +21,7 @@ defmodule ElixirDrops.AccountsFixtures do
     {:ok, user} =
       attrs
       |> Enum.into(%{
-        avatar: "github.com/user_avatar.png",
+        avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
         email: unique_user_email(),
         github_id: 1_456_872,
         github_username: "github_username",

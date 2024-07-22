@@ -22,7 +22,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
     info: %{
       email: "dano.csharp@gmail.com",
       first_name: "Tony",
-      image: "http://github.com/dano_csharp_avatar.jpg",
+      image: "https://avatars.githubusercontent.com/u/1456872?v=4",
       last_name: "Picula",
       name: nil,
       nickname: "DohaoTz4",
@@ -79,7 +79,8 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
       assert Repo.aggregate(User, :count) == 1
 
       assert user_token = get_session(conn, :user_token)
-      assert %User{} = Accounts.get_user_by_session_token(user_token)
+      assert %User{} = user = Accounts.get_user_by_session_token(user_token)
+      assert user.name == "Tony Picula"
     end
 
     test "when user is not valid it returns an error", %{conn: conn} do
@@ -99,6 +100,56 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
 
       assert redirected_to(conn, 302)
       assert Repo.aggregate(User, :count) == 0
+    end
+
+    test "returns error when auth.info in invalid", %{conn: conn} do
+      ueberauth_auth = Map.put(@ueberauth_auth, :info, nil)
+
+      conn =
+        conn
+        |> bypass_through(ElixirDropsWeb.Router, [:browser])
+        |> assign(:ueberauth_auth, ueberauth_auth)
+        |> GithubAuthController.callback(%{})
+
+      assert redirected_to(conn, 302)
+      assert Repo.aggregate(User, :count) == 0
+    end
+
+    test "extracts user name from auth", %{conn: conn} do
+      ueberauth_auth =
+        update_in(
+          @ueberauth_auth,
+          [:info, :name],
+          fn _value -> "Tony Picula" end
+        )
+
+      conn =
+        conn
+        |> bypass_through(ElixirDropsWeb.Router, [:browser])
+        |> assign(:ueberauth_auth, ueberauth_auth)
+        |> GithubAuthController.callback(%{})
+
+      assert user_token = get_session(conn, :user_token)
+      assert %User{} = user = Accounts.get_user_by_session_token(user_token)
+      assert user.name == "Tony Picula"
+    end
+
+    test "uses nickname as name if name is not present", %{conn: conn} do
+      ueberauth_auth =
+        @ueberauth_auth
+        |> update_in([:info, :name], fn _value -> nil end)
+        |> update_in([:info, :first_name], fn _value -> nil end)
+        |> update_in([:info, :last_name], fn _value -> nil end)
+
+      conn =
+        conn
+        |> bypass_through(ElixirDropsWeb.Router, [:browser])
+        |> assign(:ueberauth_auth, ueberauth_auth)
+        |> GithubAuthController.callback(%{})
+
+      assert user_token = get_session(conn, :user_token)
+      assert %User{} = user = Accounts.get_user_by_session_token(user_token)
+      assert user.name == "DohaoTz4"
     end
   end
 
