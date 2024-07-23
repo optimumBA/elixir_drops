@@ -169,16 +169,16 @@ defmodule ElixirDropsWeb.UserAuthTest do
       {:cont, updated_socket} =
         UserAuth.on_mount(:assign_current_user, %{}, session, %Socket{})
 
-      assert updated_socket.assigns.current_user == nil
+      refute updated_socket.assigns.current_user
     end
 
-    test "assigns nil to current_user assign if there isn't a user_token", %{conn: conn} do
+    test "confirms no current_user assigned if there isn't a user_token", %{conn: conn} do
       session = get_session(conn)
 
       {:cont, updated_socket} =
         UserAuth.on_mount(:assign_current_user, %{}, session, %Socket{})
 
-      assert updated_socket.assigns.current_user == nil
+      refute updated_socket.assigns.current_user
     end
   end
 
@@ -211,7 +211,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
       }
 
       {:halt, updated_socket} = UserAuth.on_mount(:ensure_authenticated, %{}, session, socket)
-      assert updated_socket.assigns.current_user == nil
+      refute updated_socket.assigns.current_user
     end
 
     test "redirects to login page if there isn't a user_token", %{conn: conn} do
@@ -223,7 +223,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
       }
 
       {:halt, updated_socket} = UserAuth.on_mount(:ensure_authenticated, %{}, session, socket)
-      assert updated_socket.assigns.current_user == nil
+      refute updated_socket.assigns.current_user
     end
   end
 

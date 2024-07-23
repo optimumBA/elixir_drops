@@ -55,7 +55,7 @@ defmodule ElixirDrops.Accounts do
   end
 
   @doc """
-  Gets a user Github ID.
+  Gets a user by Github ID.
 
     ## Examples
 
@@ -110,23 +110,6 @@ defmodule ElixirDrops.Accounts do
     user
     |> change_user(attrs)
     |> Repo.update()
-  end
-
-  @doc """
-  Deletes a user.
-
-    ## Examples
-
-        iex> delete_user(user)
-        {:ok, %User{}}
-
-        iex> delete_user(user)
-        {:error, %Ecto.Changeset{}}
-
-  """
-  @spec delete_user(user()) :: {:ok, user()} | {:error, changeset()}
-  def delete_user(%User{} = user) do
-    Repo.delete(user)
   end
 
   @doc """

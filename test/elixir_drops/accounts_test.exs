@@ -155,7 +155,7 @@ defmodule ElixirDrops.AccountsTest do
     end
   end
 
-  describe "get or list users" do
+  describe "get users" do
     setup [:create_user_and_token]
 
     test "get_user!/1 returns the user with given id", %{user: user} do
@@ -203,7 +203,7 @@ defmodule ElixirDrops.AccountsTest do
     end
   end
 
-  describe "update or delete users" do
+  describe "update users" do
     setup [:create_user_and_token]
 
     test "update_user/2 with valid data updates the user", %{user: user} do
@@ -224,11 +224,6 @@ defmodule ElixirDrops.AccountsTest do
 
     test "change_user/1 returns a user changeset", %{user: user} do
       assert %Ecto.Changeset{} = Accounts.change_user(user)
-    end
-
-    test "delete_user/1 deletes the user", %{user: user} do
-      assert {:ok, %User{}} = Accounts.delete_user(user)
-      assert_raise Ecto.NoResultsError, fn -> Accounts.get_user!(user.id) end
     end
   end
 end

@@ -22,7 +22,11 @@ defmodule ElixirDropsWeb.SharedComponents do
         <div>
           <%= if @current_user do %>
             <div class="flex items-center gap-x-3">
-              <.user_avatar avatar_class="w-10 h-10" current_user={@current_user} />
+              <img
+                src={@current_user.avatar}
+                alt={@current_user.github_username}
+                class="w-10 h-10 rounded-full"
+              />
               <p><%= @current_user.github_username %></p>
               <button phx-click={JS.toggle_class("hidden", to: "#slide-menu")}>
                 <Icons.chevron_down />
@@ -45,22 +49,6 @@ defmodule ElixirDropsWeb.SharedComponents do
     """
   end
 
-  defp user_avatar(assigns) do
-    ~H"""
-    <%= if @current_user.avatar do %>
-      <img
-        src={@current_user.avatar}
-        alt={@current_user.github_username}
-        class={["rounded-full", @avatar_class]}
-      />
-    <% else %>
-      <p class="font-semibold text-[#eae8fd] bg-blue_primary text-xl rounded-full w-10 h-10 flex items-center justify-center">
-        <%= upcase_first(@current_user.github_username) %>
-      </p>
-    <% end %>
-    """
-  end
-
   defp slide_menu(assigns) do
     ~H"""
     <div
@@ -68,7 +56,11 @@ defmodule ElixirDropsWeb.SharedComponents do
       id="slide-menu"
     >
       <div class="mx-auto">
-        <.user_avatar avatar_class="w-16 h-16" current_user={@current_user} />
+        <img
+          src={@current_user.avatar}
+          alt={@current_user.github_username}
+          class="w-16 h-16 rounded-full"
+        />
       </div>
       <p class="text-[1.2rem] mx-auto mt-1"><%= @current_user.github_username %></p>
 
@@ -90,6 +82,4 @@ defmodule ElixirDropsWeb.SharedComponents do
     </div>
     """
   end
-
-  defp upcase_first(<<first::utf8, _rest::binary>>), do: String.upcase(<<first::utf8>>)
 end
