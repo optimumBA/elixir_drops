@@ -1,0 +1,1 @@
+alias ElixirDrops.{Drops, Repo}
