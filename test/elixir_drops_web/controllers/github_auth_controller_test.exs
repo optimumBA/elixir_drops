@@ -8,13 +8,15 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
   alias ElixirDrops.Repo
   alias ElixirDropsWeb.GithubAuthController
 
+  @valid_test_user_token "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"
+
   setup %{conn: conn} do
     conn =
       conn
       |> Map.replace!(:secret_key_base, ElixirDropsWeb.Endpoint.config(:secret_key_base))
       |> init_test_session(%{})
 
-    %{conn: conn, user_token: "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"}
+    %{conn: conn, user_token: @valid_test_user_token}
   end
 
   @ueberauth_auth %{
@@ -156,7 +158,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
   test "logout clears the session", %{conn: conn} do
     conn =
       conn
-      |> init_test_session(%{user_token: "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"})
+      |> init_test_session(%{user_token: @valid_test_user_token})
       |> get(~p"/auth/logout")
 
     refute get_session(conn, :user_token)
@@ -165,7 +167,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
   test "logout redirects to /", %{conn: conn} do
     conn =
       conn
-      |> init_test_session(%{user_token: "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"})
+      |> init_test_session(%{user_token: @valid_test_user_token})
       |> get(~p"/auth/logout")
 
     assert redirected_to(conn, 302)

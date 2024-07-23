@@ -218,6 +218,7 @@ defmodule ElixirDropsWeb.UserAuth do
     else
       conn
       |> maybe_store_return_to()
+      |> put_flash(:error, "You must log in to access this page.")
       |> redirect(to: ~p"/")
       |> halt()
     end
