@@ -13,6 +13,9 @@ defmodule ElixirDrops.AccountsFixtures do
   @spec unique_user_email() :: String.t()
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
 
+  @spec unique_github_id() :: integer()
+  def unique_github_id, do: :rand.uniform(1_000_000)
+
   # TODO: Replace when merged with auth
 
   @doc """
@@ -24,7 +27,7 @@ defmodule ElixirDrops.AccountsFixtures do
       Enum.into(attrs, %{
         avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
         email: unique_user_email(),
-        github_id: 1_456_872,
+        github_id: unique_github_id(),
         github_username: "github_username",
         name: "some_name"
       })

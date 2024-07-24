@@ -13,65 +13,61 @@ defmodule ElixirDrops.Drops do
   @type changeset :: Ecto.Changeset.t()
   @type drop :: Drop.t()
   @type drop_id :: Ecto.UUID.t()
+  @type filters :: map()
   @type limit :: integer()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
   @doc """
-  Returns the list of drops.
+  Returns the list of drops filtered by the given filters.
 
   ## Examples
 
-      iex> list_drops()
+      iex> list_drops(10, %{user_id: 1234})
+      [%Drop{}, ...]
+
+      iex> list_drops(10, %{older_than: %Drop{}})
+      [%Drop{}, ...]
+
+      iex> list_drops(10, %{newer_than: %Drop{}})
       [%Drop{}, ...]
 
   """
-  @spec list_drops(limit()) :: [drop()] | []
-  def list_drops(limit \\ 10) do
-    Drop
+  @spec list_drops(limit(), filters()) :: [drop()]
+  def list_drops(limit, filters \\ %{}) do
+    filter_query = apply_filters()
+
+    drop_query()
+    |> where(^filter_query.(filters))
     |> order_by([d], {:desc, d.inserted_at})
     |> limit(^limit)
     |> preload([:user])
     |> Repo.all()
   end
 
-  @doc """
-  Returns the list of drops newer than a given drop.
-
-  ## Examples
-
-      iex> list_newer_drops()
-      [%Drop{}, ...]
-
-  """
-  @spec list_newer_drops(drop(), limit()) :: [drop()]
-  def list_newer_drops(drop, limit \\ 10) do
-    Drop
-    |> where([d], d.inserted_at > ^drop.inserted_at)
-    |> order_by([d], {:desc, d.inserted_at})
-    |> limit(^limit)
-    |> preload([:user])
-    |> Repo.all()
+  defp drop_query do
+    from drop in Drop, as: :drop
   end
 
-  @doc """
-  Returns the list of drops older than a given drop.
-
-  ## Examples
-
-      iex> list_older_drops()
-      [%Drop{}, ...]
-
-  """
-  @spec list_older_drops(drop(), limit()) :: [drop()]
-  def list_older_drops(drop, limit \\ 10) do
-    Drop
-    |> where([d], d.inserted_at < ^drop.inserted_at)
-    |> order_by([d], {:desc, d.inserted_at})
-    |> limit(^limit)
-    |> preload([:user])
-    |> Repo.all()
+  defp apply_filters do
+    fn filters ->
+      Enum.reduce(filters, dynamic(true), &apply_filter/2)
+    end
   end
+
+  defp apply_filter({:user_id, user_id}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
+  end
+
+  defp apply_filter({:older_than, drop}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.inserted_at < ^drop.inserted_at)
+  end
+
+  defp apply_filter({:newer_than, drop}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.inserted_at > ^drop.inserted_at)
+  end
+
+  defp apply_filter(_other, dynamic), do: dynamic
 
   @doc """
   Gets a single drop.
@@ -90,26 +86,9 @@ defmodule ElixirDrops.Drops do
   @spec get_drop(drop_id()) :: drop() | nil
   def get_drop(drop_id) do
     Drop
-    |> where([d], d.id == ^drop_id)
+    |> where([drop], drop.id == ^drop_id)
     |> preload([:user])
     |> Repo.one()
-  end
-
-  @doc """
-  Returns the list of drops belonging to a user.
-
-  ## Examples
-
-      iex> get_user_drops()
-      [%Drop{}, ...]
-
-  """
-  @spec get_user_drops(user_id()) :: [drop()]
-  def get_user_drops(user_id) do
-    Drop
-    |> where([d], d.user_id == ^user_id)
-    |> preload([:user])
-    |> Repo.all()
   end
 
   @doc """
