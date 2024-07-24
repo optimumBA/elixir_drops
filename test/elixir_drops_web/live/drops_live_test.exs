@@ -7,6 +7,12 @@ defmodule ElixirDropsWeb.DropsLiveTest do
   alias ElixirDrops.Accounts
 
   describe "/" do
+    test "unauthenticated user navigation details", %{conn: conn} do
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      assert html =~ "Sign in with GitHub"
+    end
+
     test "logged in user navigation details", %{conn: conn} do
       user = user_fixture()
       token = Accounts.generate_user_session_token(user)

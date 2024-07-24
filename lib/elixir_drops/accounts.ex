@@ -38,8 +38,8 @@ defmodule ElixirDrops.Accounts do
 
     ## Examples
 
-    iex> get_or_create_user(%{field: value})
-    {:ok, %User{}}
+        iex> get_or_create_user(%{field: value})
+        {:ok, %User{}}
 
   Otherwise it returns error tuple with changeset.
   """

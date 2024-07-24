@@ -54,6 +54,7 @@ defmodule ElixirDropsWeb.SharedComponents do
     <div
       class="hidden w-[25%] shadow-md shadow-[#c4c1c8] rounded-md pt-10 pb-4 absolute top-[90%] right-[2rem] grid z-[1000] bg-white"
       id="slide-menu"
+      phx-click-away={JS.toggle_class("hidden", to: "#slide-menu")}
     >
       <div class="mx-auto">
         <img
