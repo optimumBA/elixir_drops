@@ -27,7 +27,11 @@ defmodule ElixirDrops.AccountsTest do
     %{user: user, token: token}
   end
 
-  describe "users changeset & register" do
+  describe "users changeset and change_user/1" do
+    test "change_user/1 returns a user changeset" do
+      assert %Ecto.Changeset{} = Accounts.change_user(%User{}, @valid_attrs)
+    end
+
     test "changesets with valid attrs" do
       changeset1 = Accounts.change_user(%User{}, @valid_attrs)
       assert changeset1.valid?
@@ -52,7 +56,9 @@ defmodule ElixirDrops.AccountsTest do
       {:error, changeset} = Accounts.register_user(new_user)
       assert "has already been taken" in errors_on(changeset).github_id
     end
+  end
 
+  describe "users registration with register_user/1" do
     test "register_user/1 with valid data creates a user" do
       {:ok, %User{} = user} = Accounts.register_user(@valid_attrs)
 
@@ -220,10 +226,6 @@ defmodule ElixirDrops.AccountsTest do
     test "update_user/2 with invalid data returns error changeset", %{user: user} do
       assert {:error, %Ecto.Changeset{}} = Accounts.update_user(user, @invalid_attrs)
       assert user == Accounts.get_user!(user.id)
-    end
-
-    test "change_user/1 returns a user changeset", %{user: user} do
-      assert %Ecto.Changeset{} = Accounts.change_user(user)
     end
   end
 end
