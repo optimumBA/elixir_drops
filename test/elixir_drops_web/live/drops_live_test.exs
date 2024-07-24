@@ -7,7 +7,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
   alias ElixirDrops.Accounts
 
   describe "/" do
-    test "unauthenticated user navigation details", %{conn: conn} do
+    test "shows github sign-in option for users not logged in", %{conn: conn} do
       {:ok, _live, html} = live(conn, ~p"/")
 
       assert html =~ "Sign in with GitHub"
