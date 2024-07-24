@@ -13,7 +13,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       assert html =~ "Sign in with GitHub"
     end
 
-    test "logged in user navigation details", %{conn: conn} do
+    test "shows the logged-in user's info", %{conn: conn} do
       user = user_fixture()
       token = Accounts.generate_user_session_token(user)
       conn = init_test_session(conn, %{user_token: token})
