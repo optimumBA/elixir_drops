@@ -17,16 +17,16 @@ defmodule ElixirDrops.Accounts do
   @type token :: binary()
 
   @doc """
-    Gets a single user.
-    Raises `Ecto.NoResultsError` if the User does not exist.
+  Gets a single user.
+  Raises `Ecto.NoResultsError` if the User does not exist.
 
-    ## Examples
+  ## Examples
 
-        iex> get_user!(123)
-        %User{}
+      iex> get_user!(123)
+      %User{}
 
-        iex> get_user!(456)
-        ** (Ecto.NoResultsError)
+      iex> get_user!(456)
+      ** (Ecto.NoResultsError)
 
   """
   @spec get_user!(user_id()) :: user()
@@ -36,10 +36,10 @@ defmodule ElixirDrops.Accounts do
   Gets or creates a single user.
   Returns the single user if user exists or creates the one instead.
 
-    ## Examples
+  ## Examples
 
-        iex> get_or_create_user(%{field: value})
-        {:ok, %User{}}
+      iex> get_or_create_user(%{field: value})
+      {:ok, %User{}}
 
   Otherwise it returns error tuple with changeset.
   """
@@ -57,13 +57,13 @@ defmodule ElixirDrops.Accounts do
   @doc """
   Gets a user by Github ID.
 
-    ## Examples
+  ## Examples
 
-        iex> get_user_by_github_id(2_546_302)
-        {:ok, %User{}}
+      iex> get_user_by_github_id(2_546_302)
+      {:ok, %User{}}
 
-        iex> get_user_by_github_id(4444)
-        {:error, "User not found!"}
+      iex> get_user_by_github_id(4444)
+      {:error, "User not found!"}
 
   """
   @spec get_user_by_github_id(github_id()) :: {:ok, user()} | {:error, binary()}
@@ -77,13 +77,13 @@ defmodule ElixirDrops.Accounts do
   @doc """
   Registers a user.
 
-    ## Examples
+  ## Examples
 
-        iex> register_user(%{field: value})
-        {:ok, %User{}}
+      iex> register_user(%{field: value})
+      {:ok, %User{}}
 
-        iex> register_user(%{field: bad_value})
-        {:error, %Ecto.Changeset{}}
+      iex> register_user(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
 
   """
   @spec register_user(map()) :: {:ok, user()} | {:error, changeset()}
@@ -96,13 +96,13 @@ defmodule ElixirDrops.Accounts do
   @doc """
   Updates a user.
 
-    ## Examples
+  ## Examples
 
-        iex> update_user(user, %{field: new_value})
-        {:ok, %User{}}
+      iex> update_user(user, %{field: new_value})
+      {:ok, %User{}}
 
-        iex> update_user(user, %{field: bad_value})
-        {:error, %Ecto.Changeset{}}
+      iex> update_user(user, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
 
   """
   @spec update_user(user(), map()) :: {:ok, user()} | {:error, changeset()}
@@ -115,10 +115,10 @@ defmodule ElixirDrops.Accounts do
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking user changes.
 
-    ## Examples
+  ## Examples
 
-        iex> change_user(user)
-        %Ecto.Changeset{data: %User{}}
+      iex> change_user(user)
+      %Ecto.Changeset{data: %User{}}
 
   """
   @spec change_user(user(), map()) :: changeset()
@@ -129,11 +129,11 @@ defmodule ElixirDrops.Accounts do
   @doc """
   Generates a session token for user.
 
-    ## Examples
+  ## Examples
 
-       iex> generate_user_session_token(user)
-       <<43, 31, 68, 123, 207, 25, 230, 145, 231, 37, 255, 19, 202, 97, 185, 208, 211, 12, 250, 234,
-         146, 220, 49, 98, 66, 156, 233, 191, 119, 77, 80, 251>>
+      iex> generate_user_session_token(user)
+      <<43, 31, 68, 123, 207, 25, 230, 145, 231, 37, 255, 19, 202, 97, 185, 208, 211, 12, 250, 234,
+        146, 220, 49, 98, 66, 156, 233, 191, 119, 77, 80, 251>>
 
   """
   @spec generate_user_session_token(user()) :: binary()
@@ -146,13 +146,13 @@ defmodule ElixirDrops.Accounts do
   @doc """
   Gets the user with the given signed token.
 
-    ## Examples
+  ## Examples
 
-        iex> get_user_by_session_token(token)
-        %ElixirDrops.Accounts.User{}
+      iex> get_user_by_session_token(token)
+      %ElixirDrops.Accounts.User{}
 
-        iex> get_user_by_session_token(nil)
-        nil
+      iex> get_user_by_session_token(nil)
+      nil
 
   """
   @spec get_user_by_session_token(token() | nil) :: user() | nil
@@ -166,10 +166,10 @@ defmodule ElixirDrops.Accounts do
   @doc """
   Deletes all remaining tokens from db that belong to user.
 
-    ## Examples
+  ## Examples
 
-        iex> clear_all_tokens_for_user(%ElixirDrops.Accounts.User{})
-        :ok
+      iex> clear_all_tokens_for_user(%ElixirDrops.Accounts.User{})
+      :ok
 
   """
   @spec clear_all_tokens_for_user(user()) :: :ok
@@ -182,10 +182,10 @@ defmodule ElixirDrops.Accounts do
   @doc """
   Deletes the signed token with the given context.
 
-    ## Examples
+  ## Examples
 
-        iex> delete_user_session_token(token)
-        :ok
+      iex> delete_user_session_token(token)
+      :ok
 
   """
   @spec delete_user_session_token(token()) :: :ok

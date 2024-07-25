@@ -27,17 +27,17 @@ defmodule ElixirDrops.AccountsTest do
     %{user: user, token: token}
   end
 
-  describe "users changeset and change_user/1" do
-    test "change_user/1 returns a user changeset" do
+  describe "change_user/1" do
+    test "returns a user changeset" do
       assert %Ecto.Changeset{} = Accounts.change_user(%User{}, @valid_attrs)
     end
 
-    test "changesets with valid attrs" do
+    test "returns a valid changeset" do
       changeset1 = Accounts.change_user(%User{}, @valid_attrs)
       assert changeset1.valid?
     end
 
-    test "changesets with invalid attrs" do
+    test "returns an invalid changeset" do
       changeset1 = Accounts.change_user(%User{}, @invalid_attrs)
       refute changeset1.valid?
     end
@@ -58,8 +58,8 @@ defmodule ElixirDrops.AccountsTest do
     end
   end
 
-  describe "users registration with register_user/1" do
-    test "register_user/1 with valid data creates a user" do
+  describe "register_user/1" do
+    test "with valid data creates a user" do
       {:ok, %User{} = user} = Accounts.register_user(@valid_attrs)
 
       assert user.avatar == "https://avatars.githubusercontent.com/u/1456872?v=4"
@@ -68,7 +68,7 @@ defmodule ElixirDrops.AccountsTest do
       assert user.github_id == 1_456_872
     end
 
-    test "register_user/1 with invalid data returns error changeset" do
+    test "with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Accounts.register_user(@invalid_attrs)
     end
   end
@@ -87,13 +87,21 @@ defmodule ElixirDrops.AccountsTest do
       assert user_token = Repo.get_by(UserToken, token: token)
       assert user_token.context == "session"
     end
+  end
 
-    test "verify_session_token_query/1 gives some query", %{user: user} do
+  describe "verify_session_token_query/1" do
+    setup [:create_user_and_token]
+
+    test "verifies some query", %{user: user} do
       token = Accounts.generate_user_session_token(user)
       assert UserToken.verify_session_token_query(token)
     end
+  end
 
-    test "build_session_token/1 returns github token", %{user: user} do
+  describe "build_session_token/1" do
+    setup [:create_user_and_token]
+
+    test "returns github token", %{user: user} do
       {_token, %{token: token, context: context, user_id: user_id}} =
         UserToken.build_session_token(user)
 
@@ -144,7 +152,7 @@ defmodule ElixirDrops.AccountsTest do
     end
   end
 
-  describe "delete session tokens" do
+  describe "delete_user_session_token/1" do
     setup [:create_user_and_token]
 
     test "deletes the token", %{user: user} do
@@ -161,30 +169,38 @@ defmodule ElixirDrops.AccountsTest do
     end
   end
 
-  describe "get users" do
+  describe "get_user!/1" do
     setup [:create_user_and_token]
 
-    test "get_user!/1 returns the user with given id", %{user: user} do
+    test "returns the user with given id", %{user: user} do
       assert Accounts.get_user!(user.id) == user
     end
 
-    test "get_user!/1 raises NoResultsError exception if user doesn't exist" do
+    test "raises NoResultsError exception if user doesn't exist" do
       assert_raise Ecto.NoResultsError, fn ->
         Accounts.get_user!("14444444-edaa-444a-a333-7a77758ad305")
       end
     end
+  end
 
-    test "get_user_by_github_id/1 returns the user with given github_username", %{user: user} do
+  describe "get_user_by_github_id/1" do
+    setup [:create_user_and_token]
+
+    test "returns the user with given github_username", %{user: user} do
       {:ok, ret_user} = Accounts.get_user_by_github_id(user.github_id)
       assert user == ret_user
     end
 
-    test "get_user_by_github_id/1 returns error if user doesn't exist", %{user: _user} do
+    test "returns error if user doesn't exist", %{user: _user} do
       {:error, reason} = Accounts.get_user_by_github_id(4444)
       assert reason == "User not found!"
     end
+  end
 
-    test "get_or_create_user/1 creates new user with valid params" do
+  describe "get_or_create_user/1" do
+    setup [:create_user_and_token]
+
+    test "creates new user with valid params" do
       {:ok, retur_user} =
         Accounts.get_or_create_user(%{
           avatar: "https://avatars.githubusercontent.com/u/12345678?v=4",
@@ -200,7 +216,7 @@ defmodule ElixirDrops.AccountsTest do
       assert retur_user.github_id == 12_345_678
     end
 
-    test "get_or_create_user/1 returns user if user already exists", %{user: user1} do
+    test "returns user if user already exists", %{user: user1} do
       {:ok, user2} = Accounts.get_or_create_user(@valid_attrs)
 
       assert user1.email == user2.email
@@ -209,10 +225,10 @@ defmodule ElixirDrops.AccountsTest do
     end
   end
 
-  describe "update users" do
+  describe "update_user/2" do
     setup [:create_user_and_token]
 
-    test "update_user/2 with valid data updates the user", %{user: user} do
+    test "with valid data updates the user", %{user: user} do
       update_attrs = %{
         email: "some_updated_email@gmail.com",
         github_username: "updated_github_username"
@@ -223,7 +239,7 @@ defmodule ElixirDrops.AccountsTest do
       assert user.github_username == "updated_github_username"
     end
 
-    test "update_user/2 with invalid data returns error changeset", %{user: user} do
+    test "with invalid data returns error changeset", %{user: user} do
       assert {:error, %Ecto.Changeset{}} = Accounts.update_user(user, @invalid_attrs)
       assert user == Accounts.get_user!(user.id)
     end
