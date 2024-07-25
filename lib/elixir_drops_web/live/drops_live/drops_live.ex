@@ -47,17 +47,21 @@ defmodule ElixirDropsWeb.DropsLive do
   end
 
   defp apply_action(socket, :show, %{"id" => id}) do
-    case Drops.get_drop(id) do
-      nil ->
-        socket
-        |> put_flash(:error, "Drop not found")
-        |> push_patch(to: ~p"/")
+    id
+    |> Drops.get_drop()
+    |> assign_drop(socket)
+  end
 
-      drop ->
-        socket
-        |> assign(:drop, drop)
-        |> assign(:page_title, drop.title)
-    end
+  defp assign_drop(nil, socket) do
+    socket
+    |> assign(:drop, nil)
+    |> push_patch(to: ~p"/")
+  end
+
+  defp assign_drop(drop, socket) do
+    socket
+    |> assign(:drop, drop)
+    |> assign(:page_title, drop.title)
   end
 
   def assign_drops(socket, new_page, filters \\ %{}) when new_page >= 1 do
@@ -69,26 +73,24 @@ defmodule ElixirDropsWeb.DropsLive do
     |> stream_drops(new_page, socket)
   end
 
-  defp process_entries(drop_list_result, new_page, socket) do
-    %{current_page: current_page, entries: entries, total_pages: total_pages} = drop_list_result
+  defp process_entries(%{current_page: current_page} = drops_list, new_page, socket) when new_page >= current_page do
+    %{
+      at: -1,
+      current_page: current_page,
+      entries: drops_list.entries,
+      limit: socket.assigns.per_page * 3 * -1,
+      total_pages: drops_list.total_pages
+    }
+  end
 
-    if new_page >= current_page do
-      %{
-        at: -1,
-        current_page: current_page,
-        entries: entries,
-        limit: socket.assigns.per_page * 3 * -1,
-        total_pages: total_pages
-      }
-    else
-      %{
-        at: 0,
-        current_page: current_page,
-        entries: Enum.reverse(entries),
-        limit: socket.assigns.per_page * 3,
-        total_pages: total_pages
-      }
-    end
+  defp process_entries(drops_list, new_page, socket) do
+    %{
+      at: 0,
+      current_page: new_page,
+      entries: Enum.reverse(drops_list.entries),
+      limit: socket.assigns.per_page * 3,
+      total_pages: drops_list.total_pages
+    }
   end
 
   defp stream_drops(%{entries: entries, at: at}, _new_page, socket) when length(entries) == 0 do

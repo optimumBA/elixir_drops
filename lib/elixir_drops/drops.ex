@@ -93,14 +93,6 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
 
-  defp apply_filter({:older_than, drop}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.inserted_at <= ^drop.inserted_at)
-  end
-
-  defp apply_filter({:newer_than, drop}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.inserted_at >= ^drop.inserted_at)
-  end
-
   defp apply_filter(_other, dynamic), do: dynamic
 
   @doc """

@@ -6,7 +6,6 @@ defmodule ElixirDrops.DropsTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Repo
 
   @invalid_attrs %{title: nil, body: nil}
   @valid_attrs %{title: "some title", body: "some body"}
@@ -18,111 +17,19 @@ defmodule ElixirDrops.DropsTest do
     %{drop: drop, user: user}
   end
 
+  #TODO: test sad path
   describe "list_drops" do
-    test "returns all drops when no filter is passed" do
-      user = user_fixture()
+    setup [:create_drops_setup]
 
-      drop_fixture(user)
-
-      assert [drop] = Drops.list_drops(10)
+    test "returns all drops with pagiation metadata when no filter is passed" do
+      assert %{current_page: 1, entries: [drop], total_pages: 1} = Drops.list_drops(10)
 
       assert Ecto.assoc_loaded?(drop.user)
     end
 
-    test "returns all drops filtered by user_id" do
-      user = user_fixture()
-
-      drop_fixture(user)
-
-      assert [drop] = Drops.list_drops(10, %{user_id: user.id})
+    test "returns all drops filtered by user_id", %{user: user} do
+      assert %{current_page: 1, entries: [drop], total_pages: 1} = Drops.list_drops(10, %{user_id: user.id})
       assert Ecto.assoc_loaded?(drop.user)
-    end
-
-    test "returns a list of drops created before a drop" do
-      user = user_fixture()
-
-      drop_1 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(120)
-
-      drop_2 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(240)
-
-      _drop_3 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(360)
-
-      _drop_4 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(480)
-
-      assert [drop] = Drops.list_drops(10, %{older_than: drop_2})
-      assert drop.id == drop_1.id
-      assert Ecto.assoc_loaded?(drop.user)
-    end
-
-    test "returns an empty list if there are no older drops" do
-      user = user_fixture()
-
-      _drop_1 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(120)
-
-      drop_2 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(100)
-
-      assert 10
-             |> Drops.list_drops(%{older_than: drop_2})
-             |> Enum.empty?()
-    end
-
-    test "returns a list of drops created after a drop" do
-      user = user_fixture()
-
-      _drop_1 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(120)
-
-      drop_2 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(240)
-
-      drop_3 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(360)
-
-      assert [drop] = Drops.list_drops(10, %{newer_than: drop_2})
-      assert drop.id == drop_3.id
-      assert Ecto.assoc_loaded?(drop.user)
-    end
-
-    test "returns an empty list if there are no newer drops" do
-      user = user_fixture()
-
-      drop_1 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(120)
-
-      _drop_2 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(100)
-
-      assert 10
-             |> Drops.list_drops(%{newer_than: drop_1})
-             |> Enum.empty?()
     end
   end
 
@@ -188,21 +95,5 @@ defmodule ElixirDrops.DropsTest do
                ]
              } = errors_on(changeset)
     end
-  end
-
-  defp time_before(amount_to_add) do
-    DateTime.utc_now()
-    |> DateTime.add(amount_to_add)
-    |> DateTime.to_naive()
-    |> NaiveDateTime.truncate(:second)
-  end
-
-  defp update_drop_inserted_at(drop, time_to_add) do
-    {:ok, updated_drop} =
-      drop
-      |> Ecto.Changeset.change(%{inserted_at: time_before(time_to_add)})
-      |> Repo.update()
-
-    updated_drop
   end
 end

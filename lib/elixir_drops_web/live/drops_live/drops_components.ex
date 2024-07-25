@@ -14,6 +14,7 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
   attr :timezone_offset, :integer, required: true
   attr :title, :string, required: true
 
+  #TODO: Figure out sharing(how the links will look like, how pasted links should like)
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
     ~H"""
@@ -57,7 +58,7 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
         </div>
       </div>
 
-      <div class="grid w-full py-3 drop-body" id="drop-body" phx-hook="DropBodyContainer">
+      <div class="leading-[1.6] grid w-full py-3 drop-body" id="drop-body" phx-hook="DropBodyContainer">
         <%= to_html(@body) %>
       </div>
 
@@ -69,6 +70,7 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
     """
   end
 
+  # TODO: bg-gradient slightly different from design
   @spec welcome_message(assigns()) :: rendered()
   def welcome_message(assigns) do
     ~H"""
