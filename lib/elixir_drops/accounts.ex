@@ -43,6 +43,7 @@ defmodule ElixirDrops.Accounts do
 
       iex> get_or_create_user(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
+
   """
   @spec get_or_create_user(map()) :: {:ok, user()} | {:error, changeset()}
   def get_or_create_user(%{github_id: github_id} = user) do

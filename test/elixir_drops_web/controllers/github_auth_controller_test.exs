@@ -36,7 +36,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
     uid: 61_067_389
   }
 
-  describe "get /auth/github/callback" do
+  describe "GET /auth/github/callback" do
     test "when token is invalid redirects to the root path", %{conn: conn} do
       conn =
         conn
@@ -155,7 +155,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
     end
   end
 
-  describe "logout" do
+  describe "GET /auth/logout" do
     test "clears the session", %{conn: conn} do
       conn =
         conn

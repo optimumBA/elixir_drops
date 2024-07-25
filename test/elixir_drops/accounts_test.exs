@@ -187,8 +187,8 @@ defmodule ElixirDrops.AccountsTest do
     setup [:create_user_and_token]
 
     test "returns the user with given github_username", %{user: user} do
-      {:ok, ret_user} = Accounts.get_user_by_github_id(user.github_id)
-      assert user == ret_user
+      {:ok, returned_user} = Accounts.get_user_by_github_id(user.github_id)
+      assert user == returned_user
     end
 
     test "returns error if user doesn't exist", %{user: _user} do
