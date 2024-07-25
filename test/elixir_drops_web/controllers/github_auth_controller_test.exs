@@ -155,27 +155,29 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
     end
   end
 
-  test "logout clears the session", %{conn: conn} do
-    conn =
-      conn
-      |> init_test_session(%{user_token: @valid_test_user_token})
-      |> get(~p"/auth/logout")
+  describe "logout" do
+    test "clears the session", %{conn: conn} do
+      conn =
+        conn
+        |> init_test_session(%{user_token: @valid_test_user_token})
+        |> get(~p"/auth/logout")
 
-    refute get_session(conn, :user_token)
-  end
+      refute get_session(conn, :user_token)
+    end
 
-  test "logout redirects to /", %{conn: conn} do
-    conn =
-      conn
-      |> init_test_session(%{user_token: @valid_test_user_token})
-      |> get(~p"/auth/logout")
+    test "redirects to /", %{conn: conn} do
+      conn =
+        conn
+        |> init_test_session(%{user_token: @valid_test_user_token})
+        |> get(~p"/auth/logout")
 
-    assert redirected_to(conn, 302)
-    %{resp_headers: headers} = conn
-    location = Enum.at(headers, length(headers) - 1)
-    {_loc, value} = location
-    assert value == "/"
+      assert redirected_to(conn, 302)
+      %{resp_headers: headers} = conn
+      location = Enum.at(headers, length(headers) - 1)
+      {_loc, value} = location
+      assert value == "/"
 
-    assert redirected_to(conn, 302)
+      assert redirected_to(conn, 302)
+    end
   end
 end

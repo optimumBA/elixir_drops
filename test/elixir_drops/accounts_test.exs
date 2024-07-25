@@ -33,28 +33,13 @@ defmodule ElixirDrops.AccountsTest do
     end
 
     test "returns a valid changeset" do
-      changeset1 = Accounts.change_user(%User{}, @valid_attrs)
-      assert changeset1.valid?
+      changeset = Accounts.change_user(%User{}, @valid_attrs)
+      assert changeset.valid?
     end
 
     test "returns an invalid changeset" do
-      changeset1 = Accounts.change_user(%User{}, @invalid_attrs)
-      refute changeset1.valid?
-    end
-
-    test "validates github_id uniqueness" do
-      _user = user_fixture()
-
-      new_user = %{
-        avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
-        email: "new@gmail.com",
-        github_id: 1_456_872,
-        github_username: "new_username",
-        name: "username"
-      }
-
-      {:error, changeset} = Accounts.register_user(new_user)
-      assert "has already been taken" in errors_on(changeset).github_id
+      changeset = Accounts.change_user(%User{}, @invalid_attrs)
+      refute changeset.valid?
     end
   end
 
@@ -70,6 +55,21 @@ defmodule ElixirDrops.AccountsTest do
 
     test "with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Accounts.register_user(@invalid_attrs)
+    end
+
+    test "validates github_id uniqueness" do
+      _user = user_fixture()
+
+      new_user = %{
+        avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+        email: "new@gmail.com",
+        github_id: 1_456_872,
+        github_username: "new_username",
+        name: "username"
+      }
+
+      {:error, changeset} = Accounts.register_user(new_user)
+      assert "has already been taken" in errors_on(changeset).github_id
     end
   end
 
@@ -201,7 +201,7 @@ defmodule ElixirDrops.AccountsTest do
     setup [:create_user_and_token]
 
     test "creates new user with valid params" do
-      {:ok, retur_user} =
+      {:ok, returned_user} =
         Accounts.get_or_create_user(%{
           avatar: "https://avatars.githubusercontent.com/u/12345678?v=4",
           email: "user@email.com",
@@ -210,18 +210,18 @@ defmodule ElixirDrops.AccountsTest do
           name: "username"
         })
 
-      assert retur_user.avatar == "https://avatars.githubusercontent.com/u/12345678?v=4"
-      assert retur_user.email == "user@email.com"
-      assert retur_user.github_username == "gt_username"
-      assert retur_user.github_id == 12_345_678
+      assert returned_user.avatar == "https://avatars.githubusercontent.com/u/12345678?v=4"
+      assert returned_user.email == "user@email.com"
+      assert returned_user.github_username == "gt_username"
+      assert returned_user.github_id == 12_345_678
     end
 
-    test "returns user if user already exists", %{user: user1} do
-      {:ok, user2} = Accounts.get_or_create_user(@valid_attrs)
+    test "returns user if user already exists", %{user: user_1} do
+      {:ok, user_2} = Accounts.get_or_create_user(@valid_attrs)
 
-      assert user1.email == user2.email
-      assert user1.github_username == user2.github_username
-      assert user1.github_id == user2.github_id
+      assert user_1.email == user_2.email
+      assert user_1.github_username == user_2.github_username
+      assert user_1.github_id == user_2.github_id
     end
   end
 
