@@ -1,0 +1,44 @@
+<%= if @live_action == :show do %>
+  <section class="pt-10 py-4">
+    <DropsComponents.drop
+      avatar={@drop.user.avatar}
+      body={@drop.body}
+      created_at={@drop.inserted_at}
+      github_username={@drop.user.github_username}
+      timezone_offset={@timezone_offset}
+      title={@drop.title}
+    />
+  </section>
+<% else %>
+  <section class="content-grid text-[#252525]">
+    <DropsComponents.welcome_message />
+
+    <div
+      id="drops"
+      phx-update="stream"
+      phx-viewport-top={@page > 1 && "prev-page"}
+      phx-viewport-bottom={!@end_of_timeline? && "next-page"}
+      phx-page-loading
+      class={[
+        "grid gap-y-5",
+        if(@end_of_timeline?, do: "pb-10", else: "pb-[calc(10vh)]"),
+        if(@page == 1, do: "pt-10", else: "pt-[calc(10vh)]")
+      ]}
+    >
+      <.link
+        :for={{dom_id, drop} <- @streams.drops}
+        id={dom_id}
+        navigate={~p"/drops/#{drop.id}"}
+        class="last:mb-6"
+      >
+        <DropsComponents.drop_card
+          avatar={drop.user.avatar}
+          created_at={drop.inserted_at}
+          github_username={drop.user.github_username}
+          timezone_offset={@timezone_offset}
+          title={drop.title}
+        />
+      </.link>
+    </div>
+  </section>
+<% end %>

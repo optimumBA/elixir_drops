@@ -17,7 +17,13 @@ defmodule ElixirDropsWeb.Router do
   scope "/", ElixirDropsWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :default,
+      on_mount: [
+        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset}
+      ] do
+      live "/", DropsLive, :index
+      live "/drops/:id", DropsLive, :show
+    end
   end
 
   # Other scopes may use custom stacks.

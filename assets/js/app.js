@@ -21,13 +21,20 @@ import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 import topbar from '../vendor/topbar'
+import DropBodyHooks from './hooks/drop_body_hook'
+
+let Hooks = {
+  ...DropBodyHooks,
+}
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content')
+let timezoneOffset = new Date().getTimezoneOffset()
 let liveSocket = new LiveSocket('/live', Socket, {
+  hooks: Hooks,
   longPollFallbackMs: 2500,
-  params: { _csrf_token: csrfToken },
+  params: { _csrf_token: csrfToken, timezone_offset: timezoneOffset },
 })
 
 // Show progress bar on live navigation and form submits

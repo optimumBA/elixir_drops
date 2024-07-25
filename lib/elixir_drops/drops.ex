@@ -15,35 +15,69 @@ defmodule ElixirDrops.Drops do
   @type drop_id :: Ecto.UUID.t()
   @type filters :: map()
   @type limit :: integer()
+  @type page :: integer()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
   @doc """
-  Returns the list of drops filtered by the given filters.
+  Returns a list of drops filtered by the given filters with pagination metadata.
 
   ## Examples
 
       iex> list_drops(10, %{user_id: 1234})
-      [%Drop{}, ...]
+      %{
+        current_page: 1,
+        entries: [%Drop{}, ...],
+        total_pages: 5
+      }
 
       iex> list_drops(10, %{older_than: %Drop{}})
-      [%Drop{}, ...]
+      %{
+        current_page: 1,
+        entries: [%Drop{}, ...],
+        total_pages: 5
+      }
 
       iex> list_drops(10, %{newer_than: %Drop{}})
-      [%Drop{}, ...]
+      %{
+        current_page: 1,
+        entries: [%Drop{}, ...],
+        total_pages: 5
+      }
 
   """
-  @spec list_drops(limit(), filters()) :: [drop()]
-  def list_drops(limit, filters \\ %{}) do
+  @spec list_drops(limit(), filters(), page()) :: map()
+  def list_drops(limit, filters \\ %{}, page \\ 1) do
+    filters
+    |> fetch_drops()
+    |> paginate(page, limit)
+  end
+
+  defp fetch_drops(filters) do
     filter_query = apply_filters()
 
     drop_query()
     |> where(^filter_query.(filters))
     |> order_by([d], {:desc, d.inserted_at})
-    |> limit(^limit)
     |> preload([:user])
-    |> Repo.all()
   end
+
+  defp paginate(query, page, limit) do
+    results =
+      query
+      |> limit(^limit)
+      |> offset(^((page - 1) * limit))
+      |> Repo.all()
+
+    count = Repo.aggregate(query, :count)
+
+    %{
+      current_page: page,
+      entries: Enum.slice(results, 0, limit),
+      total_pages: if(count > 0, do: ceil(count / limit), else: 0)
+    }
+  end
+
 
   defp drop_query do
     from drop in Drop, as: :drop
@@ -60,11 +94,11 @@ defmodule ElixirDrops.Drops do
   end
 
   defp apply_filter({:older_than, drop}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.inserted_at < ^drop.inserted_at)
+    dynamic([drop: drop], ^dynamic and drop.inserted_at <= ^drop.inserted_at)
   end
 
   defp apply_filter({:newer_than, drop}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.inserted_at > ^drop.inserted_at)
+    dynamic([drop: drop], ^dynamic and drop.inserted_at >= ^drop.inserted_at)
   end
 
   defp apply_filter(_other, dynamic), do: dynamic

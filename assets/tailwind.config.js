@@ -14,7 +14,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: '#FD4F00',
+        blue_primary: '#2f19ee',
+        purple_primary: '#efe8f9',
+        purple_seconday: '#eae8fd',
+      },
+      fontFamily: {
+        roboto: ['Roboto', 'sans-serif'],
       },
     },
   },

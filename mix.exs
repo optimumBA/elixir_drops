@@ -63,7 +63,11 @@ defmodule ElixirDrops.MixProject do
   #
   # Type `mix help deps` for examples and options.
   defp app_deps do
-    []
+    [
+      {:autumn, "~> 0.2"},
+      {:mdex, "~> 0.1"},
+      {:timex, "~> 3.7"}
+    ]
   end
 
   defp optimum_deps do
