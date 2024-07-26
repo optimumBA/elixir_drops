@@ -17,7 +17,6 @@ defmodule ElixirDrops.DropsTest do
     %{drop: drop, user: user}
   end
 
-  #TODO: test sad path
   describe "list_drops" do
     setup [:create_drops_setup]
 
@@ -28,8 +27,17 @@ defmodule ElixirDrops.DropsTest do
     end
 
     test "returns all drops filtered by user_id", %{user: user} do
-      assert %{current_page: 1, entries: [drop], total_pages: 1} = Drops.list_drops(10, %{user_id: user.id})
+      assert %{current_page: 1, entries: [drop], total_pages: 1} =
+               Drops.list_drops(10, %{user_id: user.id})
+
       assert Ecto.assoc_loaded?(drop.user)
+    end
+
+    test "returns empty list when no drops are found" do
+      non_existing_user_id = Ecto.UUID.generate()
+
+      assert %{current_page: 1, entries: [], total_pages: 0} =
+               Drops.list_drops(10, %{user_id: non_existing_user_id})
     end
   end
 

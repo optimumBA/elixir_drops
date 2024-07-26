@@ -17,8 +17,8 @@ DropBodyHooks.DropBodyContainer = {
     `
 
     const createCopyPrompt = () => {
-      const copyPrompt = document.createElement("div")
-      copyPrompt.classList.add("copy-prompt")
+      const copyPrompt = document.createElement('div')
+      copyPrompt.classList.add('copy-prompt')
 
       copyPrompt.innerHTML = copySvg
 

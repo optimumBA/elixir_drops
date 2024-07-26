@@ -78,7 +78,6 @@ defmodule ElixirDrops.Drops do
     }
   end
 
-
   defp drop_query do
     from drop in Drop, as: :drop
   end

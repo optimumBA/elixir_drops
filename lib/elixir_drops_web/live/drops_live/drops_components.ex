@@ -3,6 +3,7 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
 
   use ElixirDropsWeb, :html
 
+  alias ElixirDropsWeb.DropsLiveHelpers
   alias ElixirDropsWeb.SharedComponents.Icons
 
   @type assigns() :: map()
@@ -11,26 +12,40 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
   attr :avatar, :string, required: true
   attr :created_at, :string, required: true
   attr :github_username, :string, required: true
+  attr :id, :string, required: true
   attr :timezone_offset, :integer, required: true
   attr :title, :string, required: true
 
-  #TODO: Figure out sharing(how the links will look like, how pasted links should like)
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
     ~H"""
-    <div class="bg-[#f6f6f6] px-6 py-8 rounded-lg shadow-md shadow-[#bebbc2]">
-      <div class="flex justify-between">
-        <div class="flex gap-2 items-center">
-          <img src={@avatar} alt={@github_username} class="rounded-full h-10 w-10 object-cover" />
-          <p><%= @github_username %></p>
-          <p class="text-[#868686] text-xs before:content-['•'] before:block] before:mr-[0.05rem]">
-            Created <%= convert_time(@created_at, @timezone_offset) %>
-          </p>
+    <div class="bg-[#f6f6f6] px-6 py-8 rounded-lg shadow-md shadow-[#bebbc2] relative">
+      <div>
+        <div class="flex justify-between">
+          <div class="flex gap-2 items-center">
+            <img src={@avatar} alt={@github_username} class="rounded-full h-10 w-10 object-cover" />
+            <p><%= @github_username %></p>
+            <p class="text-[#868686] text-xs before:content-['•'] before:block] before:mr-[0.05rem]">
+              Created <%= DropsLiveHelpers.convert_time(@created_at, @timezone_offset) %>
+            </p>
+          </div>
+          <div
+            id={"card-copy-link-#{@id}"}
+            data-clipboard-text={url(~p"/drops/#{@id}")}
+            data-drop-id={@id}
+            phx-hook="CopyToClipboard"
+          >
+            <Icons.link_icon />
+          </div>
         </div>
-        <Icons.link_icon />
+
+        <h3 class="text-lg font-[500] mt-2"><%= @title %></h3>
       </div>
 
-      <h3 class="text-lg font-[500] mt-2"><%= @title %></h3>
+      <.copy_confirm_message
+        class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]"
+        id={@id}
+      />
     </div>
     """
   end
@@ -39,13 +54,15 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
   attr :body, :string, required: true
   attr :created_at, :string, required: true
   attr :github_username, :string, required: true
+  attr :id, :string, required: true
   attr :timezone_offset, :integer, required: true
   attr :title, :string, required: true
 
+  # TODO: Check hover behaviour for the copy link at the end(icon and text need to change color together on hover)
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do
     ~H"""
-    <div class="w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5]">
+    <div class="w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative">
       <h1 class="font-[500] text-4xl"><%= @title %></h1>
       <div class="flex gap-x-3 items-center border-b-[1px] border-b-[#b2b2b2] py-5">
         <img src={@avatar} alt={@github_username} class="rounded-full h-12 w-12 object-cover" />
@@ -53,19 +70,31 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
         <div>
           <p class="mb-1"><%= @github_username %></p>
           <p class="text-[#696969] text-xs">
-            Created <%= convert_time(@created_at, @timezone_offset) %>
+            Created <%= DropsLiveHelpers.convert_time(@created_at, @timezone_offset) %>
           </p>
         </div>
       </div>
 
-      <div class="leading-[1.6] grid w-full py-3 drop-body" id="drop-body" phx-hook="DropBodyContainer">
+      <div
+        class="leading-[1.6] grid w-full py-3 drop-body"
+        id="drop-body"
+        phx-hook="DropBodyContainer"
+      >
         <%= to_html(@body) %>
       </div>
 
-      <p class="mt-4 text-sm text-[#4f4f4f] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3">
+      <p
+        id="copy-link-#{@id}"
+        data-clipboard-text={url(~p"/drops/#{@id}")}
+        data-drop-id={@id}
+        phx-hook="CopyToClipboard"
+        class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
+      >
         <span><Icons.link_icon /></span>
         <span>Copy link</span>
       </p>
+
+      <.copy_confirm_message class="absolute bottom-0 right-0" id={@id} />
     </div>
     """
   end
@@ -93,13 +122,19 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
     """
   end
 
-  defp convert_time(time, timezone_offset) do
-    {:ok, created_at_time} =
-      time
-      |> NaiveDateTime.add(-1 * timezone_offset, :second)
-      |> Timex.format("{relative}", :relative)
-
-    created_at_time
+  defp copy_confirm_message(assigns) do
+    ~H"""
+    <p
+      id={"copy-confirm-message-#{@id}"}
+      class={[
+        "hidden text-[#eae8fd] text-sm bg-[#9666d9] rounded-md px-6 py-4 flex items-center gap-x-1 z-[1000]",
+        @class
+      ]}
+    >
+      <span><Icons.check_icon /></span>
+      <span>Link copied to clipboard. </span>
+    </p>
+    """
   end
 
   defp to_html(markdown) do

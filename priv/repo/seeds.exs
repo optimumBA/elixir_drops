@@ -258,6 +258,7 @@ for drop <- [drop_1, drop_2, drop_3, drop_4, drop_5, drop_6] do
   Drops.create_or_update_drop(%Drop{}, user, drop)
 end
 
+# TODO: Only for testing, remove when done
 for n <- 1..20 do
   drop = %{
     title: "Sample drop #{n}",

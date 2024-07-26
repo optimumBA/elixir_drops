@@ -64,16 +64,17 @@ defmodule ElixirDropsWeb.DropsLive do
     |> assign(:page_title, drop.title)
   end
 
-  def assign_drops(socket, new_page, filters \\ %{}) when new_page >= 1 do
+  defp assign_drops(socket, new_page, filters \\ %{}) when new_page >= 1 do
     %{page: page, per_page: per_page} = socket.assigns
 
     per_page
     |> Drops.list_drops(filters, page)
     |> process_entries(new_page, socket)
-    |> stream_drops(new_page, socket)
+    |> drops_stream(new_page, socket)
   end
 
-  defp process_entries(%{current_page: current_page} = drops_list, new_page, socket) when new_page >= current_page do
+  defp process_entries(%{current_page: current_page} = drops_list, new_page, socket)
+       when new_page >= current_page do
     %{
       at: -1,
       current_page: current_page,
@@ -93,11 +94,11 @@ defmodule ElixirDropsWeb.DropsLive do
     }
   end
 
-  defp stream_drops(%{entries: entries, at: at}, _new_page, socket) when length(entries) == 0 do
+  defp drops_stream(%{entries: [], at: at}, _new_page, socket) do
     assign(socket, :end_of_timeline?, at == -1)
   end
 
-  defp stream_drops(drops_list, new_page, socket) do
+  defp drops_stream(drops_list, new_page, socket) do
     %{at: at, current_page: current_page, entries: entries, total_pages: total_pages} = drops_list
 
     socket
