@@ -178,41 +178,6 @@ for Linux, or
 for macOS.
 """
 
-filler_drop = ~S"""
-Lorem ipsum odor amet, consectetuer adipiscing elit. Amet et nunc maecenas lorem faucibus netus. Rutrum aliquet purus dui mus dui odio. Ipsum non tortor hendrerit torquent; ante conubia. Elementum malesuada pretium dignissim nec massa. In sagittis bibendum montes lacinia lobortis ipsum. Dictum bibendum pellentesque sapien porta venenatis pellentesque lobortis. Dui molestie nostra quis natoque inceptos mollis volutpat ipsum dignissim.
-
-
-Primis arcu etiam finibus netus blandit sapien ullamcorper semper euismod. Dapibus nostra luctus urna ultrices ultricies at. Himenaeos est integer conubia; maximus porta nascetur ridiculus. Elit penatibus facilisi a rutrum volutpat dolor erat ante. Inceptos dolor duis inceptos maecenas dapibus cubilia platea. Maecenas venenatis consectetur efficitur sem quis platea ullamcorper facilisi. Habitasse ut netus integer curae, torquent nostra conubia. Semper eros senectus tortor elementum adipiscing ex cubilia. Porttitor nulla donec non fringilla mattis rhoncus.
-```javascript
-const createCopyPrompt = () => {
-  const copyPrompt = document.createElement("div")
-  copyPrompt.classList.add("copy-prompt")
-
-  copyPrompt.innerHTML = copySvg
-
-  return copyPrompt
-}
-```
-Duis euismod himenaeos congue elementum, vivamus massa. Lacinia elit molestie ridiculus varius nunc. Odio magna senectus ac senectus habitant montes fames facilisi aliquam. Nascetur bibendum magna eu integer, class facilisi. Nam erat ad egestas; habitasse rutrum libero et. Morbi interdum hendrerit tellus praesent semper lectus. Praesent eu felis vivamus efficitur rutrum vitae lobortis dis. Vitae consequat suscipit aptent conubia felis netus ridiculus suscipit.
-
-Neque fringilla dignissim gravida tristique, ridiculus aptent. Sagittis eleifend bibendum facilisis lectus; mollis elit erat hac ultrices. Turpis ullamcorper accumsan eget mus dolor purus fusce pulvinar. Taciti nam inceptos malesuada faucibus, ante nisi conubia massa nisi. Netus cursus sodales dictumst porttitor aliquet. Volutpat morbi eget ligula euismod taciti vehicula nulla felis. Auctor nostra consequat elementum id arcu facilisis. Nunc augue urna cursus parturient tempor quis netus montes? Justo maecenas fermentum arcu et pretium. Nulla porttitor congue proin ultrices ultricies?
-
-
-```elixir
-revision_file = Path.join([:code.priv_dir(:app_name), "REVISION"])
-
-appsignal_revision =
-  revision_file
-  |> File.read!()
-  |> String.trim()
-
-config :appsignal, :config,
-  revision: appsignal_revision
-```
-
-Pulvinar semper himenaeos, sollicitudin rutrum efficitur in? Aenean vehicula nulla nisl cursus et id elementum suscipit imperdiet. Aliquet at mi venenatis; tortor sagittis vitae blandit dui praesent. Euismod ex fames orci velit condimentum habitasse nam. Magnis enim penatibus urna duis sociosqu tempor. Commodo mauris gravida elementum convallis et senectus habitasse. Luctus sapien a scelerisque blandit amet at vitae. Netus hendrerit justo pretium rhoncus imperdiet luctus iaculis. Litora augue ultrices odio primis inceptos quisque.
-"""
-
 user =
   %User{}
   |> User.user_changeset(%{
@@ -255,15 +220,5 @@ drop_6 = %{
 }
 
 for drop <- [drop_1, drop_2, drop_3, drop_4, drop_5, drop_6] do
-  Drops.create_or_update_drop(%Drop{}, user, drop)
-end
-
-# TODO: Only for testing, remove when done
-for n <- 1..20 do
-  drop = %{
-    title: "Sample drop #{n}",
-    body: filler_drop
-  }
-
   Drops.create_or_update_drop(%Drop{}, user, drop)
 end

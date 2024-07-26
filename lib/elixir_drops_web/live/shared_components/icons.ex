@@ -17,7 +17,7 @@ defmodule ElixirDropsWeb.SharedComponents.Icons do
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
-        class={["stroke-[#797979] hover:stroke-[#5947F1]", @class]}
+        class="stroke-current"
       />
     </svg>
     """

@@ -34,6 +34,7 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
             data-clipboard-text={url(~p"/drops/#{@id}")}
             data-drop-id={@id}
             phx-hook="CopyToClipboard"
+            class="text-[#797979] hover:text-[#5947F1]"
           >
             <Icons.link_icon />
           </div>
@@ -58,7 +59,6 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
   attr :timezone_offset, :integer, required: true
   attr :title, :string, required: true
 
-  # TODO: Check hover behaviour for the copy link at the end(icon and text need to change color together on hover)
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do
     ~H"""
@@ -99,12 +99,11 @@ defmodule ElixirDropsWeb.DropsLive.DropsComponents do
     """
   end
 
-  # TODO: bg-gradient slightly different from design
   @spec welcome_message(assigns()) :: rendered()
   def welcome_message(assigns) do
     ~H"""
     <div
-      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#7d7f99] px-10 py-3 grid full-width__no-columns"
+      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] px-10 py-3 grid full-width__no-columns"
       id="welcome-message"
     >
       <button class="ml-auto" phx-click={JS.hide(to: "#welcome-message")}>
