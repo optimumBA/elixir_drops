@@ -265,7 +265,5 @@ for n <- 1..20 do
     body: filler_drop
   }
 
-  :timer.sleep(60_000)
-
   Drops.create_or_update_drop(%Drop{}, user, drop)
 end
