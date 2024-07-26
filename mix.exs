@@ -63,7 +63,9 @@ defmodule ElixirDrops.MixProject do
   #
   # Type `mix help deps` for examples and options.
   defp app_deps do
-    []
+    [
+      {:ueberauth_github, "~> 0.8.3"}
+    ]
   end
 
   defp optimum_deps do

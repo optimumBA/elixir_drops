@@ -1,6 +1,8 @@
 defmodule ElixirDropsWeb.Router do
   use ElixirDropsWeb, :router
 
+  import ElixirDropsWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule ElixirDropsWeb.Router do
     plug :put_root_layout, html: {ElixirDropsWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
   pipeline :api do
@@ -17,7 +20,19 @@ defmodule ElixirDropsWeb.Router do
   scope "/", ElixirDropsWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :default,
+      on_mount: {ElixirDropsWeb.UserAuth, :assign_current_user} do
+      live "/", DropsLive, :index
+    end
+  end
+
+  scope "/auth", ElixirDropsWeb do
+    pipe_through :browser
+
+    get "/logout", GithubAuthController, :logout
+
+    get "/:provider", GithubAuthController, :request
+    get "/:provider/callback", GithubAuthController, :callback
   end
 
   # Other scopes may use custom stacks.
