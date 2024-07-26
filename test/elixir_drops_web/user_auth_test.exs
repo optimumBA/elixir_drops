@@ -206,8 +206,8 @@ defmodule ElixirDropsWeb.UserAuthTest do
         |> get_session()
 
       socket = %Socket{
-        endpoint: AuthSampleWeb.Endpoint,
-        assigns: %{__changed__: %{}, flash: %{}}
+        assigns: %{__changed__: %{}, flash: %{}},
+        endpoint: ElixirDropsWeb.Endpoint
       }
 
       {:halt, updated_socket} = UserAuth.on_mount(:ensure_authenticated, %{}, session, socket)
@@ -219,7 +219,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
       session = get_session(conn)
 
       socket = %Socket{
-        endpoint: AuthSampleWeb.Endpoint,
+        endpoint: ElixirDropsWeb.Endpoint,
         assigns: %{__changed__: %{}, flash: %{}}
       }
 
