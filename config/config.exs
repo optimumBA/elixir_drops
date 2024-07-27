@@ -70,6 +70,16 @@ config :appsignal, :config,
   name: "elixir_drops",
   otp_app: :elixir_drops
 
+# register Github strategy with Ueberauth
+config :ueberauth, Ueberauth,
+  providers: [
+    github:
+      {Ueberauth.Strategy.Github,
+       [
+         default_scope: "read:user,user:email"
+       ]}
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

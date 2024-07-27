@@ -8,6 +8,7 @@
       <%= assigns[:page_title] || "ElixirDrops" %>
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <link rel="icon" href={~p"/images/logo.png"} type="image/png" />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
     <script
@@ -17,7 +18,7 @@
     >
     </script>
   </head>
-  <body class="font-roboto">
+  <body class="font-roboto text-[#4f4f4f] bg-white">
     <%= @inner_content %>
   </body>
 </html>

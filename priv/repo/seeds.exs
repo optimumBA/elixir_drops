@@ -181,11 +181,11 @@ for macOS.
 user =
   %User{}
   |> User.user_changeset(%{
-    avatar: "https://avatars.githubusercontent.com/u/583231?v=4",
-    email: "octocat@gmail.com",
+    avatar: "https://avatars.githubusercontent.com/u/10211884?v=4",
+    email: "projects@optimum.ba",
     github_id: 897_654,
-    github_username: "octocat",
-    name: "The Octocat"
+    github_username: "optimumBA",
+    name: "Optimum"
   })
   |> Repo.insert!()
 

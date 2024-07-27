@@ -2,7 +2,7 @@ defmodule ElixirDropsWeb.DropsLive do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
-  alias ElixirDropsWeb.DropsLive.DropsComponents
+  alias ElixirDropsWeb.DropsComponents
 
   @drops_per_page 10
   @initial_page 1
