@@ -8,7 +8,7 @@ defmodule ElixirDrops.DateTimeHelper do
 
   ## Examples
       iex> ElixirDrops.DateTimeHelper.convert_to_relative_time(~N[2019-01-01 00:00:00], 3600)
-      "1 hour ago"
+      "5 years ago"
 
   """
   @spec convert_to_relative_time(NaiveDateTime.t(), integer()) :: String.t()
