@@ -26,11 +26,25 @@ defmodule ElixirDrops.DropsTest do
       assert Ecto.assoc_loaded?(drop.user)
     end
 
-    test "returns all drops filtered by user_id", %{user: user} do
-      assert %{current_page: 1, entries: [drop], total_pages: 1} =
+    test "returns all drops filtered by user_id", %{drop: drop, user: user} do
+      user_2 =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "github_username",
+          name: "some_name"
+        })
+
+      drop_fixture(%Drop{}, user_2, %{title: "Drop 2", body: "Body for drop 2"})
+
+      Drops.list_drops(10, %{user_id: user.id})
+
+      assert %{current_page: 1, entries: [user_drop], total_pages: 1} =
                Drops.list_drops(10, %{user_id: user.id})
 
-      assert Ecto.assoc_loaded?(drop.user)
+      assert drop.id == user_drop.id
+      assert Ecto.assoc_loaded?(user_drop.user)
     end
 
     test "returns empty list when no drops are found" do

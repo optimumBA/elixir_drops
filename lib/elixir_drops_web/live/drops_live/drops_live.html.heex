@@ -1,48 +1,51 @@
-<DropsComponents.navbar current_user={@current_user} />
+<section class="drops-container relative">
+  <DropsComponents.navbar current_user={@current_user} />
 
-<%= if @live_action == :show do %>
-  <section class="pt-10 py-4">
-    <DropsComponents.drop
-      avatar={@drop.user.avatar}
-      body={@drop.body}
-      created_at={@drop.inserted_at}
-      github_username={@drop.user.github_username}
-      id={@drop.id}
-      timezone_offset={@timezone_offset}
-      title={@drop.title}
-    />
-  </section>
-<% else %>
-  <section class="content-grid text-[#252525]">
-    <DropsComponents.welcome_message />
+  <%= if @live_action == :show do %>
+    <section class="pt-10 py-4">
+      <DropsComponents.drop
+        avatar={@drop.user.avatar}
+        body={@drop.body}
+        created_at={@drop.inserted_at}
+        github_username={@drop.user.github_username}
+        id={@drop.id}
+        timezone_offset={@timezone_offset}
+        title={@drop.title}
+      />
+    </section>
+  <% else %>
+    <section class="content-grid text-[#252525]">
+      <DropsComponents.welcome_message show_user_drops?={@show_user_drops?} />
 
-    <div
-      id="drops"
-      phx-update="stream"
-      phx-viewport-top={@page > 1 && "prev-page"}
-      phx-viewport-bottom={!@end_of_timeline? && "next-page"}
-      phx-page-loading
-      class={[
-        "grid gap-y-5",
-        if(@end_of_timeline?, do: "pb-10", else: "pb-[calc(10vh)]"),
-        if(@page == 1, do: "pt-10", else: "pt-[calc(10vh)]")
-      ]}
-    >
-      <.link
-        :for={{dom_id, drop} <- @streams.drops}
-        id={dom_id}
-        patch={~p"/drops/#{drop.id}"}
-        class="last:mb-6"
+      <div
+        id="drops"
+        phx-update="stream"
+        phx-viewport-top={@page > 1 && "prev-page"}
+        phx-viewport-bottom={!@end_of_timeline? && "next-page"}
+        phx-page-loading
+        class={[
+          "grid gap-y-5",
+          if(@end_of_timeline?, do: "pb-8", else: "pb-[calc(10vh)]"),
+          if(@page == 1, do: "pt-8", else: "pt-[calc(10vh)]")
+        ]}
       >
-        <DropsComponents.drop_card
-          avatar={drop.user.avatar}
-          created_at={drop.inserted_at}
-          github_username={drop.user.github_username}
-          id={drop.id}
-          timezone_offset={@timezone_offset}
-          title={drop.title}
-        />
-      </.link>
-    </div>
-  </section>
-<% end %>
+        <.link
+          :for={{dom_id, drop} <- @streams.drops}
+          id={dom_id}
+          patch={~p"/drops/#{drop.id}"}
+          class="last:mb-6"
+        >
+          <DropsComponents.drop_card
+            avatar={drop.user.avatar}
+            created_at={drop.inserted_at}
+            github_username={drop.user.github_username}
+            id={drop.id}
+            timezone_offset={@timezone_offset}
+            title={drop.title}
+          />
+        </.link>
+      </div>
+    </section>
+  <% end %>
+</section>
+<DropsComponents.signin_popup_message />

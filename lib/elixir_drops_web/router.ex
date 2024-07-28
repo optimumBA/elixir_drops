@@ -30,6 +30,21 @@ defmodule ElixirDropsWeb.Router do
     end
   end
 
+  scope "/", ElixirDropsWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [
+        {ElixirDropsWeb.UserAuth, :ensure_authenticated},
+        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
+        {ElixirDropsWeb.UserAuth, :assign_current_user}
+      ] do
+      live "/:user_name", DropsLive, :index
+      live "/drop/:id/edit", DropsLive, :edit
+      live "/drop/new", DropsLive, :new
+    end
+  end
+
   scope "/auth", ElixirDropsWeb do
     pipe_through :browser
 

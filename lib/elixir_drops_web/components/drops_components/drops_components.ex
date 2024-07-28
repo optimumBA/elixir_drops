@@ -22,66 +22,36 @@ defmodule ElixirDropsWeb.DropsComponents do
 
         <div>
           <%= if @current_user do %>
-            <div class="flex items-center gap-x-3">
-              <img
-                src={@current_user.avatar}
-                alt={@current_user.github_username}
-                class="w-10 h-10 rounded-full"
-              />
-              <p><%= @current_user.github_username %></p>
-              <button phx-click={JS.toggle_class("hidden", to: "#slide-menu")}>
-                <Icons.chevron_down />
-              </button>
-
-              <.slide_menu current_user={@current_user} />
+            <div class="flex items-center gap-x-4">
+              <.create_post_button current_user={@current_user} />
+              <div class="flex items-center gap-x-3">
+                <img
+                  src={@current_user.avatar}
+                  alt={@current_user.github_username}
+                  class="w-10 h-10 rounded-full"
+                />
+                <p><%= @current_user.github_username %></p>
+                <button phx-click={JS.toggle_class("hidden", to: "#slide-menu")}>
+                  <Icons.chevron_down />
+                </button>
+                <.slide_menu current_user={@current_user} />
+              </div>
             </div>
           <% else %>
-            <.link
-              href={~p"/auth/github"}
-              class="font-semibold text-[#eae8fd] bg-blue_primary px-5 py-2 rounded-md flex gap-x-2"
-            >
-              <span><Icons.github_icon /></span>
-              <span> Sign in with GitHub</span>
-            </.link>
+            <div class="flex items-center gap-x-4">
+              <.create_post_button current_user={@current_user} />
+              <.link
+                href={~p"/auth/github"}
+                class="font-semibold text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-5 py-2 rounded-lg flex items-center gap-x-2"
+              >
+                <span><Icons.github_icon /></span>
+                <span> Sign in with GitHub</span>
+              </.link>
+            </div>
           <% end %>
         </div>
       </nav>
     </header>
-    """
-  end
-
-  defp slide_menu(assigns) do
-    ~H"""
-    <div
-      class="hidden w-[25%] shadow-md shadow-[#c4c1c8] rounded-md pt-10 pb-4 absolute top-[90%] right-[2rem] grid z-[1000] bg-white"
-      id="slide-menu"
-      phx-click-away={JS.toggle_class("hidden", to: "#slide-menu")}
-    >
-      <div class="mx-auto">
-        <img
-          src={@current_user.avatar}
-          alt={@current_user.github_username}
-          class="w-16 h-16 rounded-full"
-        />
-      </div>
-      <p class="text-[1.2rem] mx-auto mt-1"><%= @current_user.github_username %></p>
-
-      <ul class="mt-10 grid gap-y-6">
-        <li class="px-5">
-          <.link href={~p"/"} class="flex gap-x-2">
-            <span><Icons.drops_icon /></span>
-            <span> My posts </span>
-          </.link>
-        </li>
-        <li class="nav-list-border full-bleed"></li>
-        <li class="px-5">
-          <.link href={~p"/auth/logout"} class="flex gap-x-2 ">
-            <span><Icons.sign_out_icon /></span>
-            <span>Sign out</span>
-          </.link>
-        </li>
-      </ul>
-    </div>
     """
   end
 
@@ -95,7 +65,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
     ~H"""
-    <div class="bg-[#f6f6f6] px-6 py-8 rounded-lg shadow-md shadow-[#bebbc2] relative">
+    <div class="drop-card bg-[#f6f6f6] px-6 py-8 rounded-lg shadow-md shadow-[#bebbc2] relative">
       <div>
         <div class="flex justify-between">
           <div class="flex gap-2 items-center">
@@ -142,7 +112,6 @@ defmodule ElixirDropsWeb.DropsComponents do
       <h1 class="font-[500] text-4xl"><%= @title %></h1>
       <div class="flex gap-x-3 items-center border-b-[1px] border-b-[#b2b2b2] py-5">
         <img src={@avatar} alt={@github_username} class="rounded-full h-12 w-12 object-cover" />
-
         <div>
           <p class="mb-1"><%= @github_username %></p>
           <p class="text-[#696969] text-xs">
@@ -179,7 +148,10 @@ defmodule ElixirDropsWeb.DropsComponents do
   def welcome_message(assigns) do
     ~H"""
     <div
-      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] px-10 py-3 grid full-width__no-columns"
+      class={[
+        "text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] px-10 py-3 grid full-width__no-columns",
+        @show_user_drops? && "hidden"
+      ]}
       id="welcome-message"
     >
       <button class="ml-auto" phx-click={JS.hide(to: "#welcome-message")}>
@@ -197,6 +169,32 @@ defmodule ElixirDropsWeb.DropsComponents do
     """
   end
 
+  @spec signin_popup_message(assigns()) :: rendered()
+  def signin_popup_message(assigns) do
+    ~H"""
+    <div
+      id="signin-popup-message"
+      class="hidden bg-white absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] py-8 px-6 rounded-lg w-[50%] shadow-md shadow-[#b2b2b2] z-[10000] grid"
+      phx-click-away={hide_popup("signin-popup-message")}
+    >
+      <button class="ml-auto" phx-click={hide_popup("signin-popup-message")}>
+        <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+      </button>
+      <div class="mx-auto mb-4">
+        <img src={~p"/images/logo.png"} />
+      </div>
+      <p class="mx-auto mb-8">Take a moment to sign in to continue on ElixirDrops!</p>
+      <.link
+        href={~p"/auth/github"}
+        class="font-semibold text-[#eae8fd] text-lg bg-blue_primary hover:opacity-80 w-[60%] py-4 mx-auto rounded-lg flex justify-center items-center gap-x-2"
+      >
+        <span><Icons.github_icon /></span>
+        <span> Sign in with GitHub</span>
+      </.link>
+    </div>
+    """
+  end
+
   defp copy_confirm_message(assigns) do
     ~H"""
     <p
@@ -210,6 +208,81 @@ defmodule ElixirDropsWeb.DropsComponents do
       <span>Link copied to clipboard. </span>
     </p>
     """
+  end
+
+  defp create_post_button(assigns) do
+    ~H"""
+    <button
+      class={[
+        "text-sm tracking-wide px-6 py-2 rounded-lg flex items-center gap-x-2",
+        @current_user && "text-[#eae8fd] bg-blue_primary hover:opacity-80",
+        !@current_user && "text-blue_primary border-blue_primary border-2 hover:bg-[#eae8fd]"
+      ]}
+      phx-click={
+        if @current_user,
+          do: JS.navigate(~p"/drop/new"),
+          else: show_popup("signin-popup-message")
+      }
+    >
+      <span><.icon name="hero-plus" /></span>
+      <span>Create Post</span>
+    </button>
+    """
+  end
+
+  defp slide_menu(assigns) do
+    ~H"""
+    <div
+      class="hidden w-[25%] shadow-md shadow-[#c4c1c8] rounded-md pt-10 pb-4 absolute top-[90%] right-[2rem] grid z-[1000] bg-white"
+      id="slide-menu"
+      phx-click-away={JS.toggle_class("hidden", to: "#slide-menu")}
+    >
+      <div class="mx-auto">
+        <img
+          src={@current_user.avatar}
+          alt={@current_user.github_username}
+          class="w-16 h-16 rounded-full"
+        />
+      </div>
+      <p class="text-[1.2rem] mx-auto mt-1"><%= @current_user.github_username %></p>
+
+      <ul class="mt-10 grid gap-y-6">
+        <li class="px-5">
+          <.link navigate={~p"/#{@current_user.github_username}"} class="flex gap-x-2">
+            <span><Icons.drops_icon /></span>
+            <span> My posts </span>
+          </.link>
+        </li>
+        <li class="nav-list-border full-bleed"></li>
+        <li class="px-5">
+          <.link href={~p"/auth/logout"} class="flex gap-x-2 ">
+            <span><Icons.sign_out_icon /></span>
+            <span>Sign out</span>
+          </.link>
+        </li>
+      </ul>
+    </div>
+    """
+  end
+
+  defp show_popup(pop_up_message_id) do
+    %JS{}
+    |> JS.remove_class("hidden", to: "##{pop_up_message_id}")
+    |> JS.add_class("bg-[#acacac]", to: ".drops-container")
+    |> JS.add_class("pointer-events-none ", to: ".drops-container")
+    |> JS.add_class("z-[10]", to: ".drops-container")
+    |> JS.add_class("bg-[#a7a7a7]", to: ".drop-card")
+    |> JS.add_class("shadow-[#878589]", to: ".drop-card")
+  end
+
+  defp hide_popup(pop_up_message_id) do
+    %JS{}
+    |> JS.add_class("hidden", to: "##{pop_up_message_id}")
+    |> JS.remove_class("bg-[#acacac]", to: ".drops-container")
+    |> JS.remove_class("pointer-events-none ", to: ".drops-container")
+    |> JS.remove_class("z-[10]", to: ".drops-container")
+    |> JS.remove_class("bg-[#a7a7a7]", to: ".drop-card")
+    |> JS.remove_class("shadow-[#878589]", to: ".drop-card")
   end
 
   defp to_html(markdown) do

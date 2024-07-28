@@ -14,6 +14,8 @@ defmodule ElixirDropsWeb.DropsLive do
       socket
       |> assign(:page, @initial_page)
       |> assign(:per_page, @drops_per_page)
+      |> assign(:show_user_drops?, false)
+      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
     }
   end
 
@@ -39,11 +41,22 @@ defmodule ElixirDropsWeb.DropsLive do
     end
   end
 
+  # TODO: Add flag to show that one is viewing user drops, remove welcome message, add header, update drops cards
+  defp apply_action(socket, :index, %{"user_name" => _user_name}) do
+    user_id = socket.assigns.current_user.id
+
+    socket
+    |> assign(:drop, nil)
+    |> assign(:page_title, "ElixirDrops")
+    |> assign(:show_user_drops?, true)
+    |> assign_drops(1, [reset: true], %{user_id: user_id})
+  end
+
   defp apply_action(socket, :index, _params) do
     socket
     |> assign(:drop, nil)
     |> assign(:page_title, "ElixirDrops")
-    |> assign_drops(1)
+    |> assign_drops(1, reset: true)
   end
 
   defp apply_action(socket, :show, %{"id" => id}) do
@@ -64,13 +77,24 @@ defmodule ElixirDropsWeb.DropsLive do
     |> assign(:page_title, drop.title)
   end
 
-  defp assign_drops(socket, new_page, filters \\ %{}) when new_page >= 1 do
+  defp assign_drops(socket, new_page, opts \\ [], filters \\ %{}) when new_page >= 1 do
     %{page: page, per_page: per_page} = socket.assigns
 
     per_page
     |> Drops.list_drops(filters, page)
+    |> stream_drops(new_page, socket, opts)
+  end
+
+  defp stream_drops(%{entries: []}, _new_page, socket, _opts) do
+    socket
+    |> assign(:end_of_timeline?, true)
+    |> stream(:drops, [])
+  end
+
+  defp stream_drops(drops_list, new_page, socket, opts) do
+    drops_list
     |> process_entries(new_page, socket)
-    |> drops_stream(new_page, socket)
+    |> assign_drops_stream(new_page, socket, opts)
   end
 
   defp process_entries(%{current_page: current_page} = drops_list, new_page, socket)
@@ -94,16 +118,18 @@ defmodule ElixirDropsWeb.DropsLive do
     }
   end
 
-  defp drops_stream(%{entries: [], at: at}, _new_page, socket) do
+  defp assign_drops_stream(%{entries: [], at: at}, _new_page, socket, _opts) do
     assign(socket, :end_of_timeline?, at == -1)
   end
 
-  defp drops_stream(drops_list, new_page, socket) do
+  defp assign_drops_stream(drops_list, new_page, socket, opts) do
     %{at: at, current_page: current_page, entries: entries, total_pages: total_pages} = drops_list
+
+    reset = opts[:reset] || false
 
     socket
     |> assign(:end_of_timeline?, current_page == total_pages)
     |> assign(:page, new_page)
-    |> stream(:drops, entries, dom_id: &"drop-#{&1.id}", at: at)
+    |> stream(:drops, entries, at: at, reset: reset)
   end
 end
