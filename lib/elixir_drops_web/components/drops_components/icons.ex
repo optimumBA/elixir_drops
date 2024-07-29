@@ -6,21 +6,6 @@ defmodule ElixirDropsWeb.DropsComponents.Icons do
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
 
-  @spec chevron_down(assigns()) :: rendered()
-  def chevron_down(assigns) do
-    ~H"""
-    <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M12.6668 6.5L8.00016 11.1667L3.3335 6.5"
-        stroke="#4F4F4F"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
-    """
-  end
-
   @spec github_icon(assigns()) :: rendered()
   def github_icon(assigns) do
     ~H"""
@@ -42,7 +27,7 @@ defmodule ElixirDropsWeb.DropsComponents.Icons do
           fill-rule="evenodd"
           clip-rule="evenodd"
           d="M12 4.30662C10.8701 5.29938 9.82513 6.38482 8.876 7.55162C7.305 9.50662 6 11.8166 6 13.9996C6 15.5909 6.63214 17.117 7.75736 18.2423C8.88258 19.3675 10.4087 19.9996 12 19.9996C13.5913 19.9996 15.1174 19.3675 16.2426 18.2423C17.3679 17.117 18 15.5909 18 13.9996C18 11.8166 16.695 9.50662 15.124 7.55162C14.1749 6.38482 13.1299 5.29938 12 4.30662ZM11.249 2.32062C11.4604 2.14619 11.7259 2.05078 12 2.05078C12.2741 2.05078 12.5396 2.14619 12.751 2.32062C14.1882 3.51533 15.5048 4.84803 16.682 6.29962C18.322 8.33862 20 11.1056 20 13.9996C20 16.1213 19.1571 18.1562 17.6569 19.6565C16.1566 21.1568 14.1217 21.9996 12 21.9996C9.87827 21.9996 7.84344 21.1568 6.34315 19.6565C4.84285 18.1562 4 16.1213 4 13.9996C4 11.1056 5.678 8.33862 7.318 6.29862C8.49491 4.84743 9.8122 3.51506 11.249 2.32062Z"
-          fill="#252525"
+          class="fill-current"
         />
       </g>
       <defs>
@@ -136,38 +121,6 @@ defmodule ElixirDropsWeb.DropsComponents.Icons do
           <stop offset="1" stop-color="#621BC7" />
         </linearGradient>
       </defs>
-    </svg>
-    """
-  end
-
-  attr :class, :string, default: nil
-
-  @spec link_icon(assigns()) :: rendered()
-  def link_icon(assigns) do
-    ~H"""
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M13.8284 10.1716C12.2663 8.60948 9.73367 8.60948 8.17157 10.1716L4.17157 14.1716C2.60948 15.7337 2.60948 18.2663 4.17157 19.8284C5.73367 21.3905 8.26633 21.3905 9.82843 19.8284L10.93 18.7269M10.1716 13.8284C11.7337 15.3905 14.2663 15.3905 15.8284 13.8284L19.8284 9.82843C21.3905 8.26633 21.3905 5.73367 19.8284 4.17157C18.2663 2.60948 15.7337 2.60948 14.1716 4.17157L13.072 5.27118"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="stroke-current"
-      />
-    </svg>
-    """
-  end
-
-  @spec check_icon(assigns()) :: rendered()
-  def check_icon(assigns) do
-    ~H"""
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M7 10L9 12L13 8M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z"
-        stroke="#B2B2B2"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
     </svg>
     """
   end

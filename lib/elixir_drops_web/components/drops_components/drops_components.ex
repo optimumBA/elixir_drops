@@ -32,7 +32,7 @@ defmodule ElixirDropsWeb.DropsComponents do
                 />
                 <p><%= @current_user.github_username %></p>
                 <button phx-click={JS.toggle_class("hidden", to: "#slide-menu")}>
-                  <Icons.chevron_down />
+                  <.icon name="hero-chevron-down" class="text-[#4F4F4F]" />
                 </button>
                 <.slide_menu current_user={@current_user} />
               </div>
@@ -142,7 +142,7 @@ defmodule ElixirDropsWeb.DropsComponents do
         phx-hook="CopyToClipboard"
         class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
       >
-        <span><Icons.link_icon /></span>
+        <span><.icon name="hero-link" class="h-4 w-4 stroke-2" /></span>
         <span>Copy link</span>
       </p>
 
@@ -248,7 +248,7 @@ defmodule ElixirDropsWeb.DropsComponents do
         @class
       ]}
     >
-      <span><Icons.check_icon /></span>
+      <.icon name="hero-check-circle bg-[#b2b2b2]" class="h-5 w-5" />
       <span>Link copied to clipboard. </span>
     </p>
     """
@@ -256,12 +256,13 @@ defmodule ElixirDropsWeb.DropsComponents do
 
   defp create_post_button(assigns) do
     ~H"""
-    <button
+    <.link
       class={[
         "text-sm tracking-wide px-6 py-2 rounded-lg flex items-center gap-x-2",
         @current_user && "text-[#eae8fd] bg-blue_primary hover:opacity-80",
         !@current_user && "text-blue_primary border-blue_primary border-2 hover:bg-[#eae8fd]"
       ]}
+      id="create-post-button"
       phx-click={
         if @current_user,
           do: JS.navigate(~p"/drop/new"),
@@ -270,7 +271,7 @@ defmodule ElixirDropsWeb.DropsComponents do
     >
       <span><.icon name="hero-plus" /></span>
       <span>Create Post</span>
-    </button>
+    </.link>
     """
   end
 
@@ -288,8 +289,9 @@ defmodule ElixirDropsWeb.DropsComponents do
       </.drop_card_action_default>
 
       <.link
-        navigate="/drop/#{@id}/edit"
+        navigate={"/drop/#{@id}/edit"}
         class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-4"
+        id={"edit-drop-#{@id}"}
       >
         <.icon name="hero-pencil" class="h-6 w-6" /> Edit drop
       </.link>
@@ -315,7 +317,11 @@ defmodule ElixirDropsWeb.DropsComponents do
 
       <ul class="mt-10 grid gap-y-6">
         <li class="px-5">
-          <.link navigate={~p"/#{@current_user.github_username}"} class="flex gap-x-2">
+          <.link
+            href={~p"/#{@current_user.github_username}"}
+            class="flex gap-x-2 hover:text-[#5947F1]"
+            id="view-user-drops-link"
+          >
             <span><Icons.drops_icon /></span>
             <span> My posts </span>
           </.link>
@@ -348,7 +354,7 @@ defmodule ElixirDropsWeb.DropsComponents do
         @inner_text && "flex items-center justify-center gap-x-2"
       ]}
     >
-      <Icons.link_icon />
+      <.icon name="hero-link" class="h-6 w-6 stroke-2" />
       <%= render_slot(@inner_text) %>
     </div>
     """

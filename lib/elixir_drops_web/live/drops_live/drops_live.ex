@@ -41,6 +41,10 @@ defmodule ElixirDropsWeb.DropsLive do
     end
   end
 
+  defp apply_action(socket, action, _params) when action in [:edit, :new] do
+    socket
+  end
+
   defp apply_action(socket, :index, %{"user_name" => _user_name}) do
     user_id = socket.assigns.current_user.id
 
