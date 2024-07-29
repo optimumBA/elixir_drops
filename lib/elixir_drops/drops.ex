@@ -31,14 +31,7 @@ defmodule ElixirDrops.Drops do
         total_pages: 5
       }
 
-      iex> list_drops(10, %{older_than: %Drop{}})
-      %{
-        current_page: 1,
-        entries: [%Drop{}, ...],
-        total_pages: 5
-      }
-
-      iex> list_drops(10, %{newer_than: %Drop{}})
+      iex> list_drops(10, %{})
       %{
         current_page: 1,
         entries: [%Drop{}, ...],
