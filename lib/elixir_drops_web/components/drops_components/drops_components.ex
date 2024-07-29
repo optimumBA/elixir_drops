@@ -13,7 +13,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   def navbar(assigns) do
     ~H"""
     <header class="content-grid border-b-[1px] border-b-[#B2B2B2] py-2 w-full relative">
-      <nav class="flex items-center justify-between">
+      <nav class="breakout flex items-center justify-between nav-primary">
         <div>
           <.link href={~p"/"}>
             <Icons.elixir_drops_logo />
@@ -59,6 +59,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   attr :created_at, :string, required: true
   attr :github_username, :string, required: true
   attr :id, :string, required: true
+  attr :show_user_drops?, :boolean, required: true
   attr :timezone_offset, :integer, required: true
   attr :title, :string, required: true
 
@@ -75,15 +76,19 @@ defmodule ElixirDropsWeb.DropsComponents do
               Created <%= DateTimeHelper.convert_to_relative_time(@created_at, @timezone_offset) %>
             </p>
           </div>
-          <div
-            id={"card-copy-link-#{@id}"}
-            data-clipboard-text={url(~p"/drops/#{@id}")}
-            data-drop-id={@id}
-            phx-hook="CopyToClipboard"
-            class="text-[#797979] hover:text-[#5947F1]"
-          >
-            <Icons.link_icon />
-          </div>
+
+          <%= if @show_user_drops? do %>
+            <button
+              class="text-[#797979] hover:text-[#5947F1]"
+              id="drop-card-menu-btn"
+              data-drop-id={@id}
+              phx-hook="DropCardMenu"
+            >
+              <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
+            </button>
+          <% else %>
+            <.drop_card_action_default id={@id} />
+          <% end %>
         </div>
 
         <h3 class="text-lg font-[500] mt-2"><%= @title %></h3>
@@ -93,6 +98,8 @@ defmodule ElixirDropsWeb.DropsComponents do
         class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]"
         id={@id}
       />
+
+      <.drop_card_menu id={@id} />
     </div>
     """
   end
@@ -144,27 +151,64 @@ defmodule ElixirDropsWeb.DropsComponents do
     """
   end
 
+  attr :condition, :boolean, required: true
+
   @spec welcome_message(assigns()) :: rendered()
   def welcome_message(assigns) do
     ~H"""
     <div
-      class={[
-        "text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] px-10 py-3 grid full-width__no-columns",
-        @show_user_drops? && "hidden"
-      ]}
+      :if={!@condition}
+      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width"
       id="welcome-message"
     >
-      <button class="ml-auto" phx-click={JS.hide(to: "#welcome-message")}>
+      <button class="ml-auto breakout" phx-click={JS.hide(to: "#welcome-message")}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5" />
       </button>
 
-      <h2 class="font-[500] text-[1.15rem] tracking-wide mb-3">Welcome to ElixirDrops!</h2>
+      <h2 class="breakout font-[500] text-[1.15rem] tracking-wide mb-3 ml-3">
+        Welcome to ElixirDrops!
+      </h2>
 
-      <p>
+      <p class="breakout ml-3">
         Hello there and welcome to the ultimate hub for the Elixir community!
         Whether you're a seasoned developer or just starting your journey, ElixirDrops is the perfect place to discover, share, and discuss the best tips and tricks for mastering Elixir.
         Sign in to explore, learn and become a contributor on this platform.
       </p>
+    </div>
+    """
+  end
+
+  attr :current_user, :any, required: true
+  attr :show_user_drops?, :boolean, required: true
+
+  @spec user_drops_header(assigns()) :: rendered()
+  def user_drops_header(assigns) do
+    ~H"""
+    <div :if={@show_user_drops? && @current_user} class="full-width">
+      <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 full-width">
+        <div class="flex items-center gap-x-3 breakout pl-6">
+          <div>
+            <img
+              src={@current_user.avatar}
+              alt={@current_user.github_username}
+              class="w-16 h-16 rounded-full object-fill"
+            />
+          </div>
+          <p>
+            <%= @current_user.github_username %>
+          </p>
+        </div>
+      </div>
+
+      <nav class="full-width bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
+        <ul class="pl-6 breakout flex">
+          <li class="min-h-full py-4 px-2 border-b-2 border-b-[#887ce1] flex items-center">
+            <.link href={~p"/#{@current_user.github_username}"}>
+              My posts
+            </.link>
+          </li>
+        </ul>
+      </nav>
     </div>
     """
   end
@@ -230,6 +274,29 @@ defmodule ElixirDropsWeb.DropsComponents do
     """
   end
 
+  defp drop_card_menu(assigns) do
+    ~H"""
+    <div
+      class="hidden absolute right-6 top-[3.8rem] w-[20%] py-6 pr-4 rounded-md bg-white shadow-md shadow-[#aaa4af] z-1000"
+      id={"drop-card-menu-#{@id}"}
+      phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
+    >
+      <.drop_card_action_default id={@id}>
+        <:inner_text>
+          Copy link
+        </:inner_text>
+      </.drop_card_action_default>
+
+      <.link
+        navigate="/drop/#{@id}/edit"
+        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-4"
+      >
+        <.icon name="hero-pencil" class="h-6 w-6" /> Edit drop
+      </.link>
+    </div>
+    """
+  end
+
   defp slide_menu(assigns) do
     ~H"""
     <div
@@ -265,13 +332,37 @@ defmodule ElixirDropsWeb.DropsComponents do
     """
   end
 
+  attr :id, :string, required: true
+
+  slot :inner_text
+
+  defp drop_card_action_default(assigns) do
+    ~H"""
+    <div
+      id={"card-copy-link-#{@id}"}
+      data-clipboard-text={url(~p"/drops/#{@id}")}
+      data-drop-id={@id}
+      phx-hook="CopyToClipboard"
+      class={[
+        "text-[#797979] hover:text-[#5947F1]",
+        @inner_text && "flex items-center justify-center gap-x-2"
+      ]}
+    >
+      <Icons.link_icon />
+      <%= render_slot(@inner_text) %>
+    </div>
+    """
+  end
+
   defp show_popup(pop_up_message_id) do
     %JS{}
     |> JS.remove_class("hidden", to: "##{pop_up_message_id}")
     |> JS.add_class("bg-[#acacac]", to: ".drops-container")
     |> JS.add_class("pointer-events-none ", to: ".drops-container")
     |> JS.add_class("z-[10]", to: ".drops-container")
+    |> JS.remove_class("bg-[#f6f6f6]", to: ".drop-card")
     |> JS.add_class("bg-[#a7a7a7]", to: ".drop-card")
+    |> JS.remove_class("shadow-[#bebbc2]", to: ".drop-card")
     |> JS.add_class("shadow-[#878589]", to: ".drop-card")
   end
 
@@ -282,7 +373,9 @@ defmodule ElixirDropsWeb.DropsComponents do
     |> JS.remove_class("pointer-events-none ", to: ".drops-container")
     |> JS.remove_class("z-[10]", to: ".drops-container")
     |> JS.remove_class("bg-[#a7a7a7]", to: ".drop-card")
+    |> JS.add_class("bg-[#f6f6f6]", to: ".drop-card")
     |> JS.remove_class("shadow-[#878589]", to: ".drop-card")
+    |> JS.add_class("shadow-[#bebbc2]", to: ".drop-card")
   end
 
   defp to_html(markdown) do

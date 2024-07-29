@@ -41,7 +41,6 @@ defmodule ElixirDropsWeb.DropsLive do
     end
   end
 
-  # TODO: Add flag to show that one is viewing user drops, remove welcome message, add header, update drops cards
   defp apply_action(socket, :index, %{"user_name" => _user_name}) do
     user_id = socket.assigns.current_user.id
 

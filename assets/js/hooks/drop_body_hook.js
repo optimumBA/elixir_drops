@@ -47,4 +47,20 @@ DropBodyHooks.DropBodyContainer = {
   },
 }
 
+DropBodyHooks.DropCardMenu = {
+  mounted() {
+    const button = this.el
+    const dropId = button.dataset.dropId
+
+    button.addEventListener('click', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+
+      const dropMenu = document.querySelector(`#drop-card-menu-${dropId}`)
+
+      dropMenu.classList.toggle('hidden')
+    })
+  },
+}
+
 export default DropBodyHooks
