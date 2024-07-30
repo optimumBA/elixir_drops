@@ -12,26 +12,29 @@ defmodule ElixirDropsWeb.DropsComponents do
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
-    <header class="content-grid border-b-[1px] border-b-[#B2B2B2] py-2 w-full relative">
+    <header class="header content-grid py-2 w-full relative z-[100000] shadow-md shadow-[#c4c0c8]">
       <nav class="breakout flex items-center justify-between nav-primary">
         <div>
           <.link href={~p"/"}>
-            <Icons.elixir_drops_logo />
+            <Icons.elixir_drops_logo class="w-32 md:w-48" />
           </.link>
         </div>
 
         <div>
           <%= if @current_user do %>
             <div class="flex items-center gap-x-4">
-              <.create_post_button current_user={@current_user} />
-              <div class="flex items-center gap-x-3">
+              <.create_post_button current_user={@current_user} live_action={@live_action} />
+              <div
+                class="flex items-center gap-x-3 cursor-pointer"
+                phx-click={JS.toggle_class("hidden", to: "#slide-menu")}
+              >
                 <img
                   src={@current_user.avatar}
                   alt={@current_user.github_username}
                   class="w-10 h-10 rounded-full"
                 />
-                <p><%= @current_user.github_username %></p>
-                <button phx-click={JS.toggle_class("hidden", to: "#slide-menu")}>
+                <p class="hidden md:block"><%= @current_user.github_username %></p>
+                <button class="hidden md:block">
                   <.icon name="hero-chevron-down" class="text-[#4F4F4F]" />
                 </button>
                 <.slide_menu current_user={@current_user} />
@@ -39,10 +42,10 @@ defmodule ElixirDropsWeb.DropsComponents do
             </div>
           <% else %>
             <div class="flex items-center gap-x-4">
-              <.create_post_button current_user={@current_user} />
+              <.create_post_button current_user={@current_user} live_action={@live_action} />
               <.link
                 href={~p"/auth/github"}
-                class="font-semibold text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-5 py-2 rounded-lg flex items-center gap-x-2"
+                class="font-semibold text-[#eae8fd] text-xs md:text-sm bg-blue_primary hover:opacity-80 px-2 md:px-5 py-2 rounded-lg flex items-center gap-x-2"
               >
                 <span><Icons.github_icon /></span>
                 <span> Sign in with GitHub</span>
@@ -66,13 +69,17 @@ defmodule ElixirDropsWeb.DropsComponents do
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
     ~H"""
-    <div class="drop-card bg-[#f6f6f6] px-6 py-8 rounded-lg shadow-md shadow-[#bebbc2] relative">
+    <div class="drop-card bg-[#f6f6f6] px-6 md:px-4 py-6 md:py-8 rounded-lg shadow-md shadow-[#bebbc2] relative">
       <div>
         <div class="flex justify-between">
-          <div class="flex gap-2 items-center">
-            <img src={@avatar} alt={@github_username} class="rounded-full h-10 w-10 object-cover" />
+          <div class="flex gap-1 md:gap-2 items-center">
+            <img
+              src={@avatar}
+              alt={@github_username}
+              class="rounded-full h-8 md:h-10 w-8 md:w-10 object-cover"
+            />
             <p><%= @github_username %></p>
-            <p class="text-[#868686] text-xs before:content-['•'] before:block] before:mr-[0.05rem]">
+            <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
               Created <%= DateTimeHelper.convert_to_relative_time(@created_at, @timezone_offset) %>
             </p>
           </div>
@@ -91,13 +98,8 @@ defmodule ElixirDropsWeb.DropsComponents do
           <% end %>
         </div>
 
-        <h3 class="text-lg font-[500] mt-2"><%= @title %></h3>
+        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @title %></h3>
       </div>
-
-      <.copy_confirm_message
-        class="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]"
-        id={@id}
-      />
 
       <.drop_card_menu id={@id} />
     </div>
@@ -116,7 +118,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   def drop(assigns) do
     ~H"""
     <div class="w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative">
-      <h1 class="font-[500] text-4xl"><%= @title %></h1>
+      <h1 class="font-[500] text-2xl md:text-4xl"><%= @title %></h1>
       <div class="flex gap-x-3 items-center border-b-[1px] border-b-[#b2b2b2] py-5">
         <img src={@avatar} alt={@github_username} class="rounded-full h-12 w-12 object-cover" />
         <div>
@@ -138,15 +140,12 @@ defmodule ElixirDropsWeb.DropsComponents do
       <p
         id="copy-link-#{@id}"
         data-clipboard-text={url(~p"/drops/#{@id}")}
-        data-drop-id={@id}
         phx-hook="CopyToClipboard"
         class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
       >
         <span><.icon name="hero-link" class="h-4 w-4 stroke-2" /></span>
         <span>Copy link</span>
       </p>
-
-      <.copy_confirm_message class="absolute bottom-0 right-0" id={@id} />
     </div>
     """
   end
@@ -160,16 +159,17 @@ defmodule ElixirDropsWeb.DropsComponents do
       :if={!@condition}
       class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width"
       id="welcome-message"
+      phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <button class="ml-auto breakout" phx-click={JS.hide(to: "#welcome-message")}>
+      <button class="ml-auto breakout" phx-click={hide_welcome_message()}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5" />
       </button>
 
-      <h2 class="breakout font-[500] text-[1.15rem] tracking-wide mb-3 ml-3">
+      <h2 class="breakout font-[500] text-[1.15rem] tracking-wide mb-3 md:ml-3">
         Welcome to ElixirDrops!
       </h2>
 
-      <p class="breakout ml-3">
+      <p class="breakout md:ml-3">
         Hello there and welcome to the ultimate hub for the Elixir community!
         Whether you're a seasoned developer or just starting your journey, ElixirDrops is the perfect place to discover, share, and discuss the best tips and tricks for mastering Elixir.
         Sign in to explore, learn and become a contributor on this platform.
@@ -184,9 +184,13 @@ defmodule ElixirDropsWeb.DropsComponents do
   @spec user_drops_header(assigns()) :: rendered()
   def user_drops_header(assigns) do
     ~H"""
-    <div :if={@show_user_drops? && @current_user} class="full-width">
+    <div
+      :if={@show_user_drops? && @current_user}
+      class="full-width"
+      phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
+    >
       <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 full-width">
-        <div class="flex items-center gap-x-3 breakout pl-6">
+        <div class="flex flex-col md:flex-row items-center gap-x-3 breakout md:pl-6">
           <div>
             <img
               src={@current_user.avatar}
@@ -218,7 +222,11 @@ defmodule ElixirDropsWeb.DropsComponents do
     ~H"""
     <div
       id="signin-popup-message"
-      class="hidden bg-white absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] py-8 px-6 rounded-lg w-[50%] shadow-md shadow-[#b2b2b2] z-[10000] grid"
+      class={[
+        "hidden bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
+        "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
+        "w-[95%] md:w-[60%] py-4 md:py-8 px-4 md:px-6"
+      ]}
       phx-click-away={hide_popup("signin-popup-message")}
     >
       <button class="ml-auto" phx-click={hide_popup("signin-popup-message")}>
@@ -227,10 +235,12 @@ defmodule ElixirDropsWeb.DropsComponents do
       <div class="mx-auto mb-4">
         <img src={~p"/images/logo.png"} />
       </div>
-      <p class="mx-auto mb-8">Take a moment to sign in to continue on ElixirDrops!</p>
+      <p class="text-sm md:text-base mx-auto mb-6 md:mb-8">
+        Take a moment to sign in to continue on ElixirDrops!
+      </p>
       <.link
         href={~p"/auth/github"}
-        class="font-semibold text-[#eae8fd] text-lg bg-blue_primary hover:opacity-80 w-[60%] py-4 mx-auto rounded-lg flex justify-center items-center gap-x-2"
+        class="font-semibold text-[#eae8fd] text-sm md:text-lg bg-blue_primary hover:opacity-80 w-[55%] md:w-[60%] py-2 md:py-4 mx-auto rounded-lg flex justify-center items-center gap-x-2"
       >
         <span><Icons.github_icon /></span>
         <span> Sign in with GitHub</span>
@@ -239,26 +249,11 @@ defmodule ElixirDropsWeb.DropsComponents do
     """
   end
 
-  defp copy_confirm_message(assigns) do
-    ~H"""
-    <p
-      id={"copy-confirm-message-#{@id}"}
-      class={[
-        "hidden text-[#eae8fd] text-sm bg-[#9666d9] rounded-md px-6 py-4 flex items-center gap-x-1 z-[1000]",
-        @class
-      ]}
-    >
-      <.icon name="hero-check-circle bg-[#b2b2b2]" class="h-5 w-5" />
-      <span>Link copied to clipboard. </span>
-    </p>
-    """
-  end
-
   defp create_post_button(assigns) do
     ~H"""
     <.link
       class={[
-        "text-sm tracking-wide px-6 py-2 rounded-lg flex items-center gap-x-2",
+        "text-sm tracking-wide px-6 py-2 rounded-lg hidden md:flex items-center gap-x-2",
         @current_user && "text-[#eae8fd] bg-blue_primary hover:opacity-80",
         !@current_user && "text-blue_primary border-blue_primary border-2 hover:bg-[#eae8fd]"
       ]}
@@ -272,13 +267,25 @@ defmodule ElixirDropsWeb.DropsComponents do
       <span><.icon name="hero-plus" /></span>
       <span>Create Post</span>
     </.link>
+
+    <.link
+      :if={@live_action == :index}
+      class="bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80"
+      phx-click={
+        if @current_user,
+          do: JS.navigate(~p"/drop/new"),
+          else: show_popup("signin-popup-message")
+      }
+    >
+      <.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" />
+    </.link>
     """
   end
 
   defp drop_card_menu(assigns) do
     ~H"""
     <div
-      class="hidden absolute right-6 top-[3.8rem] w-[20%] py-6 pr-4 rounded-md bg-white shadow-md shadow-[#aaa4af] z-1000"
+      class="text-sm md:text-base hidden absolute right-6 top-[3rem] md:top-[3.8rem] w-[40%] md:w-[20%] py-6 md:pr-4 rounded-md bg-white shadow-md shadow-[#aaa4af] z-1000"
       id={"drop-card-menu-#{@id}"}
       phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
     >
@@ -293,7 +300,7 @@ defmodule ElixirDropsWeb.DropsComponents do
         class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-4"
         id={"edit-drop-#{@id}"}
       >
-        <.icon name="hero-pencil" class="h-6 w-6" /> Edit drop
+        <.icon name="hero-pencil" class="h-4 md:h-6 w-4 md:w-6" /> Edit drop
       </.link>
     </div>
     """
@@ -302,7 +309,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   defp slide_menu(assigns) do
     ~H"""
     <div
-      class="hidden w-[25%] shadow-md shadow-[#c4c1c8] rounded-md pt-10 pb-4 absolute top-[90%] right-[2rem] grid z-[1000] bg-white"
+      class="hidden w-[100%] md:w-[25%] shadow-md shadow-[#c4c1c8] md:rounded-b-md pt-10 pb-4 absolute top-[101%] right-0 md:right-[2rem] grid z-[1000] bg-white"
       id="slide-menu"
       phx-click-away={JS.toggle_class("hidden", to: "#slide-menu")}
     >
@@ -347,17 +354,22 @@ defmodule ElixirDropsWeb.DropsComponents do
     <div
       id={"card-copy-link-#{@id}"}
       data-clipboard-text={url(~p"/drops/#{@id}")}
-      data-drop-id={@id}
       phx-hook="CopyToClipboard"
       class={[
         "text-[#797979] hover:text-[#5947F1]",
         @inner_text && "flex items-center justify-center gap-x-2"
       ]}
     >
-      <.icon name="hero-link" class="h-6 w-6 stroke-2" />
+      <.icon name="hero-link" class="h-4 w-4 md:h-6 md:w-6" />
       <%= render_slot(@inner_text) %>
     </div>
     """
+  end
+
+  defp hide_welcome_message do
+    %JS{}
+    |> JS.hide(to: "#welcome-message")
+    |> JS.add_class("shadow-md shadow-[#b2b2b2]", to: ".header")
   end
 
   defp show_popup(pop_up_message_id) do

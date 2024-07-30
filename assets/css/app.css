@@ -7,9 +7,9 @@
 
 /* Reusable classes for composition */
 .content-grid {
-  --padding-inline: 2rem;
-  --content-max-width: 900px;
-  --breakout-max-width: 1200px;
+  --padding-inline: 1rem;
+  --content-max-width: 650px;
+  --breakout-max-width: 900px;
 
   --breakout-size: calc(
     (var(--breakout-max-width) - var(--content-max-width)) / 2
@@ -26,6 +26,14 @@
     [content-end]
     minmax(0, var(--breakout-size)) [breakout-end]
     minmax(var(--padding-inline), 1fr) [full-width-end];
+}
+
+@media (min-width: 768px) {
+  .content-grid {
+    --padding-inline: 2rem;
+    --content-max-width: 900px;
+    --breakout-max-width: 1200px;
+  }
 }
 
 @media (min-width: 1280px) {

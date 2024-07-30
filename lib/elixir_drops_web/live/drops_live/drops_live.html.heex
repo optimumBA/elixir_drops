@@ -4,7 +4,7 @@
   </section>
 <% else %>
   <section class="drops-container relative">
-    <DropsComponents.navbar current_user={@current_user} />
+    <DropsComponents.navbar current_user={@current_user} live_action={@live_action} />
 
     <%= if @live_action == :show do %>
       <section class="pt-10 py-4">
@@ -19,7 +19,7 @@
         />
       </section>
     <% else %>
-      <section class="content-grid text-[#252525]">
+      <section class="content-grid text-[#252525] relative">
         <DropsComponents.welcome_message condition={@show_user_drops?} />
 
         <DropsComponents.user_drops_header
@@ -34,9 +34,9 @@
           phx-viewport-bottom={!@end_of_timeline? && "next-page"}
           phx-page-loading
           class={[
-            "grid gap-y-5",
-            if(@end_of_timeline?, do: "pb-8", else: "pb-[calc(10vh)]"),
-            if(@page == 1, do: "pt-8", else: "pt-[calc(10vh)]")
+            "grid gap-y-2 md:gap-y-5",
+            if(@end_of_timeline?, do: "pb-6 md:pb-8", else: "pb-[calc(10vh)]"),
+            if(@page == 1, do: "pt-6 md:pt-8", else: "pt-[calc(10vh)]")
           ]}
         >
           <div
@@ -66,6 +66,17 @@
         </div>
       </section>
     <% end %>
+
+    <p
+      id="copy-confirm-message"
+      class={[
+        "hidden text-[#eae8fd] text-sm bg-[#9666d9] rounded-md w-[50%] md:w-[30%] lg:w-[20%] pl-2 py-3 flex items-center gap-x-1 z-[1000]",
+        "fixed bottom-12 left-[50%] translate-x-[-50%] translate-y-[50%]"
+      ]}
+    >
+      <.icon name="hero-check-circle bg-[#b2b2b2]" class="h-5 w-5" />
+      <span>Link copied to clipboard. </span>
+    </p>
   </section>
 
   <DropsComponents.signin_popup_message />

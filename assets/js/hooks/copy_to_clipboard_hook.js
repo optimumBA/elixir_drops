@@ -3,10 +3,7 @@ let CopyToClipboardHooks = {}
 CopyToClipboardHooks.CopyToClipboard = {
   mounted() {
     const copyLink = this.el
-    const dropid = copyLink.dataset.dropId
-    let copyConfirmElement = document.querySelector(
-      `#copy-confirm-message-${dropid}`
-    )
+    let copyConfirmElement = document.querySelector(`#copy-confirm-message`)
 
     let textToCopy = copyLink.dataset.clipboardText
 
