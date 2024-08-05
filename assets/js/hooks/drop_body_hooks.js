@@ -98,14 +98,18 @@ DropBodyHooks.SecondaryNavLinks = {
     const lgMediaScreensQuery = window.matchMedia('(min-width: 1280px)')
 
     const emptyDropsEl = document.querySelector('#drops-empty')
-    const emptyDropsContainer =
-      emptyDropsEl.parentElement.lastElementChild.id == 'drops-empty'
+    const dropContainerWithDrops =
+      emptyDropsEl.parentElement.lastElementChild.id.includes('drops-empty')
 
-    if (emptyDropsEl && emptyDropsContainer && lgMediaScreensQuery.matches) {
+    if (emptyDropsEl && dropContainerWithDrops && lgMediaScreensQuery.matches) {
       secondaryNavLinks.classList.add('breakout')
     }
 
-    if (emptyDropsEl && !emptyDropsContainer && lgMediaScreensQuery.matches) {
+    if (
+      emptyDropsEl &&
+      !dropContainerWithDrops &&
+      lgMediaScreensQuery.matches
+    ) {
       secondaryNavLinks.classList.remove('breakout')
     }
   },

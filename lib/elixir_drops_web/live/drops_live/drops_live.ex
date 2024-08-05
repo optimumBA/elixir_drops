@@ -2,15 +2,20 @@ defmodule ElixirDropsWeb.DropsLive do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.DropsComponents
+  alias ElixirDropsWeb.DropsLive.FormComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
+    Drops.subscribe()
+
     {
       :ok,
       socket
       |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
       |> assign(:end_of_timeline?, false)
+      |> assign(:new_drops?, false)
       |> assign(:show_user_drops?, false)
     }
   end
@@ -18,6 +23,11 @@ defmodule ElixirDropsWeb.DropsLive do
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info({Drops, [:drop, :created], _drop}, socket) do
+    {:noreply, assign(socket, :new_drops?, true)}
   end
 
   @impl Phoenix.LiveView
@@ -43,8 +53,28 @@ defmodule ElixirDropsWeb.DropsLive do
     }
   end
 
-  defp apply_action(socket, action, _params) when action in [:edit, :new] do
+  def handle_event("refresh-drops", _params, socket) do
+    {:noreply, assign_drops(socket, %{})}
+  end
+
+  defp apply_action(socket, :edit, %{"id" => id}) do
+    case Drops.get_drop(id) do
+      nil ->
+        socket
+        |> assign(:drop, nil)
+        |> push_navigate(to: ~p"/")
+
+      %Drop{} = drop ->
+        socket
+        |> assign(:drop, drop)
+        |> assign(:page_title, "Edit Drop")
+    end
+  end
+
+  defp apply_action(socket, :new, _params) do
     socket
+    |> assign(:drop, %Drop{})
+    |> assign(:page_title, "Create Drop")
   end
 
   defp apply_action(socket, :index, %{"user_name" => user_name}) do
@@ -94,14 +124,6 @@ defmodule ElixirDropsWeb.DropsLive do
     |> assign(:page_title, drop.title)
   end
 
-  defp maybe_filter_user_drops(socket, filters) do
-    if socket.assigns.show_user_drops? do
-      Map.put(filters, :user_id, socket.assigns.current_user.id)
-    else
-      filters
-    end
-  end
-
   defp insert_drops(socket, filters, opts \\ []) do
     drops =
       socket
@@ -115,5 +137,13 @@ defmodule ElixirDropsWeb.DropsLive do
     |> stream_insert_many(:drops, drops, opts)
     |> assign(:first_drop, first_drop)
     |> assign(:last_drop, last_drop)
+  end
+
+  defp maybe_filter_user_drops(socket, filters) do
+    if socket.assigns.show_user_drops? do
+      Map.put(filters, :user_id, socket.assigns.current_user.id)
+    else
+      filters
+    end
   end
 end

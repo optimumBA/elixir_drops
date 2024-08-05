@@ -73,6 +73,10 @@
   clip-path: inset(0 inherit);
 }
 
+.shadow-upper {
+  box-shadow: 0 -6px 3px -3px #cfced3;
+}
+
 /* Nav */
 .nav-list-border {
   --bg-color: #b2b2b2;
@@ -83,11 +87,13 @@
 }
 
 /* Markdown Body */
-.drop-body hr {
+.drop-body hr,
+.drop-preview hr {
   @apply block my-2;
 }
 
-.drop-body a {
+.drop-body a,
+.drop-preview a {
   @apply text-[#5947F1] underline;
 }
 
@@ -101,7 +107,16 @@
 
 /* Code Blocks */
 .drop-body pre {
-  @apply text-xs md:text-sm p-4 rounded-b-xl overflow-x-scroll;
+  @apply rounded-b-xl;
+}
+
+.drop-preview pre {
+  @apply rounded-xl;
+}
+
+.drop-body pre,
+.drop-preview pre {
+  @apply text-xs md:text-sm p-4 overflow-x-scroll;
 }
 
 .copy-prompt {
@@ -110,4 +125,49 @@
 
 .copy-prompt > * {
   @apply h-5 w-5 mt-2;
+}
+
+/* Markdown editor form + preview */
+drops-editor {
+  --padding-inline: 1rem;
+
+  display: grid;
+  grid-template-columns: var(--padding-inline) 1fr var(--padding-inline);
+  grid-template-areas:
+    '... editor ...'
+    '... preview ...'
+    'action action action';
+  gap: 2em;
+}
+
+@media (min-width: 1024px) {
+  .drops-editor {
+    --padding-inline: 1rem;
+
+    display: grid;
+    grid-template-columns: var(--padding-inline) repeat(2, 1fr) var(
+        --padding-inline
+      );
+    grid-template-areas:
+      '... editor preview ...'
+      'action action action action';
+    gap: 1.5em;
+  }
+}
+
+.drops-editor .drop-text-editor {
+  grid-area: editor;
+}
+
+.drops-editor .drop-preview-container {
+  grid-area: preview;
+}
+
+.drops-editor .action {
+  @apply pr-[1rem] lg:pr-[2rem];
+  grid-area: action;
+}
+
+.drop-preview > * {
+  @apply mb-5;
 }

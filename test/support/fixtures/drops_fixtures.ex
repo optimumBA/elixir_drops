@@ -31,7 +31,7 @@ defmodule ElixirDrops.DropsFixtures do
       })
 
     {:ok, drop} =
-      Drops.create_or_update_drop(drop, user, drop_attrs)
+      Drops.create_drop(drop, user, drop_attrs)
 
     drop
   end

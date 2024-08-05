@@ -6,6 +6,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
   import Phoenix.LiveViewTest
 
   alias ElixirDrops.DateTimeHelper
+  alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
 
   defp create_drops_setup(%{conn: conn}) do
@@ -41,12 +42,11 @@ defmodule ElixirDropsWeb.DropsLiveTest do
     test "unauthorized users are cannot create drops", %{conn: conn} do
       {:ok, live, _html} = live(conn, ~p"/")
 
-      assert {:error, {:redirect, %{to: path}}} =
-               live
-               |> element("#create-post-button")
-               |> render_click()
+      live
+      |> element("#create-post-button")
+      |> render_click()
 
-      refute path == ~p"/drop/new"
+      assert :ok = refute_redirected(live, ~p"/drop/new")
     end
 
     test "authorized users can navigate to create drops page", %{conn: conn, user: user} do
@@ -217,6 +217,137 @@ defmodule ElixirDropsWeb.DropsLiveTest do
                live(conn, ~p"/#{user.github_username}")
 
       assert flash["error"] == "You must log in to access this page."
+      assert path == ~p"/"
+    end
+  end
+
+  describe "/drop/new" do
+    setup [:create_drops_setup]
+
+    test "authorized users can create drops", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drop/new")
+
+      {:ok, _live, html} =
+        live
+        |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
+        |> render_submit()
+        |> follow_redirect(conn, ~p"/#{user.github_username}")
+
+      assert html =~ "New Drop title"
+      assert html =~ "Drop successfully created."
+    end
+
+    test "gets updated with new drops", %{conn: conn, user: user} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, drop} =
+        Drops.create_drop(%Drop{}, user, %{title: "New Drop title", body: "Drop body"})
+
+      assert has_element?(live, "#new-drops-indicator")
+
+      live
+      |> element("#new-drops-indicator")
+      |> render_click()
+
+      assert has_element?(live, "#drop-#{drop.id}", drop.title)
+    end
+
+    test "authorized users cannot create a drop with invalid data", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drop/new")
+
+      live
+      |> form("#drops-editor-form", drop: %{title: "", body: ""})
+      |> render_change() =~ "can&#39;t be blank"
+    end
+
+    test "unauthorized users are redirected", %{conn: conn} do
+      assert {:error, {:redirect, %{to: path, flash: flash}}} = live(conn, ~p"/drop/new")
+
+      assert path == ~p"/"
+      assert flash["error"] == "You must log in to access this page."
+    end
+
+    test "parses Markdown in drop body and renders it in the Preview section", %{
+      conn: conn,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drop/new")
+
+      drop_body = """
+      # Test heading
+
+      ## Test subheading
+
+      Some *text* here
+
+      * Some list item
+      * Another list item
+      """
+
+      html =
+        live
+        |> form("#drops-editor-form", drop: %{title: "Drop title here", body: drop_body})
+        |> render_change()
+
+      assert html =~ "Drop title here"
+      assert html =~ ~r|<h1>Test heading</h1|
+      assert html =~ ~r|<h2>Test subheading</h2|
+      assert html =~ ~r|<p>Some <em>text<\/em> here|
+
+      assert html =~
+               ~r|<ul><li>Some list item</li><li>Another list item</li></ul>|
+    end
+  end
+
+  describe "/drop/:id/edit" do
+    setup [:create_drops_setup]
+
+    test "authorized user updates a drop", %{conn: conn, user: user, drop: drop} do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, html} = live(conn, ~p"/drop/#{drop.id}/edit")
+
+      assert html =~ "Edit post"
+      assert html =~ drop.body
+      assert html =~ drop.title
+
+      {:ok, _live, updated_html} =
+        live
+        |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
+        |> render_submit()
+        |> follow_redirect(conn, ~p"/#{user.github_username}")
+
+      assert updated_html =~ "New Drop title"
+      assert updated_html =~ "Drop successfully updated."
+
+      assert updated_drop = Drops.get_drop(drop.id)
+      assert updated_drop.title == "New Drop title"
+      assert updated_drop.body == "New Drop body"
+    end
+
+    test "unauthorized users are redirected", %{conn: conn, drop: drop} do
+      assert {:error, {:redirect, %{to: path, flash: flash}}} =
+               live(conn, ~p"/drop/#{drop.id}/edit")
+
+      assert path == ~p"/"
+      assert flash["error"] == "You must log in to access this page."
+    end
+
+    test "one is redirected if drop doesn't exist", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      non_existent_drop_id = Ecto.UUID.generate()
+
+      assert {:error, {:live_redirect, %{to: path}}} =
+               live(conn, ~p"/drop/#{non_existent_drop_id}/edit")
+
       assert path == ~p"/"
     end
   end

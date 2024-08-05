@@ -262,6 +262,46 @@ defmodule ElixirDropsWeb.DropsComponents do
     """
   end
 
+  @spec cancel_form_popup_message(assigns()) :: rendered()
+  def cancel_form_popup_message(assigns) do
+    ~H"""
+    <div
+      :if={@current_user}
+      id="edit-form-cancel-confirm"
+      class={[
+        "hidden bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
+        "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
+        "w-[95%] md:w-[60%] py-4 md:py-8 px-4 md:px-6"
+      ]}
+      phx-click-away={hide_popup("edit-form-cancel-confirm")}
+    >
+      <div class="grid gap-y-2">
+        <.icon name="hero-exclamation-triangle" class="text-[#efd343] h-8 w-8 mx-auto" />
+        <h3 class="font-semibold text-xl text-[#252525] mx-auto">Wait a minute!</h3>
+        <p class="mx-auto">
+          Are you sure you want to leave this page? All changes you've made will be lost.
+        </p>
+        <div class="flex justify-center items-center gap-x-3 mx-auto w-full">
+          <button
+            type="button"
+            class="text-[#4f4f4f] text-sm rounded-lg w-[30%] py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
+            phx-click={JS.navigate(~p"/#{@current_user.github_username}")}
+          >
+            Close editor
+          </button>
+          <button
+            type="button"
+            class="text-sm text-[#d3cffb] rounded-lg w-[30%] py-2 bg-blue_primary hover:opacity-80"
+            phx-click={hide_popup("edit-form-cancel-confirm")}
+          >
+            Continue writing
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   defp create_post_button(assigns) do
     ~H"""
     <.link
@@ -326,7 +366,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   defp slide_menu(assigns) do
     ~H"""
     <div
-      class="hidden w-[100%] md:w-[25%] shadow-md shadow-[#c4c1c8] md:rounded-b-md pt-10 pb-4 absolute top-[101%] right-0 md:right-[2rem] grid z-[1000] bg-white"
+      class="hidden w-[100%] md:w-[25%] shadow-md shadow-[#c4c1c8] md:rounded-b-md pt-10 pb-4 absolute top-[101%] right-0 md:right-[2rem] grid z-[10000] bg-white"
       id="slide-menu"
       phx-click-away={JS.toggle_class("hidden", to: "#slide-menu")}
     >
@@ -389,7 +429,8 @@ defmodule ElixirDropsWeb.DropsComponents do
     |> JS.add_class("shadow-md shadow-[#b2b2b2]", to: ".header")
   end
 
-  defp show_popup(pop_up_message_id) do
+  @spec show_popup(String.t()) :: Phoenix.LiveView.JS.t()
+  def show_popup(pop_up_message_id) do
     %JS{}
     |> JS.remove_class("hidden", to: "##{pop_up_message_id}")
     |> JS.add_class("bg-[#acacac]", to: ".drops-container")
@@ -399,9 +440,16 @@ defmodule ElixirDropsWeb.DropsComponents do
     |> JS.add_class("bg-[#a7a7a7]", to: ".drop-card")
     |> JS.remove_class("shadow-[#bebbc2]", to: ".drop-card")
     |> JS.add_class("shadow-[#878589]", to: ".drop-card")
+    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-form")
+    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-text-editor")
+    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-title-input")
+    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-editor-input")
+    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-preview-container")
+    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".action")
   end
 
-  defp hide_popup(pop_up_message_id) do
+  @spec hide_popup(String.t()) :: Phoenix.LiveView.JS.t()
+  def hide_popup(pop_up_message_id) do
     %JS{}
     |> JS.add_class("hidden", to: "##{pop_up_message_id}")
     |> JS.remove_class("bg-[#acacac]", to: ".drops-container")
@@ -411,9 +459,16 @@ defmodule ElixirDropsWeb.DropsComponents do
     |> JS.add_class("bg-[#f6f6f6]", to: ".drop-card")
     |> JS.remove_class("shadow-[#878589]", to: ".drop-card")
     |> JS.add_class("shadow-[#bebbc2]", to: ".drop-card")
+    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-form")
+    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-text-editor")
+    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-title-input")
+    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-editor-input")
+    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-preview-container")
+    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".action")
   end
 
-  defp to_html(markdown) do
+  @spec to_html(binary()) :: Phoenix.HTML.safe()
+  def to_html(markdown) do
     markdown
     |> MDEx.to_html(
       features: [syntax_highlight_theme: "onedark"],

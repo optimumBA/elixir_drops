@@ -187,31 +187,41 @@ defmodule ElixirDrops.DropsTest do
     end
   end
 
-  describe "create_or_update_drop/3" do
-    setup [:create_drops_setup]
-
-    test "creates a drop given valid data", %{user: user} do
-      assert {:ok, %Drop{} = drop} = Drops.create_or_update_drop(%Drop{}, user, @valid_attrs)
+  describe "create_drop/3" do
+    test "creates a drop given valid data" do
+      user = user_fixture()
+      assert {:ok, %Drop{} = drop} = Drops.create_drop(%Drop{}, user, @valid_attrs)
 
       assert drop.body == @valid_attrs.body
       assert drop.title == @valid_attrs.title
       assert drop.user_id == user.id
     end
 
-    test "returns an error if data is invalid", %{user: user} do
+    test "returns an error changeset if data is invalid" do
+      user = user_fixture()
+
       assert {:error, %Ecto.Changeset{}} =
-               Drops.create_or_update_drop(%Drop{}, user, @invalid_attrs)
+               Drops.create_drop(%Drop{}, user, @invalid_attrs)
     end
+  end
+
+  describe "update_drop/3" do
+    setup [:create_drops_setup]
 
     test "updates an existing drop", %{drop: drop, user: user} do
       assert {:ok, %Drop{} = drop} =
-               Drops.create_or_update_drop(drop, user, %{
+               Drops.update_drop(drop, user, %{
                  body: "Updated body",
                  title: "Updated title"
                })
 
       assert drop.body == "Updated body"
       assert drop.title == "Updated title"
+    end
+
+    test "returns an error changeset if data is invalid", %{drop: drop, user: user} do
+      assert {:error, %Ecto.Changeset{}} =
+               Drops.update_drop(drop, user, @invalid_attrs)
     end
   end
 
@@ -248,6 +258,12 @@ defmodule ElixirDrops.DropsTest do
                  "can't be blank"
                ]
              } = errors_on(changeset)
+    end
+  end
+
+  describe "subscribe/0" do
+    test "returns :ok and subscribes caller to the drops topic" do
+      assert :ok == Drops.subscribe()
     end
   end
 end

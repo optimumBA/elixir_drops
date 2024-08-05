@@ -19,6 +19,22 @@ defmodule ElixirDrops.Drops do
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
+  @topic inspect(__MODULE__)
+
+  @doc """
+  Subscribes to drops events.
+
+  ## Examples
+
+    iex> subscribe
+    :ok
+
+  """
+  @spec subscribe() :: :ok
+  def subscribe do
+    Phoenix.PubSub.subscribe(ElixirDrops.PubSub, @topic)
+  end
+
   @doc """
   Returns a list of drops filtered by the given filters with cursor data.
 
@@ -81,7 +97,7 @@ defmodule ElixirDrops.Drops do
       %Drop{}
 
       iex> get_drop(456)
-      ** nil
+      nil
 
   """
   @spec get_drop(drop_id()) :: drop() | nil
@@ -93,19 +109,57 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
-  Creates or updates a drop .
+  Creates a drop.
 
-  ## Examples
+  ### Examples
 
-      iex> create_or_update_drop(%Drop{}, %User{}, %{title: "drop", ...})
+      iex> create_drop(%Drop{}, %User{}, %{title: "drop", ...})
       {:ok, %Drop{}}
 
-      iex> create_or_update_drop(%Drop{}, %User{}, %{title: nil})
+      iex> create_drop(%Drop{}, %User{}, %{title: nil})
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec create_or_update_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
-  def create_or_update_drop(drop, user, attrs \\ %{}) do
+  @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
+  def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
+    case create_or_update_drop(drop, user, attrs) do
+      {:ok, drop} ->
+        drop = Repo.preload(drop, [:user])
+
+        Phoenix.PubSub.broadcast(
+          ElixirDrops.PubSub,
+          @topic,
+          {
+            __MODULE__,
+            [:drop, :created],
+            drop
+          }
+        )
+
+        {:ok, drop}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  @doc """
+  Updates a drop.
+
+  ### Examples
+
+      iex> update_drop(%Drop{}, %User{}, %{title: "drop", ...})
+      {:ok, %Drop{}}
+
+      iex> update_drop(%Drop{}, %User{}, %{title: nil})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  @spec update_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
+  def update_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}),
+    do: create_or_update_drop(drop, user, attrs)
+
+  defp create_or_update_drop(drop, user, attrs) do
     drop
     |> Drop.changeset(attrs)
     |> Ecto.Changeset.put_change(:user_id, user.id)

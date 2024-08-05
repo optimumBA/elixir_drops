@@ -6,7 +6,13 @@
   />
 
   <section :if={@live_action in [:edit, :new]}>
-    <p>FORM COMING UP</p>
+    <.live_component
+      current_user={@current_user}
+      drop={@drop}
+      id="drops-form"
+      live_action={@live_action}
+      module={FormComponent}
+    />
   </section>
 
   <section :if={@live_action == :show} class="pt-10 py-4">
@@ -73,6 +79,20 @@
         />
       </.link>
     </div>
+
+    <button
+      :if={@new_drops? && !@show_user_drops?}
+      class={[
+        "text-white text-sm flex items-center justify-center gap-x-1 bg-[#9666d9] hover:opacity-80 rounded-xl mx-auto",
+        " mt-2 w-[30%] sm:w-[20%] md:w-[15%] px-1 py-1",
+        "absolute left-[50%] top-[14rem] sm:top-[12rem] md:top-[10rem] translate-x-[-50%] z-[1000000]"
+      ]}
+      id="new-drops-indicator"
+      phx-click={JS.push("refresh-drops")}
+    >
+      <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
+      <span>New Drops</span>
+    </button>
   </section>
 
   <p
@@ -90,4 +110,5 @@
   </p>
 </section>
 
+<DropsComponents.cancel_form_popup_message current_user={@current_user} />
 <DropsComponents.signin_popup_message />
