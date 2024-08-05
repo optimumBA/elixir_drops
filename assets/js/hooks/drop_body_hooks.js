@@ -1,3 +1,5 @@
+import ClipboardJS from 'clipboard'
+
 let DropBodyHooks = {}
 
 DropBodyHooks.DropBodyContainer = {
@@ -32,12 +34,12 @@ DropBodyHooks.DropBodyContainer = {
 
       codeBlock.insertAdjacentElement('beforebegin', copyPrompt)
 
+      new ClipboardJS(copyPrompt, {
+        text: () => codeBlock.querySelector('code').textContent,
+      })
+
       copyPrompt.addEventListener('click', () => {
-        const code = codeBlock.querySelector('code').textContent
-
         copyPrompt.innerHTML = copiedSvg
-
-        navigator.clipboard.writeText(code)
 
         setTimeout(() => {
           copyPrompt.innerHTML = copySvg

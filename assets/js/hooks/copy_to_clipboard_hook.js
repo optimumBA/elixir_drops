@@ -1,3 +1,5 @@
+import ClipboardJS from 'clipboard'
+
 let CopyToClipboardHooks = {}
 
 CopyToClipboardHooks.CopyToClipboard = {
@@ -5,13 +7,11 @@ CopyToClipboardHooks.CopyToClipboard = {
     const copyLink = this.el
     let copyConfirmElement = document.querySelector(`#copy-confirm-message`)
 
-    let textToCopy = copyLink.dataset.clipboardText
+    new ClipboardJS(copyLink)
 
     copyLink.addEventListener('click', (event) => {
       event.preventDefault()
       event.stopPropagation()
-
-      navigator.clipboard.writeText(textToCopy)
 
       copyConfirmElement.classList.remove('hidden')
 
