@@ -17,7 +17,7 @@ CopyToClipboardHooks.CopyToClipboard = {
 
       setTimeout(() => {
         copyConfirmElement.classList.add('hidden')
-      }, 1500)
+      }, 500)
     })
   },
 }

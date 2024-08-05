@@ -23,7 +23,12 @@ defmodule ElixirDropsWeb.DropsComponents do
         <div>
           <%= if @current_user do %>
             <div class="flex items-center gap-x-4">
-              <.create_post_button current_user={@current_user} live_action={@live_action} />
+              <.create_post_button
+                current_user={@current_user}
+                live_action={@live_action}
+                show_user_drops?={@show_user_drops?}
+              />
+
               <div
                 class="flex items-center gap-x-3 cursor-pointer"
                 phx-click={JS.toggle_class("hidden", to: "#slide-menu")}
@@ -42,7 +47,12 @@ defmodule ElixirDropsWeb.DropsComponents do
             </div>
           <% else %>
             <div class="flex items-center gap-x-4">
-              <.create_post_button current_user={@current_user} live_action={@live_action} />
+              <.create_post_button
+                current_user={@current_user}
+                live_action={@live_action}
+                show_user_drops?={@show_user_drops?}
+              />
+
               <.link
                 href={~p"/auth/github"}
                 class="font-semibold text-[#eae8fd] text-xs md:text-sm bg-blue_primary hover:opacity-80 px-2 md:px-5 py-2 rounded-lg flex items-center gap-x-2"
@@ -117,9 +127,12 @@ defmodule ElixirDropsWeb.DropsComponents do
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do
     ~H"""
-    <div class="w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative">
+    <div
+      class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
+      phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
+    >
       <h1 class="font-[500] text-2xl md:text-4xl"><%= @title %></h1>
-      <div class="flex gap-x-3 items-center border-b-[1px] border-b-[#b2b2b2] py-5">
+      <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
         <img src={@avatar} alt={@github_username} class="rounded-full h-12 w-12 object-cover" />
         <div>
           <p class="mb-1"><%= @github_username %></p>
@@ -205,8 +218,8 @@ defmodule ElixirDropsWeb.DropsComponents do
       </div>
 
       <nav class="full-width bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
-        <ul class="pl-6 breakout flex">
-          <li class="min-h-full py-4 px-2 border-b-2 border-b-[#887ce1] flex items-center">
+        <ul class="breakout flex" id="secondary-nav-links" phx-hook="SecondaryNavLinks">
+          <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center">
             <.link href={~p"/#{@current_user.github_username}"}>
               My posts
             </.link>
@@ -270,7 +283,11 @@ defmodule ElixirDropsWeb.DropsComponents do
 
     <.link
       :if={@live_action == :index}
-      class="bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80"
+      id="create-post-btn-mobile"
+      phx-hook="CreatePostButtonMobile"
+      class={[
+        "bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80"
+      ]}
       phx-click={
         if @current_user,
           do: JS.navigate(~p"/drop/new"),
@@ -285,7 +302,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   defp drop_card_menu(assigns) do
     ~H"""
     <div
-      class="text-sm md:text-base hidden absolute right-6 top-[3rem] md:top-[3.8rem] w-[40%] md:w-[20%] py-6 md:pr-4 rounded-md bg-white shadow-md shadow-[#aaa4af] z-1000"
+      class="drop-card-menu text-sm md:text-base hidden absolute right-6 top-[3rem] md:top-[3.8rem] py-6 pl-6 pr-12 rounded-md bg-white shadow-xl shadow-[#aaa4af] z-[100000]"
       id={"drop-card-menu-#{@id}"}
       phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
     >
@@ -297,7 +314,7 @@ defmodule ElixirDropsWeb.DropsComponents do
 
       <.link
         navigate={"/drop/#{@id}/edit"}
-        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-4"
+        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
         id={"edit-drop-#{@id}"}
       >
         <.icon name="hero-pencil" class="h-4 md:h-6 w-4 md:w-6" /> Edit drop
@@ -313,14 +330,14 @@ defmodule ElixirDropsWeb.DropsComponents do
       id="slide-menu"
       phx-click-away={JS.toggle_class("hidden", to: "#slide-menu")}
     >
-      <div class="mx-auto">
+      <div class="mx-auto cursor-default">
         <img
           src={@current_user.avatar}
           alt={@current_user.github_username}
           class="w-16 h-16 rounded-full"
         />
       </div>
-      <p class="text-[1.2rem] mx-auto mt-1"><%= @current_user.github_username %></p>
+      <p class="text-[1.2rem] mx-auto mt-1 cursor-default"><%= @current_user.github_username %></p>
 
       <ul class="mt-10 grid gap-y-6">
         <li class="px-5">
@@ -335,7 +352,7 @@ defmodule ElixirDropsWeb.DropsComponents do
         </li>
         <li class="nav-list-border full-bleed"></li>
         <li class="px-5">
-          <.link href={~p"/auth/logout"} class="flex gap-x-2 ">
+          <.link href={~p"/auth/logout"} class="flex gap-x-2 hover:text-[#5947F1]">
             <span><Icons.sign_out_icon /></span>
             <span>Sign out</span>
           </.link>
@@ -360,7 +377,7 @@ defmodule ElixirDropsWeb.DropsComponents do
         @inner_text && "flex items-center justify-center gap-x-2"
       ]}
     >
-      <.icon name="hero-link" class="h-4 w-4 md:h-6 md:w-6" />
+      <.icon name="hero-link-solid" class="h-4 w-4 md:h-6 md:w-6" />
       <%= render_slot(@inner_text) %>
     </div>
     """

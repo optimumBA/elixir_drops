@@ -41,7 +41,7 @@ DropBodyHooks.DropBodyContainer = {
 
         setTimeout(() => {
           copyPrompt.innerHTML = copySvg
-        }, 1500)
+        }, 800)
       })
     })
   },
@@ -51,15 +51,63 @@ DropBodyHooks.DropCardMenu = {
   mounted() {
     const button = this.el
     const dropId = button.dataset.dropId
+    const dropCardMenus = document.querySelectorAll(`.drop-card-menu`)
 
     button.addEventListener('click', (event) => {
       event.preventDefault()
       event.stopPropagation()
 
-      const dropMenu = document.querySelector(`#drop-card-menu-${dropId}`)
-
-      dropMenu.classList.toggle('hidden')
+      dropCardMenus.forEach((dropCardMenu) => {
+        if (dropCardMenu.id === `drop-card-menu-${dropId}`) {
+          dropCardMenu.classList.toggle('hidden')
+        } else {
+          dropCardMenu.classList.add('hidden')
+        }
+      })
     })
+  },
+}
+
+DropBodyHooks.CreatePostButtonMobile = {
+  mounted() {
+    const button = this.el
+
+    const emptyDropsEl = document.querySelector('#drops-empty')
+
+    if (
+      emptyDropsEl &&
+      emptyDropsEl.parentElement.lastElementChild.id == 'drops-empty'
+    ) {
+      button.classList.add('hidden')
+    }
+
+    window.onscroll = () => {
+      if (window.scrollY > 300) {
+        button.classList.add('hidden')
+      } else {
+        button.classList.remove('hidden')
+      }
+    }
+  },
+}
+
+DropBodyHooks.SecondaryNavLinks = {
+  mounted() {
+    const secondaryNavLinks = this.el
+
+    const lgMediaScreensQuery = window.matchMedia('(min-width: 1280px)')
+
+    const emptyDropsEl = document.querySelector('#drops-empty')
+    const emptyDropsContainer =
+      emptyDropsEl.parentElement.lastElementChild.id == 'drops-empty'
+
+    if (emptyDropsEl && emptyDropsContainer && lgMediaScreensQuery.matches) {
+      secondaryNavLinks.classList.add('breakout')
+    }
+
+    if (emptyDropsEl && !emptyDropsContainer && lgMediaScreensQuery.matches) {
+      secondaryNavLinks.classList.remove('breakout')
+    }
   },
 }
 

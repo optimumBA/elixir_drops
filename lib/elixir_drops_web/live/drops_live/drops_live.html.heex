@@ -1,83 +1,93 @@
-<%= if @live_action in [:edit, :new] do %>
-  <section>
+<section class="drops-container relative">
+  <DropsComponents.navbar
+    current_user={@current_user}
+    live_action={@live_action}
+    show_user_drops?={@show_user_drops?}
+  />
+
+  <section :if={@live_action in [:edit, :new]}>
     <p>FORM COMING UP</p>
   </section>
-<% else %>
-  <section class="drops-container relative">
-    <DropsComponents.navbar current_user={@current_user} live_action={@live_action} />
 
-    <%= if @live_action == :show do %>
-      <section class="pt-10 py-4">
-        <DropsComponents.drop
-          avatar={@drop.user.avatar}
-          body={@drop.body}
-          created_at={@drop.inserted_at}
-          github_username={@drop.user.github_username}
-          id={@drop.id}
-          timezone_offset={@timezone_offset}
-          title={@drop.title}
-        />
-      </section>
-    <% else %>
-      <section class="content-grid text-[#252525] relative">
-        <DropsComponents.welcome_message condition={@show_user_drops?} />
-
-        <DropsComponents.user_drops_header
-          current_user={@current_user}
-          show_user_drops?={@show_user_drops?}
-        />
-
-        <div
-          id="drops"
-          phx-update="stream"
-          phx-viewport-top={@page > 1 && "prev-page"}
-          phx-viewport-bottom={!@end_of_timeline? && "next-page"}
-          phx-page-loading
-          class={[
-            "grid gap-y-2 md:gap-y-5",
-            if(@end_of_timeline?, do: "pb-6 md:pb-8", else: "pb-[calc(10vh)]"),
-            if(@page == 1, do: "pt-6 md:pt-8", else: "pt-[calc(10vh)]")
-          ]}
-        >
-          <div
-            :if={@show_user_drops?}
-            id="drops-empty"
-            class="only:grid hidden text-[#868686] text-lg min-h-[60svh] items-center justify-center"
-          >
-            <p>You haven't created any post yet.</p>
-          </div>
-
-          <.link
-            :for={{dom_id, drop} <- @streams.drops}
-            id={dom_id}
-            patch={~p"/drops/#{drop.id}"}
-            class="last:mb-6"
-          >
-            <DropsComponents.drop_card
-              avatar={drop.user.avatar}
-              created_at={drop.inserted_at}
-              github_username={drop.user.github_username}
-              id={drop.id}
-              show_user_drops?={@show_user_drops?}
-              timezone_offset={@timezone_offset}
-              title={drop.title}
-            />
-          </.link>
-        </div>
-      </section>
-    <% end %>
-
-    <p
-      id="copy-confirm-message"
-      class={[
-        "hidden text-[#eae8fd] text-sm bg-[#9666d9] rounded-md w-[50%] md:w-[30%] lg:w-[20%] pl-2 py-3 flex items-center gap-x-1 z-[1000]",
-        "fixed bottom-12 left-[50%] translate-x-[-50%] translate-y-[50%]"
-      ]}
-    >
-      <.icon name="hero-check-circle bg-[#b2b2b2]" class="h-5 w-5" />
-      <span>Link copied to clipboard. </span>
-    </p>
+  <section :if={@live_action == :show} class="pt-10 py-4">
+    <DropsComponents.drop
+      avatar={@drop.user.avatar}
+      body={@drop.body}
+      created_at={@drop.inserted_at}
+      github_username={@drop.user.github_username}
+      id={@drop.id}
+      timezone_offset={@timezone_offset}
+      title={@drop.title}
+    />
   </section>
 
-  <DropsComponents.signin_popup_message />
-<% end %>
+  <section :if={@live_action == :index} class="content-grid text-[#252525] relative">
+    <DropsComponents.welcome_message condition={@show_user_drops?} />
+
+    <DropsComponents.user_drops_header
+      current_user={@current_user}
+      show_user_drops?={@show_user_drops?}
+    />
+
+    <div
+      id="drops"
+      phx-update="stream"
+      phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
+      phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
+      phx-page-loading
+      class={[
+        "grid gap-y-2 md:gap-y-5 py-8"
+      ]}
+    >
+      <div
+        :if={@show_user_drops?}
+        id="drops-empty"
+        class="only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+      >
+        <div class="flex flex-col items-center justify-center">
+          <p>You haven't created any post yet.</p>
+          <.link
+            navigate={~p"/drop/new"}
+            class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 md:hidden py-2 mt-2 rounded-lg flex items-center gap-x-2"
+          >
+            <span><.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" /></span>
+            <span> Create Post</span>
+          </.link>
+        </div>
+      </div>
+
+      <.link
+        :for={{dom_id, drop} <- @streams.drops}
+        id={dom_id}
+        patch={~p"/drops/#{drop.id}"}
+        class="last:mb-6"
+      >
+        <DropsComponents.drop_card
+          avatar={drop.user.avatar}
+          created_at={drop.inserted_at}
+          github_username={drop.user.github_username}
+          id={drop.id}
+          show_user_drops?={@show_user_drops?}
+          timezone_offset={@timezone_offset}
+          title={drop.title}
+        />
+      </.link>
+    </div>
+  </section>
+
+  <p
+    id="copy-confirm-message"
+    class={[
+      "hidden text-[#eae8fd] text-xs bg-[#9666d9] rounded-lg drop-shadow-sm px-3 py-3 flex items-center gap-x-1 z-[1000]",
+      "fixed bottom-12 left-[50%] translate-x-[-50%] translate-y-[50%]"
+    ]}
+  >
+    <.icon
+      name="hero-check-circle-solid bg-[#b2b2b2]"
+      class="h-4 w-4 fill-[#eae8fd] bg-[#eae8fd]"
+    />
+    <span>copied to clipboard</span>
+  </p>
+</section>
+
+<DropsComponents.signin_popup_message />

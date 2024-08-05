@@ -101,8 +101,7 @@
 
 /* Code Blocks */
 .drop-body pre {
-  @apply text-sm p-4 rounded-b-xl;
-  white-space: pre-wrap;
+  @apply text-xs md:text-sm p-4 rounded-b-xl overflow-x-scroll;
 }
 
 .copy-prompt {

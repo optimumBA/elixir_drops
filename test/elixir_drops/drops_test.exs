@@ -17,16 +17,18 @@ defmodule ElixirDrops.DropsTest do
     %{drop: drop, user: user}
   end
 
-  describe "list_drops" do
-    setup [:create_drops_setup]
+  describe "list_drops/2" do
+    test "returns a list of all drops when no filter is passed" do
+      create_drops_setup(%{})
 
-    test "returns all drops with pagiation metadata when no filter is passed" do
-      assert %{current_page: 1, entries: [drop], total_pages: 1} = Drops.list_drops(10)
+      assert [drop] = Drops.list_drops()
 
       assert Ecto.assoc_loaded?(drop.user)
     end
 
-    test "returns all drops filtered by user_id", %{drop: drop, user: user} do
+    test "can filter drops belonging to a user" do
+      %{drop: drop, user: user} = create_drops_setup(%{})
+
       user_2 =
         user_fixture(%{
           avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
@@ -38,20 +40,150 @@ defmodule ElixirDrops.DropsTest do
 
       drop_fixture(%Drop{}, user_2, %{title: "Drop 2", body: "Body for drop 2"})
 
-      Drops.list_drops(10, %{user_id: user.id})
-
-      assert %{current_page: 1, entries: [user_drop], total_pages: 1} =
-               Drops.list_drops(10, %{user_id: user.id})
+      assert [user_drop] = Drops.list_drops(%{user_id: user.id})
 
       assert drop.id == user_drop.id
       assert Ecto.assoc_loaded?(user_drop.user)
     end
 
-    test "returns empty list when no drops are found" do
+    test "returns empty list when a user has no drops" do
       non_existing_user_id = Ecto.UUID.generate()
 
-      assert %{current_page: 1, entries: [], total_pages: 0} =
-               Drops.list_drops(10, %{user_id: non_existing_user_id})
+      assert [] = Drops.list_drops(%{user_id: non_existing_user_id})
+    end
+
+    test "can filter drops older than a given drop sorted by inserted_at" do
+      user = user_fixture()
+
+      [drop_1, drop_2, drop_3, _drop_4] =
+        for drop <- 1..4 do
+          %Drop{}
+          |> drop_fixture(user)
+          |> update_drop_inserted_at(drop * 120)
+        end
+
+      assert [older_drop_1, older_drop_2] = Drops.list_drops(%{older_than: drop_3})
+      assert older_drop_1.id == drop_2.id
+      assert older_drop_2.id == drop_1.id
+      assert Ecto.assoc_loaded?(older_drop_1.user)
+      assert Ecto.assoc_loaded?(older_drop_2.user)
+    end
+
+    test "returns an empty list if there are no drops older than a given drop" do
+      user = user_fixture()
+
+      [drop_1, _drop_2] =
+        for drop <- 1..2 do
+          %Drop{}
+          |> drop_fixture(user)
+          |> update_drop_inserted_at(drop * 120)
+        end
+
+      assert %{older_than: drop_1}
+             |> Drops.list_drops()
+             |> Enum.empty?()
+    end
+
+    test "can filter drops newer than a given drop sorted by inserted_at" do
+      user = user_fixture()
+
+      [_drop_1, drop_2, drop_3, drop_4] =
+        for drop <- 1..4 do
+          %Drop{}
+          |> drop_fixture(user)
+          |> update_drop_inserted_at(drop * 120)
+        end
+
+      assert [newer_drop_1, newer_drop_2] = Drops.list_drops(%{newer_than: drop_2})
+      assert newer_drop_1.id == drop_4.id
+      assert newer_drop_2.id == drop_3.id
+      assert Ecto.assoc_loaded?(newer_drop_1.user)
+      assert Ecto.assoc_loaded?(newer_drop_2.user)
+    end
+
+    test "returns an empty list if there are no newer drops" do
+      user = user_fixture()
+
+      [_drop_1, drop_2] =
+        for drop <- 1..2 do
+          %Drop{}
+          |> drop_fixture(user)
+          |> update_drop_inserted_at(drop * 120)
+        end
+
+      assert %{newer_than: drop_2}
+             |> Drops.list_drops()
+             |> Enum.empty?()
+    end
+
+    test "can filter drops by multiple parameters" do
+      user = user_fixture()
+
+      user_2 =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "github_username",
+          name: "some_name"
+        })
+
+      [drop_1, drop_2, drop_3] =
+        for drop <- 1..3 do
+          %Drop{}
+          |> drop_fixture(user)
+          |> update_drop_inserted_at(drop * 120)
+        end
+
+      for drop <- 1..3 do
+        %Drop{}
+        |> drop_fixture(user_2)
+        |> update_drop_inserted_at(drop * 120)
+      end
+
+      assert [older_user_drop_1, older_user_drop_2] =
+               Drops.list_drops(%{user_id: user.id, older_than: drop_3})
+
+      assert older_user_drop_1.id == drop_2.id
+      assert older_user_drop_1.user_id == user.id
+      assert older_user_drop_2.id == drop_1.id
+      assert older_user_drop_2.user_id == user.id
+      assert Ecto.assoc_loaded?(older_user_drop_1.user)
+      assert Ecto.assoc_loaded?(older_user_drop_2.user)
+    end
+
+    test "returns empty list for multiple filters whose conditions are not met" do
+      user = user_fixture()
+
+      user_2 =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "github_username",
+          name: "some_name"
+        })
+
+      _drop_1 =
+        %Drop{}
+        |> drop_fixture(user)
+        |> update_drop_inserted_at(120)
+
+      [_drop_2, drop_3] =
+        for drop <- 1..2 do
+          %Drop{}
+          |> drop_fixture(user_2)
+          |> update_drop_inserted_at(drop * 120)
+        end
+
+      assert [] == Drops.list_drops(%{user_id: user_2.id, newer_than: drop_3})
+    end
+
+    test "defaults to listing all drops if an invalid filter is passed" do
+      %{drop: drop} = create_drops_setup(%{})
+
+      assert [result_drop] = Drops.list_drops(%{tags: ["tag"]})
+      assert drop.id == result_drop.id
     end
   end
 

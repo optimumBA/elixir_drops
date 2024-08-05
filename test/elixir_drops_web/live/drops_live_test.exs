@@ -38,16 +38,18 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       assert html =~ "Welcome to ElixirDrops"
     end
 
-    test "unauthorised users are cannot create drops", %{conn: conn} do
+    test "unauthorized users are cannot create drops", %{conn: conn} do
       {:ok, live, _html} = live(conn, ~p"/")
 
-      assert {:error, {:redirect, %{to: "#"}}} =
+      assert {:error, {:redirect, %{to: path}}} =
                live
                |> element("#create-post-button")
                |> render_click()
+
+      refute path == ~p"/drop/new"
     end
 
-    test "authorised users can navigate to create drops page", %{conn: conn, user: user} do
+    test "authorized users can navigate to create drops page", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
 
       {:ok, live, _html} = live(conn, ~p"/")
@@ -61,7 +63,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       assert path == ~p"/drop/new"
     end
 
-    test "authorised users can navigate to edit a drop", %{conn: conn, user: user, drop: drop} do
+    test "authorized users can navigate to edit a drop", %{conn: conn, user: user, drop: drop} do
       conn = sign_in_user(conn, user)
 
       {:ok, live, _html} = live(conn, ~p"/")
@@ -84,21 +86,27 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       assert path == ~p"/drop/#{drop.id}/edit"
     end
 
-    test "logged in user can navigate to view their drops", %{conn: conn, user: user} do
+    test "authorized users can view their drops", %{conn: conn, drop: drop, user: user} do
       conn = sign_in_user(conn, user)
 
       {:ok, live, _html} = live(conn, ~p"/")
 
-      live
-      |> element("#view-user-drops-link")
-      |> render_click()
+      assert {:ok, conn} =
+               live
+               |> element("#view-user-drops-link")
+               |> render_click()
+               |> follow_redirect(conn, ~p"/#{user.github_username}")
 
-      {path, _flash} = assert_redirect(live)
+      html = html_response(conn, 200)
 
-      assert path == ~p"/#{user.github_username}"
+      assert html =~ "My posts"
+      assert html =~ drop.title
+      assert html =~ user.avatar
+      assert html =~ user.github_username
+      assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
     end
 
-    test "lists all drops", %{conn: conn, drop: drop, user: user} do
+    test "show a list of drops", %{conn: conn, drop: drop, user: user} do
       {:ok, _live, html} = live(conn, ~p"/")
 
       assert html =~ drop.title
@@ -107,7 +115,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
     end
 
-    test "user navigates to the drop", %{conn: conn, drop: drop} do
+    test "user can view a drop", %{conn: conn, drop: drop} do
       {:ok, live, _html} = live(conn, ~p"/")
 
       live
@@ -116,6 +124,40 @@ defmodule ElixirDropsWeb.DropsLiveTest do
 
       assert_patch(live, ~p"/drops/#{drop.id}")
       assert has_element?(live, "#drop-body")
+    end
+
+    test "can see older drops with infinite scroll", %{conn: conn, user: user} do
+      for drop <- 1..25 do
+        time = 120 * drop
+
+        %Drop{}
+        |> drop_fixture(user, %{title: "Drop title #{drop}", body: "Body for drop #{drop}"})
+        |> update_drop_inserted_at(time)
+      end
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert html_2 = render_hook(live, "next-page", %{})
+
+      assert html_2 =~ "Drop title 11"
+      assert html_2 =~ "Drop title 14"
+    end
+
+    test "can see newer drops with infinite scroll", %{conn: conn, user: user} do
+      for drop <- 1..25 do
+        time = 120 * drop
+
+        %Drop{}
+        |> drop_fixture(user, %{title: "Drop title #{drop}", body: "Body for drop #{drop}"})
+        |> update_drop_inserted_at(time)
+      end
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert html_2 = render_hook(live, "prev-page", %{})
+
+      assert html_2 =~ "Drop title 1"
+      refute html_2 =~ "Drop title 14"
     end
   end
 
@@ -144,7 +186,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
   describe "/:username" do
     setup [:create_drops_setup]
 
-    test "authorised users can view their their own drops", %{conn: conn, drop: drop, user: user} do
+    test "authorized users can view their their own drops", %{conn: conn, drop: drop, user: user} do
       user_2 =
         user_fixture(%{
           avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
@@ -166,7 +208,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       refute html =~ user_2.github_username
     end
 
-    test "unauthorised users are redirected", %{conn: conn, user: user} do
+    test "unauthorized users are redirected", %{conn: conn, user: user} do
       assert {:error,
               {
                 :redirect,

@@ -22,7 +22,7 @@ import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 import topbar from '../vendor/topbar'
 import CopyToClipboardHooks from './hooks/copy_to_clipboard_hook'
-import DropBodyHooks from './hooks/drop_body_hook'
+import DropBodyHooks from './hooks/drop_body_hooks'
 
 let Hooks = {
   ...CopyToClipboardHooks,

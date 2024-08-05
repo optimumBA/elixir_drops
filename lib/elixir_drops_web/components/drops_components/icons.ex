@@ -49,6 +49,7 @@ defmodule ElixirDropsWeb.DropsComponents.Icons do
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
+        class="stroke-current"
       />
     </svg>
     """
