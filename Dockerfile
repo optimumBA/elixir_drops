@@ -51,12 +51,12 @@ COPY lib lib
 
 COPY assets assets
 
-# compile assets
-RUN mix assets.deploy
-
 # Install npm dependencies
 COPY assets/package.json assets/package-lock.json ./assets/
 RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
+
+# compile assets
+RUN mix assets.deploy
 
 # Compile the release
 RUN mix compile
