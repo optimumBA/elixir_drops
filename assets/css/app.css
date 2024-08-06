@@ -128,7 +128,7 @@
 }
 
 /* Markdown editor form + preview */
-drops-editor {
+.drops-editor {
   --padding-inline: 1rem;
 
   display: grid;
@@ -137,7 +137,7 @@ drops-editor {
     '... editor ...'
     '... preview ...'
     'action action action';
-  gap: 2em;
+  row-gap: 2em;
 }
 
 @media (min-width: 1024px) {

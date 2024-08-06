@@ -179,10 +179,10 @@ defmodule ElixirDrops.DropsTest do
       assert [] == Drops.list_drops(%{user_id: user_2.id, newer_than: drop_3})
     end
 
-    test "defaults to listing all drops if an invalid filter is passed" do
+    test "defaults to listing all drops if a non-existent filter is passed" do
       %{drop: drop} = create_drops_setup(%{})
 
-      assert [result_drop] = Drops.list_drops(%{tags: ["tag"]})
+      assert [result_drop] = Drops.list_drops(%{unknown_filter: "unknown_filter"})
       assert drop.id == result_drop.id
     end
   end

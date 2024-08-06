@@ -333,6 +333,23 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       assert updated_drop.body == "New Drop body"
     end
 
+    test "authorized user cannot update a drop with invalid data", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drop/#{drop.id}/edit")
+
+      html =
+        live
+        |> form("#drops-editor-form", drop: %{title: "", body: "New Drop body"})
+        |> render_change()
+
+      assert html =~ "can&#39;t be blank"
+    end
+
     test "unauthorized users are redirected", %{conn: conn, drop: drop} do
       assert {:error, {:redirect, %{to: path, flash: flash}}} =
                live(conn, ~p"/drop/#{drop.id}/edit")

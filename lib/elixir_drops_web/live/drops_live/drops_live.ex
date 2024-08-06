@@ -8,7 +8,7 @@ defmodule ElixirDropsWeb.DropsLive do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    Drops.subscribe()
+    if connected?(socket), do: Drops.subscribe()
 
     {
       :ok,
@@ -54,7 +54,7 @@ defmodule ElixirDropsWeb.DropsLive do
   end
 
   def handle_event("refresh-drops", _params, socket) do
-    {:noreply, assign_drops(socket, %{})}
+    {:noreply, assign_drops(socket)}
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -92,7 +92,7 @@ defmodule ElixirDropsWeb.DropsLive do
     |> assign(:drop, nil)
     |> assign(:page_title, "ElixirDrops")
     |> assign(:show_user_drops?, false)
-    |> assign_drops(%{})
+    |> assign_drops()
   end
 
   defp apply_action(socket, :show, %{"id" => id}) do
@@ -101,7 +101,7 @@ defmodule ElixirDropsWeb.DropsLive do
     |> assign_drop(socket)
   end
 
-  defp assign_drops(socket, filters) do
+  defp assign_drops(socket, filters \\ %{}) do
     drops = Drops.list_drops(filters)
     first_drop = List.first(drops)
     last_drop = List.last(drops)

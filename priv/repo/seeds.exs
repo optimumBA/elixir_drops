@@ -220,5 +220,5 @@ drop_6 = %{
 }
 
 for drop <- [drop_1, drop_2, drop_3, drop_4, drop_5, drop_6] do
-  Drops.create_or_update_drop(%Drop{}, user, drop)
+  Drops.create_drop(%Drop{}, user, drop)
 end
