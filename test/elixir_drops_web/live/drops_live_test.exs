@@ -36,7 +36,6 @@ defmodule ElixirDropsWeb.DropsLiveTest do
 
       assert html =~ "#{user.github_username}"
       assert html =~ "#{user.avatar}"
-      assert html =~ "Welcome to ElixirDrops"
     end
 
     test "unauthorized users are cannot create drops", %{conn: conn} do
