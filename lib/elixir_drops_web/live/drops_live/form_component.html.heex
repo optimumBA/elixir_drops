@@ -28,7 +28,8 @@
           type="textarea"
           input_field_class="drop-editor-input text-sm md:text-md placeholder:text-inherit placeholder:italic border-2 border-[#dedede] focus:border-[#7d6ff4] rounded-md min-h-[70vh] w-full"
           id="drop-editor-input"
-          phx-debounce={400}
+          phx-hook="DropBodyEditorHook"
+          phx-debounce="500"
         />
         <p class="text-xs pb-3 flex items-center justify-start">
           <span>Markdown is supported</span>

@@ -23,10 +23,12 @@ import { LiveSocket } from 'phoenix_live_view'
 import topbar from '../vendor/topbar'
 import CopyToClipboardHooks from './hooks/copy_to_clipboard_hook'
 import DropBodyHooks from './hooks/drop_body_hooks'
+import DropEditorHooks from './hooks/drop_editor_hooks'
 
 let Hooks = {
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
+  ...DropEditorHooks,
 }
 
 let csrfToken = document

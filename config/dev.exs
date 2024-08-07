@@ -84,6 +84,15 @@ config :phoenix_live_view,
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
 
+config :elixir_drops, :s3, %{
+  debug_requests: true,
+  access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
+  bucket: System.get_env("AWS_BUCKET_NAME"),
+  endpoint_url: System.get_env("AWS_ENDPOINT_URL_S3"),
+  region: System.get_env("AWS_REGION"),
+  secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY")
+}
+
 config :ueberauth, Ueberauth.Strategy.Github.OAuth,
   client_id: System.get_env("GITHUB_CLIENT_ID"),
   client_secret: System.get_env("GITHUB_CLIENT_SECRET")

@@ -6,6 +6,7 @@ defmodule ElixirDropsWeb.DropsLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.S3Helper
   alias ElixirDropsWeb.DropsComponents
 
   @impl Phoenix.LiveComponent
@@ -40,6 +41,28 @@ defmodule ElixirDropsWeb.DropsLive.FormComponent do
       {:error, changeset} ->
         {:noreply, assign_form(socket, changeset)}
     end
+  end
+
+  def handle_event("upload-image", %{"type" => "image/" <> _rest = type} = params, socket) do
+    %{"image" => image_binary, "name" => name} = params
+    filename = "#{Ecto.UUID.generate()}_#{name}"
+
+    [_metadata, image] = String.split(image_binary, ",")
+
+    decoded_image = Base.decode64!(image)
+
+    case S3Helper.upload_image(decoded_image, filename, type) do
+      {:ok, url} ->
+        {:noreply, push_event(socket, "image-upload-complete", %{url: url})}
+
+      {:error, _reason} ->
+        {:noreply, push_event(socket, "image-upload-error", %{})}
+    end
+  end
+
+  # Invalid image type handling, maybe don't even allow them in  server -> Just deal with them in the UI
+  def handle_event(:upload_image, _params, socket) do
+    {:noreply, socket}
   end
 
   defp put_flash_message(socket, :new),

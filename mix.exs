@@ -66,6 +66,7 @@ defmodule ElixirDrops.MixProject do
     [
       {:autumn, "~> 0.2"},
       {:mdex, "~> 0.1"},
+      {:req, "~> 0.5.6"},
       {:timex, "~> 3.7"},
       {:ueberauth_github, "~> 0.8.3"}
     ]
