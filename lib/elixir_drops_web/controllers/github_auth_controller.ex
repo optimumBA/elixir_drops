@@ -13,7 +13,6 @@ defmodule ElixirDropsWeb.GithubAuthController do
 
   use ElixirDropsWeb, :controller
 
-  plug :save_return_to_path when action in [:request]
   plug Ueberauth
 
   import Plug.Conn
@@ -46,10 +45,6 @@ defmodule ElixirDropsWeb.GithubAuthController do
       _error ->
         redirect(conn, to: ~p"/")
     end
-  end
-
-  defp save_return_to_path(%Plug.Conn{} = conn, _opts) do
-    put_session(conn, :auth_redirect_to, conn.request_path)
   end
 
   @doc """
