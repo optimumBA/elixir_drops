@@ -53,10 +53,10 @@ defmodule ElixirDropsWeb.DropsLive.FormComponent do
 
     case S3Helper.upload_image(decoded_image, filename, type) do
       {:ok, url} ->
-        {:noreply, push_event(socket, "image-upload-complete", %{url: url})}
+        {:reply, %{url: url}, socket}
 
       {:error, _reason} ->
-        {:noreply, push_event(socket, "image-upload-error", %{})}
+        {:reply, %{error: "Failed to upload image"}, socket}
     end
   end
 
