@@ -7,6 +7,7 @@ defmodule ElixirDropsWeb.DropsLive.FormComponent do
 
   alias ElixirDrops.Drops
   alias ElixirDropsWeb.DropsComponents
+  alias ElixirDropsWeb.DropsComponents.Icons
 
   @impl Phoenix.LiveComponent
   def update(assigns, socket) do
@@ -32,21 +33,16 @@ defmodule ElixirDropsWeb.DropsLive.FormComponent do
       {:ok, _drop} ->
         {
           :noreply,
-          socket
-          |> put_flash_message(socket.assigns.live_action)
-          |> push_navigate(to: ~p"/#{socket.assigns.current_user.github_username}")
+          push_navigate(
+            socket,
+            to: ~p"/#{socket.assigns.current_user.github_username}"
+          )
         }
 
       {:error, changeset} ->
         {:noreply, assign_form(socket, changeset)}
     end
   end
-
-  defp put_flash_message(socket, :new),
-    do: put_flash(socket, :info, "Drop successfully created.")
-
-  defp put_flash_message(socket, :edit),
-    do: put_flash(socket, :info, "Drop successfully updated.")
 
   defp create_or_update_drop(socket, :edit, drop_params) do
     Drops.update_drop(

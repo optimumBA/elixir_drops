@@ -9,6 +9,9 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+
+IO.puts(IO.ANSI.format([:yellow, "SEEDING DROPS:::"]))
+
 alias ElixirDrops.Accounts.User
 alias ElixirDrops.Drops
 alias ElixirDrops.Drops.Drop

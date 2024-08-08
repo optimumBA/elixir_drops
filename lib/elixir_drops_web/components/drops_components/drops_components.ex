@@ -238,7 +238,7 @@ defmodule ElixirDropsWeb.DropsComponents do
       class={[
         "hidden bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
         "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
-        "w-[95%] md:w-[60%] py-4 md:py-8 px-4 md:px-6"
+        "w-[95%] md:w-[40%] py-4 md:py-6 px-4"
       ]}
       phx-click-away={hide_popup("signin-popup-message")}
     >
@@ -248,12 +248,12 @@ defmodule ElixirDropsWeb.DropsComponents do
       <div class="mx-auto mb-4">
         <img src={~p"/images/logo.png"} />
       </div>
-      <p class="text-sm md:text-base mx-auto mb-6 md:mb-8">
+      <p class="text-sm md:text-base mx-auto mb-6">
         Take a moment to sign in to continue on ElixirDrops!
       </p>
       <.link
         href={~p"/auth/github"}
-        class="font-semibold text-[#eae8fd] text-sm md:text-lg bg-blue_primary hover:opacity-80 w-[55%] md:w-[60%] py-2 md:py-4 mx-auto rounded-lg flex justify-center items-center gap-x-2"
+        class="font-semibold text-[#eae8fd] text-sm md:text-base bg-blue_primary hover:opacity-80 w-[55%] md:w-[45%] py-2 md:py-2 mx-auto rounded-lg flex justify-center items-center gap-x-2"
       >
         <span><Icons.github_icon /></span>
         <span> Sign in with GitHub</span>

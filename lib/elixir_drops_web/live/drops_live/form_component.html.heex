@@ -78,11 +78,17 @@
         </button>
 
         <button
-          class="text-sm text-[#d3cffb] rounded-lg px-3 py-2 bg-blue_primary hover:opacity-80"
+          class={[
+            "text-sm text-[#d3cffb] rounded-lg px-3 py-2 bg-blue_primary hover:opacity-80",
+            "phx-submit-loading:opacity-80 phx-submit-loading:px-12"
+          ]}
           type="submit"
         >
-          <span :if={@live_action == :new}>Post Drop</span>
-          <span :if={@live_action == :edit}>Update Drop</span>
+          <span :if={@live_action == :new} class="phx-submit-loading:hidden">Post Drop</span>
+          <span :if={@live_action == :edit} class="phx-submit-loading:hidden">Update Drop</span>
+          <span class="hidden phx-submit-loading:block">
+            <Icons.loading_spin_circle class="text-white h-6 w-6" />
+          </span>
         </button>
       </div>
     </div>

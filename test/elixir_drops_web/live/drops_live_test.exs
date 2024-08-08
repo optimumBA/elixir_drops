@@ -236,7 +236,6 @@ defmodule ElixirDropsWeb.DropsLiveTest do
         |> follow_redirect(conn, ~p"/#{user.github_username}")
 
       assert html =~ "New Drop title"
-      assert html =~ "Drop successfully created."
     end
 
     test "gets updated with new drops", %{conn: conn, user: user} do
@@ -326,7 +325,6 @@ defmodule ElixirDropsWeb.DropsLiveTest do
         |> follow_redirect(conn, ~p"/#{user.github_username}")
 
       assert updated_html =~ "New Drop title"
-      assert updated_html =~ "Drop successfully updated."
 
       assert updated_drop = Drops.get_drop(drop.id)
       assert updated_drop.title == "New Drop title"
