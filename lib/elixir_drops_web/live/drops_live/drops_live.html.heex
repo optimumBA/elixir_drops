@@ -28,7 +28,7 @@
   </section>
 
   <section :if={@live_action == :index} class="content-grid text-[#252525] relative">
-    <DropsComponents.welcome_message condition={@show_user_drops?} />
+    <DropsComponents.welcome_message condition={!@current_user} />
 
     <DropsComponents.user_drops_header
       current_user={@current_user}

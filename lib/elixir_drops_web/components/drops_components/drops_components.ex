@@ -169,7 +169,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   def welcome_message(assigns) do
     ~H"""
     <div
-      :if={!@condition}
+      :if={@condition}
       class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width"
       id="welcome-message"
       phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
