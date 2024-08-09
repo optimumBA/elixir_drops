@@ -68,7 +68,8 @@ defmodule ElixirDrops.MixProject do
       {:mdex, "~> 0.1"},
       {:req, "~> 0.5.6"},
       {:timex, "~> 3.7"},
-      {:ueberauth_github, "~> 0.8.3"}
+      {:ueberauth_github, "~> 0.8.3"},
+      {:mox, "~> 1.1", only: :test}
     ]
   end
 

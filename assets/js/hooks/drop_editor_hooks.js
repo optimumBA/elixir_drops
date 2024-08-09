@@ -4,6 +4,9 @@ DropEditorHooks.DropBodyEditorHook = {
   mounted() {
     const hook = this
     const editor = this.el
+    const fileTypeErrorMessage = document.querySelector('#file-type-error-msg')
+    const uploadFileButton = document.querySelector('#upload-file-button')
+    const uploadFileInput = document.querySelector('#upload-file-input')
 
     const cancelDefault = (event) => {
       event.preventDefault()
@@ -22,20 +25,17 @@ DropEditorHooks.DropBodyEditorHook = {
     }
 
     const acceptedFileTypes = [
+      'image/gif',
       'image/jpeg',
-      'image/png',
-      'image/gif',
       'image/jpg',
-      'image/gif',
+      'image/png',
     ]
-
-    const fileTypeErrorMessage = document.querySelector('#file-type-error-msg')
 
     editor.addEventListener('dragover', cancelDefault)
     editor.addEventListener('dragleave', cancelDefault)
 
     const sendUploadRequest = (file) => {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const reader = new FileReader()
 
         reader.onload = () => {
@@ -57,11 +57,7 @@ DropEditorHooks.DropBodyEditorHook = {
                     : `![${file.name}](${response.url})`
                 )
               } else {
-                resolve(
-                  editor.selectionStart == 0
-                    ? `Image upload failed \n\n`
-                    : `Image upload failed`
-                )
+                reject(`Failed to upload ${file.name} \n\n`)
               }
             }
           )
@@ -71,30 +67,49 @@ DropEditorHooks.DropBodyEditorHook = {
       })
     }
 
+    const updateImageString = (imageString, newImageString) => {
+      editor.value = editor.value.replace(imageString, newImageString)
+      editor.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    const uploadFile = (file) => {
+      if (acceptedFileTypes.includes(file.type.toLowerCase())) {
+        fileTypeErrorMessage.classList.add('hidden')
+
+        let imageString = `[uploading! ${file.name}...]\n\n`
+
+        updateEditorValue(editor, imageString)
+
+        return sendUploadRequest(file)
+          .then((newImageString) => {
+            updateImageString(imageString, newImageString)
+          })
+          .catch((error) => {
+            hook.pushEventTo('#drops-form', 'show-image-upload-error')
+            updateImageString(imageString, error)
+          })
+      } else {
+        fileTypeErrorMessage.classList.remove('hidden')
+        return
+      }
+    }
+
     editor.addEventListener('drop', (event) => {
       cancelDefault(event)
 
       const file = event.dataTransfer.files[0]
 
-      if (acceptedFileTypes.includes(file.type.toLowerCase())) {
-        fileTypeErrorMessage.classList.add('hidden')
+      uploadFile(file)
+    })
 
-        let imageString =
-          editor.selectionStart == 0
-            ? `[uploading! ${file.name}...]\n\n`
-            : `[uploading! ${file.name}...]`
+    uploadFileButton.addEventListener('click', () => {
+      uploadFileInput.click()
+    })
 
-        updateEditorValue(editor, imageString)
+    uploadFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0]
 
-        return sendUploadRequest(file).then((newImageString) => {
-          editor.value = editor.value.replace(imageString, newImageString)
-
-          editor.dispatchEvent(new Event('input', { bubbles: true }))
-        })
-      } else {
-        fileTypeErrorMessage.classList.remove('hidden')
-        return
-      }
+      uploadFile(file)
     })
   },
 }

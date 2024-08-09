@@ -6,7 +6,7 @@ defmodule ElixirDropsWeb.DropsLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.S3Helper
+  alias ElixirDrops.S3Helper.Client
   alias ElixirDropsWeb.DropsComponents
 
   @impl Phoenix.LiveComponent
@@ -15,7 +15,10 @@ defmodule ElixirDropsWeb.DropsLive.FormComponent do
 
     changeset = Drops.change_drop(socket.assigns.drop)
 
-    {:ok, assign_form(socket, changeset)}
+    {:ok,
+     socket
+     |> assign_form(changeset)
+     |> assign(:show_image_uploads_error?, false)}
   end
 
   @impl Phoenix.LiveComponent
@@ -43,26 +46,25 @@ defmodule ElixirDropsWeb.DropsLive.FormComponent do
     end
   end
 
-  def handle_event("upload-image", %{"type" => "image/" <> _rest = type} = params, socket) do
-    %{"image" => image_binary, "name" => name} = params
+  def handle_event("show-image-upload-error", _params, socket) do
+    {:noreply, assign(socket, show_image_uploads_error?: true)}
+  end
+
+  def handle_event("upload-image", params, socket) do
+    %{"image" => image_binary, "name" => name, "type" => type} = params
     filename = "#{Ecto.UUID.generate()}_#{name}"
 
     [_metadata, image] = String.split(image_binary, ",")
 
     decoded_image = Base.decode64!(image)
 
-    case S3Helper.upload_image(decoded_image, filename, type) do
+    case Client.upload_image(decoded_image, filename, type) do
       {:ok, url} ->
         {:reply, %{url: url}, socket}
 
       {:error, _reason} ->
         {:reply, %{error: "Failed to upload image"}, socket}
     end
-  end
-
-  # Invalid image type handling, maybe don't even allow them in  server -> Just deal with them in the UI
-  def handle_event(:upload_image, _params, socket) do
-    {:noreply, socket}
   end
 
   defp put_flash_message(socket, :new),

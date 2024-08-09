@@ -31,13 +31,50 @@
           phx-hook="DropBodyEditorHook"
           phx-debounce="500"
         />
+
+        <input type="file" id="upload-file-input" class="sr-only" />
+
         <p class="text-xs pb-3 flex items-center justify-start">
-          <span>Markdown is supported</span>
+          <.link
+            href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet"
+            target="_blank"
+          >
+            Markdown is supported
+          </.link>
           <span>
             <.icon name="hero-minus" class="rotate-90 text-[#bfb8fa]" />
           </span>
-          <span>Drag or paste images</span>
+          <button type="button" id="upload-file-button">
+            Drag or click to add images
+          </button>
         </p>
+
+        <div
+          class="hidden text-[#D84141] border-[1px] border-[#D84141] bg-[#FAE7E7] py-3 px-6 mb-4 rounded-md"
+          id="file-type-error-msg"
+        >
+          <p class="font-semibold flex gap-x-2 mb-2">
+            <.icon name="hero-exclamation-triangle" class="h-5 w-5" />
+            <span>This file type is not supported.</span>
+          </p>
+          <p class="ml-6">
+            Try uploading JPEG, PNG or GIF.
+          </p>
+        </div>
+
+        <div
+          :if={@show_image_uploads_error?}
+          class="text-[#D84141] border-[1px] border-[#D84141] bg-[#FAE7E7] py-3 px-6 mb-4 rounded-md"
+          id="file-upload-error-msg"
+        >
+          <p class="font-semibold flex gap-x-2 mb-2">
+            <.icon name="hero-exclamation-triangle" class="h-5 w-5" />
+            <span>Failed to upload image</span>
+          </p>
+          <p class="ml-6">
+            An error occurred while uploading some images. Please try again.
+          </p>
+        </div>
       </div>
     </div>
 
