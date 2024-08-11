@@ -41,8 +41,7 @@ DropEditorHooks.DropBodyEditorHook = {
         reader.onload = () => {
           const image = reader.result
 
-          hook.pushEventTo(
-            '#drops-form',
+          hook.pushEvent(
             'upload-image',
             {
               image: image,
@@ -85,7 +84,7 @@ DropEditorHooks.DropBodyEditorHook = {
             updateImageString(imageString, newImageString)
           })
           .catch((error) => {
-            hook.pushEventTo('#drops-form', 'show-image-upload-error')
+            hook.pushEvent('show-image-upload-error')
             updateImageString(imageString, error)
           })
       } else {

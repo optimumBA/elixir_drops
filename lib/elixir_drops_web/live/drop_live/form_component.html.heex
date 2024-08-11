@@ -99,7 +99,7 @@
             class="drop-preview text-[#4f4f4f] text-sm md:text-md pb-3 mb-pb-0 h-full w-full md:h-[70vh] overflow-y-scroll"
             id="drop-preview"
           >
-            <%= input_value(f, :body) && DropsComponents.to_html(input_value(f, :body)) %>
+            <%= input_value(f, :body) && DropComponents.to_html(input_value(f, :body)) %>
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@
       <div class="flex justify-end items-center gap-x-3">
         <button
           class="text-[#4f4f4f] text-sm rounded-lg px-3 py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
-          phx-click={DropsComponents.show_popup("edit-form-cancel-confirm")}
+          phx-click={DropComponents.show_popup("edit-form-cancel-confirm")}
           type="button"
         >
           Close editor

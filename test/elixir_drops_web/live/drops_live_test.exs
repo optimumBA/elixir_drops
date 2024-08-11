@@ -3,11 +3,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
+  import Mox
   import Phoenix.LiveViewTest
 
   alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.S3Helper.Client
+
+  setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
     conn = put_connect_params(conn, %{"timezone_offset" => 0})
@@ -157,6 +161,23 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html_2 =~ "Drop title 1"
       refute html_2 =~ "Drop title 14"
     end
+
+    test "gets updated with new drops", %{conn: conn, user: user} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, drop} =
+        Drops.create_drop(%Drop{}, user, %{title: "New Drop title", body: "Drop body"})
+
+      assert has_element?(live, "#new-drops-indicator")
+
+      live
+      |> element("#new-drops-indicator")
+      |> render_click()
+
+      assert has_element?(live, "#drop-#{drop.id}", drop.title)
+    end
   end
 
   describe "/drops/:id" do
@@ -236,21 +257,24 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ "New Drop title"
     end
 
-    test "gets updated with new drops", %{conn: conn, user: user} do
-      {:ok, live, _html} = live(conn, ~p"/")
+    test "images can be added to a drop", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
 
-      refute has_element?(live, "#new-drops-indicator")
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      {:ok, drop} =
-        Drops.create_drop(%Drop{}, user, %{title: "New Drop title", body: "Drop body"})
+      image =
+        "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgEASABIAAD/4gxYSUNDX1BST0ZJTEUAAQEAAAxITGlubwIQAABtbnRyUkdCIFhZWiAHzgACAAkABgAxAABhY3NwTVNGVAAAAABJRUMgc1JHQgAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLUhQICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 
-      assert has_element?(live, "#new-drops-indicator")
+      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
+        {:ok, "https://image.com/image.png"}
+      end)
 
       live
-      |> element("#new-drops-indicator")
-      |> render_click()
-
-      assert has_element?(live, "#drop-#{drop.id}", drop.title)
+      |> element("#drop-editor-input")
+      |> render_hook(
+        "upload-image",
+        %{"image" => image, "name" => "image", "type" => "image.jpg"}
+      ) =~ "Markdown is supported"
     end
 
     test "authorized users cannot create a drop with invalid data", %{conn: conn, user: user} do

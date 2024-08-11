@@ -3,6 +3,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.S3Helper.Client
   alias ElixirDropsWeb.DropLive.DropComponents
   alias ElixirDropsWeb.DropLive.FormComponent
 
@@ -55,6 +56,27 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   def handle_event("refresh-drops", _params, socket) do
     {:noreply, assign_drops(socket)}
+  end
+
+  def handle_event("show-image-upload-error", _params, socket) do
+    {:noreply, assign(socket, show_image_uploads_error?: true)}
+  end
+
+  def handle_event("upload-image", params, socket) do
+    %{"image" => image_binary, "name" => name, "type" => type} = params
+    filename = "#{Ecto.UUID.generate()}_#{name}"
+
+    [_metadata, image] = String.split(image_binary, ",")
+
+    decoded_image = Base.decode64!(image)
+
+    case Client.upload_image(decoded_image, filename, type) do
+      {:ok, url} ->
+        {:reply, %{url: url}, socket}
+
+      {:error, _reason} ->
+        {:reply, %{error: "Failed to upload image"}, socket}
+    end
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do

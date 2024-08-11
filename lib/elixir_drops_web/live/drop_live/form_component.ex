@@ -6,8 +6,7 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.S3Helper.Client
-  alias ElixirDropsWeb.DropsComponents
+  alias ElixirDropsWeb.DropLive.DropComponents
 
   @impl Phoenix.LiveComponent
   def update(assigns, socket) do
@@ -36,42 +35,16 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
       {:ok, _drop} ->
         {
           :noreply,
-          socket
-          |> put_flash_message(socket.assigns.live_action)
-          |> push_navigate(to: ~p"/#{socket.assigns.current_user.github_username}")
+          push_navigate(
+            socket,
+            to: ~p"/#{socket.assigns.current_user.github_username}"
+          )
         }
 
       {:error, changeset} ->
         {:noreply, assign_form(socket, changeset)}
     end
   end
-
-  def handle_event("show-image-upload-error", _params, socket) do
-    {:noreply, assign(socket, show_image_uploads_error?: true)}
-  end
-
-  def handle_event("upload-image", params, socket) do
-    %{"image" => image_binary, "name" => name, "type" => type} = params
-    filename = "#{Ecto.UUID.generate()}_#{name}"
-
-    [_metadata, image] = String.split(image_binary, ",")
-
-    decoded_image = Base.decode64!(image)
-
-    case Client.upload_image(decoded_image, filename, type) do
-      {:ok, url} ->
-        {:reply, %{url: url}, socket}
-
-      {:error, _reason} ->
-        {:reply, %{error: "Failed to upload image"}, socket}
-    end
-  end
-
-  defp put_flash_message(socket, :new),
-    do: put_flash(socket, :info, "Drop successfully created.")
-
-  defp put_flash_message(socket, :edit),
-    do: put_flash(socket, :info, "Drop successfully updated.")
 
   defp create_or_update_drop(socket, :edit, drop_params) do
     Drops.update_drop(
