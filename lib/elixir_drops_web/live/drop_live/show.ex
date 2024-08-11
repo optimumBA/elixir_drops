@@ -6,7 +6,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, :show_user_drops?, false)}
   end
 
   @impl Phoenix.LiveView
