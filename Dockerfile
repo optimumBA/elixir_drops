@@ -49,11 +49,11 @@ COPY priv priv
 
 COPY lib lib
 
-COPY assets assets
-
 # Install npm dependencies
 COPY assets/package.json assets/package-lock.json ./assets/
 RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
+
+COPY assets assets
 
 # compile assets
 RUN mix assets.deploy

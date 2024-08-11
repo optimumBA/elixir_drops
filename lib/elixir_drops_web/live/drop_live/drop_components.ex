@@ -1,10 +1,10 @@
-defmodule ElixirDropsWeb.DropsComponents do
+defmodule ElixirDropsWeb.DropLive.DropComponents do
   @moduledoc false
 
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.DateTimeHelper
-  alias ElixirDropsWeb.DropsComponents.Icons
+  alias ElixirDropsWeb.DropLive.Icons
 
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
@@ -169,7 +169,7 @@ defmodule ElixirDropsWeb.DropsComponents do
   def welcome_message(assigns) do
     ~H"""
     <div
-      :if={!@condition}
+      :if={@condition}
       class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width"
       id="welcome-message"
       phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
@@ -238,7 +238,7 @@ defmodule ElixirDropsWeb.DropsComponents do
       class={[
         "hidden bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
         "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
-        "w-[95%] md:w-[60%] py-4 md:py-8 px-4 md:px-6"
+        "w-[95%] md:w-[40%] py-4 md:py-6 px-4"
       ]}
       phx-click-away={hide_popup("signin-popup-message")}
     >
@@ -248,12 +248,12 @@ defmodule ElixirDropsWeb.DropsComponents do
       <div class="mx-auto mb-4">
         <img src={~p"/images/logo.png"} />
       </div>
-      <p class="text-sm md:text-base mx-auto mb-6 md:mb-8">
+      <p class="text-sm md:text-base mx-auto mb-6">
         Take a moment to sign in to continue on ElixirDrops!
       </p>
       <.link
         href={~p"/auth/github"}
-        class="font-semibold text-[#eae8fd] text-sm md:text-lg bg-blue_primary hover:opacity-80 w-[55%] md:w-[60%] py-2 md:py-4 mx-auto rounded-lg flex justify-center items-center gap-x-2"
+        class="font-semibold text-[#eae8fd] text-sm md:text-base bg-blue_primary hover:opacity-80 w-[55%] md:w-[45%] py-2 md:py-2 mx-auto rounded-lg flex justify-center items-center gap-x-2"
       >
         <span><Icons.github_icon /></span>
         <span> Sign in with GitHub</span>
@@ -313,7 +313,7 @@ defmodule ElixirDropsWeb.DropsComponents do
       id="create-post-button"
       phx-click={
         if @current_user,
-          do: JS.navigate(~p"/drop/new"),
+          do: JS.navigate(~p"/drops/new"),
           else: show_popup("signin-popup-message")
       }
     >
@@ -330,7 +330,7 @@ defmodule ElixirDropsWeb.DropsComponents do
       ]}
       phx-click={
         if @current_user,
-          do: JS.navigate(~p"/drop/new"),
+          do: JS.navigate(~p"/drops/new"),
           else: show_popup("signin-popup-message")
       }
     >
@@ -353,7 +353,7 @@ defmodule ElixirDropsWeb.DropsComponents do
       </.drop_card_action_default>
 
       <.link
-        navigate={"/drop/#{@id}/edit"}
+        navigate={"/drops/#{@id}/edit"}
         class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
         id={"edit-drop-#{@id}"}
       >

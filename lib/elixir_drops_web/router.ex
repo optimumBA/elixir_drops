@@ -17,6 +17,46 @@ defmodule ElixirDropsWeb.Router do
     plug :accepts, ["json"]
   end
 
+  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
+
+  scope "/", ElixirDropsWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [
+        {ElixirDropsWeb.UserAuth, :ensure_authenticated},
+        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
+        {ElixirDropsWeb.UserAuth, :assign_current_user}
+      ] do
+      live "/:user_name", DropLive.Index, :index
+
+      live "/drops/:id/edit", DropLive.Index, :edit
+      live "/drops/new", DropLive.Index, :new
+    end
+  end
+
+  scope "/", ElixirDropsWeb do
+    pipe_through :browser
+
+    live_session :default,
+      on_mount: [
+        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
+        {ElixirDropsWeb.UserAuth, :assign_current_user}
+      ] do
+      live "/", DropLive.Index, :index
+      live "/drops/:id", DropLive.Show, :show
+    end
+  end
+
+  scope "/auth", ElixirDropsWeb do
+    pipe_through :browser
+
+    get "/logout", GithubAuthController, :logout
+
+    get "/:provider", GithubAuthController, :request
+    get "/:provider/callback", GithubAuthController, :callback
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", ElixirDropsWeb do
   #   pipe_through :api
@@ -37,44 +77,5 @@ defmodule ElixirDropsWeb.Router do
       live_dashboard "/dashboard", metrics: ElixirDropsWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
-  end
-
-  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
-
-  scope "/", ElixirDropsWeb do
-    pipe_through :browser
-
-    live_session :default,
-      on_mount: [
-        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
-        {ElixirDropsWeb.UserAuth, :assign_current_user}
-      ] do
-      live "/", DropsLive, :index
-      live "/drops/:id", DropsLive, :show
-    end
-  end
-
-  scope "/", ElixirDropsWeb do
-    pipe_through [:browser, :require_authenticated_user]
-
-    live_session :require_authenticated_user,
-      on_mount: [
-        {ElixirDropsWeb.UserAuth, :ensure_authenticated},
-        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
-        {ElixirDropsWeb.UserAuth, :assign_current_user}
-      ] do
-      live "/:user_name", DropsLive, :index
-      live "/drop/:id/edit", DropsLive, :edit
-      live "/drop/new", DropsLive, :new
-    end
-  end
-
-  scope "/auth", ElixirDropsWeb do
-    pipe_through :browser
-
-    get "/logout", GithubAuthController, :logout
-
-    get "/:provider", GithubAuthController, :request
-    get "/:provider/callback", GithubAuthController, :callback
   end
 end

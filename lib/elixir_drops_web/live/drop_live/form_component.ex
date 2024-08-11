@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.DropsLive.FormComponent do
+defmodule ElixirDropsWeb.DropLive.FormComponent do
   @moduledoc false
 
   use ElixirDropsWeb, :live_component

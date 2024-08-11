@@ -1,10 +1,10 @@
-defmodule ElixirDropsWeb.DropsLive do
+defmodule ElixirDropsWeb.DropLive.Index do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDropsWeb.DropsComponents
-  alias ElixirDropsWeb.DropsLive.FormComponent
+  alias ElixirDropsWeb.DropLive.DropComponents
+  alias ElixirDropsWeb.DropLive.FormComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
@@ -95,12 +95,6 @@ defmodule ElixirDropsWeb.DropsLive do
     |> assign_drops()
   end
 
-  defp apply_action(socket, :show, %{"id" => id}) do
-    id
-    |> Drops.get_drop()
-    |> assign_drop(socket)
-  end
-
   defp assign_drops(socket, filters \\ %{}) do
     drops = Drops.list_drops(filters)
     first_drop = List.first(drops)
@@ -110,18 +104,6 @@ defmodule ElixirDropsWeb.DropsLive do
     |> stream(:drops, drops, reset: true)
     |> assign(:first_drop, first_drop)
     |> assign(:last_drop, last_drop)
-  end
-
-  defp assign_drop(nil, socket) do
-    socket
-    |> assign(:drop, nil)
-    |> push_patch(to: ~p"/")
-  end
-
-  defp assign_drop(drop, socket) do
-    socket
-    |> assign(:drop, drop)
-    |> assign(:page_title, drop.title)
   end
 
   defp insert_drops(socket, filters, opts \\ []) do
