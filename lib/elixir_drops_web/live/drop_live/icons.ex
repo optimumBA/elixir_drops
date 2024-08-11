@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.DropsComponents.Icons do
+defmodule ElixirDropsWeb.DropLive.Icons do
   @moduledoc false
 
   use ElixirDropsWeb, :html

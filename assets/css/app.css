@@ -77,6 +77,16 @@
   box-shadow: 0 -6px 3px -3px #cfced3;
 }
 
+/* Headers */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-[500];
+}
+
 /* Nav */
 .nav-list-border {
   --bg-color: #b2b2b2;

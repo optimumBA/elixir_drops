@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.DropsLiveTest do
+defmodule ElixirDropsWeb.DropLiveTest do
   use ElixirDropsWeb.ConnCase, async: true
 
   import ElixirDrops.AccountsFixtures
@@ -45,7 +45,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       |> element("#create-post-button")
       |> render_click()
 
-      assert :ok = refute_redirected(live, ~p"/drop/new")
+      assert :ok = refute_redirected(live, ~p"/drops/new")
     end
 
     test "authorized users can navigate to create drops page", %{conn: conn, user: user} do
@@ -59,7 +59,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
 
       {path, _flash} = assert_redirect(live)
 
-      assert path == ~p"/drop/new"
+      assert path == ~p"/drops/new"
     end
 
     test "authorized users can navigate to edit a drop", %{conn: conn, user: user, drop: drop} do
@@ -82,7 +82,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
 
       {path, _flash} = assert_redirect(live_2)
 
-      assert path == ~p"/drop/#{drop.id}/edit"
+      assert path == ~p"/drops/#{drop.id}/edit"
     end
 
     test "authorized users can view their drops", %{conn: conn, drop: drop, user: user} do
@@ -114,7 +114,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
     end
 
-    test "user can view a drop", %{conn: conn, drop: drop} do
+    test "user can navigate to view a drop", %{conn: conn, drop: drop} do
       {:ok, live, _html} = live(conn, ~p"/")
 
       live
@@ -122,7 +122,6 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       |> render_click()
 
       assert_patch(live, ~p"/drops/#{drop.id}")
-      assert has_element?(live, "#drop-body")
     end
 
     test "can see older drops with infinite scroll", %{conn: conn, user: user} do
@@ -226,7 +225,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
     test "authorized users can create drops", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drop/new")
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
 
       {:ok, _live, html} =
         live
@@ -257,7 +256,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
     test "authorized users cannot create a drop with invalid data", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drop/new")
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
 
       live
       |> form("#drops-editor-form", drop: %{title: "", body: ""})
@@ -265,7 +264,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
     end
 
     test "unauthorized users are redirected", %{conn: conn} do
-      assert {:error, {:redirect, %{to: path, flash: flash}}} = live(conn, ~p"/drop/new")
+      assert {:error, {:redirect, %{to: path, flash: flash}}} = live(conn, ~p"/drops/new")
 
       assert path == ~p"/"
       assert flash["error"] == "You must log in to access this page."
@@ -277,7 +276,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
     } do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drop/new")
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
 
       drop_body = """
       # Test heading
@@ -305,13 +304,13 @@ defmodule ElixirDropsWeb.DropsLiveTest do
     end
   end
 
-  describe "/drop/:id/edit" do
+  describe "/drops/:id/edit" do
     setup [:create_drops_setup]
 
     test "authorized user updates a drop", %{conn: conn, user: user, drop: drop} do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, html} = live(conn, ~p"/drop/#{drop.id}/edit")
+      {:ok, live, html} = live(conn, ~p"/drops/#{drop.id}/edit")
 
       assert html =~ "Edit post"
       assert html =~ drop.body
@@ -337,7 +336,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
     } do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drop/#{drop.id}/edit")
+      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.id}/edit")
 
       html =
         live
@@ -349,7 +348,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
 
     test "unauthorized users are redirected", %{conn: conn, drop: drop} do
       assert {:error, {:redirect, %{to: path, flash: flash}}} =
-               live(conn, ~p"/drop/#{drop.id}/edit")
+               live(conn, ~p"/drops/#{drop.id}/edit")
 
       assert path == ~p"/"
       assert flash["error"] == "You must log in to access this page."
@@ -360,7 +359,7 @@ defmodule ElixirDropsWeb.DropsLiveTest do
       non_existent_drop_id = Ecto.UUID.generate()
 
       assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/drop/#{non_existent_drop_id}/edit")
+               live(conn, ~p"/drops/#{non_existent_drop_id}/edit")
 
       assert path == ~p"/"
     end

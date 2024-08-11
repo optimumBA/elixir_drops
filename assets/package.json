@@ -1,8 +1,4 @@
 {
-  "devDependencies": {
-    "prettier": "^3.3.3",
-    "prettier-plugin-toml": "^2.0.1"
-  },
   "dependencies": {
     "@github/paste-markdown": "^1.5.3",
     "clipboard": "^2.0.11"

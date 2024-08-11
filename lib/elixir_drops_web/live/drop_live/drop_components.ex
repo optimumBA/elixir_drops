@@ -1,10 +1,10 @@
-defmodule ElixirDropsWeb.DropsComponents do
+defmodule ElixirDropsWeb.DropLive.DropComponents do
   @moduledoc false
 
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.DateTimeHelper
-  alias ElixirDropsWeb.DropsComponents.Icons
+  alias ElixirDropsWeb.DropLive.Icons
 
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
@@ -313,7 +313,7 @@ defmodule ElixirDropsWeb.DropsComponents do
       id="create-post-button"
       phx-click={
         if @current_user,
-          do: JS.navigate(~p"/drop/new"),
+          do: JS.navigate(~p"/drops/new"),
           else: show_popup("signin-popup-message")
       }
     >
@@ -330,7 +330,7 @@ defmodule ElixirDropsWeb.DropsComponents do
       ]}
       phx-click={
         if @current_user,
-          do: JS.navigate(~p"/drop/new"),
+          do: JS.navigate(~p"/drops/new"),
           else: show_popup("signin-popup-message")
       }
     >
@@ -353,7 +353,7 @@ defmodule ElixirDropsWeb.DropsComponents do
       </.drop_card_action_default>
 
       <.link
-        navigate={"/drop/#{@id}/edit"}
+        navigate={"/drops/#{@id}/edit"}
         class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
         id={"edit-drop-#{@id}"}
       >
