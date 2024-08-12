@@ -302,6 +302,22 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
     """
   end
 
+  @spec copied_link_popup_message(assigns()) :: rendered()
+  def copied_link_popup_message(assigns) do
+    ~H"""
+    <p
+      id="copy-confirm-message"
+      class={[
+        "hidden text-[#eae8fd] text-xs bg-[#9666d9] rounded-lg drop-shadow-sm px-3 py-3 flex items-center gap-x-1 z-[1000]",
+        "fixed bottom-12 left-[50%] translate-x-[-50%] translate-y-[50%]"
+      ]}
+    >
+      <.icon name="hero-check-circle-solid bg-[#b2b2b2]" class="h-4 w-4 fill-[#eae8fd] bg-[#eae8fd]" />
+      <span>copied to clipboard</span>
+    </p>
+    """
+  end
+
   defp create_post_button(assigns) do
     ~H"""
     <.link
