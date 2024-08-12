@@ -19,6 +19,13 @@ defmodule ElixirDropsWeb.Router do
 
   resources "/health", ElixirDropsWeb.HealthController, only: [:index]
 
+  scope "/seo", ElixirDropsWeb do
+    pipe_through :browser
+
+    live "/:code_block", SeoLive.Index, :index
+    # live "/", SeoLive.Index, :index
+  end
+
   scope "/", ElixirDropsWeb do
     pipe_through [:browser, :require_authenticated_user]
 

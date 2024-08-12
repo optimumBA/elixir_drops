@@ -61,6 +61,12 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Wallaby
+config :wallaby,
+  chromedriver: [headless: true],
+  max_wait_time: 10_000,
+  screenshot_on_failure: true
+
 # AppSignal
 config :appsignal, :config,
   active: false,

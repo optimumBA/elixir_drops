@@ -181,3 +181,13 @@ h6 {
 .drop-preview > * {
   @apply mb-5;
 }
+
+/* opengraph image generator page */
+.seo-image img {
+  @apply h-[80vh] w-full object-cover;
+}
+
+.seo-image pre {
+  @apply px-6 py-10 text-sm;
+}
+

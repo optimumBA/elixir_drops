@@ -93,6 +93,7 @@ defmodule ElixirDropsWeb do
       import ElixirDropsWeb.CoreComponents
       import ElixirDropsWeb.CustomComponents
       import ElixirDropsWeb.Gettext
+      import ElixirDropsWeb.SeoMetaTagsComponent
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
