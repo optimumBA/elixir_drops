@@ -30,7 +30,7 @@ defmodule ElixirDropsWeb.Router do
       ] do
       live "/:user_name", DropLive.Index, :index
 
-      live "/drops/:id/edit", DropLive.Index, :edit
+      live "/drops/:unique_url_string/edit", DropLive.Index, :edit
       live "/drops/new", DropLive.Index, :new
     end
   end
@@ -44,7 +44,7 @@ defmodule ElixirDropsWeb.Router do
         {ElixirDropsWeb.UserAuth, :assign_current_user}
       ] do
       live "/", DropLive.Index, :index
-      live "/drops/:id", DropLive.Show, :show
+      live "/drops/:unique_url_string", DropLive.Show, :show
     end
   end
 

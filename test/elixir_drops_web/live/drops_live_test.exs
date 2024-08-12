@@ -82,7 +82,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {path, _flash} = assert_redirect(live_2)
 
-      assert path == ~p"/drops/#{drop.id}/edit"
+      assert path == ~p"/drops/#{drop.unique_url_string}/edit"
     end
 
     test "authorized users can view their drops", %{conn: conn, drop: drop, user: user} do
@@ -121,7 +121,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       |> element("#drop-#{drop.id}")
       |> render_click()
 
-      assert_patch(live, ~p"/drops/#{drop.id}")
+      assert_patch(live, ~p"/drops/#{drop.unique_url_string}")
     end
 
     test "can see older drops with infinite scroll", %{conn: conn, user: user} do
@@ -163,7 +163,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, drop: drop, user: user} do
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.unique_url_string}")
 
       assert html =~ ~r(<p>Drop body text...</p>)
       assert html =~ drop.title
@@ -310,7 +310,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
     test "authorized user updates a drop", %{conn: conn, user: user, drop: drop} do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, html} = live(conn, ~p"/drops/#{drop.id}/edit")
+      {:ok, live, html} = live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
 
       assert html =~ "Edit post"
       assert html =~ drop.body
@@ -336,7 +336,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
     } do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.id}/edit")
+      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
 
       html =
         live

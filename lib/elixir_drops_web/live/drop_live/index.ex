@@ -57,8 +57,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply, assign_drops(socket)}
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    case Drops.get_drop(id) do
+  defp apply_action(socket, :edit, %{"unique_url_string" => unique_url_string}) do
+    case Drops.get_drop_by_unique_url_string(unique_url_string) do
       nil ->
         socket
         |> assign(:drop, nil)

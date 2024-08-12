@@ -16,11 +16,13 @@ defmodule ElixirDrops.Drops do
   @type filters :: map()
   @type limit :: integer()
   @type page :: integer()
+  @type short_unique_string :: String.t()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
   @topic inspect(__MODULE__)
 
+  @short_unique_string_allowed_chars "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   @doc """
   Subscribes to drops events.
 
@@ -109,6 +111,28 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
+  Gets a single drop by its unique string.
+
+  Returns nil if the Drop does not exist.
+
+  ## Examples
+
+      iex> get_drop_by_unique_url_string("vPfoDMdY")
+      %Drop{}
+
+      iex> get_drop_by_unique_url_string("non_existent")
+      ** nil
+
+  """
+  @spec get_drop_by_unique_url_string(short_unique_string()) :: drop() | nil
+  def get_drop_by_unique_url_string(unique_url_string) do
+    Drop
+    |> where([d], d.unique_url_string == ^unique_url_string)
+    |> preload([:user])
+    |> Repo.one()
+  end
+
+  @doc """
   Creates a drop.
 
   ### Examples
@@ -122,7 +146,19 @@ defmodule ElixirDrops.Drops do
   """
   @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    case create_or_update_drop(drop, user, attrs) do
+    unique_url_string = generate_unique_url_string()
+
+    attrs =
+      attrs
+      |> Map.put(:unique_url_string, unique_url_string)
+      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+
+    changeset =
+      %Drop{}
+      |> Drop.changeset(attrs)
+      |> Ecto.Changeset.put_change(:user_id, user.id)
+
+    case Repo.insert(changeset) do
       {:ok, drop} ->
         drop = Repo.preload(drop, [:user])
 
@@ -139,7 +175,14 @@ defmodule ElixirDrops.Drops do
         {:ok, drop}
 
       {:error, changeset} ->
-        {:error, changeset}
+        if changeset.errors[:unique_url_string] do
+          new_unique_url_string = generate_unique_url_string()
+
+          attrs = Map.put(attrs, :unique_url_string, new_unique_url_string)
+          create_drop(drop, user, attrs)
+        else
+          {:error, changeset}
+        end
     end
   end
 
@@ -156,10 +199,7 @@ defmodule ElixirDrops.Drops do
 
   """
   @spec update_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
-  def update_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}),
-    do: create_or_update_drop(drop, user, attrs)
-
-  defp create_or_update_drop(drop, user, attrs) do
+  def update_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
     drop
     |> Drop.changeset(attrs)
     |> Ecto.Changeset.put_change(:user_id, user.id)
@@ -178,5 +218,13 @@ defmodule ElixirDrops.Drops do
   @spec change_drop(drop(), attrs()) :: changeset()
   def change_drop(%Drop{} = drop, attrs \\ %{}) do
     Drop.changeset(drop, attrs)
+  end
+
+  defp generate_unique_url_string do
+    @short_unique_string_allowed_chars
+    |> String.to_charlist()
+    |> Enum.shuffle()
+    |> Enum.take(8)
+    |> List.to_string()
   end
 end
