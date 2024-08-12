@@ -15,6 +15,8 @@ defmodule ElixirDrops.Drops.Drop do
   schema "drops" do
     field :body, :string
     field :title, :string
+    field :unique_url_string, :string
+
     belongs_to :user, User
 
     timestamps()
@@ -23,7 +25,8 @@ defmodule ElixirDrops.Drops.Drop do
   @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
-    |> cast(attrs, [:body, :title])
-    |> validate_required([:body, :title])
+    |> cast(attrs, [:body, :title, :unique_url_string, :user_id])
+    |> validate_required([:body, :title, :unique_url_string])
+    |> unique_constraint(:unique_url_string)
   end
 end

@@ -47,7 +47,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
       <div
         :for={{dom_id, drop} <- @drops}
         id={dom_id}
-        phx-click={JS.navigate(~p"/drops/#{drop.id}")}
+        phx-click={JS.navigate(~p"/drops/#{drop.unique_url_string}")}
         class="last:mb-6 cursor-pointer"
         role="link"
       >

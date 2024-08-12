@@ -94,14 +94,14 @@ defmodule ElixirDropsWeb.DropComponents do
               <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
             </button>
           <% else %>
-            <.drop_card_action_default id={@drop.id} />
+            <.drop_card_action_default id={@drop.id} unique_url_string={@drop.unique_url_string} />
           <% end %>
         </div>
 
         <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
       </div>
 
-      <.drop_card_menu id={@drop.id} />
+      <.drop_card_menu id={@drop.id} unique_url_string={@drop.unique_url_string} />
     </div>
     """
   end
@@ -140,8 +140,8 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <p
-        id="copy-link-#{@drop.id}"
-        data-clipboard-text={url(~p"/drops/#{@drop.id}")}
+        id="copy-link-#{@id}"
+        data-clipboard-text={url(~p"/drops/#{@drop.unique_url_string}")}
         phx-hook="CopyToClipboard"
         class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
       >
@@ -399,15 +399,15 @@ defmodule ElixirDropsWeb.DropComponents do
       id={"drop-card-menu-#{@id}"}
       phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
     >
-      <.drop_card_action_default id={@id}>
+      <.drop_card_action_default id={@id} unique_url_string={@unique_url_string}>
         <:inner_text>
           Copy link
         </:inner_text>
       </.drop_card_action_default>
 
       <.link
-        navigate={"/drops/#{@id}/edit"}
-        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
+        navigate={"/drops/#{@unique_url_string}/edit"}
+        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-4"
         id={"edit-drop-#{@id}"}
       >
         <.icon name="hero-pencil" class="h-4 md:h-6 w-4 md:w-6" /> Edit drop
@@ -456,6 +456,7 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :id, :string, required: true
+  attr :unique_url_string, :string, required: true
 
   slot :inner_text
 
@@ -463,7 +464,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       id={"card-copy-link-#{@id}"}
-      data-clipboard-text={url(~p"/drops/#{@id}")}
+      data-clipboard-text={url(~p"/drops/#{@unique_url_string}")}
       phx-hook="CopyToClipboard"
       class={[
         "text-[#797979] hover:text-[#5947F1]",

@@ -45,9 +45,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     }
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
+  defp apply_action(socket, :edit, %{"unique_url_string" => unique_url_string}) do
     filters = %{
-      drop_id: id,
+      unique_url_string: unique_url_string,
       user_id: socket.assigns.current_user.id
     }
 
