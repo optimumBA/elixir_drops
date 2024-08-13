@@ -24,10 +24,6 @@ defmodule ElixirDropsWeb.SeoLive.Index do
      |> assign(:is_image?, Regex.match?(@image_regex, code_block))}
   end
 
-  def handle_params(_params, _uri, socket) do
-    {:noreply, socket}
-  end
-
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""

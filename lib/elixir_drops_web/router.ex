@@ -23,7 +23,6 @@ defmodule ElixirDropsWeb.Router do
     pipe_through :browser
 
     live "/:code_block", SeoLive.Index, :index
-    # live "/", SeoLive.Index, :index
   end
 
   scope "/", ElixirDropsWeb do

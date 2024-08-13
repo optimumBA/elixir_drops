@@ -5,7 +5,6 @@ defmodule ElixirDropsWeb.DropsSeoTagsExtractor do
 
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.S3Helper.Client
-  alias ElixirDropsWeb.Endpoint
   alias Wallaby.Browser
 
   @type drop() :: Drop.t()
@@ -31,7 +30,7 @@ defmodule ElixirDropsWeb.DropsSeoTagsExtractor do
 
   defp maybe_get_first_image_or_return_code_block(code_block, _drop), do: code_block
 
-  defp get_image_url(nil, _drop), do: static_url(Endpoint, ~p"/images/seo_default_image.png")
+  defp get_image_url(nil, _drop), do: nil
 
   defp get_image_url(markdown_block, drop) do
     screenshot = generate_screenshot(markdown_block)
