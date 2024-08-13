@@ -8,6 +8,7 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
   alias ElixirDrops.Drops
   alias ElixirDropsWeb.DropLive.DropComponents
   alias ElixirDropsWeb.DropLive.Icons
+  alias ElixirDropsWeb.DropsSeoTagsExtractor
 
   @impl Phoenix.LiveComponent
   def update(assigns, socket) do
@@ -30,7 +31,9 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
 
   def handle_event("save", %{"drop" => drop_params}, socket) do
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
-      {:ok, _drop} ->
+      {:ok, drop} ->
+        create_drop_seo_image(socket, drop)
+
         {
           :noreply,
           push_navigate(
@@ -57,6 +60,17 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
       socket.assigns.drop,
       socket.assigns.current_user,
       drop_params
+    )
+  end
+
+  # Maybe put this in the background(calling external resources and all), later
+  defp create_drop_seo_image(socket, drop) do
+    seo_image = DropsSeoTagsExtractor.create_drop_meta_image(drop)
+
+    Drops.update_drop(
+      socket.assigns.drop,
+      socket.assigns.current_user,
+      %{"seo_image_link" => seo_image}
     )
   end
 

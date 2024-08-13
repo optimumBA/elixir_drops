@@ -31,13 +31,19 @@ defmodule ElixirDropsWeb.DropsSeoTagsExtractor do
 
   defp maybe_get_first_image_or_return_code_block(code_block, _drop), do: code_block
 
-  defp get_image_url(nil, _drop), do: static_url(Endpoint, ~p"/images/logo.png")
+  defp get_image_url(nil, _drop), do: static_url(Endpoint, ~p"/images/seo_default_image.png")
 
   defp get_image_url(markdown_block, drop) do
-    markdown_block
-    |> generate_screenshot()
-    |> File.read!()
-    |> upload_image(drop)
+    screenshot = generate_screenshot(markdown_block)
+
+    image_url =
+      screenshot
+      |> File.read!()
+      |> upload_image(drop)
+
+    File.rm!(screenshot)
+
+    image_url
   end
 
   defp generate_screenshot(markdown_block) do
@@ -53,23 +59,17 @@ defmodule ElixirDropsWeb.DropsSeoTagsExtractor do
     screenshot
   end
 
-  # Check if one already exists -> delete before creating?
-  # Maybe do a Req.get(construct url) -> 404(upload), 200(return the url)
-   # delete temp screenshot -> maybe
   defp upload_image(image, drop) do
-    image_name = "drop-meta-image-#{drop.id}2.png"
+    timestamp = Timex.to_unix(drop.updated_at)
+
+    image_name = "drop-meta-image-#{timestamp}-#{drop.id}.png"
 
     case Client.upload_image(image, image_name, "image/png") do
       {:ok, image_url} ->
-        IO.inspect(image_url)
         image_url
 
       _error ->
         nil
     end
   end
-
-
 end
-
-# Drops.get_drop "ba4ddee1-564b-4b06-8d79-b459e5524022"

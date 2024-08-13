@@ -184,10 +184,9 @@ h6 {
 
 /* opengraph image generator page */
 .seo-image img {
-  @apply h-[80vh] w-full object-cover;
+  @apply h-[100vh] w-full object-cover;
 }
 
 .seo-image pre {
-  @apply px-6 py-10 text-sm;
+  @apply px-6 py-10 text-sm whitespace-break-spaces w-[90%] rounded-lg;
 }
-

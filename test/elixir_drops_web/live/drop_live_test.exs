@@ -157,6 +157,36 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html_2 =~ "Drop title 1"
       refute html_2 =~ "Drop title 14"
     end
+
+    test "rendered HTML includes SEO meta tags", %{conn: conn} do
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:description\" content=\"Share Elixir tips and tricks with the community...\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
+
+      assert html =~ "<meta name=\"twitter:site\" content=\"@optimumBA\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:url\" content=\"http://localhost:4002/\"/>"
+
+      assert html =~
+               "<meta property=\"description\" content=\"Share Elixir tips and tricks with the community...\"/>"
+
+      assert html =~
+               "<meta property=\"og:description\" content=\"Share Elixir tips and tricks with the community...\"/>"
+
+      assert html =~
+               "<meta property=\"og:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
+
+      assert html =~ "<meta property=\"og:title\" content=\"Elixir Drops\"/>"
+      assert html =~ "<meta property=\"og:type\" content=\"website\"/>"
+      assert html =~ "<meta property=\"og:url\" content=\"http://localhost:4002/\"/>"
+    end
   end
 
   describe "/drops/:id" do
@@ -178,6 +208,36 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert {:error, {:live_redirect, %{to: ^path}}} =
                live(conn, ~p"/drops/#{drop_id}")
+    end
+
+    test "rendered HTML includes SEO meta tags", %{conn: conn, drop: drop} do
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+
+      assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
+      assert html =~ "<meta name=\"twitter:description\" content=\"#{drop.title}\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
+
+      assert html =~ "<meta name=\"twitter:site\" content=\"@optimumBA\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:url\" content=\"http://localhost:4002/drops/#{drop.id}\"/>"
+
+      assert html =~
+               "<meta property=\"description\" content=\"#{drop.title}\"/>"
+
+      assert html =~
+               "<meta property=\"og:description\" content=\"#{drop.title}\"/>"
+
+      assert html =~
+               "<meta property=\"og:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
+
+      assert html =~ "<meta property=\"og:title\" content=\"Elixir Drops\"/>"
+      assert html =~ "<meta property=\"og:type\" content=\"article\"/>"
+
+      assert html =~
+               "<meta property=\"og:url\" content=\"http://localhost:4002/drops/#{drop.id}\"/>"
     end
   end
 

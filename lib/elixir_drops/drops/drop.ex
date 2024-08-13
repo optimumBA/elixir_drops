@@ -13,8 +13,9 @@ defmodule ElixirDrops.Drops.Drop do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "drops" do
-    field :title, :string
     field :body, :string
+    field :seo_image_link, :string
+    field :title, :string
 
     belongs_to :user, User
 
@@ -24,7 +25,7 @@ defmodule ElixirDrops.Drops.Drop do
   @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
-    |> cast(attrs, [:body, :title, :user_id])
+    |> cast(attrs, [:body, :seo_image_link, :title, :user_id])
     |> validate_required([:body, :title])
   end
 end

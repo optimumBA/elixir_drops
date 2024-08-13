@@ -10,7 +10,7 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
   @type rendered :: rendered()
 
   @default_description """
-  Share Elixir tips and tricks with the community.
+  Share Elixir tips and tricks with the community...
   """
 
   @default_title "Elixir Drops"
@@ -18,7 +18,6 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
 
   attr :attributes, :map
 
-  # TODO: Description is the title, remove?
   @spec seo_meta_tags(assigns()) :: rendered()
   def seo_meta_tags(assigns) do
     assigns =
@@ -60,7 +59,7 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
   defp assign_image_url(assigns) do
     assign_new(assigns, :image_url, fn
       %{attributes: %{image_url: image_url}} when is_binary(image_url) -> image_url
-      _assigns -> static_url(Endpoint, ~p"/images/logo.png")
+      _assigns -> static_url(Endpoint, ~p"/images/seo_default_image.png")
     end)
   end
 
