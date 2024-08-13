@@ -20,9 +20,9 @@ defmodule ElixirDrops.Drops do
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
+  @short_unique_string_allowed_chars "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   @topic inspect(__MODULE__)
 
-  @short_unique_string_allowed_chars "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   @doc """
   Subscribes to drops events.
 
@@ -146,44 +146,13 @@ defmodule ElixirDrops.Drops do
   """
   @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    unique_url_string = generate_unique_url_string()
+    attrs = attrs_with_unique_url_string(attrs)
 
-    attrs =
-      attrs
-      |> Map.put(:unique_url_string, unique_url_string)
-      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
-
-    changeset =
-      %Drop{}
-      |> Drop.changeset(attrs)
-      |> Ecto.Changeset.put_change(:user_id, user.id)
-
-    case Repo.insert(changeset) do
-      {:ok, drop} ->
-        drop = Repo.preload(drop, [:user])
-
-        Phoenix.PubSub.broadcast(
-          ElixirDrops.PubSub,
-          @topic,
-          {
-            __MODULE__,
-            [:drop, :created],
-            drop
-          }
-        )
-
-        {:ok, drop}
-
-      {:error, changeset} ->
-        if changeset.errors[:unique_url_string] do
-          new_unique_url_string = generate_unique_url_string()
-
-          attrs = Map.put(attrs, :unique_url_string, new_unique_url_string)
-          create_drop(drop, user, attrs)
-        else
-          {:error, changeset}
-        end
-    end
+    drop
+    |> Drop.changeset(attrs)
+    |> Ecto.Changeset.put_change(:user_id, user.id)
+    |> Repo.insert()
+    |> process_drop()
   end
 
   @doc """
@@ -226,5 +195,35 @@ defmodule ElixirDrops.Drops do
     |> Enum.shuffle()
     |> Enum.take(8)
     |> List.to_string()
+  end
+
+  defp attrs_with_unique_url_string(attrs) do
+    unique_url_string = generate_unique_url_string()
+
+    attrs
+    |> Map.put(:unique_url_string, unique_url_string)
+    |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+  end
+
+  defp process_drop({:ok, drop}) do
+    drop = Repo.preload(drop, [:user])
+
+    broadcast_drop_creation(drop)
+
+    {:ok, drop}
+  end
+
+  defp process_drop({:error, changeset}), do: {:error, changeset}
+
+  defp broadcast_drop_creation(drop) do
+    Phoenix.PubSub.broadcast(
+      ElixirDrops.PubSub,
+      @topic,
+      {
+        __MODULE__,
+        [:drop, :created],
+        drop
+      }
+    )
   end
 end
