@@ -77,7 +77,7 @@ config :ueberauth, Ueberauth,
       {Ueberauth.Strategy.Github,
        [
          default_scope: "read:user,user:email",
-         callback_url: "https://elixirdrops-pr-2.fly.dev/"
+         send_redirect_uri: false
        ]}
   ]
 
