@@ -129,7 +129,8 @@ if config_env() == :prod do
 
   config :ueberauth, Ueberauth.Strategy.Github.OAuth,
     client_id: github_client_id,
-    client_secret: github_client_secret
+    client_secret: github_client_secret,
+    callback_url: "https://elixirdrops-pr-2.fly.dev/auth/github/callback"
 
   appsignal_app_env =
     System.get_env("APPSIGNAL_APP_ENV") ||
