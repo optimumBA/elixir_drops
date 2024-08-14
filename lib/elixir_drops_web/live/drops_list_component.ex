@@ -50,7 +50,7 @@ defmodule ElixirDropsWeb.DropsListComponent do
   def handle_event("refresh-drops", _params, socket) do
     send(self(), :drops_refreshed)
 
-    {:noreply, stream(socket, :drops, [], reset: true)}
+    {:noreply, assign_drops(socket)}
   end
 
   defp assign_drops(socket) do
