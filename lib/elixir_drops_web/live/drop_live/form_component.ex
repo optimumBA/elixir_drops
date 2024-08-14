@@ -6,7 +6,7 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
-  alias ElixirDropsWeb.DropLive.DropComponents
+  alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropLive.Icons
 
   @impl Phoenix.LiveComponent
@@ -35,7 +35,7 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
           :noreply,
           push_navigate(
             socket,
-            to: ~p"/#{socket.assigns.current_user.github_username}"
+            to: ~p"/profile"
           )
         }
 

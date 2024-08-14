@@ -68,6 +68,12 @@ defmodule ElixirDropsWeb do
     quote do
       use Phoenix.LiveComponent
 
+      def stream_insert_many(socket, stream_key, items, opts \\ []) do
+        Enum.reduce(items, socket, fn item, socket ->
+          Phoenix.LiveView.stream_insert(socket, stream_key, item, opts)
+        end)
+      end
+
       unquote(html_helpers())
     end
   end

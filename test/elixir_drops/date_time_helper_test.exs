@@ -5,8 +5,12 @@ defmodule ElixirDrops.DateTimeHelperTest do
 
   describe "convert_to_relative_time/2" do
     test "adds timezone offset and converts to relative time" do
-      assert DateTimeHelper.convert_to_relative_time(~N[2019-01-01 00:00:00], 3600) ==
-               "5 years ago"
+      now = DateTime.utc_now()
+      naive_time_now = DateTime.to_naive(now)
+      timezone_offset = 3600
+
+      assert DateTimeHelper.convert_to_relative_time(naive_time_now, timezone_offset) ==
+               "in 59 minutes"
     end
   end
 end

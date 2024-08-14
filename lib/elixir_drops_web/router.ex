@@ -28,10 +28,10 @@ defmodule ElixirDropsWeb.Router do
         {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
         {ElixirDropsWeb.UserAuth, :assign_current_user}
       ] do
-      live "/:user_name", DropLive.Index, :index
+      live "/profile", UserDropLive.Index, :index
 
-      live "/drops/:id/edit", DropLive.Index, :edit
-      live "/drops/new", DropLive.Index, :new
+      live "/drops/:id/edit", UserDropLive.Index, :edit
+      live "/drops/new", UserDropLive.Index, :new
     end
   end
 
