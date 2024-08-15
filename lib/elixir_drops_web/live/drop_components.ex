@@ -206,7 +206,7 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <nav class="full-width bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
-        <ul class="breakout flex" id="secondary-nav-links" phx-hook="SecondaryNavLinks">
+        <ul class="flex" id="secondary-nav-links" phx-hook="SecondaryNavLinks">
           <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center">
             <.link href={~p"/profile"}>
               My posts

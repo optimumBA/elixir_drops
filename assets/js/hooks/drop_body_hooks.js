@@ -78,19 +78,21 @@ DropBodyHooks.CreatePostButtonMobile = {
 
     const userDropsList = document.querySelector('#user-drops')
 
-    if (
-      userDropsList &&
-      emptyDropsEl &&
-      emptyDropsEl.parentElement.lastElementChild.id == 'drops-empty'
-    ) {
-      button.classList.add('hidden')
+    const hideButton = () => {
+      if (userDropsList && emptyDropsEl.nextElementSibling == null) {
+        button.classList.add('hidden')
+      } else {
+        button.classList.remove('hidden')
+      }
     }
+
+    hideButton()
 
     window.onscroll = () => {
       if (window.scrollY > 300) {
         button.classList.add('hidden')
       } else {
-        button.classList.remove('hidden')
+        hideButton()
       }
     }
   },
@@ -103,18 +105,12 @@ DropBodyHooks.SecondaryNavLinks = {
     const lgMediaScreensQuery = window.matchMedia('(min-width: 1280px)')
 
     const emptyDropsEl = document.querySelector('#drops-empty')
-    const dropContainerWithDrops =
-      emptyDropsEl.parentElement.lastElementChild.id.includes('drops-empty')
+
+    const dropContainerWithDrops = emptyDropsEl.nextElementSibling == null
 
     if (emptyDropsEl && dropContainerWithDrops && lgMediaScreensQuery.matches) {
       secondaryNavLinks.classList.add('breakout')
-    }
-
-    if (
-      emptyDropsEl &&
-      !dropContainerWithDrops &&
-      lgMediaScreensQuery.matches
-    ) {
+    } else {
       secondaryNavLinks.classList.remove('breakout')
     }
   },
