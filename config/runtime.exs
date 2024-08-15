@@ -128,8 +128,8 @@ if config_env() == :prod do
       """
 
   config :ueberauth, Ueberauth.Strategy.Github.OAuth,
-    client_id: github_client_id,
-    client_secret: github_client_secret
+    client_id: " Iv23lisVV9tAtnqOmFi8",
+    client_secret: "35449a9cb0f5e052f83715c9e3cb834c0d5a6e88"
 
   appsignal_app_env =
     System.get_env("APPSIGNAL_APP_ENV") ||
