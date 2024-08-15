@@ -13,12 +13,17 @@
 
   <section :if={@live_action == :index} class="content-grid text-[#252525] relative">
     <DropComponents.user_drops_header current_user={@current_user} />
-    <.live_component
-      drop_filters={@drop_filters}
+
+    <DropComponents.drops_list
+      drops={@streams.drops}
+      end_of_timeline?={@end_of_timeline?}
       id="user-drops"
-      module={DropsListComponent}
-      show_card_menu?={true}
       timezone_offset={@timezone_offset}
+    />
+
+    <DropComponents.create_post_button_mobile
+      current_user={@current_user}
+      show_mobile_create_post_btn?={true}
     />
   </section>
 

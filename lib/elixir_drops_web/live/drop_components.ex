@@ -13,7 +13,7 @@ defmodule ElixirDropsWeb.DropComponents do
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
-    <header class="header content-grid py-2 w-full relative z-[100000] shadow-md shadow-[#c4c0c8]">
+    <header class="header content-grid py-2 w-full relative z-30 shadow-md shadow-[#c4c0c8]">
       <nav class="breakout flex items-center justify-between nav-primary">
         <div>
           <.link href={~p"/"}>
@@ -328,6 +328,62 @@ defmodule ElixirDropsWeb.DropComponents do
     >
       <.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" />
     </.link>
+    """
+  end
+
+  attr :drops, :any, required: true
+  attr :end_of_timeline?, :boolean, required: true
+  attr :id, :string, required: true
+  attr :show_user_drops?, :boolean, default: false
+  attr :timezone_offset, :string, required: true
+
+  @spec drops_list(assigns()) :: rendered()
+  def drops_list(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      phx-update="stream"
+      phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
+      phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
+      phx-page-loading
+      class={[
+        "grid gap-y-2 md:gap-y-5 py-8"
+      ]}
+    >
+      <div
+        :if={@show_user_drops?}
+        id="drops-empty"
+        class="only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+      >
+        <div class="flex flex-col items-center justify-center">
+          <p>You haven't created any post yet.</p>
+          <.link
+            navigate={~p"/drops/new"}
+            class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 md:hidden py-2 mt-2 rounded-lg flex items-center gap-x-2"
+          >
+            <span><.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" /></span>
+            <span> Create Post</span>
+          </.link>
+        </div>
+      </div>
+
+      <.link
+        :for={{dom_id, drop} <- @drops}
+        id={dom_id}
+        patch={~p"/drops/#{drop.id}"}
+        class="last:mb-6"
+      >
+        <.drop_card
+          avatar={drop.user.avatar}
+          created_at={drop.inserted_at}
+          github_username={drop.user.github_username}
+          id={drop.id}
+          show_card_menu?={@show_user_drops?}
+          timezone_offset={@timezone_offset}
+          title={drop.title}
+        />
+      </.link>
+    </div>
     """
   end
 

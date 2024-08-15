@@ -97,6 +97,40 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert has_element?(live, "#drop-#{drop.id}", drop.title)
     end
+
+    test "can see older drops with infinite scroll", %{conn: conn, user: user} do
+      for drop <- 1..25 do
+        time = 120 * drop
+
+        %Drop{}
+        |> drop_fixture(user, %{title: "Drop title #{drop}", body: "Body for drop #{drop}"})
+        |> update_drop_inserted_at(time)
+      end
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert html_2 = render_hook(live, "next-page", %{})
+
+      assert html_2 =~ "Drop title 11"
+      assert html_2 =~ "Drop title 14"
+    end
+
+    test "can see newer drops with infinite scroll", %{conn: conn, user: user} do
+      for drop <- 1..25 do
+        time = 120 * drop
+
+        %Drop{}
+        |> drop_fixture(user, %{title: "Drop title #{drop}", body: "Body for drop #{drop}"})
+        |> update_drop_inserted_at(time)
+      end
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert html_2 = render_hook(live, "prev-page", %{})
+
+      assert html_2 =~ "Drop title 1"
+      refute html_2 =~ "Drop title 14"
+    end
   end
 
   describe "/drops/:id" do

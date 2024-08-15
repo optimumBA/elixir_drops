@@ -76,7 +76,10 @@ DropBodyHooks.CreatePostButtonMobile = {
 
     const emptyDropsEl = document.querySelector('#drops-empty')
 
+    const userDropsList = document.querySelector('#user-drops')
+
     if (
+      userDropsList &&
       emptyDropsEl &&
       emptyDropsEl.parentElement.lastElementChild.id == 'drops-empty'
     ) {

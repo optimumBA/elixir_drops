@@ -4,11 +4,10 @@
   <section class="content-grid text-[#252525] relative">
     <DropComponents.welcome_message condition={!@current_user} />
 
-    <.live_component
-      drop_filters={@drop_filters}
+    <DropComponents.drops_list
+      drops={@streams.drops}
+      end_of_timeline?={@end_of_timeline?}
       id="drops"
-      module={DropsListComponent}
-      show_card_menu?={false}
       timezone_offset={@timezone_offset}
     />
 
@@ -20,7 +19,7 @@
         "fixed left-[50%] translate-x-[-50%] z-[1000000]"
       ]}
       id="new-drops-indicator"
-      phx-click={JS.push("refresh-drops", target: "#drops")}
+      phx-click={JS.push("refresh-drops")}
     >
       <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
       <span>New Drops</span>
