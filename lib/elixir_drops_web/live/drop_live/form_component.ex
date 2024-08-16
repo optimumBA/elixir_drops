@@ -6,9 +6,9 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Workers.ImageCreationWorker
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropLive.Icons
-  alias ElixirDrops.ImageCreationWorker
 
   @impl Phoenix.LiveComponent
   def update(assigns, socket) do
@@ -32,7 +32,7 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
   def handle_event("save", %{"drop" => drop_params}, socket) do
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
       {:ok, drop} ->
-        enqueue_seo_image_creation(drop.id, socket.assigns.current_user.id)
+        enqueue_seo_image_creation(drop.id)
 
         {
           :noreply,
@@ -63,11 +63,8 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
     )
   end
 
-  defp enqueue_seo_image_creation(drop_id, user_id) do
-    %{
-      "drop_id" => drop_id,
-      "user_id" => user_id
-    }
+  defp enqueue_seo_image_creation(drop_id) do
+    %{"drop_id" => drop_id}
     |> ImageCreationWorker.new()
     |> Oban.insert()
   end

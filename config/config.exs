@@ -9,7 +9,11 @@ import Config
 
 config :elixir_drops,
   ecto_repos: [ElixirDrops.Repo],
-  generators: [timestamp_type: :utc_datetime, binary_id: true]
+  generators: [timestamp_type: :utc_datetime, binary_id: true],
+  wallaby_auth: [
+    username: "elixir_drops_wallaby",
+    password: "l3AVAovk4B8g5Sbq"
+  ]
 
 # Configures the endpoint
 config :elixir_drops, ElixirDropsWeb.Endpoint,
@@ -88,7 +92,7 @@ config :ueberauth, Ueberauth,
 
 config :elixir_drops, Oban,
   engine: Oban.Engines.Basic,
-  queues: [default: 10, media: 20],
+  queues: [default: 10, seo_images: 20],
   repo: ElixirDrops.Repo
 
 # Import environment specific config. This must remain at the bottom

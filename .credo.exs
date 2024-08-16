@@ -215,7 +215,8 @@
                "lib/elixir_drops_web/endpoint.ex",
                "lib/elixir_drops_web/router.ex"
              ]
-           }},
+           },
+           max_deps: 20},
           {Credo.Check.Refactor.NegatedIsNil, []},
           {Credo.Check.Refactor.PassAsyncInTestCases, []},
           {Credo.Check.Refactor.PipeChainStart, []},

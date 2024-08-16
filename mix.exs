@@ -67,6 +67,7 @@ defmodule ElixirDrops.MixProject do
       {:autumn, "~> 0.2"},
       {:mdex, "~> 0.1"},
       {:mox, "~> 1.1", only: :test},
+      {:oban, "~> 2.18"},
       {:timex, "~> 3.7"},
       {:ueberauth_github, "~> 0.8.3"},
       {:wallaby, "~> 0.30.9"}
@@ -117,8 +118,7 @@ defmodule ElixirDrops.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"},
-      {:oban, "~> 2.18"},
+      {:bandit, "~> 1.5"}
     ]
   end
 

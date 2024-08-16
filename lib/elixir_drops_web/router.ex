@@ -13,14 +13,16 @@ defmodule ElixirDropsWeb.Router do
     plug :fetch_current_user
   end
 
+  pipeline :seo_image_generator do
+    plug :wallaby_auth
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
-
   scope "/seo", ElixirDropsWeb do
-    pipe_through :browser
+    pipe_through [:browser, :seo_image_generator]
 
     live "/:code_block", SeoLive.Index, :index
   end
@@ -82,6 +84,26 @@ defmodule ElixirDropsWeb.Router do
 
       live_dashboard "/dashboard", metrics: ElixirDropsWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
+  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
+
+  defp wallaby_auth(conn, _opts) do
+    options = Application.get_env(:elixir_drops, :wallaby_auth)
+    username = Keyword.fetch!(options, :username)
+    password = Keyword.fetch!(options, :password)
+
+    with {request_username, request_password} <- Plug.BasicAuth.parse_basic_auth(conn),
+         valid_username? = Plug.Crypto.secure_compare(username, request_username),
+         valid_password? = Plug.Crypto.secure_compare(password, request_password),
+         true <- valid_username? and valid_password? do
+      conn
+    else
+      _no_auth ->
+        conn
+        |> Plug.BasicAuth.request_basic_auth()
+        |> halt()
     end
   end
 end

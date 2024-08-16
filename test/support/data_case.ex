@@ -20,6 +20,8 @@ defmodule ElixirDrops.DataCase do
 
   using do
     quote do
+      use Oban.Testing, repo: ElixirDrops.Repo
+
       alias ElixirDrops.Repo
 
       import Ecto

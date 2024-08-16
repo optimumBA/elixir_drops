@@ -4,6 +4,7 @@
   },
   "skip_files": [
     "lib/elixir_drops_web/components/core_components.ex",
-    "lib/elixir_drops/release.ex"
+    "lib/elixir_drops/release.ex",
+    "lib/elixir_drops/s3_helper/http.ex"
   ]
 }
