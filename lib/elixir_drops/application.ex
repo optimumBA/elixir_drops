@@ -17,7 +17,8 @@ defmodule ElixirDrops.Application do
       # Start a worker by calling: ElixirDrops.Worker.start_link(arg)
       # {ElixirDrops.Worker, arg},
       # Start to serve requests, typically the last entry
-      ElixirDropsWeb.Endpoint
+      ElixirDropsWeb.Endpoint,
+      {Oban, Application.fetch_env!(:elixir_drops, Oban)}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

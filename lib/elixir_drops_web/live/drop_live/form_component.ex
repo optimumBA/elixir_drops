@@ -8,7 +8,7 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
   alias ElixirDrops.Drops
   alias ElixirDropsWeb.DropLive.DropComponents
   alias ElixirDropsWeb.DropLive.Icons
-  alias ElixirDropsWeb.DropsSeoTagsExtractor
+  alias ElixirDrops.ImageCreationWorker
 
   @impl Phoenix.LiveComponent
   def update(assigns, socket) do
@@ -32,7 +32,7 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
   def handle_event("save", %{"drop" => drop_params}, socket) do
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
       {:ok, drop} ->
-        create_drop_seo_image(socket, drop)
+        enqueue_seo_image_creation(drop.id, socket.assigns.current_user.id)
 
         {
           :noreply,
@@ -63,15 +63,13 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
     )
   end
 
-  # Maybe put this in the background(calling external resources and all), later
-  defp create_drop_seo_image(socket, drop) do
-    seo_image = DropsSeoTagsExtractor.create_drop_meta_image(drop)
-
-    Drops.update_drop(
-      socket.assigns.drop,
-      socket.assigns.current_user,
-      %{"seo_image_link" => seo_image}
-    )
+  defp enqueue_seo_image_creation(drop_id, user_id) do
+    %{
+      "drop_id" => drop_id,
+      "user_id" => user_id
+    }
+    |> ImageCreationWorker.new()
+    |> Oban.insert()
   end
 
   defp assign_form(socket, changeset) do

@@ -35,3 +35,6 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+# Enable testing mode to prevent Oban from running jobs and plugins during test runs
+config :elixir_drops, Oban, testing: :inline
