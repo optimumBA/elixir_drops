@@ -1,8 +1,9 @@
-defmodule ElixirDropsWeb.DropLive.DropComponents do
+defmodule ElixirDropsWeb.DropComponents do
   @moduledoc false
 
   use ElixirDropsWeb, :html
 
+  alias ElixirDrops.Accounts.User
   alias ElixirDrops.DateTimeHelper
   alias ElixirDropsWeb.DropLive.Icons
 
@@ -12,7 +13,7 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
-    <header class="header content-grid py-2 w-full relative z-[100000] shadow-md shadow-[#c4c0c8]">
+    <header class="header content-grid py-2 w-full relative z-30 shadow-md shadow-[#c4c0c8]">
       <nav class="breakout flex items-center justify-between nav-primary">
         <div>
           <.link href={~p"/"}>
@@ -23,11 +24,7 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
         <div>
           <%= if @current_user do %>
             <div class="flex items-center gap-x-4">
-              <.create_post_button
-                current_user={@current_user}
-                live_action={@live_action}
-                show_user_drops?={@show_user_drops?}
-              />
+              <.create_post_button current_user={@current_user} live_action={@live_action} />
 
               <div
                 class="flex items-center gap-x-3 cursor-pointer"
@@ -47,11 +44,7 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
             </div>
           <% else %>
             <div class="flex items-center gap-x-4">
-              <.create_post_button
-                current_user={@current_user}
-                live_action={@live_action}
-                show_user_drops?={@show_user_drops?}
-              />
+              <.create_post_button current_user={@current_user} live_action={@live_action} />
 
               <.link
                 href={~p"/auth/github"}
@@ -72,7 +65,7 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
   attr :created_at, :string, required: true
   attr :github_username, :string, required: true
   attr :id, :string, required: true
-  attr :show_user_drops?, :boolean, required: true
+  attr :show_card_menu?, :boolean, default: false
   attr :timezone_offset, :integer, required: true
   attr :title, :string, required: true
 
@@ -94,7 +87,7 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
             </p>
           </div>
 
-          <%= if @show_user_drops? do %>
+          <%= if @show_card_menu? do %>
             <button
               class="text-[#797979] hover:text-[#5947F1]"
               id="drop-card-menu-btn"
@@ -191,17 +184,12 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
     """
   end
 
-  attr :current_user, :any, required: true
-  attr :show_user_drops?, :boolean, required: true
+  attr :current_user, User, required: true
 
   @spec user_drops_header(assigns()) :: rendered()
   def user_drops_header(assigns) do
     ~H"""
-    <div
-      :if={@show_user_drops? && @current_user}
-      class="full-width"
-      phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
-    >
+    <div class="full-width" phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}>
       <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 full-width">
         <div class="flex flex-col md:flex-row items-center gap-x-3 breakout md:pl-6">
           <div>
@@ -218,9 +206,9 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
       </div>
 
       <nav class="full-width bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
-        <ul class="breakout flex" id="secondary-nav-links" phx-hook="SecondaryNavLinks">
+        <ul class="flex" id="secondary-nav-links" phx-hook="SecondaryNavLinks">
           <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center">
-            <.link href={~p"/#{@current_user.github_username}"}>
+            <.link href={~p"/profile"}>
               My posts
             </.link>
           </li>
@@ -285,7 +273,7 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
           <button
             type="button"
             class="text-[#4f4f4f] text-sm rounded-lg w-[30%] py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
-            phx-click={JS.navigate(~p"/#{@current_user.github_username}")}
+            phx-click={JS.navigate(~p"/profile")}
           >
             Close editor
           </button>
@@ -298,6 +286,103 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
           </button>
         </div>
       </div>
+    </div>
+    """
+  end
+
+  @spec copied_link_popup_message(assigns()) :: rendered()
+  def copied_link_popup_message(assigns) do
+    ~H"""
+    <p
+      id="copy-confirm-message"
+      class={[
+        "hidden text-[#eae8fd] text-xs bg-[#9666d9] rounded-lg drop-shadow-sm px-3 py-3 flex items-center gap-x-1 z-[1000]",
+        "fixed bottom-12 left-[50%] translate-x-[-50%] translate-y-[50%]"
+      ]}
+    >
+      <.icon name="hero-check-circle-solid bg-[#b2b2b2]" class="h-4 w-4 fill-[#eae8fd] bg-[#eae8fd]" />
+      <span>copied to clipboard</span>
+    </p>
+    """
+  end
+
+  attr :current_user, User
+  attr :show_mobile_create_post_btn?, :boolean, required: true
+
+  @spec create_post_button_mobile(assigns()) :: rendered()
+  def create_post_button_mobile(assigns) do
+    ~H"""
+    <.link
+      :if={@show_mobile_create_post_btn?}
+      id="create-post-btn-mobile"
+      phx-hook="CreatePostButtonMobile"
+      class={[
+        "bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80"
+      ]}
+      phx-click={
+        if(@current_user,
+          do: JS.navigate(~p"/drops/new"),
+          else: show_popup("signin-popup-message")
+        )
+      }
+    >
+      <.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" />
+    </.link>
+    """
+  end
+
+  attr :drops, :any, required: true
+  attr :end_of_timeline?, :boolean, required: true
+  attr :id, :string, required: true
+  attr :show_user_drops?, :boolean, default: false
+  attr :timezone_offset, :string, required: true
+
+  @spec drops_list(assigns()) :: rendered()
+  def drops_list(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      phx-update="stream"
+      phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
+      phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
+      phx-page-loading
+      class={[
+        "grid gap-y-2 md:gap-y-5 py-8"
+      ]}
+    >
+      <div
+        :if={@show_user_drops?}
+        id="drops-empty"
+        class="only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+      >
+        <div class="flex flex-col items-center justify-center">
+          <p>You haven't created any post yet.</p>
+          <.link
+            navigate={~p"/drops/new"}
+            class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 md:hidden py-2 mt-2 rounded-lg flex items-center gap-x-2"
+          >
+            <span><.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" /></span>
+            <span> Create Post</span>
+          </.link>
+        </div>
+      </div>
+
+      <.link
+        :for={{dom_id, drop} <- @drops}
+        id={dom_id}
+        patch={~p"/drops/#{drop.id}"}
+        class="last:mb-6"
+      >
+        <.drop_card
+          avatar={drop.user.avatar}
+          created_at={drop.inserted_at}
+          github_username={drop.user.github_username}
+          id={drop.id}
+          show_card_menu?={@show_user_drops?}
+          timezone_offset={@timezone_offset}
+          title={drop.title}
+        />
+      </.link>
     </div>
     """
   end
@@ -319,22 +404,6 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
     >
       <span><.icon name="hero-plus" /></span>
       <span>Create Post</span>
-    </.link>
-
-    <.link
-      :if={@live_action == :index}
-      id="create-post-btn-mobile"
-      phx-hook="CreatePostButtonMobile"
-      class={[
-        "bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80"
-      ]}
-      phx-click={
-        if @current_user,
-          do: JS.navigate(~p"/drops/new"),
-          else: show_popup("signin-popup-message")
-      }
-    >
-      <.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" />
     </.link>
     """
   end
@@ -382,7 +451,7 @@ defmodule ElixirDropsWeb.DropLive.DropComponents do
       <ul class="mt-10 grid gap-y-6">
         <li class="px-5">
           <.link
-            href={~p"/#{@current_user.github_username}"}
+            href={~p"/profile"}
             class="flex gap-x-2 hover:text-[#5947F1]"
             id="view-user-drops-link"
           >

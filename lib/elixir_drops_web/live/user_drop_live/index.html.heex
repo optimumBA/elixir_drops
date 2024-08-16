@@ -1,0 +1,32 @@
+<section class="drops-container relative h-full w-full">
+  <DropComponents.navbar current_user={@current_user} live_action={@live_action} />
+
+  <section :if={@live_action in [:edit, :new]}>
+    <.live_component
+      current_user={@current_user}
+      drop={@drop}
+      id="drops-form"
+      live_action={@live_action}
+      module={FormComponent}
+    />
+  </section>
+
+  <section :if={@live_action == :index} class="content-grid text-[#252525] relative">
+    <DropComponents.user_drops_header current_user={@current_user} />
+
+    <DropComponents.drops_list
+      drops={@streams.drops}
+      end_of_timeline?={@end_of_timeline?}
+      id="user-drops"
+      show_user_drops?={true}
+      timezone_offset={@timezone_offset}
+    />
+
+    <DropComponents.create_post_button_mobile
+      current_user={@current_user}
+      show_mobile_create_post_btn?={true}
+    />
+  </section>
+
+  <DropComponents.copied_link_popup_message />
+</section>

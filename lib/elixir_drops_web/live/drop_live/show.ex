@@ -2,7 +2,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
-  alias ElixirDropsWeb.DropLive.DropComponents
+  alias ElixirDropsWeb.DropComponents
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
