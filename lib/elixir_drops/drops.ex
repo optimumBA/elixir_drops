@@ -121,7 +121,7 @@ defmodule ElixirDrops.Drops do
       %Drop{}
 
       iex> get_drop_by_unique_url_string("non_existent")
-      ** nil
+      nil
 
   """
   @spec get_drop_by_unique_url_string(short_unique_string()) :: drop() | nil
@@ -189,7 +189,16 @@ defmodule ElixirDrops.Drops do
     Drop.changeset(drop, attrs)
   end
 
-  defp generate_unique_url_string do
+  @doc """
+  Generates a unique string for the drop.
+
+  ## Examples
+
+      iex> generate_unique_url_string()
+      "vPf2DMdY"
+  """
+  @spec generate_unique_url_string() :: short_unique_string()
+  def generate_unique_url_string do
     @short_unique_string_allowed_chars
     |> String.to_charlist()
     |> Enum.shuffle()

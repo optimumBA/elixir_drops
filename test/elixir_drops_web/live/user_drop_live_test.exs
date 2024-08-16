@@ -166,7 +166,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "unauthorized users are redirected", %{conn: conn, drop: drop} do
       assert {:error, {:redirect, %{to: path, flash: flash}}} =
-               live(conn, ~p"/drops/#{drop.id}/edit")
+               live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
 
       assert path == ~p"/"
       assert flash["error"] == "You must log in to access this page."
@@ -174,10 +174,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "one is redirected if drop doesn't exist", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
-      non_existent_drop_id = Ecto.UUID.generate()
+      non_existent_drop_unique_url_string = Drops.generate_unique_url_string()
 
       assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/drops/#{non_existent_drop_id}/edit")
+               live(conn, ~p"/drops/#{non_existent_drop_unique_url_string}/edit")
 
       assert path == ~p"/"
     end
