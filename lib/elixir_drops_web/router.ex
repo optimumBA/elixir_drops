@@ -17,8 +17,6 @@ defmodule ElixirDropsWeb.Router do
     plug :accepts, ["json"]
   end
 
-  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
-
   scope "/", ElixirDropsWeb do
     pipe_through [:browser, :require_authenticated_user]
 
@@ -28,10 +26,10 @@ defmodule ElixirDropsWeb.Router do
         {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
         {ElixirDropsWeb.UserAuth, :assign_current_user}
       ] do
-      live "/:user_name", DropLive.Index, :index
+      live "/profile", UserDropLive.Index, :index
 
-      live "/drops/:unique_url_string/edit", DropLive.Index, :edit
-      live "/drops/new", DropLive.Index, :new
+      live "/drops/:unique_url_string/edit", UserDropLive.Index, :edit
+      live "/drops/new", UserDropLive.Index, :new
     end
   end
 
@@ -78,4 +76,6 @@ defmodule ElixirDropsWeb.Router do
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
+
+  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
 end
