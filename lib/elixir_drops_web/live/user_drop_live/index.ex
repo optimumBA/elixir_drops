@@ -4,33 +4,23 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.DropComponents
+  alias ElixirDropsWeb.DropLive.DropsListComponent
   alias ElixirDropsWeb.DropLive.FormComponent
-  alias ElixirDropsWeb.DropsHelpers
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    {
-      :ok,
-      socket
-      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
-      |> assign(:end_of_timeline?, false)
-      |> assign(:new_drops?, false)
-    }
+    {:ok,
+     assign(
+       socket,
+       :drop_filters,
+       %{user_id: socket.assigns.current_user.id}
+     )}
   end
 
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
-
-  @impl Phoenix.LiveView
-  def handle_event(event, params, socket)
-      when event in [
-             "next-page",
-             "prev-page"
-           ],
-      do: DropsHelpers.handle_event(event, params, socket)
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     case Drops.get_drop(id) do
@@ -56,6 +46,5 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     socket
     |> assign(:drop, nil)
     |> assign(:page_title, "ElixirDrops | #{socket.assigns.current_user.github_username}")
-    |> DropsHelpers.assign_drops()
   end
 end
