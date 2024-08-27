@@ -10,7 +10,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
   alias ElixirDrops.Drops.Drop
 
   defp create_drops_setup(%{conn: conn}) do
-    conn = put_connect_params(conn, %{"timezone_offset" => 0})
+    conn =
+      put_connect_params(
+        conn,
+        %{
+          "show_welcome_message" => "true",
+          "timezone_offset" => 0
+        }
+      )
+
     user = user_fixture()
     drop = drop_fixture(user)
 

@@ -165,7 +165,7 @@ defmodule ElixirDropsWeb.DropComponents do
       :if={@condition}
       class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width"
       id="welcome-message"
-      phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
+      phx-hook="WelcomeMessage"
     >
       <button class="ml-auto breakout" phx-click={hide_welcome_message()}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5" />
@@ -440,6 +440,7 @@ defmodule ElixirDropsWeb.DropComponents do
     %JS{}
     |> JS.hide(to: "#welcome-message")
     |> JS.add_class("shadow-md shadow-[#b2b2b2]", to: ".header")
+    |> JS.dispatch("hide-welcome-message", to: "#welcome-message")
   end
 
   @spec show_popup(String.t()) :: Phoenix.LiveView.JS.t()

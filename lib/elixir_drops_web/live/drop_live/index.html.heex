@@ -2,7 +2,7 @@
   <DropComponents.navbar current_user={@current_user} live_action={@live_action} />
 
   <section class="content-grid text-[#252525] relative">
-    <DropComponents.welcome_message condition={!@current_user} />
+    <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
 
     <.live_component
       module={DropsListComponent}
