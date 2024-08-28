@@ -39,6 +39,7 @@ defmodule ElixirDropsWeb.DropLive.DropsListComponent do
         id={dom_id}
         phx-click={JS.navigate(~p"/drops/#{drop.id}")}
         class="last:mb-6 cursor-pointer"
+        role="link"
       >
         <DropComponents.drop_card
           avatar={drop.user.avatar}
