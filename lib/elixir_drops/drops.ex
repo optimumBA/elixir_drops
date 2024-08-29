@@ -5,8 +5,12 @@ defmodule ElixirDrops.Drops do
 
   import Ecto.Query, warn: false
 
+  alias Ecto.Multi
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropTag
+  alias ElixirDrops.Drops.Tag
+  alias ElixirDrops.Drops.Tag
   alias ElixirDrops.Repo
 
   @type attrs :: map()
@@ -16,6 +20,7 @@ defmodule ElixirDrops.Drops do
   @type filters :: map()
   @type limit :: integer()
   @type page :: integer()
+  @type tags :: [Tag.t()]
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
@@ -51,19 +56,40 @@ defmodule ElixirDrops.Drops do
 
   """
   @spec list_drops(filters(), limit()) :: [drop()]
-  def list_drops(filters \\ %{}, limit \\ 10) do
-    filter_query = apply_filters()
+  def list_drops(filters \\ %{}, limit \\ 10)
 
+  def list_drops(%{tag: tag} = filters, limit) do
+    tag
+    |> drop_query_with_tags()
+    |> filter_query(filters, limit)
+    |> Repo.all()
+  end
+
+  def list_drops(filters, limit) do
     drop_query()
-    |> where(^filter_query.(filters))
-    |> order_by([d], {:desc, d.inserted_at})
-    |> limit(^limit)
-    |> preload([:user])
+    |> filter_query(filters, limit)
     |> Repo.all()
   end
 
   defp drop_query do
     from drop in Drop, as: :drop
+  end
+
+  defp drop_query_with_tags(tag) do
+    drop_query()
+    |> join(:inner, [drop], dt in DropTag, on: drop.id == dt.drop_id)
+    |> join(:inner, [_drop, drop_tag], t in Tag, on: t.id == drop_tag.tag_id)
+    |> where([drop, _dt, tag], tag.name == ^tag)
+  end
+
+  defp filter_query(query, filters, limit) do
+    filter_query = apply_filters()
+
+    query
+    |> where(^filter_query.(filters))
+    |> order_by([d], {:desc, d.inserted_at})
+    |> limit(^limit)
+    |> preload([:user, :tags])
   end
 
   defp apply_filters do
@@ -109,6 +135,20 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
+  Returns an `%Ecto.Changeset{}` for tracking drop changes.
+
+  ## Examples
+
+      iex> change_drop(drop)
+      %Ecto.Changeset{data: %Drop{}}
+
+  """
+  @spec change_drop(drop(), tags(), attrs()) :: changeset()
+  def change_drop(%Drop{} = drop, tags \\ [], attrs \\ %{}) do
+    Drop.changeset(drop, tags, attrs) # REthink public API
+  end
+
+  @doc """
   Creates a drop.
 
   ### Examples
@@ -124,17 +164,7 @@ defmodule ElixirDrops.Drops do
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
     case create_or_update_drop(drop, user, attrs) do
       {:ok, drop} ->
-        drop = Repo.preload(drop, [:user])
-
-        Phoenix.PubSub.broadcast(
-          ElixirDrops.PubSub,
-          @topic,
-          {
-            __MODULE__,
-            [:drop, :created],
-            drop
-          }
-        )
+        :ok = broadcast_drop_creation(drop)
 
         {:ok, drop}
 
@@ -160,23 +190,76 @@ defmodule ElixirDrops.Drops do
     do: create_or_update_drop(drop, user, attrs)
 
   defp create_or_update_drop(drop, user, attrs) do
+    Multi.new()
+    |> Multi.run(:tags, fn _repo, changes ->
+      insert_and_get_all_tags(changes, attrs)
+    end)
+    |> Multi.run(:drop, fn _repo, changes ->
+      insert_or_update_drop(changes, drop, user, attrs)
+    end)
+    |> Repo.transaction()
+    |> process_result()
+  end
+
+  defp process_result({:ok, %{drop: drop}}) do
+    drop = Repo.preload(drop, [:tags, :user])
+
+    {:ok, drop}
+  end
+
+  defp process_result({:error, _name, changeset, _changes}), do: {:error, changeset}
+
+  # TODO: Maybe just pass tags as a string directly from liveview, so I don;t have to care about the format of the map
+  defp insert_and_get_all_tags(_changes, attrs) do
+    tags = attrs["tags"] || attrs.tags
+
+    case Tag.parse_tags(tags) do
+      [] ->
+        {:ok, []}
+
+      names ->
+        timestamp = now()
+        maps = name_map(names, timestamp)
+
+        Repo.insert_all(Tag, maps, on_conflict: :nothing)
+
+        {:ok, Repo.all(from t in Tag, where: t.name in ^names)}
+    end
+  end
+
+  defp insert_or_update_drop(%{tags: tags}, drop, user, attrs) do
     drop
-    |> Drop.changeset(attrs)
+    |> Drop.changeset(tags, attrs)
     |> Ecto.Changeset.put_change(:user_id, user.id)
     |> Repo.insert_or_update()
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking drop changes.
+  defp now do
+    now = NaiveDateTime.utc_now()
 
-  ## Examples
+    NaiveDateTime.truncate(now, :second)
+  end
 
-      iex> change_drop(drop)
-      %Ecto.Changeset{data: %Drop{}}
+  defp name_map(names, timestamp) do
+    Enum.map(
+      names,
+      &%{
+        name: &1,
+        inserted_at: timestamp,
+        updated_at: timestamp
+      }
+    )
+  end
 
-  """
-  @spec change_drop(drop(), attrs()) :: changeset()
-  def change_drop(%Drop{} = drop, attrs \\ %{}) do
-    Drop.changeset(drop, attrs)
+  defp broadcast_drop_creation(drop) do
+    Phoenix.PubSub.broadcast(
+      ElixirDrops.PubSub,
+      @topic,
+      {
+        __MODULE__,
+        [:drop, :created],
+        drop
+      }
+    )
   end
 end

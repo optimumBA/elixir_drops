@@ -6,9 +6,10 @@ defmodule ElixirDrops.DropsTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.Tag
 
-  @invalid_attrs %{title: nil, body: nil}
-  @valid_attrs %{title: "some title", body: "some body"}
+  @invalid_attrs %{title: nil, body: nil, tags: ""}
+  @valid_attrs %{title: "some title", body: "some body", tags: "tag1, tag2"}
 
   defp create_drops_setup(_attrs) do
     user = user_fixture()
@@ -18,12 +19,38 @@ defmodule ElixirDrops.DropsTest do
   end
 
   describe "list_drops/2" do
+    test "returns a list of drops with a given tag" do
+      %{drop: drop, user: user} = create_drops_setup(%{})
+
+      _drop_2 =
+        drop_fixture(
+          %Drop{},
+          user,
+          %{title: "Drop 2", body: "Body for drop 2", tags: "tag4, tag5"}
+        )
+
+      assert [tagged_drop] = Drops.list_drops(%{tag: "tag1"})
+
+      assert tagged_drop.id == drop.id
+      assert Ecto.assoc_loaded?(tagged_drop.user)
+      assert Ecto.assoc_loaded?(tagged_drop.tags)
+    end
+
+    test "returns an empty list if no drops match the given tag" do
+      create_drops_setup(%{})
+
+      drops_with_tag = Drops.list_drops(%{tag: "tag6"})
+
+      assert Enum.empty?(drops_with_tag)
+    end
+
     test "returns a list of all drops when no filter is passed" do
       create_drops_setup(%{})
 
       assert [drop] = Drops.list_drops()
 
       assert Ecto.assoc_loaded?(drop.user)
+      assert Ecto.assoc_loaded?(drop.tags)
     end
 
     test "can filter drops belonging to a user" do
@@ -44,6 +71,7 @@ defmodule ElixirDrops.DropsTest do
 
       assert drop.id == user_drop.id
       assert Ecto.assoc_loaded?(user_drop.user)
+      assert Ecto.assoc_loaded?(user_drop.tags)
     end
 
     test "returns empty list when a user has no drops" do
@@ -66,7 +94,9 @@ defmodule ElixirDrops.DropsTest do
       assert older_drop_1.id == drop_2.id
       assert older_drop_2.id == drop_1.id
       assert Ecto.assoc_loaded?(older_drop_1.user)
+      assert Ecto.assoc_loaded?(older_drop_1.tags)
       assert Ecto.assoc_loaded?(older_drop_2.user)
+      assert Ecto.assoc_loaded?(older_drop_2.tags)
     end
 
     test "returns an empty list if there are no drops older than a given drop" do
@@ -98,7 +128,9 @@ defmodule ElixirDrops.DropsTest do
       assert newer_drop_1.id == drop_4.id
       assert newer_drop_2.id == drop_3.id
       assert Ecto.assoc_loaded?(newer_drop_1.user)
+      assert Ecto.assoc_loaded?(newer_drop_1.tags)
       assert Ecto.assoc_loaded?(newer_drop_2.user)
+      assert Ecto.assoc_loaded?(newer_drop_2.tags)
     end
 
     test "returns an empty list if there are no newer drops" do
@@ -131,7 +163,7 @@ defmodule ElixirDrops.DropsTest do
       [drop_1, drop_2, drop_3] =
         for drop <- 1..3 do
           %Drop{}
-          |> drop_fixture(user)
+          |> drop_fixture(user, %{title: "Drop #{drop}", body: "Body for drop #{drop}", tags: "drop#{drop}"})
           |> update_drop_inserted_at(drop * 120)
         end
 
@@ -141,15 +173,16 @@ defmodule ElixirDrops.DropsTest do
         |> update_drop_inserted_at(drop * 120)
       end
 
-      assert [older_user_drop_1, older_user_drop_2] =
-               Drops.list_drops(%{user_id: user.id, older_than: drop_3})
+      Drops.list_drops(%{user_id: user.id, older_than: drop_3, tag: "drop1"})
 
-      assert older_user_drop_1.id == drop_2.id
-      assert older_user_drop_1.user_id == user.id
-      assert older_user_drop_2.id == drop_1.id
-      assert older_user_drop_2.user_id == user.id
-      assert Ecto.assoc_loaded?(older_user_drop_1.user)
-      assert Ecto.assoc_loaded?(older_user_drop_2.user)
+      assert [older_user_drop] =
+               Drops.list_drops(%{user_id: user.id, older_than: drop_3, tag: "drop1"})
+
+      assert older_user_drop.id == drop_1.id
+      assert older_user_drop.user_id == user.id
+
+      assert Ecto.assoc_loaded?(older_user_drop.user)
+      assert Ecto.assoc_loaded?(older_user_drop.tags)
     end
 
     test "returns empty list for multiple filters whose conditions are not met" do
@@ -195,6 +228,7 @@ defmodule ElixirDrops.DropsTest do
       assert drop.body == @valid_attrs.body
       assert drop.title == @valid_attrs.title
       assert drop.user_id == user.id
+      assert [%Tag{name: "tag1"}, %Tag{name: "tag2"}] = drop.tags
     end
 
     test "returns an error changeset if data is invalid" do
@@ -212,11 +246,13 @@ defmodule ElixirDrops.DropsTest do
       assert {:ok, %Drop{} = drop} =
                Drops.update_drop(drop, user, %{
                  body: "Updated body",
-                 title: "Updated title"
+                 title: "Updated title",
+                 tags: "tag1, tag2"
                })
 
       assert drop.body == "Updated body"
       assert drop.title == "Updated title"
+      assert [%Tag{name: "tag1"}, %Tag{name: "tag2"}] = drop.tags
     end
 
     test "returns an error changeset if data is invalid", %{drop: drop, user: user} do
@@ -230,6 +266,7 @@ defmodule ElixirDrops.DropsTest do
 
     test "returns the drop with given id", %{drop: drop} do
       assert %Drop{} = drop = Drops.get_drop(drop.id)
+      assert Ecto.assoc_loaded?(drop.tags)
       assert Ecto.assoc_loaded?(drop.user)
     end
 
