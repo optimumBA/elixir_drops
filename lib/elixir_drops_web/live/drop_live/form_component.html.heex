@@ -28,8 +28,38 @@
           type="textarea"
           input_field_class="drop-editor-input text-sm md:text-md placeholder:text-inherit placeholder:italic border-2 border-[#dedede] focus:border-[#7d6ff4] rounded-md min-h-[70vh] w-full"
           id="drop-editor-input"
-          phx-debounce={400}
+          phx-debounce="400"
         />
+
+        <div class="my-3">
+          <p class="font-light mb-2">
+            <span>Add Tags to classify your post (at least 2 tags and at most 10 tags): </span>
+            <span class="tag-count"></span>
+          </p>
+
+          <div
+            class="flex flex-wrap border-[#cbcbcb] border-[2px] py-2 rounded-md"
+            id="tags-input-container"
+            phx-hook="TagsInput"
+          >
+            <DropComponents.tag :for={tag <- String.split(@tags, ", ")} tag={tag} />
+
+            <input
+              placeholder="Add a new tag"
+              id="tag-input-field"
+              class="placeholder:text-[#9a9a9a] ml-2 grow focus:outline-none focus:ring-0"
+            />
+
+            <template id="tag-template">
+              <div class="mx-2 tag">
+                <button class="mb-2 text-sm text-[#252525] flex items-center justify-between bg-[#eae8fd] py-1 px-2 rounded-md">
+                  <span class="mr-2 tag-name"></span>
+                  <.icon name="hero-x-mark-mini" class="text-[#575757] h-4 w-4 remove-tag" />
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
 
         <p class="text-xs pb-3 flex items-center justify-start">
           <span>Markdown is supported</span>

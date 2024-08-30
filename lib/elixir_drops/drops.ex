@@ -130,7 +130,7 @@ defmodule ElixirDrops.Drops do
   def get_drop(drop_id) do
     Drop
     |> where([drop], drop.id == ^drop_id)
-    |> preload([:user])
+    |> preload([:tags, :user])
     |> Repo.one()
   end
 
@@ -209,7 +209,6 @@ defmodule ElixirDrops.Drops do
 
   defp process_result({:error, _name, changeset, _changes}), do: {:error, changeset}
 
-  # TODO: Maybe just pass tags as a string directly from liveview, so I don;t have to care about the format of the map
   defp insert_and_get_all_tags(_changes, attrs) do
     tags = attrs["tags"] || attrs.tags
 

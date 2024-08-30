@@ -306,6 +306,19 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :tag, :string, required: true
+
+  def tag(assigns) do
+    ~H"""
+    <div class="mx-2 tag">
+      <button class="mb-2 text-sm text-[#252525] flex items-center justify-between bg-[#eae8fd] py-1 px-2 rounded-md">
+        <span class="mr-2 tag-name"><%= @tag %></span>
+        <.icon name="hero-x-mark-mini" class="text-[#575757] h-4 w-4 remove-tag" />
+      </button>
+    </div>
+    """
+  end
+
   attr :current_user, User
   attr :show_mobile_create_post_btn?, :boolean, required: true
 

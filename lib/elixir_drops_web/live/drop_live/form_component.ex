@@ -15,7 +15,10 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
 
     changeset = Drops.change_drop(socket.assigns.drop)
 
-    {:ok, assign_form(socket, changeset)}
+    {:ok,
+     socket
+     |> assign_form(changeset)
+     |> assign_tags(socket.assigns.live_action)}
   end
 
   @impl Phoenix.LiveComponent
@@ -28,7 +31,15 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
     {:noreply, assign_form(socket, changeset)}
   end
 
+  # Check number of tags -> Add error messages to form
+  # For Max, check from frontend, prevent user from typing more
+  # Maybe pass the tags as a list from here, so no one has wonder what to get from map
+  # Test number of tags allowed and that the tags are unique
+  # Tag in the show and list cards
   def handle_event("save", %{"drop" => drop_params}, socket) do
+    tags = socket.assigns.tags
+    drop_params = Map.put(drop_params, "tags", tags)
+
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
       {:ok, _drop} ->
         {
@@ -42,6 +53,10 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
       {:error, changeset} ->
         {:noreply, assign_form(socket, changeset)}
     end
+  end
+
+  def handle_event("update-tags", %{"tags" => tags}, socket) do
+    {:noreply, assign(socket, :tags, tags)}
   end
 
   defp create_or_update_drop(socket, :edit, drop_params) do
@@ -62,5 +77,16 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
 
   defp assign_form(socket, changeset) do
     assign(socket, :form, to_form(changeset))
+  end
+
+  defp assign_tags(socket, :new), do: assign(socket, :tags, "")
+
+  defp assign_tags(socket, :edit) do
+    tags =
+      socket.assigns.drop.tags
+      |> Enum.map(& &1.name)
+      |> Enum.join(", ")
+
+    assign(socket, :tags, tags)
   end
 end
