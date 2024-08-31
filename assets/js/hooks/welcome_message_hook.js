@@ -10,7 +10,7 @@ WelcomeMessageHooks.WelcomeMessage = {
     header.classList.remove('shadow-[#c4c0c8]')
 
     welcomeMessage.addEventListener('hide-welcome-message', () => {
-      localStorage.setItem('show-welcome-message', 'false')
+      localStorage.setItem('show-welcome-message', false)
     })
   },
 }

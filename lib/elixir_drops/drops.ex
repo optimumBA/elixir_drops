@@ -162,7 +162,7 @@ defmodule ElixirDrops.Drops do
   defp create_or_update_drop(drop, user, attrs) do
     drop
     |> Drop.changeset(attrs)
-    |> Ecto.Changeset.put_change(:user_id, user.id)
+    |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.insert_or_update()
   end
 

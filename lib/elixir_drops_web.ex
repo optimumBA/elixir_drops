@@ -85,7 +85,7 @@ defmodule ElixirDropsWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import ElixirDropsWeb.CoreComponents
-      import ElixirDropsWeb.CustomComponents
+      import ElixirDropsWeb.CustomInputComponents
       import ElixirDropsWeb.Gettext
 
       # Shortcut for generating JS commands

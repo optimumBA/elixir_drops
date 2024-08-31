@@ -37,12 +37,12 @@ let csrfToken = document
 
 let showOrHideWelcomeMessage = () => {
   if (localStorage.getItem('show-welcome-message') === null) {
-    localStorage.setItem('show-welcome-message', 'true')
-    return localStorage.getItem('show-welcome-message')
-  } else {
-    return localStorage.getItem('show-welcome-message')
+    localStorage.setItem('show-welcome-message', true)
   }
+
+  return localStorage.getItem('show-welcome-message')
 }
+
 let timezoneOffset = new Date().getTimezoneOffset()
 
 params = {

@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.CustomComponents do
+defmodule ElixirDropsWeb.CustomInputComponents do
   @moduledoc """
   Provides custom core UI components.
 
