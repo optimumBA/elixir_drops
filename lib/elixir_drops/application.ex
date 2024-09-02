@@ -12,6 +12,7 @@ defmodule ElixirDrops.Application do
       ElixirDrops.Repo,
       {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: ElixirDrops.PubSub},
+      {Oban, Application.fetch_env!(:elixir_drops, Oban)},
       # Start the Finch HTTP client for sending emails
       {Finch, name: ElixirDrops.Finch},
       # Start a worker by calling: ElixirDrops.Worker.start_link(arg)

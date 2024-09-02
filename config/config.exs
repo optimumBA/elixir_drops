@@ -80,6 +80,11 @@ config :ueberauth, Ueberauth,
        ]}
   ]
 
+config :elixir_drops, Oban,
+  engine: Oban.Engines.Basic,
+  queues: [default: 10, drop_image: 20],
+  repo: ElixirDrops.Repo
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
