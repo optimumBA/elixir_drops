@@ -15,6 +15,7 @@ defmodule ElixirDrops.Drops.Drop do
   schema "drops" do
     field :title, :string
     field :body, :string
+    field :drop_image, :string
 
     belongs_to :user, User
 
@@ -24,7 +25,7 @@ defmodule ElixirDrops.Drops.Drop do
   @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
-    |> cast(attrs, [:body, :title, :user_id], :drop_image)
+    |> cast(attrs, [:body, :title, :user_id, :drop_image])
     |> validate_required([:body, :title])
   end
 end
