@@ -4,62 +4,96 @@ TagInputHooks.TagsInput = {
   mounted() {
     const hook = this
     const tagsContainer = this.el
-    const tagsInputField = document.querySelector("#tag-input-field")
-    const deleteTagBtn = document.querySelectorAll(".remove-tag")
-    const tagCountEl = document.querySelector(".tag-count")
-    const tagNames = document.querySelectorAll(".tag-name")
+    const deleteTagBtn = document.querySelectorAll('.remove-tag')
+    const dropTagsInput = document.querySelector('#drop-tags-input')
+    const tagCountEl = document.querySelector('.tag-count')
+    const tagNames = document.querySelectorAll('.tag-name')
+    const tagsInputField = document.querySelector('#tag-input-field')
+
     let tagCount = tagNames.length
     tagCountEl.textContent = `${tagCount} / 10`
-    
+
     const addTag = (tagText) => {
-      const tagTemplate = document.querySelector("#tag-template")
+      const tagTemplate = document.querySelector('#tag-template')
       const newTag = tagTemplate.content.cloneNode(true)
-      newTag.querySelector(".tag-name").textContent = tagText
+      newTag.querySelector('.tag-name').textContent = tagText
       tagsContainer.insertBefore(newTag, tagsInputField)
-      updateTags(+1)
+
+      let tags = dropTagsInput.value + `, ${tagText}`
+
+      updateTags(tags, +1)
     }
 
-    // Update the count of tags, if > 10 add error messages, also check count > 2 before form is submitted
-    
     const updateCount = (count) => {
       tagCount = tagCount + count
       tagCountEl.textContent = `${tagCount} / 10`
     }
 
-    const updateTags = (count) => {
-      let tags = ""
+    const updateTags = (tagText, count) => {
+      dropTagsInput.value = tagText
 
-      tagNames.forEach(tagName => {
-        tags = `${tags}, ${tagName.textContent}`
+      dropTagsInput.dispatchEvent(new Event('input', { bubbles: false }))
+
+      hook.pushEventTo('#drops-form', 'update-tags', {
+        tags: dropTagsInput.value,
       })
 
-      tags = tags.substring(1).trim()
-
       updateCount(count)
-      
-      hook.pushEventTo('#drops-form', 'update-tags', {
-        tags: tags
+    }
+
+    const debounce = (cb, delay = 1000) => {
+      let timeout
+
+      return (...args) => {
+        clearTimeout(timeout)
+        timeout = setTimeout(() => {
+          cb(...args)
+        }, delay)
+      }
+    }
+
+    const updateTagSuggestions = debounce(() => {
+      updateTagsList(tagsInputField)
+    })
+
+    const updateTagsList = (element) => {
+      hook.pushEventTo('#drops-form', 'suggest-tags', {
+        name: element.value.trim(),
       })
     }
 
-    deleteTagBtn.forEach(btn => {
+    deleteTagBtn.forEach((btn) => {
       btn.addEventListener('click', (event) => {
         event.preventDefault()
 
-       let tag = btn.closest(".tag")
-       tag.remove()
-       updateTags(-1)
+        let tag = btn.closest('.tag')
+        let tagText = tag.textContent.trim()
+
+        let newValue = dropTagsInput.value
+          .split(', ')
+          .filter((text) => text !== tagText)
+          .join(', ')
+
+        updateTags(newValue, -1)
+
+        tag.remove()
       })
     })
 
-    tagsInputField.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && e.target.value.trim() !== "") {
-        e.preventDefault()
-        addTag(e.target.value.trim())
-        e.target.value = ""
+    tagsInputField.addEventListener('keydown', (event) => {
+      if (event.target.value.trim() !== '') {
+        if (event.key === 'Enter') {
+          event.preventDefault()
+          event.stopPropagation()
+
+          addTag(event.target.value.trim())
+          event.target.value = ''
+        } else {
+          updateTagSuggestions()
+        }
       }
     })
-  }
+  },
 }
 
 export default TagInputHooks

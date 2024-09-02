@@ -11,5 +11,7 @@ defmodule ElixirDrops.Repo.Migrations.CreateDropsTags do
 
     create index(:drops_tags, [:drop_id])
     create index(:drops_tags, [:tag_id])
+
+    create unique_index(:drops_tags, [:drop_id, :tag_id])
   end
 end

@@ -15,21 +15,18 @@ defmodule ElixirDrops.Drops.Drop do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "drops" do
-    field :title, :string
     field :body, :string
-
+    field :title, :string
     belongs_to :user, User
-
-    many_to_many :tags, Tag, join_through: DropTag, on_replace: :delete
+    many_to_many :tags, Tag, join_through: DropTag, on_replace: :delete, unique: true
 
     timestamps()
   end
 
-  @spec changeset(t(), list(), map()) :: Ecto.Changeset.t()
-  def changeset(%__MODULE__{} = drop, tags, attrs \\ %{}) do
+  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
-    |> cast(attrs, [:body, :title, :user_id])
+    |> cast(attrs, [:body, :title])
     |> validate_required([:body, :title])
-    |> put_assoc(:tags, tags)
   end
 end

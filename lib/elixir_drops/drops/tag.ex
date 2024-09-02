@@ -14,8 +14,7 @@ defmodule ElixirDrops.Drops.Tag do
   @foreign_key_type :binary_id
   schema "tags" do
     field :name, :string
-
-    many_to_many :drops, Drop, join_through: DropTag
+    many_to_many :drops, Drop, join_through: DropTag, on_replace: :delete
 
     timestamps()
   end
@@ -26,12 +25,5 @@ defmodule ElixirDrops.Drops.Tag do
     |> cast(attrs, [:name])
     |> validate_required([:name])
     |> unique_constraint(:name)
-  end
-
-  def parse_tags(tags) do
-    (tags || "")
-    |> String.split(",")
-    |> Enum.map(&String.trim/1)
-    |> Enum.reject(&(&1 == ""))
   end
 end

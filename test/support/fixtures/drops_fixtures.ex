@@ -27,8 +27,8 @@ defmodule ElixirDrops.DropsFixtures do
     drop_attrs =
       Enum.into(attrs, %{
         body: "Drop body text...",
-        title: drop_title,
-        tags: "tag1, tag2"
+        tags: ["tag1", "tag2"],
+        title: drop_title
       })
 
     {:ok, drop} =

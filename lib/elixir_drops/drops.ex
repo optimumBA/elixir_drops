@@ -20,7 +20,6 @@ defmodule ElixirDrops.Drops do
   @type filters :: map()
   @type limit :: integer()
   @type page :: integer()
-  @type tags :: [Tag.t()]
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
@@ -113,6 +112,31 @@ defmodule ElixirDrops.Drops do
   defp apply_filter(_other, dynamic), do: dynamic
 
   @doc """
+  Returns a list of tags matching the given name.
+
+  ## Examples
+
+      iex> get_tag_by_name("tag")
+      [%Tag{}, ...]
+
+      iex> get_tag_by_name("tag")
+      []
+
+  """
+  @spec get_tag_by_name(String.t()) :: [Tag.t()]
+  def get_tag_by_name(name) do
+    name = "%#{name}%"
+
+    query =
+      from(tag in Tag,
+        where: ilike(tag.name, ^name),
+        select: tag
+      )
+
+    Repo.all(query)
+  end
+
+  @doc """
   Gets a single drop.
 
   Returns nil if the Drop does not exist.
@@ -143,9 +167,9 @@ defmodule ElixirDrops.Drops do
       %Ecto.Changeset{data: %Drop{}}
 
   """
-  @spec change_drop(drop(), tags(), attrs()) :: changeset()
-  def change_drop(%Drop{} = drop, tags \\ [], attrs \\ %{}) do
-    Drop.changeset(drop, tags, attrs) # REthink public API
+  @spec change_drop(drop(), attrs()) :: changeset()
+  def change_drop(%Drop{} = drop, attrs \\ %{}) do
+    Drop.changeset(drop, attrs)
   end
 
   @doc """
@@ -190,9 +214,11 @@ defmodule ElixirDrops.Drops do
     do: create_or_update_drop(drop, user, attrs)
 
   defp create_or_update_drop(drop, user, attrs) do
+    tags = attrs[:tags] || attrs["tags"] || []
+
     Multi.new()
     |> Multi.run(:tags, fn _repo, changes ->
-      insert_and_get_all_tags(changes, attrs)
+      insert_and_get_all_tags(changes, tags)
     end)
     |> Multi.run(:drop, fn _repo, changes ->
       insert_or_update_drop(changes, drop, user, attrs)
@@ -209,10 +235,8 @@ defmodule ElixirDrops.Drops do
 
   defp process_result({:error, _name, changeset, _changes}), do: {:error, changeset}
 
-  defp insert_and_get_all_tags(_changes, attrs) do
-    tags = attrs["tags"] || attrs.tags
-
-    case Tag.parse_tags(tags) do
+  defp insert_and_get_all_tags(_changes, tags) do
+    case tags do
       [] ->
         {:ok, []}
 
@@ -228,8 +252,14 @@ defmodule ElixirDrops.Drops do
 
   defp insert_or_update_drop(%{tags: tags}, drop, user, attrs) do
     drop
-    |> Drop.changeset(tags, attrs)
-    |> Ecto.Changeset.put_change(:user_id, user.id)
+    |> Drop.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:tags, tags)
+    |> Ecto.Changeset.put_assoc(:user, user)
+    |> Ecto.Changeset.validate_length(:tags,
+      min: 2,
+      max: 10,
+      message: "Should have at least 2 drops and at most 10 tags"
+    )
     |> Repo.insert_or_update()
   end
 

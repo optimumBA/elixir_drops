@@ -8,8 +8,8 @@ defmodule ElixirDrops.DropsTest do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.Tag
 
-  @invalid_attrs %{title: nil, body: nil, tags: ""}
-  @valid_attrs %{title: "some title", body: "some body", tags: "tag1, tag2"}
+  @invalid_attrs %{body: nil, tags: nil, title: nil}
+  @valid_attrs %{body: "some body", tags: ["tag3", "tag4"], title: "some title"}
 
   defp create_drops_setup(_attrs) do
     user = user_fixture()
@@ -26,7 +26,7 @@ defmodule ElixirDrops.DropsTest do
         drop_fixture(
           %Drop{},
           user,
-          %{title: "Drop 2", body: "Body for drop 2", tags: "tag4, tag5"}
+          %{title: "Drop 2", body: "Body for drop 2", tags: ["drop2", "tag"]}
         )
 
       assert [tagged_drop] = Drops.list_drops(%{tag: "tag1"})
@@ -39,7 +39,7 @@ defmodule ElixirDrops.DropsTest do
     test "returns an empty list if no drops match the given tag" do
       create_drops_setup(%{})
 
-      drops_with_tag = Drops.list_drops(%{tag: "tag6"})
+      drops_with_tag = Drops.list_drops(%{tag: "non-existent"})
 
       assert Enum.empty?(drops_with_tag)
     end
@@ -65,7 +65,11 @@ defmodule ElixirDrops.DropsTest do
           name: "some_name"
         })
 
-      drop_fixture(%Drop{}, user_2, %{title: "Drop 2", body: "Body for drop 2"})
+      drop_fixture(%Drop{}, user_2, %{
+        body: "Body for drop 2",
+        tags: ["tag4", "tag5"],
+        title: "Drop 2"
+      })
 
       assert [user_drop] = Drops.list_drops(%{user_id: user.id})
 
@@ -160,10 +164,14 @@ defmodule ElixirDrops.DropsTest do
           name: "some_name"
         })
 
-      [drop_1, drop_2, drop_3] =
+      [drop_1, _drop_2, drop_3] =
         for drop <- 1..3 do
           %Drop{}
-          |> drop_fixture(user, %{title: "Drop #{drop}", body: "Body for drop #{drop}", tags: "drop#{drop}"})
+          |> drop_fixture(user, %{
+            body: "Body for drop #{drop}",
+            tags: ["drop#{drop}", "drop"],
+            title: "Drop #{drop}"
+          })
           |> update_drop_inserted_at(drop * 120)
         end
 
@@ -172,8 +180,6 @@ defmodule ElixirDrops.DropsTest do
         |> drop_fixture(user_2)
         |> update_drop_inserted_at(drop * 120)
       end
-
-      Drops.list_drops(%{user_id: user.id, older_than: drop_3, tag: "drop1"})
 
       assert [older_user_drop] =
                Drops.list_drops(%{user_id: user.id, older_than: drop_3, tag: "drop1"})
@@ -228,7 +234,7 @@ defmodule ElixirDrops.DropsTest do
       assert drop.body == @valid_attrs.body
       assert drop.title == @valid_attrs.title
       assert drop.user_id == user.id
-      assert [%Tag{name: "tag1"}, %Tag{name: "tag2"}] = drop.tags
+      assert [%Tag{name: "tag3"}, %Tag{name: "tag4"}] = drop.tags
     end
 
     test "returns an error changeset if data is invalid" do
@@ -236,6 +242,29 @@ defmodule ElixirDrops.DropsTest do
 
       assert {:error, %Ecto.Changeset{}} =
                Drops.create_drop(%Drop{}, user, @invalid_attrs)
+    end
+
+    test "returns an error changeset if a drop has less than 2 tags" do
+      user = user_fixture()
+
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Drops.create_drop(%Drop{}, user, %{body: "body", title: "title", tags: ["tag1"]})
+
+      assert %{
+               tags: ["Should have at least 2 drops and at most 10 tags"]
+             } = errors_on(changeset)
+    end
+
+    test "returns an error changeset for drop with more than 10 tags" do
+      user = user_fixture()
+      tags = Enum.map(1..12, &"tag#{&1}")
+
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Drops.create_drop(%Drop{}, user, %{body: "body", title: "title", tags: tags})
+
+      assert %{
+               tags: ["Should have at least 2 drops and at most 10 tags"]
+             } = errors_on(changeset)
     end
   end
 
@@ -246,18 +275,44 @@ defmodule ElixirDrops.DropsTest do
       assert {:ok, %Drop{} = drop} =
                Drops.update_drop(drop, user, %{
                  body: "Updated body",
-                 title: "Updated title",
-                 tags: "tag1, tag2"
+                 tags: ["tag6", "tag7"],
+                 title: "Updated title"
                })
 
       assert drop.body == "Updated body"
       assert drop.title == "Updated title"
-      assert [%Tag{name: "tag1"}, %Tag{name: "tag2"}] = drop.tags
+      assert [%Tag{name: "tag6"}, %Tag{name: "tag7"}] = drop.tags
     end
 
     test "returns an error changeset if data is invalid", %{drop: drop, user: user} do
       assert {:error, %Ecto.Changeset{}} =
                Drops.update_drop(drop, user, @invalid_attrs)
+    end
+
+    test "returns an error changeset if the updated drop has less than 2 tags", %{
+      drop: drop,
+      user: user
+    } do
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Drops.update_drop(drop, user, %{body: "body", title: "title", tags: ["tag1"]})
+
+      assert %{
+               tags: ["Should have at least 2 drops and at most 10 tags"]
+             } = errors_on(changeset)
+    end
+
+    test "returns an error changeset if the updated drop has more than 10 tags", %{
+      drop: drop,
+      user: user
+    } do
+      tags = Enum.map(1..12, &"tag#{&1}")
+
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Drops.update_drop(drop, user, %{body: "body", title: "title", tags: tags})
+
+      assert %{
+               tags: ["Should have at least 2 drops and at most 10 tags"]
+             } = errors_on(changeset)
     end
   end
 
@@ -277,7 +332,22 @@ defmodule ElixirDrops.DropsTest do
     end
   end
 
-  describe "change_drop/1" do
+  describe "get_tag_by_name/1" do
+    setup [:create_drops_setup]
+
+    test "returns the tag matching a given name" do
+      assert [tag1, tag2] = Drops.get_tag_by_name("tag")
+
+      assert tag1.name == "tag1"
+      assert tag2.name == "tag2"
+    end
+
+    test "returns and empty list if no tag matches the given name" do
+      assert [] = Drops.get_tag_by_name("non-existent")
+    end
+  end
+
+  describe "change_drop/2" do
     setup [:create_drops_setup]
 
     test "returns a valid drop changeset", %{drop: drop} do
