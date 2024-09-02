@@ -17,8 +17,6 @@ defmodule ElixirDropsWeb.Router do
     plug :accepts, ["json"]
   end
 
-  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
-
   scope "/", ElixirDropsWeb do
     pipe_through [:browser, :require_authenticated_user]
 
@@ -79,4 +77,6 @@ defmodule ElixirDropsWeb.Router do
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
+
+  resources "/health", ElixirDropsWeb.HealthController, only: [:index]
 end

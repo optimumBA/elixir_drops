@@ -1,4 +1,6 @@
-defmodule ElixirDropsWeb.DropLive.DropsListComponent do
+defmodule ElixirDropsWeb.DropsListComponent do
+  @moduledoc false
+
   use ElixirDropsWeb, :live_component
 
   alias ElixirDrops.Drops

@@ -3,7 +3,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDropsWeb.DropComponents
-  alias ElixirDropsWeb.DropLive.DropsListComponent
+  alias ElixirDropsWeb.DropsListComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do

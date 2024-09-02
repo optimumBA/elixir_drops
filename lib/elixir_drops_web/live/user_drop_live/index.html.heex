@@ -17,14 +17,14 @@
     <.live_component
       module={DropsListComponent}
       drop_filters={@drop_filters}
-      id="#{@current_user.id}-drops"
+      id="user-drops"
       show_user_drops?={true}
       timezone_offset={@timezone_offset}
     />
 
     <DropComponents.create_post_button_mobile
       current_user={@current_user}
-      show_mobile_create_post_btn?={true}
+      class="user-drops-mobile-btn"
     />
   </section>
 

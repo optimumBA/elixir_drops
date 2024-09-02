@@ -361,9 +361,7 @@ defmodule ElixirDrops.DropsTest do
 
       assert %{
                body: ["can't be blank"],
-               title: [
-                 "can't be blank"
-               ]
+               title: ["can't be blank"]
              } = errors_on(changeset)
     end
   end
