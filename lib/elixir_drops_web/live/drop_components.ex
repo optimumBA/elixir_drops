@@ -5,6 +5,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.DateTimeHelper
+  alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.Icons
 
   @type assigns :: map()
@@ -61,13 +62,9 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  attr :avatar, :string, required: true
-  attr :created_at, :string, required: true
-  attr :github_username, :string, required: true
-  attr :id, :string, required: true
+  attr :drop, Drop, required: true
   attr :show_card_menu?, :boolean, default: false
   attr :timezone_offset, :integer, required: true
-  attr :title, :string, required: true
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
@@ -77,13 +74,13 @@ defmodule ElixirDropsWeb.DropComponents do
         <div class="flex justify-between">
           <div class="flex gap-1 md:gap-2 items-center">
             <img
-              src={@avatar}
-              alt={@github_username}
+              src={@drop.user.avatar}
+              alt={@drop.user.github_username}
               class="rounded-full h-8 md:h-10 w-8 md:w-10 object-cover"
             />
-            <p><%= @github_username %></p>
+            <p><%= @drop.user.github_username %></p>
             <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
-              Created <%= DateTimeHelper.convert_to_relative_time(@created_at, @timezone_offset) %>
+              Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
             </p>
           </div>
 
@@ -91,31 +88,32 @@ defmodule ElixirDropsWeb.DropComponents do
             <button
               class="text-[#797979] hover:text-[#5947F1]"
               id="drop-card-menu-btn"
-              data-drop-id={@id}
-              phx-click={JS.toggle(to: "#drop-card-menu-#{@id}")}
+              data-drop-id={@drop.id}
+              phx-click={JS.toggle(to: "#drop-card-menu-#{@drop.id}")}
             >
               <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
             </button>
           <% else %>
-            <.drop_card_action_default id={@id} />
+            <.drop_card_action_default id={@drop.id} />
           <% end %>
         </div>
 
-        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @title %></h3>
+        <.tag_filter
+          class="bg-[#eae8fd] hover:opacity-80"
+          tags={@drop.tags}
+          user_list?={@show_card_menu?}
+        />
+
+        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
       </div>
 
-      <.drop_card_menu id={@id} />
+      <.drop_card_menu id={@drop.id} />
     </div>
     """
   end
 
-  attr :avatar, :string, required: true
-  attr :body, :string, required: true
-  attr :created_at, :string, required: true
-  attr :github_username, :string, required: true
-  attr :id, :string, required: true
+  attr :drop, Drop, required: true
   attr :timezone_offset, :integer, required: true
-  attr :title, :string, required: true
 
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do
@@ -124,15 +122,23 @@ defmodule ElixirDropsWeb.DropComponents do
       class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <h1 class="font-[500] text-2xl md:text-4xl"><%= @title %></h1>
-      <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
-        <img src={@avatar} alt={@github_username} class="rounded-full h-12 w-12 object-cover" />
-        <div>
-          <p class="mb-1"><%= @github_username %></p>
-          <p class="text-[#696969] text-xs">
-            Created <%= DateTimeHelper.convert_to_relative_time(@created_at, @timezone_offset) %>
-          </p>
+      <h1 class="font-[500] text-2xl md:text-4xl"><%= @drop.title %></h1>
+      <div class="border-b-[2.5px] border-b-[#ececec] py-5">
+        <div class="flex gap-x-3 items-center">
+          <img
+            src={@drop.user.avatar}
+            alt={@drop.user.github_username}
+            class="rounded-full h-12 w-12 object-cover"
+          />
+          <div>
+            <p class="mb-1"><%= @drop.user.github_username %></p>
+            <p class="text-[#696969] text-xs">
+              Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
+            </p>
+          </div>
         </div>
+
+        <.tag_filter class="border-[1px] border-[#e2e2e2] mt-3 hover:bg-[#eae8fd]" tags={@drop.tags} />
       </div>
 
       <div
@@ -140,12 +146,12 @@ defmodule ElixirDropsWeb.DropComponents do
         id="drop-body"
         phx-hook="DropBodyContainer"
       >
-        <%= to_html(@body) %>
+        <%= to_html(@drop.body) %>
       </div>
 
       <p
-        id="copy-link-#{@id}"
-        data-clipboard-text={url(~p"/drops/#{@id}")}
+        id="copy-link-#{@drop.id}"
+        data-clipboard-text={url(~p"/drops/#{@drop.id}")}
         phx-hook="CopyToClipboard"
         class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
       >
@@ -310,13 +316,14 @@ defmodule ElixirDropsWeb.DropComponents do
 
   attr :tag, :string, required: true
 
+  @spec tag(assigns()) :: rendered()
   def tag(assigns) do
     ~H"""
     <div class="mx-2 tag">
-      <button class="mb-2 text-sm text-[#252525] flex items-center justify-between bg-[#eae8fd] py-1 px-2 rounded-md">
+      <div class="mb-2 text-sm text-[#252525] flex items-center justify-between bg-[#eae8fd] py-1 px-2 rounded-md">
         <span class="mr-2 tag-name"><%= @tag %></span>
-        <.icon name="hero-x-mark-mini" class="text-[#575757] h-4 w-4 remove-tag" />
-      </button>
+        <.icon name="hero-x-mark-mini" class="text-[#575757] h-4 w-4 cursor-pointer remove-tag" />
+      </div>
     </div>
     """
   end
@@ -490,6 +497,29 @@ defmodule ElixirDropsWeb.DropComponents do
       <.icon name="hero-link-solid" class="h-4 w-4 md:h-6 md:w-6" />
       <%= render_slot(@inner_text) %>
     </div>
+    """
+  end
+
+  attr :class, :string, default: nil
+  attr :tags, :list, required: true
+  attr :user_list?, :boolean, default: false
+
+  defp tag_filter(assigns) do
+    ~H"""
+    <ul class="flex flex-wrap gap-x-2 mt-3">
+      <li :for={tag <- Enum.map(@tags, & &1.name)} }>
+        <.link
+          class={[
+            "text-sm text-[#252525] flex items-center justify-center py-1 px-2 rounded-md",
+            "tag-#{tag}",
+            @class
+          ]}
+          navigate={if(@user_list?, do: ~p"/profile?tag=#{tag}", else: ~p"/?tag=#{tag}")}
+        >
+          <span class="mr-2"><%= tag %></span>
+        </.link>
+      </li>
+    </ul>
     """
   end
 

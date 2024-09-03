@@ -24,6 +24,5 @@ defmodule ElixirDrops.Drops.DropTag do
     drop_tag
     |> cast(attrs, [:tag_id, :drop_id])
     |> validate_required([:tag_id, :drop_id])
-    |> unique_constraint([:tag_id, :drop_id])
   end
 end

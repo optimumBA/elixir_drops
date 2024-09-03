@@ -55,7 +55,6 @@
               id="tag-input-field"
               class="placeholder:text-[#9a9a9a] ml-2 grow focus:outline-none focus:ring-0"
               phx-update="ignore"
-              list="tag-suggestions"
             />
 
             <datalist id="tag-suggestions" class="bg-white">
@@ -64,10 +63,13 @@
 
             <template id="tag-template">
               <div class="mx-2 tag">
-                <button class="tag-btn mb-2 text-sm text-[#252525] flex items-center justify-between bg-[#eae8fd] py-1 px-2 rounded-md">
+                <div class="tag-btn mb-2 text-sm text-[#252525] flex items-center justify-between bg-[#eae8fd] py-1 px-2 rounded-md">
                   <span class="mr-2 tag-name"></span>
-                  <.icon name="hero-x-mark-mini" class="text-[#575757] h-4 w-4 remove-tag" />
-                </button>
+                  <.icon
+                    name="hero-x-mark-mini"
+                    class="text-[#575757] h-4 w-4 cursor-pointer remove-tag"
+                  />
+                </div>
               </div>
             </template>
           </div>
@@ -100,6 +102,7 @@
         ]}>
           See post preview as you write...
         </p>
+
         <div :if={input_value(f, :title) || input_value(f, :body)}>
           <h2 class="font-semibold text-sm md:text-base lg:text-lg text-[#252525] border-b-2 border-b-[#cfcfcf] tracking-wide pt-8 pb-4 mb-8">
             <%= input_value(f, :title) %>

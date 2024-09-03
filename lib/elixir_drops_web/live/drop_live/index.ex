@@ -11,9 +11,22 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
     {:ok,
      socket
-     |> assign(:drop_filters, %{})
      |> assign(:new_drops?, false)
      |> assign(:page_title, "ElixirDrops")}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_params(params, _uri, socket) do
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  defp apply_action(socket, :index, %{"tag" => tag}) do
+    tag = String.trim(tag)
+    assign(socket, :drop_filters, %{tag: tag})
+  end
+
+  defp apply_action(socket, :index, _params) do
+    assign(socket, :drop_filters, %{})
   end
 
   @impl Phoenix.LiveView

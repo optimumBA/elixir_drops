@@ -246,7 +246,9 @@ defmodule ElixirDrops.Drops do
 
         Repo.insert_all(Tag, maps, on_conflict: :nothing)
 
-        {:ok, Repo.all(from t in Tag, where: t.name in ^names)}
+        tag_query = from t in Tag, where: t.name in ^names
+
+        {:ok, Repo.all(tag_query)}
     end
   end
 

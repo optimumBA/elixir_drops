@@ -44,13 +44,9 @@ defmodule ElixirDropsWeb.DropsListComponent do
         role="link"
       >
         <DropComponents.drop_card
-          avatar={drop.user.avatar}
-          created_at={drop.inserted_at}
-          github_username={drop.user.github_username}
-          id={drop.id}
+          drop={drop}
           show_card_menu?={@show_user_drops?}
           timezone_offset={@timezone_offset}
-          title={drop.title}
         />
       </div>
     </div>

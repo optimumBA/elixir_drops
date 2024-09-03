@@ -42,6 +42,15 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     |> assign(:page_title, "Create Drop")
   end
 
+  defp apply_action(socket, :index, %{"tag" => tag}) do
+    tag = String.trim(tag)
+    filters = %{user_id: socket.assigns.current_user.id, tag: tag}
+
+    socket
+    |> assign(:drop_filters, filters)
+    |> assign(:page_title, "ElixirDrops | #{socket.assigns.current_user.github_username}")
+  end
+
   defp apply_action(socket, :index, _params) do
     socket
     |> assign(:drop, nil)

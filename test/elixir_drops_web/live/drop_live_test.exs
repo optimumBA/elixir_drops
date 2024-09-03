@@ -97,7 +97,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute has_element?(live, "#new-drops-indicator")
 
       {:ok, drop} =
-        Drops.create_drop(%Drop{}, user, %{title: "New Drop title", body: "Drop body"})
+        Drops.create_drop(%Drop{}, user, %{
+          title: "New Drop title",
+          body: "Drop body",
+          tags: ["tag1", "tag2"]
+        })
 
       assert has_element?(live, "#new-drops-indicator")
 
@@ -106,6 +110,31 @@ defmodule ElixirDropsWeb.DropLiveTest do
       |> render_click()
 
       assert has_element?(live, "#drop-#{drop.id}", drop.title)
+    end
+
+    test "user can filter drops by tags", %{conn: conn, drop: drop, user: user} do
+      {:ok, live, html} = live(conn, ~p"/")
+
+      _drop2 =
+        drop_fixture(%Drop{}, user, %{
+          body: "Body for drop 2",
+          tags: ["tag4", "tag5"],
+          title: "Drop 2"
+        })
+
+      [tag1, tag2] = Enum.map(drop.tags, & &1.name)
+
+      assert html =~ tag1
+      assert html =~ tag2
+
+      {:ok, _live, tags_html} =
+        live
+        |> element("#drop-#{drop.id} .drop-card .tag-#{tag1}")
+        |> render_click()
+        |> follow_redirect(conn, ~p"/?tag=#{tag1}")
+
+      assert tags_html =~ tag1
+      refute tags_html =~ "tag4"
     end
   end
 

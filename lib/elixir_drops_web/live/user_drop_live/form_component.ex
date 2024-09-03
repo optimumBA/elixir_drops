@@ -87,10 +87,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   defp assign_tags(socket, :new), do: assign(socket, :tags, "")
 
   defp assign_tags(socket, :edit) do
-    tags =
-      socket.assigns.drop.tags
-      |> Enum.map(& &1.name)
-      |> Enum.join(", ")
+    tags = Enum.map_join(socket.assigns.drop.tags, ", ", & &1.name)
 
     assign(socket, :tags, tags)
   end
