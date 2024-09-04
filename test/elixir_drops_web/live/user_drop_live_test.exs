@@ -84,28 +84,36 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   describe "/drop/new" do
     setup [:create_drops_setup]
 
-    # test "authorized users can create drops", %{conn: conn, user: user} do
-    #   conn = sign_in_user(conn, user)
+    test "authorized users can create drops", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
 
-    #   {:ok, live, _html} = live(conn, ~p"/drops/new")
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-    #   {:ok, _live, html} =
-    #     live
-    #     |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
-    #     |> render_submit()
-    #     |> follow_redirect(conn, ~p"/profile")
+      {:ok, _live, html} =
+        live
+        |> form("#drops-editor-form",
+          drop: %{title: "New Drop title", drop_tags: "drop_tag_1, drop_tag_2", body: "Drop body"}
+        )
+        |> render_submit()
+        |> follow_redirect(conn, ~p"/profile")
 
-    #   assert html =~ "New Drop title"
-    # end
+      assert html =~ "New Drop title"
+      assert html =~ "drop_tag_1"
+      assert html =~ "drop_tag_2"
+    end
 
     test "authorized users cannot create a drop with invalid data", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
 
       {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      live
-      |> form("#drops-editor-form", drop: %{title: "", body: ""})
-      |> render_change() =~ "can&#39;t be blank"
+      html_2 =
+        live
+        |> form("#drops-editor-form", drop: %{title: "", drop_tags: "drop1", body: ""})
+        |> render_submit()
+
+      assert html_2 =~ "can&#39;t be blank"
+      assert html_2 =~ "Should have at least 2 drops and at most 10 tags"
     end
 
     test "unauthorized users are redirected", %{conn: conn} do
@@ -136,13 +144,17 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       html =
         live
-        |> form("#drops-editor-form", drop: %{title: "Drop title here", body: drop_body})
+        |> form("#drops-editor-form",
+          drop: %{title: "Drop title here", drop_tags: "drop_tag1, drop_tag2", body: drop_body}
+        )
         |> render_change()
 
       assert html =~ "Drop title here"
       assert html =~ ~r|<h1>Test heading</h1|
       assert html =~ ~r|<h2>Test subheading</h2|
       assert html =~ ~r|<p>Some <em>text<\/em> here|
+      assert html =~ "drop_tag1"
+      assert html =~ "drop_tag2"
 
       assert html =~
                ~r|<ul><li>Some list item</li><li>Another list item</li></ul>|

@@ -9,7 +9,7 @@ defmodule ElixirDrops.DropsTest do
   alias ElixirDrops.Drops.Tag
 
   @invalid_attrs %{body: nil, tags: nil, title: nil}
-  @valid_attrs %{body: "some body", tags: ["tag3", "tag4"], title: "some title"}
+  @valid_attrs %{body: "some body", drop_tags: "tag3, tag4", title: "some title"}
 
   defp create_drops_setup(_attrs) do
     user = user_fixture()
@@ -26,7 +26,7 @@ defmodule ElixirDrops.DropsTest do
         drop_fixture(
           %Drop{},
           user,
-          %{title: "Drop 2", body: "Body for drop 2", tags: ["drop2", "tag"]}
+          %{title: "Drop 2", body: "Body for drop 2", drop_tags: "drop2, tag"}
         )
 
       assert [tagged_drop] = Drops.list_drops(%{tag: "tag1"})
@@ -67,7 +67,7 @@ defmodule ElixirDrops.DropsTest do
 
       drop_fixture(%Drop{}, user_2, %{
         body: "Body for drop 2",
-        tags: ["tag4", "tag5"],
+        drop_tags: "tag4, tag5",
         title: "Drop 2"
       })
 
@@ -169,7 +169,7 @@ defmodule ElixirDrops.DropsTest do
           %Drop{}
           |> drop_fixture(user, %{
             body: "Body for drop #{drop}",
-            tags: ["drop#{drop}", "drop"],
+            drop_tags: "drop#{drop}, drop",
             title: "Drop #{drop}"
           })
           |> update_drop_inserted_at(drop * 120)
@@ -248,22 +248,41 @@ defmodule ElixirDrops.DropsTest do
       user = user_fixture()
 
       assert {:error, %Ecto.Changeset{} = changeset} =
-               Drops.create_drop(%Drop{}, user, %{body: "body", title: "title", tags: ["tag1"]})
+               Drops.create_drop(%Drop{}, user, %{body: "body", title: "title", drop_tags: "tag1"})
 
       assert %{
-               tags: ["Should have at least 2 drops and at most 10 tags"]
+               drop_tags: ["Should have at least 2 drops and at most 10 tags"]
              } = errors_on(changeset)
     end
 
     test "returns an error changeset for drop with more than 10 tags" do
       user = user_fixture()
-      tags = Enum.map(1..12, &"tag#{&1}")
+      tags = Enum.map_join(1..12, ", ", &"tag#{&1}")
 
       assert {:error, %Ecto.Changeset{} = changeset} =
-               Drops.create_drop(%Drop{}, user, %{body: "body", title: "title", tags: tags})
+               Drops.create_drop(%Drop{}, user, %{body: "body", drop_tags: tags, title: "title"})
 
       assert %{
-               tags: ["Should have at least 2 drops and at most 10 tags"]
+               drop_tags: ["Should have at least 2 drops and at most 10 tags"]
+             } = errors_on(changeset)
+    end
+
+    test "check for duplicate tags" do
+      user = user_fixture()
+
+      assert {:error, changeset} =
+               Drops.create_drop(%Drop{}, user, %{
+                 body: "drop body",
+                 drop_tags: "tag1, tag1, TAG1",
+                 title: "Drop title"
+               })
+
+      assert %{
+               tags: [
+                 %{},
+                 %{id: ["has already been taken"]},
+                 %{id: ["has already been taken"]}
+               ]
              } = errors_on(changeset)
     end
   end
@@ -275,7 +294,7 @@ defmodule ElixirDrops.DropsTest do
       assert {:ok, %Drop{} = drop} =
                Drops.update_drop(drop, user, %{
                  body: "Updated body",
-                 tags: ["tag6", "tag7"],
+                 drop_tags: "tag6, tag7",
                  title: "Updated title"
                })
 
@@ -294,10 +313,10 @@ defmodule ElixirDrops.DropsTest do
       user: user
     } do
       assert {:error, %Ecto.Changeset{} = changeset} =
-               Drops.update_drop(drop, user, %{body: "body", title: "title", tags: ["tag1"]})
+               Drops.update_drop(drop, user, %{body: "body", drop_tags: "tag1", title: "title"})
 
       assert %{
-               tags: ["Should have at least 2 drops and at most 10 tags"]
+               drop_tags: ["Should have at least 2 drops and at most 10 tags"]
              } = errors_on(changeset)
     end
 
@@ -305,13 +324,13 @@ defmodule ElixirDrops.DropsTest do
       drop: drop,
       user: user
     } do
-      tags = Enum.map(1..12, &"tag#{&1}")
+      tags = Enum.map_join(1..12, ", ", &"tag#{&1}")
 
       assert {:error, %Ecto.Changeset{} = changeset} =
-               Drops.update_drop(drop, user, %{body: "body", title: "title", tags: tags})
+               Drops.update_drop(drop, user, %{body: "body", drop_tags: tags, title: "title"})
 
       assert %{
-               tags: ["Should have at least 2 drops and at most 10 tags"]
+               drop_tags: ["Should have at least 2 drops and at most 10 tags"]
              } = errors_on(changeset)
     end
   end
@@ -361,6 +380,7 @@ defmodule ElixirDrops.DropsTest do
 
       assert %{
                body: ["can't be blank"],
+               drop_tags: ["can't be blank"],
                title: ["can't be blank"]
              } = errors_on(changeset)
     end

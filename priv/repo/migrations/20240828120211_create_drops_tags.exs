@@ -4,7 +4,7 @@ defmodule ElixirDrops.Repo.Migrations.CreateDropsTags do
   def change do
     create table(:drops_tags, primary_key: false) do
       add :drop_id, references(:drops, type: :binary_id, on_delete: :delete_all)
-      add :tag_id, references(:tags, type: :binary_id)
+      add :tag_id, references(:tags, type: :binary_id, on_delete: :delete_all)
 
       timestamps()
     end

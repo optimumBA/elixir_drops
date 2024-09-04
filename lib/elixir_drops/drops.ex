@@ -5,7 +5,6 @@ defmodule ElixirDrops.Drops do
 
   import Ecto.Query, warn: false
 
-  alias Ecto.Multi
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropTag
@@ -156,6 +155,15 @@ defmodule ElixirDrops.Drops do
     |> where([drop], drop.id == ^drop_id)
     |> preload([:tags, :user])
     |> Repo.one()
+    |> with_drop_tags()
+  end
+
+  defp with_drop_tags(nil), do: nil
+
+  defp with_drop_tags(drop) do
+    tags = Enum.map_join(drop.tags, ", ", & &1.name)
+
+    %Drop{drop | drop_tags: tags}
   end
 
   @doc """
@@ -188,7 +196,8 @@ defmodule ElixirDrops.Drops do
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
     case create_or_update_drop(drop, user, attrs) do
       {:ok, drop} ->
-        :ok = broadcast_drop_creation(drop)
+        :ok =
+          broadcast_drop_creation(drop)
 
         {:ok, drop}
 
@@ -214,72 +223,12 @@ defmodule ElixirDrops.Drops do
     do: create_or_update_drop(drop, user, attrs)
 
   defp create_or_update_drop(drop, user, attrs) do
-    tags = attrs[:tags] || attrs["tags"] || []
-
-    Multi.new()
-    |> Multi.run(:tags, fn _repo, changes ->
-      insert_and_get_all_tags(changes, tags)
-    end)
-    |> Multi.run(:drop, fn _repo, changes ->
-      insert_or_update_drop(changes, drop, user, attrs)
-    end)
-    |> Repo.transaction()
-    |> process_result()
-  end
-
-  defp process_result({:ok, %{drop: drop}}) do
-    drop = Repo.preload(drop, [:tags, :user])
-
-    {:ok, drop}
-  end
-
-  defp process_result({:error, _name, changeset, _changes}), do: {:error, changeset}
-
-  defp insert_and_get_all_tags(_changes, tags) do
-    case tags do
-      [] ->
-        {:ok, []}
-
-      names ->
-        timestamp = now()
-        maps = name_map(names, timestamp)
-
-        Repo.insert_all(Tag, maps, on_conflict: :nothing)
-
-        tag_query = from t in Tag, where: t.name in ^names
-
-        {:ok, Repo.all(tag_query)}
-    end
-  end
-
-  defp insert_or_update_drop(%{tags: tags}, drop, user, attrs) do
     drop
     |> Drop.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:tags, tags)
+    |> Drop.validate_tag_number(:drop_tags)
+    |> Drop.check_and_update_tags(attrs)
     |> Ecto.Changeset.put_assoc(:user, user)
-    |> Ecto.Changeset.validate_length(:tags,
-      min: 2,
-      max: 10,
-      message: "Should have at least 2 drops and at most 10 tags"
-    )
     |> Repo.insert_or_update()
-  end
-
-  defp now do
-    now = NaiveDateTime.utc_now()
-
-    NaiveDateTime.truncate(now, :second)
-  end
-
-  defp name_map(names, timestamp) do
-    Enum.map(
-      names,
-      &%{
-        name: &1,
-        inserted_at: timestamp,
-        updated_at: timestamp
-      }
-    )
   end
 
   defp broadcast_drop_creation(drop) do

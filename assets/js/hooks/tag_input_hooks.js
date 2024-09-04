@@ -3,94 +3,42 @@ let TagInputHooks = {}
 TagInputHooks.TagsInput = {
   mounted() {
     const hook = this
-    const tagsContainer = this.el
+    const tagsInputField = hook.el
     const deleteTagBtn = document.querySelectorAll('.remove-tag')
     const dropTagsInput = document.querySelector('#drop-tags-input')
-    const tagCountEl = document.querySelector('.tag-count')
-    const tagNames = document.querySelectorAll('.tag-name')
-    const tagsInputField = document.querySelector('#tag-input-field')
-
-    let tagCount = tagNames.length
-    tagCountEl.textContent = `${tagCount} / 10`
-
-    const addTag = (tagText) => {
-      const tagTemplate = document.querySelector('#tag-template')
-      const newTag = tagTemplate.content.cloneNode(true)
-      newTag.querySelector('.tag-name').textContent = tagText
-      tagsContainer.insertBefore(newTag, tagsInputField)
-
-      let tags = dropTagsInput.value + `, ${tagText}`
-
-      updateTags(tags, +1)
-    }
-
-    const updateCount = (count) => {
-      tagCount = tagCount + count
-      tagCountEl.textContent = `${tagCount} / 10`
-    }
-
-    const updateTags = (tagText, count) => {
-      dropTagsInput.value = tagText
-
-      dropTagsInput.dispatchEvent(new Event('input', { bubbles: false }))
-
-      hook.pushEventTo('#drops-form', 'update-tags', {
-        tags: dropTagsInput.value,
-      })
-
-      updateCount(count)
-    }
-
-    const debounce = (cb, delay = 1000) => {
-      let timeout
-
-      return (...args) => {
-        clearTimeout(timeout)
-        timeout = setTimeout(() => {
-          cb(...args)
-        }, delay)
-      }
-    }
-
-    const updateTagSuggestions = debounce(() => {
-      updateTagsList(tagsInputField)
-    })
-
-    const updateTagsList = (element) => {
-      hook.pushEventTo('#drops-form', 'suggest-tags', {
-        name: element.value.trim(),
-      })
-    }
 
     deleteTagBtn.forEach((btn) => {
       btn.addEventListener('click', (event) => {
         event.preventDefault()
+        let removeTag = event.target.parentElement
 
-        let tag = btn.closest('.tag')
-        let tagText = tag.textContent.trim()
-
-        let newValue = dropTagsInput.value
+        dropTagsInput.value = dropTagsInput.value
           .split(', ')
-          .filter((text) => text !== tagText)
+          .filter((tag) => tag !== removeTag.innerText)
           .join(', ')
+          .trim()
 
-        updateTags(newValue, -1)
-
-        tag.remove()
+        dropTagsInput.dispatchEvent(new Event('input', { bubbles: true }))
       })
     })
 
     tagsInputField.addEventListener('keydown', (event) => {
-      if (event.target.value.trim() !== '') {
-        if (event.key === 'Enter') {
-          event.preventDefault()
-          event.stopPropagation()
+      let tag = event.target.value.trim()
 
-          addTag(event.target.value.trim())
-          event.target.value = ''
-        } else {
-          updateTagSuggestions()
-        }
+      if (tag !== '' && event.key === 'Enter') {
+        event.preventDefault()
+        event.stopPropagation()
+
+        dropTagsInput.value = `${dropTagsInput.value}, ${tag}`
+          .substring(0)
+          .trim()
+        dropTagsInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+        event.target.value = ''
+      } else {
+        hook.pushEventTo('#drops-form', 'suggest-tags', {
+          name: event.target.value,
+        })
       }
     })
   },

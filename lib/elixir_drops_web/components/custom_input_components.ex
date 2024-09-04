@@ -92,6 +92,19 @@ defmodule ElixirDropsWeb.CustomInputComponents do
     """
   end
 
+  def custom_input(%{type: "hidden"} = assigns) do
+    ~H"""
+    <input
+      type="text"
+      name={@name}
+      id={@id}
+      value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+      class="hidden"
+      {@rest}
+    />
+    """
+  end
+
   def custom_input(assigns) do
     ~H"""
     <div>

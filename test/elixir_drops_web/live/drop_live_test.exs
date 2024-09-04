@@ -100,7 +100,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
         Drops.create_drop(%Drop{}, user, %{
           title: "New Drop title",
           body: "Drop body",
-          tags: ["tag1", "tag2"]
+          drop_tags: "tag1, tag2"
         })
 
       assert has_element?(live, "#new-drops-indicator")
@@ -118,7 +118,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       _drop2 =
         drop_fixture(%Drop{}, user, %{
           body: "Body for drop 2",
-          tags: ["tag4", "tag5"],
+          drop_tags: "tag4, tag5",
           title: "Drop 2"
         })
 
