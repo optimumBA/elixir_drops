@@ -126,15 +126,7 @@ defmodule ElixirDrops.Drops do
       {:ok, drop} ->
         drop = Repo.preload(drop, [:user])
 
-        Phoenix.PubSub.broadcast(
-          ElixirDrops.PubSub,
-          @topic,
-          {
-            __MODULE__,
-            [:drop, :created],
-            drop
-          }
-        )
+        :ok = broadcast_drop_creation(drop)
 
         {:ok, drop}
 
@@ -162,7 +154,7 @@ defmodule ElixirDrops.Drops do
   defp create_or_update_drop(drop, user, attrs) do
     drop
     |> Drop.changeset(attrs)
-    |> Ecto.Changeset.put_change(:user_id, user.id)
+    |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.insert_or_update()
   end
 
@@ -178,5 +170,17 @@ defmodule ElixirDrops.Drops do
   @spec change_drop(drop(), attrs()) :: changeset()
   def change_drop(%Drop{} = drop, attrs \\ %{}) do
     Drop.changeset(drop, attrs)
+  end
+
+  defp broadcast_drop_creation(drop) do
+    Phoenix.PubSub.broadcast(
+      ElixirDrops.PubSub,
+      @topic,
+      {
+        __MODULE__,
+        [:drop, :created],
+        drop
+      }
+    )
   end
 end

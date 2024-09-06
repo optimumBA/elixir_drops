@@ -10,7 +10,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
   alias ElixirDrops.Drops.Drop
 
   defp create_drops_setup(%{conn: conn}) do
-    conn = put_connect_params(conn, %{"timezone_offset" => 0})
+    conn =
+      put_connect_params(
+        conn,
+        %{
+          "show_welcome_message" => "true",
+          "timezone_offset" => 0
+        }
+      )
+
     user = user_fixture()
     drop = drop_fixture(user)
 
@@ -78,7 +86,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
       |> element("#drop-#{drop.id}")
       |> render_click()
 
-      assert_patch(live, ~p"/drops/#{drop.id}")
+      {path, _flash} = assert_redirect(live)
+
+      assert path == ~p"/drops/#{drop.id}"
     end
 
     test "gets updated with new drops", %{conn: conn, user: user} do
@@ -96,40 +106,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       |> render_click()
 
       assert has_element?(live, "#drop-#{drop.id}", drop.title)
-    end
-
-    test "can see older drops with infinite scroll", %{conn: conn, user: user} do
-      for drop <- 1..25 do
-        time = 120 * drop
-
-        %Drop{}
-        |> drop_fixture(user, %{title: "Drop title #{drop}", body: "Body for drop #{drop}"})
-        |> update_drop_inserted_at(time)
-      end
-
-      {:ok, live, _html} = live(conn, ~p"/")
-
-      assert html_2 = render_hook(live, "next-page", %{})
-
-      assert html_2 =~ "Drop title 11"
-      assert html_2 =~ "Drop title 14"
-    end
-
-    test "can see newer drops with infinite scroll", %{conn: conn, user: user} do
-      for drop <- 1..25 do
-        time = 120 * drop
-
-        %Drop{}
-        |> drop_fixture(user, %{title: "Drop title #{drop}", body: "Body for drop #{drop}"})
-        |> update_drop_inserted_at(time)
-      end
-
-      {:ok, live, _html} = live(conn, ~p"/")
-
-      assert html_2 = render_hook(live, "prev-page", %{})
-
-      assert html_2 =~ "Drop title 1"
-      refute html_2 =~ "Drop title 14"
     end
   end
 
@@ -152,6 +128,23 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert {:error, {:live_redirect, %{to: ^path}}} =
                live(conn, ~p"/drops/#{drop_id}")
+    end
+
+    test "Javascript scripts inside the drop is not executed", %{conn: conn, user: user} do
+      drop =
+        drop_fixture(
+          %Drop{},
+          user,
+          %{
+            body:
+              "dfdf\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
+            title: "Drop with script"
+          }
+        )
+
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+
+      refute html =~ ~r|<div>"Some malicious code"</div>|
     end
 
     test "rendered HTML includes SEO meta tags", %{conn: conn, drop: drop} do

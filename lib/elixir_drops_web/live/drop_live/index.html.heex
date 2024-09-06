@@ -2,12 +2,13 @@
   <DropComponents.navbar current_user={@current_user} live_action={@live_action} />
 
   <section class="content-grid text-[#252525] relative">
-    <DropComponents.welcome_message condition={!@current_user} />
+    <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
 
-    <DropComponents.drops_list
-      drops={@streams.drops}
-      end_of_timeline?={@end_of_timeline?}
+    <.live_component
+      module={DropsListComponent}
+      drop_filters={@drop_filters}
       id="drops"
+      show_user_drops?={false}
       timezone_offset={@timezone_offset}
     />
 
@@ -19,7 +20,7 @@
         "fixed left-[50%] translate-x-[-50%] z-[1000000]"
       ]}
       id="new-drops-indicator"
-      phx-click={JS.push("refresh-drops")}
+      phx-click={JS.push("refresh-drops", target: "#drops")}
     >
       <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
       <span>New Drops</span>
@@ -28,10 +29,7 @@
 
   <DropComponents.copied_link_popup_message />
 
-  <DropComponents.create_post_button_mobile
-    current_user={@current_user}
-    show_mobile_create_post_btn?={true}
-  />
+  <DropComponents.create_post_button_mobile current_user={@current_user} />
 </section>
 
 <DropComponents.cancel_form_popup_message current_user={@current_user} />

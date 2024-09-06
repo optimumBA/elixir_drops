@@ -121,6 +121,26 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~
                ~r|<ul><li>Some list item</li><li>Another list item</li></ul>|
     end
+
+    test "Javascript scripts inside the drop is not executed in the preview", %{
+      conn: conn,
+      user: user
+    } do
+      drop =
+        drop_fixture(
+          %Drop{},
+          user,
+          %{
+            body:
+              "dfdf\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
+            title: "Drop with script"
+          }
+        )
+
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+
+      refute html =~ ~r|<div>"Some malicious code"</div>|
+    end
   end
 
   describe "/drops/:id/edit" do

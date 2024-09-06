@@ -77,6 +77,7 @@
   box-shadow: 0 -6px 3px -3px #cfced3;
 }
 
+/* Typography modifiers */
 /* Headers */
 h1,
 h2,
@@ -85,6 +86,18 @@ h4,
 h5,
 h6 {
   @apply font-[500];
+}
+
+/* Blockquotes  */
+blockquote {
+  border-left: 0.3rem solid #d1d1d1;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 1rem 1.5rem;
+}
+
+blockquote *:last-child {
+  margin-bottom: 0;
 }
 
 /* Nav */
@@ -105,6 +118,62 @@ h6 {
 .drop-body a,
 .drop-preview a {
   @apply text-[#5947F1] underline;
+}
+
+.drop-body ol,
+.drop-preview ol {
+  list-style: decimal inside;
+}
+
+.drop-body ul,
+.drop-preview ul {
+  list-style: disc inside;
+}
+
+.drop-body li,
+.drop-preview li {
+  padding-left: 10px;
+  margin-bottom: 1rem;
+}
+
+.drop-body h1,
+.drop-preview h1 {
+  font-size: 2.2rem;
+  line-height: 1.25;
+}
+
+.drop-body h2,
+.drop-preview h2 {
+  font-size: 1.8rem;
+  line-height: 1.3;
+}
+
+.drop-body h3,
+.drop-preview h3 {
+  font-size: 1.6rem;
+  letter-spacing: -0.08rem;
+  line-height: 1.35;
+}
+
+.drop-body h4,
+.drop-preview h4 {
+  font-size: 1.4rem;
+  letter-spacing: -0.05rem;
+  line-height: 1.5;
+}
+
+.drop-body h5,
+.drop-preview h5 {
+  font-size: 1.2rem;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.drop-body h6,
+.drop-preview h6 {
+  font-size: 1rem;
+  letter-spacing: 0;
+  line-height: 1.2;
 }
 
 .drop-body :not(div:has(+ pre)) {

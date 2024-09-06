@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.DropLive.FormComponent do
+defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   @moduledoc false
 
   use ElixirDropsWeb, :live_component
@@ -8,7 +8,7 @@ defmodule ElixirDropsWeb.DropLive.FormComponent do
   alias ElixirDrops.Drops
   alias ElixirDrops.Workers.ImageCreationWorker
   alias ElixirDropsWeb.DropComponents
-  alias ElixirDropsWeb.DropLive.Icons
+  alias ElixirDropsWeb.Icons
 
   @impl Phoenix.LiveComponent
   def update(assigns, socket) do
