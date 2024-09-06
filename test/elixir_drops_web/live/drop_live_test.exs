@@ -147,7 +147,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html =~ ~r|<div>"Some malicious code"</div>|
     end
 
-    test "rendered HTML includes SEO meta tags", %{conn: conn, drop: drop} do
+    test "rendered HTML includes SEO meta tags for drop without a code block", %{
+      conn: conn,
+      drop: drop
+    } do
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
       assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
@@ -175,6 +178,23 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~
                "<meta property=\"og:url\" content=\"http://localhost:4002/drops/#{drop.id}\"/>"
+    end
+
+    test "includes SEO meta tags for drop with an image", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      {:ok, drop} =
+        Drops.update_drop(drop, user, %{seo_image_link: "https://example.com/image.png"})
+
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+
+      assert html =~
+               "<meta name=\"twitter:image\" content=\"https://example.com/image.png\"/>"
+
+      assert html =~
+               "<meta property=\"og:image\" content=\"https://example.com/image.png\"/>"
     end
   end
 end
