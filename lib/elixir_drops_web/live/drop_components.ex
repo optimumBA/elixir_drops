@@ -5,6 +5,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.DateTimeHelper
+  alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.Icons
 
   @type assigns :: map()
@@ -61,13 +62,9 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  attr :avatar, :string, required: true
-  attr :created_at, :string, required: true
-  attr :github_username, :string, required: true
-  attr :id, :string, required: true
+  attr :drop, Drop, required: true
   attr :show_card_menu?, :boolean, default: false
   attr :timezone_offset, :integer, required: true
-  attr :title, :string, required: true
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
@@ -77,13 +74,13 @@ defmodule ElixirDropsWeb.DropComponents do
         <div class="flex justify-between">
           <div class="flex gap-1 md:gap-2 items-center">
             <img
-              src={@avatar}
-              alt={@github_username}
+              src={@drop.user.avatar}
+              alt={@drop.user.github_username}
               class="rounded-full h-8 md:h-10 w-8 md:w-10 object-cover"
             />
-            <p><%= @github_username %></p>
+            <p><%= @drop.user.github_username %></p>
             <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
-              Created <%= DateTimeHelper.convert_to_relative_time(@created_at, @timezone_offset) %>
+              Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
             </p>
           </div>
 
@@ -91,31 +88,26 @@ defmodule ElixirDropsWeb.DropComponents do
             <button
               class="text-[#797979] hover:text-[#5947F1]"
               id="drop-card-menu-btn"
-              data-drop-id={@id}
-              phx-click={JS.toggle(to: "#drop-card-menu-#{@id}")}
+              data-drop-id={@drop.id}
+              phx-click={JS.toggle(to: "#drop-card-menu-#{@drop.id}")}
             >
               <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
             </button>
           <% else %>
-            <.drop_card_action_default id={@id} />
+            <.drop_card_action_default id={@drop.id} />
           <% end %>
         </div>
 
-        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @title %></h3>
+        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
       </div>
 
-      <.drop_card_menu id={@id} />
+      <.drop_card_menu id={@drop.id} />
     </div>
     """
   end
 
-  attr :avatar, :string, required: true
-  attr :body, :string, required: true
-  attr :created_at, :string, required: true
-  attr :github_username, :string, required: true
-  attr :id, :string, required: true
+  attr :drop, Drop, required: true
   attr :timezone_offset, :integer, required: true
-  attr :title, :string, required: true
 
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do
@@ -124,13 +116,17 @@ defmodule ElixirDropsWeb.DropComponents do
       class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <h1 class="font-[500] text-2xl md:text-4xl"><%= @title %></h1>
+      <h1 class="font-[500] text-2xl md:text-4xl"><%= @drop.title %></h1>
       <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
-        <img src={@avatar} alt={@github_username} class="rounded-full h-12 w-12 object-cover" />
+        <img
+          src={@drop.user.avatar}
+          alt={@drop.user.github_username}
+          class="rounded-full h-12 w-12 object-cover"
+        />
         <div>
-          <p class="mb-1"><%= @github_username %></p>
+          <p class="mb-1"><%= @drop.user.github_username %></p>
           <p class="text-[#696969] text-xs">
-            Created <%= DateTimeHelper.convert_to_relative_time(@created_at, @timezone_offset) %>
+            Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
           </p>
         </div>
       </div>
@@ -140,12 +136,12 @@ defmodule ElixirDropsWeb.DropComponents do
         id="drop-body"
         phx-hook="DropBodyContainer"
       >
-        <%= to_html(@body) %>
+        <%= to_html(@drop.body) %>
       </div>
 
       <p
-        id="copy-link-#{@id}"
-        data-clipboard-text={url(~p"/drops/#{@id}")}
+        id="copy-link-#{@drop.id}"
+        data-clipboard-text={url(~p"/drops/#{@drop.id}")}
         phx-hook="CopyToClipboard"
         class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
       >
