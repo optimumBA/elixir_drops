@@ -11,6 +11,7 @@ defmodule ElixirDrops.Workers.ImageCreationWorkerTest do
   alias ElixirDrops.Workers.ImageCreationWorker
 
   setup :set_mox_global
+  setup :set_mox_global
   setup :verify_on_exit!
 
   defp drop_setup(_attrs) do
