@@ -192,4 +192,25 @@ if config_env() == :prod do
     endpoint_url: aws_endpoint_url,
     region: aws_region,
     secret_access_key: aws_secret_access_key
+
+  # FLAME Backend
+  flame_memory_mb = "1024"
+
+  fly_api_token =
+    System.get_env("FLY_API_TOKEN") ||
+      raise "environment variable FLY_API_TOKEN is missing."
+
+  config :flame, :terminator, log: :info
+
+  config :flame, FLAME.FlyBackend,
+    token: fly_api_token,
+    memory_mb: flame_memory_mb,
+    env: %{
+      "AWS_ACCESS_KEY_ID" => aws_access_key_id,
+      "AWS_ENDPOINT_URL_S3" => aws_endpoint_url,
+      "AWS_REGION" => aws_region,
+      "AWS_SECRET_ACCESS_KEY" => aws_secret_access_key,
+      "BUCKET_NAME" => aws_bucket,
+      "DATABASE_URL" => database_url
+    }
 end

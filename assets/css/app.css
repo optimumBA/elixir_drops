@@ -257,5 +257,5 @@ blockquote *:last-child {
 }
 
 .seo-image pre {
-  @apply px-6 py-10 text-sm whitespace-break-spaces w-[90%] rounded-lg;
+  @apply px-6 py-10 text-sm w-[max-content] rounded-lg;
 }
