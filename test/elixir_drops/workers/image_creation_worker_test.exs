@@ -1,5 +1,5 @@
 defmodule ElixirDrops.Workers.ImageCreationWorkerTest do
-  use ElixirDrops.DataCase, async: true
+  use ElixirDrops.DataCase, async: false
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
@@ -10,6 +10,7 @@ defmodule ElixirDrops.Workers.ImageCreationWorkerTest do
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ImageCreationWorker
 
+  setup :set_mox_global
   setup :verify_on_exit!
 
   defp drop_setup(_attrs) do
@@ -32,7 +33,7 @@ defmodule ElixirDrops.Workers.ImageCreationWorkerTest do
 
       image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
 
-      expect(Client.Mock, :upload_image, fn _image, _filename, _type, _retries ->
+      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
         {:ok, image_url}
       end)
 
@@ -45,7 +46,7 @@ defmodule ElixirDrops.Workers.ImageCreationWorkerTest do
     end
 
     test "seo_image_link is not updated if there are errors", %{drop: drop} do
-      expect(Client.Mock, :upload_image, 4, fn _image, _filename, _type, _retries ->
+      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
         {:error, "Failed to upload image"}
       end)
 

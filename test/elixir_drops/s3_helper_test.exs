@@ -9,20 +9,20 @@ defmodule ElixirDrops.S3HelperTest do
 
   describe "upload_image/3" do
     test "uploads an image" do
-      expect(Client.Mock, :upload_image, fn _image, _filename, _type, _retries ->
+      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
         {:ok, "http://image.com/image.png"}
       end)
 
-      assert Client.upload_image("image", "image.png", "image/png", 0) ==
+      assert Client.upload_image("image", "image.png", "image/png") ==
                {:ok, "http://image.com/image.png"}
     end
 
-    test "retries upload and returns an error if upload fails after all retries" do
-      expect(Client.Mock, :upload_image, 4, fn _image, _filename, _type, _retries ->
+    test "retries upload and returns an error if upload fails" do
+      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
         {:error, "Failed to upload image"}
       end)
 
-      assert Client.upload_image("image", "image.png", "image/png", 0) ==
+      assert Client.upload_image("image", "image.png", "image/png") ==
                {:error, "Failed to upload image"}
     end
   end

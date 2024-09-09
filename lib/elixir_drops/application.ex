@@ -18,8 +18,19 @@ defmodule ElixirDrops.Application do
       # {ElixirDrops.Worker, arg},
       # Start to serve requests, typically the last entry
       ElixirDropsWeb.Endpoint,
-      {Oban, Application.fetch_env!(:elixir_drops, Oban)}
+      {Oban, Application.fetch_env!(:elixir_drops, Oban)},
+      {
+        FLAME.Pool,
+        name: ElixirDrops.ScreenshotGenerator,
+        idle_shutdown_after: 30_000,
+        max_concurrency: 10,
+        max: 20,
+        min: 0,
+        log: :info
+      }
     ]
+
+    # children = Enum.filter(children, &(&1))
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

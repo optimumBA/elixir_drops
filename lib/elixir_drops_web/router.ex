@@ -3,6 +3,8 @@ defmodule ElixirDropsWeb.Router do
 
   import ElixirDropsWeb.UserAuth
 
+  alias ElixirDropsWeb.Plugs.ScreenshotGeneratorPlug
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -13,18 +15,18 @@ defmodule ElixirDropsWeb.Router do
     plug :fetch_current_user
   end
 
-  pipeline :seo_image_generator do
-    plug :wallaby_auth
+  pipeline :screenshot_generator do
+    plug ScreenshotGeneratorPlug
   end
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  scope "/seo", ElixirDropsWeb do
-    pipe_through [:browser, :seo_image_generator]
+  scope "/screenshot", ElixirDropsWeb do
+    pipe_through [:browser, :screenshot_generator]
 
-    live "/:code_block", SeoLive.Index, :index
+    get "/:id", ScreenshotController, :index
   end
 
   scope "/", ElixirDropsWeb do
@@ -89,22 +91,4 @@ defmodule ElixirDropsWeb.Router do
   end
 
   resources "/health", ElixirDropsWeb.HealthController, only: [:index]
-
-  defp wallaby_auth(conn, _opts) do
-    options = Application.get_env(:elixir_drops, :wallaby_auth)
-    username = Keyword.fetch!(options, :username)
-    password = Keyword.fetch!(options, :password)
-
-    with {request_username, request_password} <- Plug.BasicAuth.parse_basic_auth(conn),
-         valid_username? = Plug.Crypto.secure_compare(username, request_username),
-         valid_password? = Plug.Crypto.secure_compare(password, request_password),
-         true <- valid_username? and valid_password? do
-      conn
-    else
-      _no_auth ->
-        conn
-        |> Plug.BasicAuth.request_basic_auth()
-        |> halt()
-    end
-  end
 end

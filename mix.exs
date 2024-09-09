@@ -65,6 +65,7 @@ defmodule ElixirDrops.MixProject do
   defp app_deps do
     [
       {:autumn, "~> 0.2"},
+      {:flame, "~> 0.4.4"},
       {:mdex, "~> 0.1"},
       {:mox, "~> 1.1", only: :test},
       {:oban, "~> 2.18"},
