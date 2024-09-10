@@ -251,11 +251,11 @@ blockquote *:last-child {
   @apply mb-5;
 }
 
-/* opengraph image generator page */
+/* screenshot image generator page */
 .seo-image img {
   @apply h-[100vh] w-full object-cover;
 }
 
 .seo-image pre {
-  @apply px-6 py-10 text-sm w-[max-content] rounded-lg;
+  @apply px-6 py-10 text-[0.8rem] text-pretty rounded-lg h-[85vh] w-[90%] overflow-y-hidden mx-auto whitespace-break-spaces;
 }

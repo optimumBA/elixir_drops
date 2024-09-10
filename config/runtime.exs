@@ -203,8 +203,6 @@ if config_env() == :prod do
   config :flame, :terminator, log: :info
 
   config :flame, FLAME.FlyBackend,
-    token: fly_api_token,
-    memory_mb: flame_memory_mb,
     env: %{
       "AWS_ACCESS_KEY_ID" => aws_access_key_id,
       "AWS_ENDPOINT_URL_S3" => aws_endpoint_url,
@@ -212,5 +210,7 @@ if config_env() == :prod do
       "AWS_SECRET_ACCESS_KEY" => aws_secret_access_key,
       "BUCKET_NAME" => aws_bucket,
       "DATABASE_URL" => database_url
-    }
+    },
+    memory_mb: flame_memory_mb,
+    token: fly_api_token
 end

@@ -7,7 +7,9 @@ defmodule ElixirDrops.Application do
 
   @impl Application
   def start(_type, _args) do
-    children = [
+    flame_parent = FLAME.Parent.get()
+
+    app_children = [
       ElixirDropsWeb.Telemetry,
       ElixirDrops.Repo,
       {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
@@ -17,20 +19,20 @@ defmodule ElixirDrops.Application do
       # Start a worker by calling: ElixirDrops.Worker.start_link(arg)
       # {ElixirDrops.Worker, arg},
       # Start to serve requests, typically the last entry
-      ElixirDropsWeb.Endpoint,
       {Oban, Application.fetch_env!(:elixir_drops, Oban)},
       {
         FLAME.Pool,
         name: ElixirDrops.ScreenshotGenerator,
         idle_shutdown_after: 30_000,
+        log: :info,
         max_concurrency: 10,
         max: 20,
-        min: 0,
-        log: :info
-      }
+        min: 0
+      },
+      !flame_parent && ElixirDropsWeb.Endpoint
     ]
 
-    # children = Enum.filter(children, &(&1))
+    children = Enum.filter(app_children, & &1)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
