@@ -487,38 +487,16 @@ defmodule ElixirDropsWeb.DropComponents do
   def show_popup(pop_up_message_id) do
     %JS{}
     |> JS.remove_class("hidden", to: "##{pop_up_message_id}")
-    |> JS.add_class("bg-[#acacac]", to: ".drops-container")
-    |> JS.add_class("pointer-events-none ", to: ".drops-container")
-    |> JS.add_class("z-[10]", to: ".drops-container")
-    |> JS.remove_class("bg-[#f6f6f6]", to: ".drop-card")
-    |> JS.add_class("bg-[#a7a7a7]", to: ".drop-card")
-    |> JS.remove_class("shadow-[#bebbc2]", to: ".drop-card")
-    |> JS.add_class("shadow-[#878589]", to: ".drop-card")
-    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-form")
-    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-text-editor")
-    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-title-input")
-    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-editor-input")
-    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".drop-preview-container")
-    |> JS.add_class("backdrop-brightness-20 bg-white/30", to: ".action")
+    |> JS.add_class("show-pop-up", to: ".drops-container")
+    |> JS.add_class("show-pop-up", to: ".drop-form")
   end
 
   @spec hide_popup(String.t()) :: Phoenix.LiveView.JS.t()
   def hide_popup(pop_up_message_id) do
     %JS{}
     |> JS.add_class("hidden", to: "##{pop_up_message_id}")
-    |> JS.remove_class("bg-[#acacac]", to: ".drops-container")
-    |> JS.remove_class("pointer-events-none ", to: ".drops-container")
-    |> JS.remove_class("z-[10]", to: ".drops-container")
-    |> JS.remove_class("bg-[#a7a7a7]", to: ".drop-card")
-    |> JS.add_class("bg-[#f6f6f6]", to: ".drop-card")
-    |> JS.remove_class("shadow-[#878589]", to: ".drop-card")
-    |> JS.add_class("shadow-[#bebbc2]", to: ".drop-card")
-    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-form")
-    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-text-editor")
-    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-title-input")
-    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-editor-input")
-    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".drop-preview-container")
-    |> JS.remove_class("backdrop-brightness-20 bg-white/30", to: ".action")
+    |> JS.remove_class("show-pop-up", to: ".drops-container")
+    |> JS.remove_class("show-pop-up", to: ".drop-form")
   end
 
   @spec to_html(binary()) :: Phoenix.HTML.safe()

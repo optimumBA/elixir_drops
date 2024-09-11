@@ -6,7 +6,7 @@ defmodule ElixirDrops.DateTimeHelper do
   @doc """
   Adds timezone offset and converts a NaiveDateTime to a relative time string.
 
-  ### Examples
+  ## Examples
 
       iex> ElixirDrops.DateTimeHelper.convert_to_relative_time(~N[2019-01-01 00:00:00], 3600)
       "5 years ago"

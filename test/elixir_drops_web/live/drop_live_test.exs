@@ -46,7 +46,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ "#{user.avatar}"
     end
 
-    test "unauthorized users are cannot create drops", %{conn: conn} do
+    test "unauthorized users are prohibited from creating drops", %{conn: conn} do
       {:ok, live, _html} = live(conn, ~p"/")
 
       live
@@ -56,7 +56,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert :ok = refute_redirected(live, ~p"/drops/new")
     end
 
-    test "authorized users can navigate to create drops page", %{conn: conn, user: user} do
+    test "authorized users can navigate to the drop creation page", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
 
       {:ok, live, _html} = live(conn, ~p"/")
@@ -130,14 +130,14 @@ defmodule ElixirDropsWeb.DropLiveTest do
                live(conn, ~p"/drops/#{drop_id}")
     end
 
-    test "Javascript scripts inside the drop is not executed", %{conn: conn, user: user} do
+    test "Javascript code inside the drop is not executed", %{conn: conn, user: user} do
       drop =
         drop_fixture(
           %Drop{},
           user,
           %{
             body:
-              "dfdf\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
+              "Some JS\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
             title: "Drop with script"
           }
         )
@@ -145,6 +145,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
+      assert html =~ "Drop with script"
+      assert html =~ "Some JS"
     end
   end
 end

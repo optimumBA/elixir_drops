@@ -25,20 +25,15 @@ defmodule ElixirDropsWeb.LiveHelpers do
     show_welcome_message? =
       cond do
         connected?(socket) ->
-          Phoenix.LiveView.get_connect_params(socket)["show_welcome_message"]
+          Phoenix.LiveView.get_connect_params(socket)["show_welcome_message"] == "true"
 
         Map.has_key?(socket.assigns, :show_welcome_message?) ->
           socket.assigns.show_welcome_message?
 
         true ->
-          "true"
+          true
       end
 
-    {:cont,
-     assign(
-       socket,
-       :show_welcome_message?,
-       show_welcome_message? == "true"
-     )}
+    {:cont, assign(socket, :show_welcome_message?, show_welcome_message?)}
   end
 end

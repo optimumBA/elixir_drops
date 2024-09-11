@@ -22,7 +22,7 @@ defmodule ElixirDropsWeb.DropsListComponent do
       <div
         :if={@show_user_drops?}
         id="drops-empty"
-        class="only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+        class="drops-empty only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
       >
         <div class="flex flex-col items-center justify-center">
           <p>You haven't created any post yet.</p>

@@ -42,24 +42,12 @@ DropBodyHooks.DropBodyContainer = {
 DropBodyHooks.CreatePostButtonMobile = {
   mounted() {
     const button = this.el
-    const emptyDropsEl = document.querySelector('#drops-empty')
-    const userDropsList = document.querySelector('#user-drops')
-
-    const hideButton = () => {
-      if (userDropsList && emptyDropsEl.nextElementSibling == null) {
-        button.classList.add('hidden')
-      } else {
-        button.classList.remove('hidden')
-      }
-    }
-
-    hideButton()
 
     window.onscroll = () => {
       if (window.scrollY > 300) {
         button.classList.add('hidden')
       } else {
-        hideButton()
+        button.classList.remove('hidden')
       }
     }
   },

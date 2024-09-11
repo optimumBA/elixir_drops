@@ -121,7 +121,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
                ~r|<ul><li>Some list item</li><li>Another list item</li></ul>|
     end
 
-    test "Javascript scripts inside the drop is not executed in the preview", %{
+    test "Javascript code inside the drop is not executed in the preview", %{
       conn: conn,
       user: user
     } do
@@ -131,7 +131,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           user,
           %{
             body:
-              "dfdf\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
+              "Some JS\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
             title: "Drop with script"
           }
         )
@@ -139,6 +139,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
+      assert html =~ "Drop with script"
+      assert html =~ "Some JS"
     end
   end
 
@@ -182,6 +184,24 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         |> render_change()
 
       assert html =~ "can&#39;t be blank"
+    end
+
+    test "a user cannot edit another user's drop", %{conn: conn, drop: drop} do
+      user_2 =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "github_username",
+          name: "some_name"
+        })
+
+      conn = sign_in_user(conn, user_2)
+
+      assert {:error, {:live_redirect, %{to: path}}} =
+               live(conn, ~p"/drops/#{drop.id}/edit")
+
+      assert path == ~p"/"
     end
 
     test "unauthorized users are redirected", %{conn: conn, drop: drop} do

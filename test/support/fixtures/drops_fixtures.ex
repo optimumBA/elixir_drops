@@ -40,18 +40,18 @@ defmodule ElixirDrops.DropsFixtures do
   Updated a drop inserted at time
   """
   @spec update_drop_inserted_at(drop(), integer()) :: drop()
-  def update_drop_inserted_at(drop, time_to_add) do
+  def update_drop_inserted_at(drop, seconds_offset) do
     {:ok, updated_drop} =
       drop
-      |> Ecto.Changeset.change(%{inserted_at: time_before(time_to_add)})
+      |> Ecto.Changeset.change(%{inserted_at: time_before_or_after(seconds_offset)})
       |> Repo.update()
 
     updated_drop
   end
 
-  defp time_before(amount_to_add) do
+  defp time_before_or_after(seconds_offset) do
     DateTime.utc_now()
-    |> DateTime.add(amount_to_add)
+    |> DateTime.add(seconds_offset)
     |> DateTime.to_naive()
     |> NaiveDateTime.truncate(:second)
   end

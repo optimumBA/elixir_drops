@@ -18,14 +18,15 @@
   display: grid;
   grid-template-columns:
     [full-width-start] minmax(var(--padding-inline), 1fr)
-    [breakout-start] minmax(0, var(--breakout-size))
-    [content-start] min(
+    [breakout-start] minmax(0, var(--breakout-size)) [content-start] min(
       100% - (var(--padding-inline) * 2),
       var(--content-max-width)
     )
-    [content-end]
-    minmax(0, var(--breakout-size)) [breakout-end]
-    minmax(var(--padding-inline), 1fr) [full-width-end];
+    [content-end] minmax(0, var(--breakout-size)) [breakout-end] minmax(
+      var(--padding-inline),
+      1fr
+    )
+    [full-width-end];
 }
 
 @media (min-width: 768px) {
@@ -206,6 +207,11 @@ blockquote *:last-child {
   @apply h-5 w-5 mt-2;
 }
 
+/* user drops list */
+.user-drops:has(.drops-empty:only-child) > .user-drops-mobile-btn {
+  @apply hidden;
+}
+
 /* Markdown editor form + preview */
 .drops-editor {
   --padding-inline: 1rem;
@@ -249,4 +255,22 @@ blockquote *:last-child {
 
 .drop-preview > * {
   @apply mb-5;
+}
+
+/* Showing popup message */
+.drops-container.show-pop-up {
+  @apply bg-[#acacac] pointer-events-none z-[10];
+}
+
+.drops-container.show-pop-up .drop-card {
+  @apply bg-[#a7a7a7] shadow-[#878589];
+}
+
+.drop-form.show-pop-up,
+.drop-form.show-pop-up .drop-text-editor,
+.drop-form.show-pop-up .drop-title-input,
+.drop-form.show-pop-up .drop-editor-input,
+.drop-form.show-pop-up .drop-preview-container,
+.drop-form.show-pop-up .action {
+  @apply bg-white/10;
 }

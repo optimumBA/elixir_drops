@@ -30,9 +30,10 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         |> push_navigate(to: ~p"/")
 
       %Drop{} = drop ->
-        socket
-        |> assign(:drop, drop)
-        |> assign(:page_title, "Edit Drop")
+        is_user_authorised? =
+          drop.user_id == socket.assigns.current_user.id
+
+        edit_drop_or_redirect(is_user_authorised?, drop, socket)
     end
   end
 
@@ -46,5 +47,17 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     socket
     |> assign(:drop, nil)
     |> assign(:page_title, "ElixirDrops | #{socket.assigns.current_user.github_username}")
+  end
+
+  defp edit_drop_or_redirect(true, drop, socket) do
+    socket
+    |> assign(:drop, drop)
+    |> assign(:page_title, "Edit Drop")
+  end
+
+  defp edit_drop_or_redirect(_other, _drop, socket) do
+    socket
+    |> assign(:drop, nil)
+    |> push_navigate(to: ~p"/")
   end
 end
