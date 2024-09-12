@@ -228,15 +228,34 @@ defmodule ElixirDrops.DropsTest do
   describe "get_drop/1" do
     setup [:create_drops_setup]
 
-    test "returns the drop with given id", %{drop: drop} do
-      assert %Drop{} = drop = Drops.get_drop(drop.id)
+    test "returns the drop with given a drop_id", %{drop: drop} do
+      assert %Drop{} = drop = Drops.get_drop(%{drop_id: drop.id})
       assert Ecto.assoc_loaded?(drop.user)
+    end
+
+    test "returns a drop belonging to a user", %{drop: drop, user: user} do
+      assert %Drop{} = Drops.get_drop(%{drop_id: drop.id, user_id: user.id})
+
+      assert Ecto.assoc_loaded?(drop.user)
+    end
+
+    test "returns nil for multiple filters whose conditions are not met", %{drop: drop} do
+      user_2 =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 00_908,
+          github_username: "github_username",
+          name: "some_name"
+        })
+
+      refute Drops.get_drop(%{drop_id: drop.id, user_id: user_2.id})
     end
 
     test "returns nil if the drop does not exist" do
       non_existent_id = Ecto.UUID.generate()
 
-      refute Drops.get_drop(non_existent_id)
+      refute Drops.get_drop(%{drop_id: non_existent_id})
     end
   end
 

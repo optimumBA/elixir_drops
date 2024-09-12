@@ -164,7 +164,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       assert updated_html =~ "New Drop title"
 
-      assert updated_drop = Drops.get_drop(drop.id)
+      assert updated_drop = Drops.get_drop(%{drop_id: drop.id})
       assert updated_drop.title == "New Drop title"
       assert updated_drop.body == "New Drop body"
     end

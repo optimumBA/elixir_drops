@@ -72,38 +72,42 @@ defmodule ElixirDrops.Drops do
     end
   end
 
-  defp apply_filter({:user_id, user_id}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
-  end
-
-  defp apply_filter({:older_than, drop}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.inserted_at < ^drop.inserted_at)
+  defp apply_filter({:drop_id, drop_id}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.id == ^drop_id)
   end
 
   defp apply_filter({:newer_than, drop}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.inserted_at > ^drop.inserted_at)
   end
 
+  defp apply_filter({:older_than, drop}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.inserted_at < ^drop.inserted_at)
+  end
+
+  defp apply_filter({:user_id, user_id}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
+  end
+
   defp apply_filter(_other, dynamic), do: dynamic
 
   @doc """
-  Gets a single drop.
-
-  Returns nil if the Drop does not exist.
+  Gets a single drop given filters.
 
   ## Examples
 
-      iex> get_drop(123)
+      iex> get_drop(%{drop_id: 1234})
       %Drop{}
 
-      iex> get_drop(456)
+      iex> get_drop(%{drop_id: invalid})
       nil
 
   """
-  @spec get_drop(drop_id()) :: drop() | nil
-  def get_drop(drop_id) do
-    Drop
-    |> where([drop], drop.id == ^drop_id)
+  @spec get_drop(filters()) :: drop() | nil
+  def get_drop(filters) do
+    filter_query = apply_filters()
+
+    drop_query()
+    |> where(^filter_query.(filters))
     |> preload([:user])
     |> Repo.one()
   end

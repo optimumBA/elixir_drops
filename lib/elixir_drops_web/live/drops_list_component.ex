@@ -124,14 +124,8 @@ defmodule ElixirDropsWeb.DropsListComponent do
     last_drop = List.last(drops)
 
     socket
-    |> stream_insert_many(:drops, drops, opts)
+    |> stream(:drops, drops, opts)
     |> assign(:first_drop, first_drop)
     |> assign(:last_drop, last_drop)
-  end
-
-  defp stream_insert_many(socket, stream_key, items, opts) do
-    Enum.reduce(items, socket, fn item, socket ->
-      stream_insert(socket, stream_key, item, opts)
-    end)
   end
 end

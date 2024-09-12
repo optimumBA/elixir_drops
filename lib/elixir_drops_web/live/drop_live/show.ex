@@ -12,7 +12,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @impl Phoenix.LiveView
   def handle_params(%{"id" => id}, _url, socket) do
     {:noreply,
-     id
+     %{drop_id: id}
      |> Drops.get_drop()
      |> assign_drop(socket)}
   end
