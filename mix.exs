@@ -65,9 +65,13 @@ defmodule ElixirDrops.MixProject do
   defp app_deps do
     [
       {:autumn, "~> 0.2"},
+      {:flame, "~> 0.4.4"},
       {:mdex, "~> 0.1"},
+      {:mox, "~> 1.1", only: :test},
+      {:oban, "~> 2.18"},
       {:timex, "~> 3.7"},
-      {:ueberauth_github, "~> 0.8.3"}
+      {:ueberauth_github, "~> 0.8.3"},
+      {:wallaby, github: "almirsarajcic/wallaby", branch: "releases"}
     ]
   end
 

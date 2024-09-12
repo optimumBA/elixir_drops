@@ -27,5 +27,21 @@ defmodule ElixirDropsWeb.DropLive.Show do
     socket
     |> assign(:drop, drop)
     |> assign(:page_title, drop.title)
+    |> assign_seo_attributes()
+  end
+
+  defp assign_seo_attributes(socket) do
+    %{drop: drop} = socket.assigns
+
+    image_url = Map.get(drop, :seo_image_link)
+
+    attributes = %{
+      description: drop.title,
+      image_url: image_url,
+      type: "article",
+      url: url(~p"/drops/#{drop.id}")
+    }
+
+    assign(socket, :seo_attributes, attributes)
   end
 end

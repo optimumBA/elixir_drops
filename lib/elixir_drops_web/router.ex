@@ -3,6 +3,8 @@ defmodule ElixirDropsWeb.Router do
 
   import ElixirDropsWeb.UserAuth
 
+  alias ElixirDropsWeb.ScreenshotGeneratorAuthPlug
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -11,6 +13,16 @@ defmodule ElixirDropsWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_user
+  end
+
+  pipeline :screenshot_generator do
+    plug ScreenshotGeneratorAuthPlug
+  end
+
+  scope "/screenshot", ElixirDropsWeb do
+    pipe_through [:browser, :screenshot_generator]
+
+    get "/:id", ScreenshotGeneratorController, :index
   end
 
   pipeline :api do

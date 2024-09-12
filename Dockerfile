@@ -73,6 +73,28 @@ RUN mix release
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
 
+# Install dependencies for Chrome and ChromeDriver
+RUN apt-get update -y && \
+    apt-get install -y ca-certificates curl fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release unzip wget xdg-utils
+
+# Install Chromium
+RUN apt-get update -y && \
+  apt-get install -y chromium
+
+# Install ChromeDriver
+RUN export CHROME_VERSION=$(chromium --version | awk '{print $2}') && \
+    export CHROMEDRIVER_RANGE=$(echo $CHROME_VERSION | sed -nE 's/^([0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}).*/\1/p') && \
+    curl https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${CHROMEDRIVER_RANGE} -o chromedriver_version.txt && \
+    export CHROMEDRIVER_VERSION=$(cat chromedriver_version.txt) && \
+    rm chromedriver_version.txt && \
+    curl https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip -o chromedriver-linux64.zip && \
+    unzip chromedriver-linux64.zip && \
+    mv chromedriver-linux64/chromedriver /opt/chromedriver && \
+    chmod +x /opt/chromedriver && \
+    ln -fs /opt/chromedriver /usr/local/bin && \
+    rm chromedriver-linux64.zip && \
+    rm -rf chromedriver-linux64
+
 RUN apt-get update -y && \
   apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
   && apt-get clean && rm -f /var/lib/apt/lists/*_*

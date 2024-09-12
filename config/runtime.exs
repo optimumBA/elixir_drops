@@ -154,4 +154,63 @@ if config_env() == :prod do
     env: appsignal_app_env,
     push_api_key: appsignal_push_api_key,
     revision: appsignal_revision
+
+  aws_access_key_id =
+    System.get_env("AWS_ACCESS_KEY_ID") ||
+      raise """
+      environment variable AWS_ACCESS_KEY_ID is missing.
+      """
+
+  aws_bucket =
+    System.get_env("BUCKET_NAME") ||
+      raise """
+      environment variable AWS_BUCKET_NAME is missing.
+      """
+
+  aws_endpoint_url =
+    System.get_env("AWS_ENDPOINT_URL_S3") ||
+      raise """
+      environment variable AWS_ENDPOINT_URL_S3 is missing.
+      """
+
+  aws_region =
+    System.get_env("AWS_REGION") ||
+      raise """
+      environment variable AWS_REGION is missing.
+      """
+
+  aws_secret_access_key =
+    System.get_env("AWS_SECRET_ACCESS_KEY") ||
+      raise """
+      environment variable AWS_SECRET_ACCESS_KEY is missing.
+      """
+
+  config :elixir_drops, :s3,
+    debug_requests: true,
+    access_key_id: aws_access_key_id,
+    bucket: aws_bucket,
+    endpoint_url: aws_endpoint_url,
+    region: aws_region,
+    secret_access_key: aws_secret_access_key
+
+  # FLAME Backend
+  flame_memory_mb = "1024"
+
+  fly_api_token =
+    System.get_env("FLY_API_TOKEN") ||
+      raise "environment variable FLY_API_TOKEN is missing."
+
+  config :flame, :terminator, log: :info
+
+  config :flame, FLAME.FlyBackend,
+    env: %{
+      "AWS_ACCESS_KEY_ID" => aws_access_key_id,
+      "AWS_ENDPOINT_URL_S3" => aws_endpoint_url,
+      "AWS_REGION" => aws_region,
+      "AWS_SECRET_ACCESS_KEY" => aws_secret_access_key,
+      "BUCKET_NAME" => aws_bucket,
+      "DATABASE_URL" => database_url
+    },
+    memory_mb: flame_memory_mb,
+    token: fly_api_token
 end

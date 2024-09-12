@@ -274,3 +274,12 @@ blockquote *:last-child {
 .drop-form.show-pop-up .action {
   @apply bg-white/10;
 }
+
+/* screenshot image generator page */
+.seo-image img {
+  @apply h-[100vh] w-full object-cover;
+}
+
+.seo-image pre {
+  @apply px-6 py-10 text-[0.8rem] text-pretty rounded-lg h-[85vh] w-[90%] overflow-y-hidden mx-auto whitespace-break-spaces;
+}

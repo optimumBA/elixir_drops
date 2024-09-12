@@ -9,7 +9,11 @@ import Config
 
 config :elixir_drops,
   ecto_repos: [ElixirDrops.Repo],
-  generators: [timestamp_type: :utc_datetime, binary_id: true]
+  generators: [timestamp_type: :utc_datetime, binary_id: true],
+  wallaby_auth: [
+    password: System.get_env("WALLABY_AUTH_PASSWORD"),
+    username: System.get_env("WALLABY_AUTH_USERNAME")
+  ]
 
 # Configures the endpoint
 config :elixir_drops, ElixirDropsWeb.Endpoint,
@@ -21,6 +25,11 @@ config :elixir_drops, ElixirDropsWeb.Endpoint,
   ],
   pubsub_server: ElixirDrops.PubSub,
   live_view: [signing_salt: "RieadJsi"]
+
+config :wallaby,
+  chromedriver: [headless: true],
+  max_wait_time: 10_000,
+  screenshot_on_failure: true
 
 # Configures the mailer
 #
@@ -79,6 +88,11 @@ config :ueberauth, Ueberauth,
          default_scope: "read:user,user:email"
        ]}
   ]
+
+config :elixir_drops, Oban,
+  engine: Oban.Engines.Basic,
+  queues: [default: 10, seo_images: 20],
+  repo: ElixirDrops.Repo
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
