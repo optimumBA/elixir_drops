@@ -14,7 +14,7 @@ defmodule ElixirDropsWeb.DropComponents do
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
-    <header class="header content-grid py-2 w-full relative z-30 shadow-md shadow-[#c4c0c8]">
+    <header class="header content-grid py-2 w-full relative z-30">
       <nav class="breakout flex items-center justify-between nav-primary">
         <div>
           <.link href={~p"/"}>
@@ -161,7 +161,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       :if={@condition}
-      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width"
+      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width welcome-message"
       id="welcome-message"
       phx-hook="WelcomeMessage"
     >
@@ -479,7 +479,7 @@ defmodule ElixirDropsWeb.DropComponents do
   defp hide_welcome_message do
     %JS{}
     |> JS.hide(to: "#welcome-message")
-    |> JS.add_class("shadow-md shadow-[#b2b2b2]", to: ".header")
+    |> JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")
     |> JS.dispatch("hide-welcome-message", to: "#welcome-message")
   end
 

@@ -257,6 +257,11 @@ blockquote *:last-child {
   @apply mb-5;
 }
 
+/* Welcome message and header */
+:not(.drops-container:has(.welcome-message)) > .header {
+  @apply shadow-md shadow-[#c4c0c8];
+}
+
 /* Showing popup message */
 .drops-container.show-pop-up {
   @apply bg-[#acacac] pointer-events-none z-[10];
