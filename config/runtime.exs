@@ -193,6 +193,24 @@ if config_env() == :prod do
     region: aws_region,
     secret_access_key: aws_secret_access_key
 
+  wallaby_auth_username =
+    System.get_env("WALLABY_AUTH_USERNAME") ||
+      raise """
+      environment variable WALLABY_AUTH_USERNAME is missing.
+      """
+
+  wallaby_auth_password =
+    System.get_env("WALLABY_AUTH_PASSWORD") ||
+      raise """
+      environment variable WALLABY_AUTH_PASSWORD is missing.
+      """
+
+  config :optimum_landing,
+    wallaby_auth: [
+      username: wallaby_auth_username,
+      password: wallaby_auth_password
+    ]
+
   # FLAME Backend
   flame_memory_mb = "1024"
 

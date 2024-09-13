@@ -281,7 +281,7 @@ blockquote *:last-child {
 }
 
 .seo-image {
-  @apply rounded-xl overflow-hidden mx-auto w-max max-w-proise max-h-[85vh] overflow-y-auto;
+  @apply rounded-xl overflow-hidden mx-auto w-max max-w-[65ch] max-h-[85vh] overflow-y-auto;
 }
 
 .seo-image pre {

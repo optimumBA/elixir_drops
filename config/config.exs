@@ -9,11 +9,7 @@ import Config
 
 config :elixir_drops,
   ecto_repos: [ElixirDrops.Repo],
-  generators: [timestamp_type: :utc_datetime, binary_id: true],
-  wallaby_auth: [
-    password: System.get_env("WALLABY_AUTH_PASSWORD"),
-    username: System.get_env("WALLABY_AUTH_USERNAME")
-  ]
+  generators: [timestamp_type: :utc_datetime, binary_id: true]
 
 # Configures the endpoint
 config :elixir_drops, ElixirDropsWeb.Endpoint,
@@ -39,6 +35,13 @@ config :wallaby,
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
 config :elixir_drops, ElixirDrops.Mailer, adapter: Swoosh.Adapters.Local
+
+config :elixir_drops,
+  wallaby_auth: [
+    username: "elixir_drops_wallaby",
+    password: "l3AVAovk4B8g5Sbq"
+  ],
+  env: config_env()
 
 # Configure esbuild (the version is required)
 config :esbuild,
