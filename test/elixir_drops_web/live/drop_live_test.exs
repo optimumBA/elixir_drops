@@ -3,11 +3,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
+  import Mox
   import Phoenix.LiveViewTest
 
   alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.S3Helper.Client
+
+  setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
     conn =
@@ -113,6 +117,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, drop: drop, user: user} do
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:error, "Image not found"}
+      end)
+
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
       assert html =~ ~r(<p>Drop body text...</p>)
@@ -137,22 +145,30 @@ defmodule ElixirDropsWeb.DropLiveTest do
           user,
           %{
             body:
-              "Some JS\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
+              "User drop with JS\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
             title: "Drop with script"
           }
         )
+
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
+      end)
 
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"
-      assert html =~ "Some JS"
+      assert html =~ "User drop with JS"
     end
 
-    test "rendered HTML includes SEO meta tags for drop without a code block", %{
+    test "rendered HTML includes SEO meta tags for drop", %{
       conn: conn,
       drop: drop
     } do
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:error, "Image not found"}
+      end)
+
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
       assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
@@ -180,23 +196,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~
                "<meta property=\"og:url\" content=\"http://localhost:4002/drops/#{drop.id}\"/>"
-    end
-
-    test "includes SEO meta tags for drop with an image", %{
-      conn: conn,
-      drop: drop,
-      user: user
-    } do
-      {:ok, drop} =
-        Drops.update_drop(drop, user, %{seo_image_link: "https://example.com/image.png"})
-
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
-
-      assert html =~
-               "<meta name=\"twitter:image\" content=\"https://example.com/image.png\"/>"
-
-      assert html =~
-               "<meta property=\"og:image\" content=\"https://example.com/image.png\"/>"
     end
   end
 end

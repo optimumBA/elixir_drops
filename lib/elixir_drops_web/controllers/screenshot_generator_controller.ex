@@ -11,7 +11,7 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorController do
 
   @spec index(conn(), params()) :: conn()
   def index(conn, %{"id" => id}) do
-    with %Drop{} = drop <- Drops.get_drop(id),
+    with %Drop{} = drop <- Drops.get_drop(%{drop_id: id}),
          [code_block] <- Regex.run(@markdown_regex, drop.body, capture: :first) do
       render(conn, :index, code_block: code_block, layout: false)
     end

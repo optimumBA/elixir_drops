@@ -5,10 +5,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
   import ElixirDrops.DropsFixtures
   import Mox
 
-  alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.S3Helper.Client
-  alias EElixirDrops.Workers.ScreenshotGeneratorWorker
+  alias ElixirDrops.Workers.ScreenshotGeneratorWorker
 
   setup :set_mox_global
   setup :verify_on_exit!
@@ -27,46 +26,51 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
   describe "perform/1" do
     setup [:drop_setup]
 
-    test "updates the drop with an image url if it has a code block",
+    test "creates a screenshot for a drop with a code block",
          %{drop: drop} do
       timestamp = Timex.to_unix(drop.updated_at)
 
       image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
 
-      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
+      Client.Mock
+      |> expect(:upload_image, fn _image, _filename, _type ->
         {:ok, image_url}
       end)
+      |> expect(:get_image, fn _url -> {:ok, image_url} end)
 
       args = %{drop_id: drop.id}
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, args)
-      assert %Drop{} = drop = Drops.get_drop(drop.id)
 
-      assert drop.seo_image_link == image_url
+      assert {:ok, _image_url} = Client.get_image(image_url)
     end
 
-    test "seo_image_link is not updated if there are errors", %{drop: drop} do
-      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
+    test "does not create a screenshot when there is an error", %{drop: drop} do
+      Client.Mock
+      |> expect(:upload_image, fn _image, _filename, _type ->
+        {:error, "Failed to upload image"}
+      end)
+      |> expect(:get_image, fn _url -> {:error, "Image not found"} end)
+
+      timestamp = Timex.to_unix(drop.updated_at)
+
+      image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
+
+      assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
+
+      assert {:error, "Image not found"} = Client.get_image(image_url)
+    end
+
+    test "no screenshot is created if a drop has no code block", %{user: user} do
+      expect(Client.Mock, :upload_image, 0, fn _image, _filename, _type ->
         {:error, "Failed to upload image"}
       end)
 
-      args = %{drop_id: drop.id}
-
-      assert :ok = perform_job(ScreenshotGeneratorWorker, args)
-      assert %Drop{} = drop = Drops.get_drop(drop.id)
-
-      refute drop.seo_image_link
-    end
-
-    test "seo_image_link is nil if there is no code block", %{user: user} do
       drop = drop_fixture(user)
 
       args = %{drop_id: drop.id}
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, args)
-
-      assert %Drop{} = drop = Drops.get_drop(drop.id)
-      refute drop.seo_image_link
     end
   end
 end

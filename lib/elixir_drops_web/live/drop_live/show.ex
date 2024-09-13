@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.S3Helper.Client
   alias ElixirDropsWeb.DropComponents
 
   @impl Phoenix.LiveView
@@ -33,15 +34,20 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp assign_seo_attributes(socket) do
     %{drop: drop} = socket.assigns
 
-    image_url = Map.get(drop, :seo_image_link)
-
     attributes = %{
       description: drop.title,
-      image_url: image_url,
+      image_url: get_image_url(drop),
       type: "article",
       url: url(~p"/drops/#{drop.id}")
     }
 
     assign(socket, :seo_attributes, attributes)
+  end
+
+  defp get_image_url(drop) do
+    case Client.get_image(drop) do
+      {:ok, url} -> url
+      _error -> nil
+    end
   end
 end

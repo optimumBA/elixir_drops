@@ -280,6 +280,10 @@ blockquote *:last-child {
   @apply h-[100vh] w-full object-cover;
 }
 
+.seo-image {
+  @apply rounded-xl overflow-hidden mx-auto w-max max-w-proise max-h-[85vh] overflow-y-auto;
+}
+
 .seo-image pre {
-  @apply px-6 py-10 text-[0.8rem] text-pretty rounded-lg h-[85vh] w-[90%] overflow-y-hidden mx-auto whitespace-break-spaces;
+  @apply px-6 py-10 text-[0.8rem] text-pretty;
 }

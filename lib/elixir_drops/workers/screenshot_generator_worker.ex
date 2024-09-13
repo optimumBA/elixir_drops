@@ -16,8 +16,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
     case check_code_block_and_update(args) do
-      {:ok, screenshot} ->
-        File.rm!(screenshot)
+      {:ok, image_url} ->
+        Logger.info("Screenshot generated: #{image_url}")
 
       error ->
         Logger.error("#{inspect(error)}")
@@ -37,15 +37,14 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp drop_screenshot(drop) do
     FLAME.call(ScreenshotGenerator, fn ->
       with {:ok, screenshot} <- generate_screenshot(drop),
-           {:ok, image} <- File.read(screenshot),
-           {:ok, _image_url} <- upload_screenshot(image, drop) do
-        {:ok, screenshot}
+           {:ok, image} <- File.read(screenshot) do
+        upload_screenshot(image, drop)
       end
     end)
   end
 
   defp get_drop(id) do
-    case Drops.get_drop(id) do
+    case Drops.get_drop(%{drop_id: id}) do
       nil -> {:error, "Drop not found"}
       drop -> {:ok, drop}
     end

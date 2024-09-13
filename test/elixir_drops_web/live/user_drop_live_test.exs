@@ -3,11 +3,15 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
+  import Mox
   import Phoenix.LiveViewTest
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
+
+  setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
     conn = put_connect_params(conn, %{"timezone_offset" => 0})
@@ -137,6 +141,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         )
 
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
+      end)
+
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
@@ -223,7 +231,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       |> render_submit()
 
       assert_enqueued(
-        worker: ImageCreationWorker,
+        worker: ScreenshotGeneratorWorker,
         args: %{drop_id: drop.id},
         queue: :seo_images
       )

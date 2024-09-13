@@ -32,7 +32,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   def handle_event("save", %{"drop" => drop_params}, socket) do
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
       {:ok, drop} ->
-        enqueue_seo_image_creation(drop.id)
+        enqueue_seo_screenshot_creation(drop.id)
 
         {
           :noreply,
@@ -63,7 +63,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     )
   end
 
-  defp enqueue_seo_image_creation(drop_id) do
+  defp enqueue_seo_screenshot_creation(drop_id) do
     %{"drop_id" => drop_id}
     |> ScreenshotGeneratorWorker.new()
     |> Oban.insert()
