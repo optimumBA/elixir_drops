@@ -77,15 +77,25 @@ FROM ${RUNNER_IMAGE}
 RUN apt-get update -y && \
     apt-get install -y ca-certificates curl fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release unzip wget xdg-utils
 
-# Install Chrome and ChromeDriver
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && wget https://storage.googleapis.com/chrome-for-testing-public/123.0.6312.86/linux64/chromedriver-linux64.zip \
-    && apt-get update -y \
-    && apt install -y ./google-chrome-stable_current_amd64.deb \
-    && unzip chromedriver-linux64.zip \
-    && mv chromedriver-linux64/chromedriver /usr/bin/chromedriver \
-    && rm google-chrome-stable_current_amd64.deb chromedriver-linux64.zip \
-    && rm -rf chromedriver-linux64
+# Install Chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
+    apt-get update -y && \
+    apt-get install -y google-chrome-stable
+    
+# Install ChromeDriver
+RUN export CHROME_VERSION=$(google-chrome --version | awk '{print $3}') && \
+    export CHROMEDRIVER_RANGE=$(echo $CHROME_VERSION | sed -nE 's/^([0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}).*/\1/p') && \
+    curl https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${CHROMEDRIVER_RANGE} -o chromedriver_version.txt && \
+    export CHROMEDRIVER_VERSION=$(cat chromedriver_version.txt) && \
+    rm chromedriver_version.txt && \
+    curl https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip -o chromedriver-linux64.zip && \
+    unzip chromedriver-linux64.zip && \
+    mv chromedriver-linux64/chromedriver /opt/chromedriver && \
+    chmod +x /opt/chromedriver && \
+    ln -fs /opt/chromedriver /usr/local/bin && \
+    rm chromedriver-linux64.zip && \
+    rm -rf chromedriver-linux64
 
 RUN apt-get update -y && \
     apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
