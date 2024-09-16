@@ -49,6 +49,17 @@ defmodule ElixirDrops.DropsFixtures do
     updated_drop
   end
 
+  @spec create_multiple_drops(user(), integer()) :: list(drop())
+  def create_multiple_drops(user, number_of_drops) do
+    for drop <- 1..number_of_drops do
+      offset_time = 120 * drop
+
+      %Drop{}
+      |> drop_fixture(user, %{title: "Drop title #{drop}", body: "Body for drop #{drop}"})
+      |> update_drop_inserted_at(offset_time)
+    end
+  end
+
   defp time_before_or_after(seconds_offset) do
     DateTime.utc_now()
     |> DateTime.add(seconds_offset)

@@ -56,11 +56,7 @@ defmodule ElixirDrops.DropsTest do
       user = user_fixture()
 
       [drop_1, drop_2, drop_3, _drop_4] =
-        for drop <- 1..4 do
-          %Drop{}
-          |> drop_fixture(user)
-          |> update_drop_inserted_at(drop * 120)
-        end
+        create_multiple_drops(user, 4)
 
       assert [older_drop_1, older_drop_2] = Drops.list_drops(%{older_than: drop_3})
       assert older_drop_1.id == drop_2.id
@@ -73,11 +69,7 @@ defmodule ElixirDrops.DropsTest do
       user = user_fixture()
 
       [drop_1, _drop_2] =
-        for drop <- 1..2 do
-          %Drop{}
-          |> drop_fixture(user)
-          |> update_drop_inserted_at(drop * 120)
-        end
+        create_multiple_drops(user, 2)
 
       assert %{older_than: drop_1}
              |> Drops.list_drops()
@@ -88,11 +80,7 @@ defmodule ElixirDrops.DropsTest do
       user = user_fixture()
 
       [_drop_1, drop_2, drop_3, drop_4] =
-        for drop <- 1..4 do
-          %Drop{}
-          |> drop_fixture(user)
-          |> update_drop_inserted_at(drop * 120)
-        end
+        create_multiple_drops(user, 4)
 
       assert [newer_drop_1, newer_drop_2] = Drops.list_drops(%{newer_than: drop_2})
       assert newer_drop_1.id == drop_4.id
@@ -105,11 +93,7 @@ defmodule ElixirDrops.DropsTest do
       user = user_fixture()
 
       [_drop_1, drop_2] =
-        for drop <- 1..2 do
-          %Drop{}
-          |> drop_fixture(user)
-          |> update_drop_inserted_at(drop * 120)
-        end
+        create_multiple_drops(user, 2)
 
       assert %{newer_than: drop_2}
              |> Drops.list_drops()
@@ -129,17 +113,9 @@ defmodule ElixirDrops.DropsTest do
         })
 
       [drop_1, drop_2, drop_3] =
-        for drop <- 1..3 do
-          %Drop{}
-          |> drop_fixture(user)
-          |> update_drop_inserted_at(drop * 120)
-        end
+        create_multiple_drops(user, 3)
 
-      for drop <- 1..3 do
-        %Drop{}
-        |> drop_fixture(user_2)
-        |> update_drop_inserted_at(drop * 120)
-      end
+      create_multiple_drops(user_2, 3)
 
       assert [older_user_drop_1, older_user_drop_2] =
                Drops.list_drops(%{user_id: user.id, older_than: drop_3})
@@ -164,17 +140,9 @@ defmodule ElixirDrops.DropsTest do
           name: "some_name"
         })
 
-      _drop_1 =
-        %Drop{}
-        |> drop_fixture(user)
-        |> update_drop_inserted_at(120)
+      create_multiple_drops(user, 1)
 
-      [_drop_2, drop_3] =
-        for drop <- 1..2 do
-          %Drop{}
-          |> drop_fixture(user_2)
-          |> update_drop_inserted_at(drop * 120)
-        end
+      [_drop_2, drop_3] = create_multiple_drops(user_2, 2)
 
       assert [] == Drops.list_drops(%{user_id: user_2.id, newer_than: drop_3})
     end

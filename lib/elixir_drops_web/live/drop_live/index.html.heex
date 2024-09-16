@@ -1,12 +1,16 @@
-<section class="drops-container relative h-full w-full">
+<section
+  class="drops-container relative h-full w-full"
+  id="drops-container"
+  phx-hook="DropsContainer"
+>
   <DropComponents.navbar current_user={@current_user} live_action={@live_action} />
 
   <section class="content-grid text-[#252525] relative">
     <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
 
-    <.live_component
-      module={DropsListComponent}
-      drop_filters={@drop_filters}
+    <DropsListHelper.drops_list
+      drops={@streams.drops}
+      end_of_timeline?={@end_of_timeline?}
       id="drops"
       show_user_drops?={false}
       timezone_offset={@timezone_offset}
@@ -20,7 +24,7 @@
         "fixed left-[50%] translate-x-[-50%] z-[1000000]"
       ]}
       id="new-drops-indicator"
-      phx-click={JS.push("refresh-drops", target: "#drops")}
+      phx-click={JS.push("refresh-drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")}
     >
       <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
       <span>New Drops</span>

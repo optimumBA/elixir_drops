@@ -40,7 +40,7 @@ defmodule ElixirDrops.Drops do
 
    ## Examples
 
-      iex> list_drops(%{user_id: 1234})
+      iex> list_drops(%{user_id: user_id})
       [%Drop{}, ...]
 
       iex> list_drops(%{older_than: %Drop{}})
@@ -95,10 +95,10 @@ defmodule ElixirDrops.Drops do
 
   ## Examples
 
-      iex> get_drop(%{drop_id: 1234})
+      iex> get_drop(%{drop_id: drop_id, user_id: user_id})
       %Drop{}
 
-      iex> get_drop(%{drop_id: invalid})
+      iex> get_drop(%{drop_id: drop_id, user_id: user_id})
       nil
 
   """
