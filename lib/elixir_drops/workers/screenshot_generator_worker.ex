@@ -16,7 +16,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
     case check_code_block_and_update(args) do
-      {:ok, image_url} ->
+      {:ok, image_url, session} ->
+        Wallaby.end_session(session)
         Logger.info("Screenshot generated: #{image_url}")
 
       error ->
@@ -36,9 +37,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp drop_screenshot(drop) do
     FLAME.call(ScreenshotGenerator, fn ->
-      with {:ok, screenshot} <- generate_screenshot(drop),
+      with {:ok, screenshot, session} <- generate_screenshot(drop),
            {:ok, image} <- File.read(screenshot) do
-        upload_screenshot(image, drop)
+        upload_screenshot(image, drop, session)
       end
     end)
   end
@@ -81,9 +82,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       |> Browser.visit(url)
       |> Browser.take_screenshot()
 
-    Wallaby.end_session(session)
-
-    {:ok, screenshot}
+    {:ok, screenshot, session}
   end
 
   defp build_url_with_auth(drop) do
@@ -96,14 +95,14 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     "#{scheme}//#{auth_values[:username]}:#{auth_values[:password]}@#{rest}"
   end
 
-  defp upload_screenshot(screenshot, drop) do
+  defp upload_screenshot(screenshot, drop, session) do
     timestamp = Timex.to_unix(drop.updated_at)
 
     image_name = "drop-meta-image-#{timestamp}-#{drop.id}.png"
 
     case Client.upload_image(screenshot, image_name, "image/png") do
       {:ok, image_url} ->
-        {:ok, image_url}
+        {:ok, image_url, session}
 
       error ->
         error
