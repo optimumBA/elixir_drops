@@ -58,7 +58,21 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp generate_screenshot(drop) do
-    {:ok, session} = Wallaby.start_session()
+    {:ok, session} =
+      Wallaby.start_session(
+        capabilities: %{
+          chromeOptions: %{
+            args: [
+              "--headless",
+              "--no-sandbox",
+              "window-size=1280,800",
+              "--fullscreen",
+              "--disable-gpu",
+              "--disable-dev-shm-usage"
+            ]
+          }
+        }
+      )
 
     url = build_url_with_auth(drop)
 

@@ -83,7 +83,9 @@ RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.d
     && apt-get update -y \
     && apt install -y ./google-chrome-stable_current_amd64.deb \
     && unzip chromedriver-linux64.zip \
-    && mv chromedriver-linux64/chromedriver /usr/bin/chromedriver
+    && mv chromedriver-linux64/chromedriver /usr/bin/chromedriver \
+    && rm google-chrome-stable_current_amd64.deb chromedriver-linux64.zip \
+    && rm -rf chromedriver-linux64
 
 RUN apt-get update -y && \
     apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
