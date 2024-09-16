@@ -57,6 +57,57 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert flash["error"] == "You must log in to access this page."
       assert path == ~p"/"
     end
+
+    test "user can view older drops with infinite scroll", %{conn: conn, user: user} do
+      drops = create_multiple_drops(user, 25)
+
+      list_midpoint =
+        drops
+        |> length()
+        |> div(2)
+
+      first_drop = List.first(drops)
+      last_drop = List.last(drops)
+      midpoint_drop = Enum.at(drops, list_midpoint)
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile")
+
+      assert html =~ last_drop.id
+      refute html =~ midpoint_drop.id
+      refute html =~ first_drop.id
+
+      assert html_2 = render_hook(live, "next-page", %{})
+      assert html_2 =~ midpoint_drop.id
+      refute html_2 =~ first_drop.id
+
+      assert html_3 = render_hook(live, "next-page", %{})
+      assert html_3 =~ first_drop.id
+    end
+
+    test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
+      drops = create_multiple_drops(user, 25)
+
+      list_midpoint =
+        drops
+        |> length()
+        |> div(2)
+
+      first_drop = List.first(drops)
+      last_drop = List.last(drops)
+      midpoint_drop = Enum.at(drops, list_midpoint)
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile")
+      assert html =~ last_drop.id
+
+      assert html_2 = render_hook(live, "next-page", %{})
+      assert html_2 =~ midpoint_drop.id
+
+      assert html_3 = render_hook(live, "prev-page", %{})
+      assert html_3 =~ last_drop.id
+      refute html_3 =~ first_drop.id
+    end
   end
 
   describe "/drop/new" do

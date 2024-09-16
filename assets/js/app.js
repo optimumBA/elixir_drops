@@ -23,11 +23,13 @@ import { LiveSocket } from 'phoenix_live_view'
 import topbar from '../vendor/topbar'
 import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
+import DropsContainerHooks from './hooks/drops_container'
 import WelcomeMessageHooks from './hooks/welcome_message'
 
 let Hooks = {
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
+  ...DropsContainerHooks,
   ...WelcomeMessageHooks,
 }
 
