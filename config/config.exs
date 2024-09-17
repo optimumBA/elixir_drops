@@ -23,9 +23,12 @@ config :elixir_drops, ElixirDropsWeb.Endpoint,
   live_view: [signing_salt: "RieadJsi"]
 
 config :wallaby,
-  chromedriver: [headless: true],
+  chromedriver: [
+    headless: true
+  ],
   max_wait_time: 10_000,
-  screenshot_on_failure: true
+  screenshot_on_failure: true,
+  env: config_env()
 
 # Configures the mailer
 #
