@@ -3,7 +3,7 @@
 @import 'tailwindcss/utilities';
 
 /* This file is for your main application CSS */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
 /* Reusable classes for composition */
 .content-grid {
@@ -286,9 +286,9 @@ blockquote *:last-child {
 }
 
 .seo-image {
-  @apply rounded-xl overflow-hidden mx-auto w-max max-w-[65ch] max-h-[85vh] overflow-y-auto;
+  @apply rounded-b-2xl mx-auto w-max max-w-[max-content] max-h-[90vh] overflow-y-auto;
 }
 
 .seo-image pre {
-  @apply px-6 py-10 text-[0.8rem] text-pretty;
+  @apply text-[1rem] font-jetBrains px-8 py-4 overflow-hidden;
 }

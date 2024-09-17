@@ -235,8 +235,7 @@ if config_env() == :prod do
       "AWS_ENDPOINT_URL_S3" => aws_endpoint_url,
       "AWS_REGION" => aws_region,
       "AWS_SECRET_ACCESS_KEY" => aws_secret_access_key,
-      "BUCKET_NAME" => aws_bucket,
-      "DATABASE_URL" => database_url
+      "BUCKET_NAME" => aws_bucket
     },
     memory_mb: flame_memory_mb,
     token: fly_api_token

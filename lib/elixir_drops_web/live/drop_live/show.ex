@@ -6,25 +6,22 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDropsWeb.DropComponents
 
   @impl Phoenix.LiveView
-  def mount(_params, _session, socket) do
-    {:ok, assign(socket, :show_user_drops?, false)}
-  end
-
-  @impl Phoenix.LiveView
   def handle_params(%{"id" => id}, _url, socket) do
+    drop = Drops.get_drop(%{drop_id: id})
+
     {:noreply,
-     %{drop_id: id}
-     |> Drops.get_drop()
-     |> assign_drop(socket)}
+     socket
+     |> assign(:show_user_drops?, false)
+     |> assign_drop(drop)}
   end
 
-  defp assign_drop(nil, socket) do
+  defp assign_drop(socket, nil) do
     socket
     |> assign(:drop, nil)
     |> push_patch(to: ~p"/")
   end
 
-  defp assign_drop(drop, socket) do
+  defp assign_drop(socket, drop) do
     socket
     |> assign(:drop, drop)
     |> assign(:page_title, drop.title)
