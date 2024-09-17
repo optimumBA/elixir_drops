@@ -21,13 +21,42 @@ import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 import topbar from '../vendor/topbar'
+import CopyToClipboardHooks from './hooks/copy_to_clipboard'
+import DropBodyHooks from './hooks/drop_body'
+import DropsContainerHooks from './hooks/drops_container'
+import WelcomeMessageHooks from './hooks/welcome_message'
+
+let Hooks = {
+  ...CopyToClipboardHooks,
+  ...DropBodyHooks,
+  ...DropsContainerHooks,
+  ...WelcomeMessageHooks,
+}
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content')
+
+let showOrHideWelcomeMessage = () => {
+  if (localStorage.getItem('show-welcome-message') === null) {
+    localStorage.setItem('show-welcome-message', true)
+  }
+
+  return localStorage.getItem('show-welcome-message')
+}
+
+let timezoneOffset = new Date().getTimezoneOffset()
+
+params = {
+  _csrf_token: csrfToken,
+  show_welcome_message: showOrHideWelcomeMessage(),
+  timezone_offset: timezoneOffset,
+}
+
 let liveSocket = new LiveSocket('/live', Socket, {
+  hooks: Hooks,
   longPollFallbackMs: 2500,
-  params: { _csrf_token: csrfToken },
+  params: params,
 })
 
 // Show progress bar on live navigation and form submits

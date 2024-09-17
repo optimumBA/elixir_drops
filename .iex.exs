@@ -1,1 +1,1 @@
-alias ElixirDrops.{Accounts, Repo}
+alias ElixirDrops.{Accounts, Drops, Repo}

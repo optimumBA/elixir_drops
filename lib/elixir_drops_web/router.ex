@@ -18,11 +18,32 @@ defmodule ElixirDropsWeb.Router do
   end
 
   scope "/", ElixirDropsWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live_session :require_authenticated_user,
+      on_mount: [
+        {ElixirDropsWeb.UserAuth, :ensure_authenticated},
+        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
+        {ElixirDropsWeb.UserAuth, :assign_current_user}
+      ] do
+      live "/profile", UserDropLive.Index, :index
+
+      live "/drops/:id/edit", UserDropLive.Index, :edit
+      live "/drops/new", UserDropLive.Index, :new
+    end
+  end
+
+  scope "/", ElixirDropsWeb do
     pipe_through :browser
 
     live_session :default,
-      on_mount: {ElixirDropsWeb.UserAuth, :assign_current_user} do
-      live "/", DropsLive, :index
+      on_mount: [
+        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
+        {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
+        {ElixirDropsWeb.UserAuth, :assign_current_user}
+      ] do
+      live "/", DropLive.Index, :index
+      live "/drops/:id", DropLive.Show, :show
     end
   end
 

@@ -5,37 +5,103 @@
 /* This file is for your main application CSS */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
+/* Reusable classes for composition */
 .content-grid {
-  --padding-inline: 2rem;
-  --content-max-width: 900px;
+  --padding-inline: 1rem;
+  --content-max-width: 650px;
+  --breakout-max-width: 900px;
+
+  --breakout-size: calc(
+    (var(--breakout-max-width) - var(--content-max-width)) / 2
+  );
 
   display: grid;
   grid-template-columns:
-    [full-width-start] minmax(var(--padding-inline), 1fr) [content-start] min(
+    [full-width-start] minmax(var(--padding-inline), 1fr)
+    [breakout-start] minmax(0, var(--breakout-size)) [content-start] min(
       100% - (var(--padding-inline) * 2),
       var(--content-max-width)
     )
-    [content-end] minmax(var(--padding-inline), 1fr) [full-width-end];
+    [content-end] minmax(0, var(--breakout-size)) [breakout-end] minmax(
+      var(--padding-inline),
+      1fr
+    )
+    [full-width-end];
 }
 
-/* TODO: Check other screen sizes as well */
-@media (min-width: 1280px) {
+@media (min-width: 768px) {
   .content-grid {
-    --content-max-width: 1200px;
+    --padding-inline: 2rem;
+    --content-max-width: 900px;
+    --breakout-max-width: 1200px;
   }
 }
 
-.content-grid > .full-width {
+@media (min-width: 1280px) {
+  .content-grid {
+    --content-max-width: 1000px;
+    --breakout-max-width: 1200px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .content-grid {
+    --content-max-width: 1200px;
+    --breakout-max-width: 1400px;
+  }
+}
+
+.content-grid > :not(.breakout, .full-width),
+.full-width > :not(.breakout, .full-width) {
+  grid-column: content;
+}
+
+.content-grid > .breakout,
+.full-width > .breakout {
+  grid-column: breakout;
+}
+
+.content-grid > .full-width,
+.full-width > .full-width {
   grid-column: full-width;
 
   display: grid;
   grid-template-columns: inherit;
 }
 
-.content-grid > :not(.full-width) {
-  grid-column: content;
+.full-bleed {
+  box-shadow: 0 0 0 inherit var(--bg-color);
+  clip-path: inset(0 inherit);
 }
 
+.shadow-upper {
+  box-shadow: 0 -6px 3px -3px #cfced3;
+}
+
+/* Typography modifiers */
+/* Headers */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-[500];
+}
+
+/* Blockquotes  */
+blockquote {
+  border-left: 0.3rem solid #d1d1d1;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 1rem 1.5rem;
+}
+
+blockquote *:last-child {
+  margin-bottom: 0;
+}
+
+/* Nav */
 .nav-list-border {
   --bg-color: #b2b2b2;
 
@@ -44,7 +110,172 @@
   width: 100%;
 }
 
-.full-bleed {
-  box-shadow: 0 0 0 inherit var(--bg-color);
-  clip-path: inset(0 inherit);
+/* Markdown Body */
+.drop-body hr,
+.drop-preview hr {
+  @apply block my-2;
+}
+
+.drop-body a,
+.drop-preview a {
+  @apply text-[#5947F1] underline;
+}
+
+.drop-body ol,
+.drop-preview ol {
+  list-style: decimal inside;
+}
+
+.drop-body ul,
+.drop-preview ul {
+  list-style: disc inside;
+}
+
+.drop-body li,
+.drop-preview li {
+  padding-left: 10px;
+  margin-bottom: 1rem;
+}
+
+.drop-body h1,
+.drop-preview h1 {
+  font-size: 2.2rem;
+  line-height: 1.25;
+}
+
+.drop-body h2,
+.drop-preview h2 {
+  font-size: 1.8rem;
+  line-height: 1.3;
+}
+
+.drop-body h3,
+.drop-preview h3 {
+  font-size: 1.6rem;
+  letter-spacing: -0.08rem;
+  line-height: 1.35;
+}
+
+.drop-body h4,
+.drop-preview h4 {
+  font-size: 1.4rem;
+  letter-spacing: -0.05rem;
+  line-height: 1.5;
+}
+
+.drop-body h5,
+.drop-preview h5 {
+  font-size: 1.2rem;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.drop-body h6,
+.drop-preview h6 {
+  font-size: 1rem;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.drop-body :not(div:has(+ pre)) {
+  @apply mb-5;
+}
+
+.drop-body div:has(+ pre) {
+  @apply mb-0;
+}
+
+/* Code Blocks */
+.drop-body pre {
+  @apply rounded-b-xl;
+}
+
+.drop-preview pre {
+  @apply rounded-xl;
+}
+
+.drop-body pre,
+.drop-preview pre {
+  @apply text-xs md:text-sm p-4 overflow-x-scroll;
+}
+
+.copy-prompt {
+  @apply cursor-pointer bg-[#252525] flex items-center justify-end py-1 px-4 rounded-t-xl;
+}
+
+.copy-prompt > * {
+  @apply h-5 w-5 mt-2;
+}
+
+/* user drops list */
+.user-drops:has(.drops-empty:only-child) > .user-drops-mobile-btn {
+  @apply hidden;
+}
+
+/* Markdown editor form + preview */
+.drops-editor {
+  --padding-inline: 1rem;
+
+  display: grid;
+  grid-template-columns: var(--padding-inline) 1fr var(--padding-inline);
+  grid-template-areas:
+    '... editor ...'
+    '... preview ...'
+    'action action action';
+  row-gap: 2em;
+}
+
+@media (min-width: 1024px) {
+  .drops-editor {
+    --padding-inline: 1rem;
+
+    display: grid;
+    grid-template-columns: var(--padding-inline) repeat(2, 1fr) var(
+        --padding-inline
+      );
+    grid-template-areas:
+      '... editor preview ...'
+      'action action action action';
+    gap: 1.5em;
+  }
+}
+
+.drops-editor .drop-text-editor {
+  grid-area: editor;
+}
+
+.drops-editor .drop-preview-container {
+  grid-area: preview;
+}
+
+.drops-editor .action {
+  @apply pr-[1rem] lg:pr-[2rem];
+  grid-area: action;
+}
+
+.drop-preview > * {
+  @apply mb-5;
+}
+
+/* Welcome message and header */
+:not(.drops-container:has(.welcome-message)) > .header {
+  @apply shadow-md shadow-[#c4c0c8];
+}
+
+/* Showing popup message */
+.drops-container.show-pop-up {
+  @apply bg-[#acacac] pointer-events-none z-[10];
+}
+
+.drops-container.show-pop-up .drop-card {
+  @apply bg-[#a7a7a7] shadow-[#878589];
+}
+
+.drop-form.show-pop-up,
+.drop-form.show-pop-up .drop-text-editor,
+.drop-form.show-pop-up .drop-title-input,
+.drop-form.show-pop-up .drop-editor-input,
+.drop-form.show-pop-up .drop-preview-container,
+.drop-form.show-pop-up .action {
+  @apply bg-white/10;
 }

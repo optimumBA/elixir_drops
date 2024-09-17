@@ -17,6 +17,13 @@ defmodule ElixirDropsWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  alias ElixirDrops.Accounts
+  alias ElixirDrops.Accounts.User
+
+  @type conn :: Plug.Conn.t()
+  @type context :: map()
+  @type user :: User.t()
+
   using do
     quote do
       # The default endpoint for testing
@@ -34,5 +41,24 @@ defmodule ElixirDropsWeb.ConnCase do
   setup tags do
     ElixirDrops.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
+  end
+
+  @doc """
+  Setup helper that logs in users.
+
+  setup :sign_in_user
+
+  Returns an updated conn.
+  """
+  @spec sign_in_user(conn(), user()) :: conn()
+  def sign_in_user(conn, user) do
+    token = Accounts.generate_user_session_token(user)
+
+    conn =
+      conn
+      |> Phoenix.ConnTest.init_test_session(%{user_token: token})
+      |> Plug.Conn.put_session(:user_token, token)
+
+    conn
   end
 end

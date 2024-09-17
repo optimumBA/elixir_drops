@@ -1,25 +1,10 @@
-defmodule ElixirDropsWeb.SharedComponents.Icons do
+defmodule ElixirDropsWeb.Icons do
   @moduledoc false
 
   use ElixirDropsWeb, :html
 
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
-
-  @spec chevron_down(assigns()) :: rendered()
-  def chevron_down(assigns) do
-    ~H"""
-    <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M12.6668 6.5L8.00016 11.1667L3.3335 6.5"
-        stroke="#4F4F4F"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
-    """
-  end
 
   @spec github_icon(assigns()) :: rendered()
   def github_icon(assigns) do
@@ -42,7 +27,7 @@ defmodule ElixirDropsWeb.SharedComponents.Icons do
           fill-rule="evenodd"
           clip-rule="evenodd"
           d="M12 4.30662C10.8701 5.29938 9.82513 6.38482 8.876 7.55162C7.305 9.50662 6 11.8166 6 13.9996C6 15.5909 6.63214 17.117 7.75736 18.2423C8.88258 19.3675 10.4087 19.9996 12 19.9996C13.5913 19.9996 15.1174 19.3675 16.2426 18.2423C17.3679 17.117 18 15.5909 18 13.9996C18 11.8166 16.695 9.50662 15.124 7.55162C14.1749 6.38482 13.1299 5.29938 12 4.30662ZM11.249 2.32062C11.4604 2.14619 11.7259 2.05078 12 2.05078C12.2741 2.05078 12.5396 2.14619 12.751 2.32062C14.1882 3.51533 15.5048 4.84803 16.682 6.29962C18.322 8.33862 20 11.1056 20 13.9996C20 16.1213 19.1571 18.1562 17.6569 19.6565C16.1566 21.1568 14.1217 21.9996 12 21.9996C9.87827 21.9996 7.84344 21.1568 6.34315 19.6565C4.84285 18.1562 4 16.1213 4 13.9996C4 11.1056 5.678 8.33862 7.318 6.29862C8.49491 4.84743 9.8122 3.51506 11.249 2.32062Z"
-          fill="#252525"
+          class="fill-current"
         />
       </g>
       <defs>
@@ -64,15 +49,25 @@ defmodule ElixirDropsWeb.SharedComponents.Icons do
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
+        class="stroke-current"
       />
     </svg>
     """
   end
 
-  @spec elixir_drops_icon(assigns()) :: rendered()
-  def elixir_drops_icon(assigns) do
+  attr :class, :string, default: nil
+
+  @spec elixir_drops_logo(assigns()) :: rendered()
+  def elixir_drops_logo(assigns) do
     ~H"""
-    <svg width="221" height="46" viewBox="0 0 221 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width="221"
+      height="46"
+      viewBox="0 0 221 46"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      class={@class}
+    >
       <path
         d="M32.3911 40.3081C25.0718 47.6274 13.2027 47.6274 5.89237 40.3081C2.23273 36.6485 0.40741 31.8559 0.40741 27.0543C0.40741 25.3998 0.623213 23.7543 1.05482 22.1538C1.88206 25.211 3.49158 28.0973 5.89237 30.4981C8.92259 33.5283 12.7351 35.3087 16.6735 35.8212C16.6735 35.8212 16.6735 35.8212 16.6825 35.8212C18.292 36.2708 19.9914 36.2708 21.601 35.8212C21.601 35.8212 21.601 35.8212 21.6099 35.8212C25.5573 35.2997 29.3608 33.5283 32.3911 30.4981C34.7919 28.0973 36.4014 25.211 37.2286 22.1538C38.9191 28.4211 37.3095 35.3897 32.3911 40.3081Z"
         fill="#2F19EE"
@@ -136,6 +131,29 @@ defmodule ElixirDropsWeb.SharedComponents.Icons do
           <stop offset="1" stop-color="#621BC7" />
         </linearGradient>
       </defs>
+    </svg>
+    """
+  end
+
+  attr :class, :string, default: nil
+
+  @spec loading_spin_circle(assigns()) :: rendered()
+  def loading_spin_circle(assigns) do
+    ~H"""
+    <svg
+      class={["animate-spin text-white", @class]}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+      </circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      >
+      </path>
     </svg>
     """
   end

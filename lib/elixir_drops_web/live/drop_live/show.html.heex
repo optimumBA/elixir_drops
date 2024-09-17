@@ -1,0 +1,15 @@
+<section class="drops-container relative h-full w-full">
+  <DropComponents.navbar
+    current_user={@current_user}
+    live_action={@live_action}
+    show_user_drops?={@show_user_drops?}
+  />
+
+  <section class="pt-10 py-4">
+    <DropComponents.drop drop={@drop} timezone_offset={@timezone_offset} />
+  </section>
+
+  <DropComponents.copied_link_popup_message />
+</section>
+
+<DropComponents.signin_popup_message />

@@ -1,0 +1,97 @@
+<div id={@id} class="drop-form min-h-[calc(100vh-12px)] bg-[#eae8fd]">
+  <.form
+    :let={f}
+    for={@form}
+    phx-target={@myself}
+    phx-change="validate"
+    phx-submit="save"
+    id="drops-editor-form"
+    class="drops-editor h-full w-full pt-12"
+  >
+    <div class="drop-text-editor text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
+      <h2 class="font-semibold text-base md:text-lg text-[#252525] tracking-wide grid grid-cols-2">
+        <span :if={@live_action == :new} class="py-3 px-4">Write a new post</span>
+        <span :if={@live_action == :edit} class="py-3 px-4">Edit post</span>
+        <span class="py-3 bg-[#dfdbfc]"></span>
+      </h2>
+      <div class="px-4">
+        <.custom_input
+          field={f[:title]}
+          placeholder="Please provide a Drop summary for the title"
+          input_field_class="drop-title-input text-sm md:text-md placeholder:text-inherit border-t-0 border-x-0 border-b-2 border-b-[#cfcfcf] focus:border-b-[#7d6ff4] pt-8 pb-4 w-full mb-8"
+          phx-debounce="blur"
+        />
+
+        <.custom_input
+          field={f[:body]}
+          placeholder="Start writing..."
+          type="textarea"
+          input_field_class="drop-editor-input text-sm md:text-md placeholder:text-inherit placeholder:italic border-2 border-[#dedede] focus:border-[#7d6ff4] rounded-md min-h-[70vh] w-full"
+          id="drop-editor-input"
+          phx-debounce={400}
+        />
+
+        <p class="text-xs pb-3 flex items-center justify-start">
+          <span>Markdown is supported</span>
+          <span>
+            <.icon name="hero-minus" class="rotate-90 text-[#bfb8fa]" />
+          </span>
+          <span>Drag or paste images</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="drop-preview-container text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
+      <h2 class="font-semibold text-base md:text-lg text-[#252525] tracking-wide grid grid-cols-2">
+        <span class="py-3 px-4">Preview</span>
+        <span class="py-3 bg-[#dfdbfc]"></span>
+      </h2>
+      <div class="px-4">
+        <p class={[
+          "text-sm md:text-md border-b-2 border-b-[#cfcfcf] pt-8 pb-4 w-full mb-8",
+          input_value(f, :title) && "hidden",
+          input_value(f, :body) && "hidden"
+        ]}>
+          See post preview as you write...
+        </p>
+        <div :if={input_value(f, :title) || input_value(f, :body)}>
+          <h2 class="font-semibold text-sm md:text-base lg:text-lg text-[#252525] border-b-2 border-b-[#cfcfcf] tracking-wide pt-8 pb-4 mb-8">
+            <%= input_value(f, :title) %>
+          </h2>
+          <div
+            class="drop-preview text-[#4f4f4f] text-sm md:text-md pb-3 mb-pb-0 h-full w-full md:h-[70vh] overflow-y-scroll"
+            id="drop-preview"
+          >
+            <%= input_value(f, :body) && DropComponents.to_html(input_value(f, :body)) %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action bg-white py-2 pb-6 shadow-upper">
+      <div class="flex justify-end items-center gap-x-3">
+        <button
+          class="text-[#4f4f4f] text-sm rounded-lg px-3 py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
+          phx-click={DropComponents.show_popup("edit-form-cancel-confirm")}
+          type="button"
+        >
+          Close editor
+        </button>
+
+        <button
+          class={[
+            "text-sm text-[#d3cffb] rounded-lg px-3 py-2 bg-blue_primary hover:opacity-80",
+            "phx-submit-loading:opacity-80 phx-submit-loading:px-12"
+          ]}
+          type="submit"
+        >
+          <span :if={@live_action == :new} class="phx-submit-loading:hidden">Post Drop</span>
+          <span :if={@live_action == :edit} class="phx-submit-loading:hidden">Update Drop</span>
+          <span class="hidden phx-submit-loading:block">
+            <Icons.loading_spin_circle class="text-white h-6 w-6" />
+          </span>
+        </button>
+      </div>
+    </div>
+  </.form>
+</div>
