@@ -286,9 +286,9 @@ blockquote *:last-child {
 }
 
 .seo-image {
-  @apply rounded-b-2xl mx-auto w-max max-w-[max-content] max-h-[90vh] overflow-y-auto;
+  @apply rounded-b-2xl mx-auto min-w-[55%] w-max max-w-[max-content] overflow-y-hidden;
 }
 
 .seo-image pre {
-  @apply text-[1rem] font-jetBrains px-8 py-4 overflow-hidden;
+  @apply text-[1rem] font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
 }
