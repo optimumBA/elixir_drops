@@ -290,5 +290,5 @@ blockquote *:last-child {
 }
 
 .seo-image pre {
-  @apply text-[1rem] font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
+  @apply text-[1.5rem] font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
 }
