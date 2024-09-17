@@ -77,5 +77,16 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
 
       assert Client.get_image(drop) == {:error, "Image not found"}
     end
+
+    test "does not create a screenshot for a non-existent drop" do
+      drop_id = Ecto.UUID.generate()
+
+      log_output =
+        capture_log(fn ->
+          assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop_id})
+        end)
+
+      assert log_output =~ "Drop not found"
+    end
   end
 end
