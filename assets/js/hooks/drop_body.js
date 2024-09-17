@@ -27,12 +27,12 @@ DropBodyHooks.DropBodyContainer = {
       })
 
       copyPrompt.addEventListener('click', () => {
-        document.querySelector('.copy-svg').classList.add('hidden')
-        document.querySelector('.copied-svg').classList.remove('hidden')
+        copyPrompt.querySelector('.copy-svg').classList.add('hidden')
+        copyPrompt.querySelector('.copied-svg').classList.remove('hidden')
 
         setTimeout(() => {
-          document.querySelector('.copy-svg').classList.remove('hidden')
-          document.querySelector('.copied-svg').classList.add('hidden')
+          copyPrompt.querySelector('.copy-svg').classList.remove('hidden')
+          copyPrompt.querySelector('.copied-svg').classList.add('hidden')
         }, 800)
       })
     })
