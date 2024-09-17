@@ -26,7 +26,7 @@ defmodule ElixirDrops.Drops do
 
   ## Examples
 
-    iex> subscribe
+    iex> subscribe()
     :ok
 
   """

@@ -45,15 +45,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     }
   end
 
-  @impl Phoenix.LiveView
-  def handle_info({:update_drops, drops, first_drop, last_drop, opts}, socket) do
-    {:noreply,
-     socket
-     |> stream(:drops, drops, opts)
-     |> assign(:first_drop, first_drop)
-     |> assign(:last_drop, last_drop)}
-  end
-
   defp apply_action(socket, :edit, %{"id" => id}) do
     filters = %{
       drop_id: id,
