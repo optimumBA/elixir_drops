@@ -62,5 +62,19 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponentsTest do
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
                "<meta property=\"og:url\" content=\"http://localhost:4002/\">"
     end
+
+    test "links are escaped and images are omitted from the description" do
+      assigns = %{
+        description:
+          "[In this drop](http://localhost:4002/good_drop) ![cover_image](http://localhost:4002/images/cover_image.png) we discussed stuff",
+        title: "Elixir Drops"
+      }
+
+      assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: assigns) =~
+               "<meta property=\"description\" content=\"In this drop we discussed stuff\">\n"
+
+      assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: assigns) =~
+               "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff\">"
+    end
   end
 end
