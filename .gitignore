@@ -41,5 +41,6 @@ npm-debug.log
 /screenshots/
 .DS_Store
 .env
+.envrc
 package.json
 package-lock.json

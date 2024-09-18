@@ -3,13 +3,19 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.S3Helper.Client
+  alias ElixirDrops.Workers.DropImageWorkers
+
+  alias ElixirDropsWeb.Endpoint
+
   alias ElixirDropsWeb.DropLive.DropComponents
   alias ElixirDropsWeb.DropLive.FormComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Drops.subscribe()
+    if connected?(socket) do
+      Drops.subscribe()
+      Endpoint.subscribe("image_upload_status")
+    end
 
     {
       :ok,
@@ -63,20 +69,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   def handle_event("upload-image", params, socket) do
-    %{"image" => image_binary, "name" => name, "type" => type} = params
-    filename = "#{Ecto.UUID.generate()}_#{name}"
-
-    [_metadata, image] = String.split(image_binary, ",")
-
-    decoded_image = Base.decode64!(image)
-
-    case Client.upload_image(decoded_image, filename, type) do
-      {:ok, url} ->
-        {:reply, %{url: url}, socket}
-
-      {:error, _reason} ->
-        {:reply, %{error: "Failed to upload image"}, socket}
-    end
+    enqueue_drop_image_upload(params)
+    {:noreply, socket}
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -149,5 +143,11 @@ defmodule ElixirDropsWeb.DropLive.Index do
     else
       filters
     end
+  end
+
+  defp enqueue_drop_image_upload(params) do
+    params
+    |> DropImageWorkers.new()
+    |> Oban.insert()
   end
 end
