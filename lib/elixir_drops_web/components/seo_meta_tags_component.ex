@@ -18,10 +18,6 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
 
   attr :attributes, :map
 
-  @consecutive_whitespace_regex ~r/\s+/
-  @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
-  @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
-
   @spec seo_meta_tags(assigns()) :: rendered()
   def seo_meta_tags(assigns) do
     assigns =
@@ -53,14 +49,8 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
 
   defp assign_description(assigns) do
     assign_new(assigns, :description, fn
-      %{attributes: %{description: description}} ->
-        description
-        |> remove_images()
-        |> replace_links()
-        |> String.trim()
-
-      _assigns ->
-        String.trim(@default_description)
+      %{attributes: %{description: description}} -> description
+      _assigns -> String.trim(@default_description)
     end)
   end
 
@@ -132,19 +122,5 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
     <meta name="twitter:type" content={@type} />
     <meta name="twitter:url" content={@url} />
     """
-  end
-
-  defp replace_links(markdown) do
-    Regex.replace(
-      @links_regex,
-      markdown,
-      fn _other, description, _url -> description end
-    )
-  end
-
-  defp remove_images(markdown) do
-    @images_regex
-    |> Regex.replace(markdown, "")
-    |> String.replace(@consecutive_whitespace_regex, " ")
   end
 end

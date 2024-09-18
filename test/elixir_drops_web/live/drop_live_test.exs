@@ -221,7 +221,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
       assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
-      assert html =~ "<meta name=\"twitter:description\" content=\"#{drop.title}\"/>"
+      assert html =~ "<meta name=\"twitter:description\" content=\"#{drop.title}...\"/>"
 
       assert html =~
                "<meta name=\"twitter:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
@@ -232,10 +232,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
                "<meta name=\"twitter:url\" content=\"http://localhost:4002/drops/#{drop.id}\"/>"
 
       assert html =~
-               "<meta property=\"description\" content=\"#{drop.title}\"/>"
+               "<meta property=\"description\" content=\"#{drop.title}...\"/>"
 
       assert html =~
-               "<meta property=\"og:description\" content=\"#{drop.title}\"/>"
+               "<meta property=\"og:description\" content=\"#{drop.title}...\"/>"
 
       assert html =~
                "<meta property=\"og:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
@@ -245,6 +245,35 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~
                "<meta property=\"og:url\" content=\"http://localhost:4002/drops/#{drop.id}\"/>"
+    end
+
+    test "links are escaped and images are omitted from the description", %{
+      conn: conn,
+      user: user
+    } do
+      drop_attributes = %{
+        description: "Drop body",
+        title: "[In this drop](http://localhost:4002/good_drop) we discussed stuff"
+      }
+
+      drop = drop_fixture(%Drop{}, user, drop_attributes)
+
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:error, "Image not found"}
+      end)
+
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+
+      File.write("dump.txt", html)
+
+      assert html =~
+               "<meta property=\"description\" content=\"In this drop we discussed stuff...\"/>"
+
+      assert html =~
+               "<meta property=\"og:description\" content=\"In this drop we discussed stuff...\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff...\"/>"
     end
   end
 end

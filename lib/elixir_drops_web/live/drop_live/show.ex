@@ -5,6 +5,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDrops.S3Helper.Client
   alias ElixirDropsWeb.DropComponents
 
+  @consecutive_whitespace_regex ~r/\s+/
+  @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
+  @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
+
   @impl Phoenix.LiveView
   def handle_params(%{"id" => id}, _url, socket) do
     drop = Drops.get_drop(%{drop_id: id})
@@ -32,7 +36,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     %{drop: drop} = socket.assigns
 
     attributes = %{
-      description: drop.title,
+      description: seo_description(drop.title),
       image_url: get_image_url(drop),
       type: "article",
       url: url(~p"/drops/#{drop.id}")
@@ -46,5 +50,31 @@ defmodule ElixirDropsWeb.DropLive.Show do
       {:ok, url} -> url
       _error -> nil
     end
+  end
+
+  defp seo_description(title) do
+    description =
+      title
+      |> remove_images()
+      |> replace_links()
+      |> String.trim()
+      |> String.split(".")
+      |> Enum.at(0)
+
+    String.pad_trailing(description, String.length(description) + 3, ".")
+  end
+
+  defp replace_links(markdown) do
+    Regex.replace(
+      @links_regex,
+      markdown,
+      fn _other, description, _url -> description end
+    )
+  end
+
+  defp remove_images(markdown) do
+    @images_regex
+    |> Regex.replace(markdown, "")
+    |> String.replace(@consecutive_whitespace_regex, " ")
   end
 end
