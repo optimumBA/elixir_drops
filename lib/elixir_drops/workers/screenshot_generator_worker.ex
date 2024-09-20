@@ -9,7 +9,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.ScreenshotGenerator
   alias Wallaby.Browser
 
-  @markdown_regex ~r/```([^`]*)```/
+  @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do

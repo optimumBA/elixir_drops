@@ -7,7 +7,7 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorController do
   @type conn :: Plug.Conn.t()
   @type params :: map()
 
-  @markdown_regex ~r/```([^`]*)```/
+  @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 
   @spec index(conn(), params()) :: conn()
   def index(conn, %{"id" => id}) do
