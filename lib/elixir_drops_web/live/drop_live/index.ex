@@ -3,18 +3,16 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Workers.DropImageWorkers
-
-  alias ElixirDropsWeb.Endpoint
+  alias Phoenix.LiveView.AsyncResult
+  alias ElixirDrops.S3Helper.Client
 
   alias ElixirDropsWeb.DropLive.DropComponents
   alias ElixirDropsWeb.DropLive.FormComponent
 
-  @impl Phoenix.LiveView
+  @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
       Drops.subscribe()
-      Endpoint.subscribe("image_upload_status")
     end
 
     {
@@ -27,17 +25,17 @@ defmodule ElixirDropsWeb.DropLive.Index do
     }
   end
 
-  @impl Phoenix.LiveView
+  @impl true
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  @impl Phoenix.LiveView
+  @impl true
   def handle_info({Drops, [:drop, :created], _drop}, socket) do
     {:noreply, assign(socket, :new_drops?, true)}
   end
 
-  @impl Phoenix.LiveView
+  @impl true
   def handle_event("next-page", _params, socket) do
     socket = insert_drops(socket, %{older_than: socket.assigns.last_drop})
 
@@ -68,9 +66,32 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply, assign(socket, show_image_uploads_error?: true)}
   end
 
+  @impl Phoenix.LiveView
   def handle_event("upload-image", params, socket) do
-    enqueue_drop_image_upload(params)
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> assign(:drop_image, AsyncResult.loading())
+     |> start_image_upload(params)}
+  end
+
+  def start_image_upload(socket, params) do
+    %{"image" => image_binary, "name" => name, "type" => type} = params
+
+    filename = "#{Ecto.UUID.generate()}_#{name}"
+
+    [_metadata, image] = String.split(image_binary, ",")
+
+    decoded_image = Base.decode64!(image)
+
+    start_async(socket, :image_upload_task, fn ->
+      case Client.upload_image(decoded_image, filename, type) do
+        {:ok, url} ->
+          {:reply, %{url: url}, socket}
+
+        {:error, _reason} ->
+          {:reply, %{error: "Failed to upload image"}, socket}
+      end
+    end)
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -145,9 +166,23 @@ defmodule ElixirDropsWeb.DropLive.Index do
     end
   end
 
-  defp enqueue_drop_image_upload(params) do
-    params
-    |> DropImageWorkers.new()
-    |> Oban.insert()
+  @impl true
+  def handle_async(:image_upload_task, {:ok, uploaded_image}, socket) do
+    %{drop_image: drop_image} = socket.assigns
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "Image uploaded successfully")
+     |> assign(:uploaded_image, AsyncResult.ok(drop_image, uploaded_image))}
+  end
+
+  @impl true
+  def handle_async(:image_upload_task, {:exit, reason}, socket) do
+    %{drop_image: drop_image} = socket.assigns
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "Image upload failed")
+     |> assign(:uploaded_image, AsyncResult.failed(drop_image, {:exit, reason}))}
   end
 end
