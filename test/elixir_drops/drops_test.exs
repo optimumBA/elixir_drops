@@ -267,7 +267,7 @@ defmodule ElixirDrops.DropsTest do
   end
 
   describe "generate_unique_url_string/0" do
-    test "returns a unique url string" do
+    test "returns a unique 8 alphanumeric characters long url string" do
       assert is_binary(Drops.generate_unique_url_string())
       assert String.length(Drops.generate_unique_url_string()) == 8
       assert String.match?(Drops.generate_unique_url_string(), ~r/^[A-Za-z0-9]+$/)
