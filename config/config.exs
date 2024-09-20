@@ -27,8 +27,7 @@ config :wallaby,
     headless: true
   ],
   max_wait_time: 10_000,
-  screenshot_on_failure: true,
-  env: config_env()
+  screenshot_on_failure: true
 
 # Configures the mailer
 #
@@ -38,13 +37,6 @@ config :wallaby,
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
 config :elixir_drops, ElixirDrops.Mailer, adapter: Swoosh.Adapters.Local
-
-config :elixir_drops,
-  wallaby_auth: [
-    username: "elixir_drops_wallaby",
-    password: "l3AVAovk4B8g5Sbq"
-  ],
-  env: config_env()
 
 # Configure esbuild (the version is required)
 config :esbuild,

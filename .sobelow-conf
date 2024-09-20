@@ -7,6 +7,6 @@
   format: "txt",
   out: "",
   threshold: "low",
-  ignore: ["Config.CSP", "Config.HTTPS", "Traversal.FileModule", "RCE.CodeModule", "XSS.Raw"],
+  ignore: ["Config.CSP", "Config.HTTPS", "RCE.CodeModule", "Traversal.FileModule", "XSS.Raw"],
   ignore_files: [],
 ]

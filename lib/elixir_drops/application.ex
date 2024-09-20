@@ -25,7 +25,7 @@ defmodule ElixirDrops.Application do
            idle_shutdown_after: 30_000,
            log: :info,
            max_concurrency: 10,
-           max: 20,
+           max: 4,
            min: 0},
         parent: ElixirDropsWeb.Endpoint,
         parent: {Oban, Application.get_env(:elixir_drops, Oban)}

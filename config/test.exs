@@ -37,3 +37,9 @@ config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
 config :elixir_drops, Oban, testing: :manual
+
+config :elixir_drops,
+  wallaby_auth: [
+    username: "test_elixir_drops_wallaby",
+    password: "test_password"
+  ]

@@ -193,14 +193,6 @@ if config_env() == :prod do
     region: aws_region,
     secret_access_key: aws_secret_access_key
 
-  # Wallaby config
-  config :wallaby,
-    chromedriver: [
-      headless: true,
-      binary: "/usr/bin/google-chrome",
-      path: "/usr/local/bin/chromedriver"
-    ]
-
   # Wallaby auth
   wallaby_auth_username =
     System.get_env("WALLABY_AUTH_USERNAME") ||
@@ -226,8 +218,6 @@ if config_env() == :prod do
   fly_api_token =
     System.get_env("FLY_API_TOKEN") ||
       raise "environment variable FLY_API_TOKEN is missing."
-
-  config :flame, :terminator, log: :info
 
   config :flame, FLAME.FlyBackend,
     env: %{
