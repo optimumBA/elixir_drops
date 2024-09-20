@@ -7,6 +7,7 @@ defmodule ElixirDrops.Drops do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.Tag
   alias ElixirDrops.Repo
 
   @type attrs :: map()
@@ -51,19 +52,40 @@ defmodule ElixirDrops.Drops do
 
   """
   @spec list_drops(filters(), limit()) :: [drop()]
-  def list_drops(filters \\ %{}, limit \\ 10) do
-    filter_query = apply_filters()
+  def list_drops(filters \\ %{}, limit \\ 10)
 
+  def list_drops(%{tag: tag} = filters, limit) do
+    tag
+    |> drop_query_with_tags()
+    |> filter_query(filters, limit)
+    |> Repo.all()
+  end
+
+  def list_drops(filters, limit) do
     drop_query()
-    |> where(^filter_query.(filters))
-    |> order_by([d], {:desc, d.inserted_at})
-    |> limit(^limit)
-    |> preload([:user])
+    |> filter_query(filters, limit)
     |> Repo.all()
   end
 
   defp drop_query do
     from drop in Drop, as: :drop
+  end
+
+  defp drop_query_with_tags(tag) do
+    drop_query()
+    |> join(:inner, [drop], dt in "drops_tags", on: drop.id == dt.drop_id)
+    |> join(:inner, [_drop, drop_tag], t in Tag, on: t.id == drop_tag.tag_id)
+    |> where([drop, _dt, tag], tag.name == ^tag)
+  end
+
+  defp filter_query(query, filters, limit) do
+    filter_query = apply_filters()
+
+    query
+    |> where(^filter_query.(filters))
+    |> order_by([d], {:desc, d.inserted_at})
+    |> limit(^limit)
+    |> preload([:user, :tags])
   end
 
   defp apply_filters do
@@ -108,8 +130,17 @@ defmodule ElixirDrops.Drops do
 
     drop_query()
     |> where(^filter_query.(filters))
-    |> preload([:user])
+    |> preload([:tags, :user])
     |> Repo.one()
+    |> with_drop_tags()
+  end
+
+  defp with_drop_tags(nil), do: nil
+
+  defp with_drop_tags(drop) do
+    tags = Enum.map_join(drop.tags, ", ", & &1.name)
+
+    %Drop{drop | drop_tags: tags}
   end
 
   @doc """
@@ -128,7 +159,7 @@ defmodule ElixirDrops.Drops do
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
     case create_or_update_drop(drop, user, attrs) do
       {:ok, drop} ->
-        drop = Repo.preload(drop, [:user])
+        drop = Repo.preload(drop, [:tags, :user])
 
         :ok = broadcast_drop_creation(drop)
 
@@ -158,6 +189,8 @@ defmodule ElixirDrops.Drops do
   defp create_or_update_drop(drop, user, attrs) do
     drop
     |> Drop.changeset(attrs)
+    |> Drop.validate_tag_number(:drop_tags)
+    |> Drop.check_and_update_tags(attrs)
     |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.insert_or_update()
   end
@@ -174,6 +207,31 @@ defmodule ElixirDrops.Drops do
   @spec change_drop(drop(), attrs()) :: changeset()
   def change_drop(%Drop{} = drop, attrs \\ %{}) do
     Drop.changeset(drop, attrs)
+  end
+
+  @doc """
+  Returns a list of tags matching the given name.
+
+  ## Examples
+
+      iex> get_tag_by_name("tag")
+      [%Tag{}, ...]
+
+      iex> get_tag_by_name("tag")
+      []
+
+  """
+  @spec get_tag_by_name(String.t()) :: [Tag.t()]
+  def get_tag_by_name(name) do
+    name = "%#{name}%"
+
+    query =
+      from(tag in Tag,
+        where: ilike(tag.name, ^name),
+        select: tag
+      )
+
+    Repo.all(query)
   end
 
   defp broadcast_drop_creation(drop) do

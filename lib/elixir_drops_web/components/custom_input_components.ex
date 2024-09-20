@@ -45,7 +45,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file month number password
-               range search select tel text textarea time url week)
+               range search select tel text textarea time url week hidden)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
@@ -89,6 +89,19 @@ defmodule ElixirDropsWeb.CustomInputComponents do
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
       <.custom_error :for={msg <- @errors}><%= msg %></.custom_error>
     </div>
+    """
+  end
+
+  def custom_input(%{type: "hidden"} = assigns) do
+    ~H"""
+    <input
+      type="text"
+      name={@name}
+      id={@id}
+      value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+      class="hidden"
+      {@rest}
+    />
     """
   end
 

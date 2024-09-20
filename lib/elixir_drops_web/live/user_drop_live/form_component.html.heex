@@ -8,7 +8,7 @@
     id="drops-editor-form"
     class="drops-editor h-full w-full pt-12"
   >
-    <div class="drop-text-editor text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
+    <div class="drop-text-editor text-[#767676] text-sm bg-white rounded-xl relative">
       <h2 class="font-semibold text-base md:text-lg text-[#252525] tracking-wide grid grid-cols-2">
         <span :if={@live_action == :new} class="py-3 px-4">Write a new post</span>
         <span :if={@live_action == :edit} class="py-3 px-4">Edit post</span>
@@ -28,8 +28,46 @@
           type="textarea"
           input_field_class="drop-editor-input text-sm md:text-md placeholder:text-inherit placeholder:italic border-2 border-[#dedede] focus:border-[#7d6ff4] rounded-md min-h-[70vh] w-full"
           id="drop-editor-input"
-          phx-debounce={400}
+          phx-debounce="400"
         />
+
+        <div class="my-3 relative">
+          <p class="font-light mb-2">
+            <span>Add Tags to classify your post (at least 2 tags and at most 10 tags): </span>
+            <span class="tag-count" id="tag-count">
+              <%= f |> input_value(:drop_tags) |> parse_tags() |> length() %> / 10
+            </span>
+          </p>
+
+          <.custom_input field={f[:drop_tags]} id="drop-tags-input" type="hidden" />
+
+          <div
+            class={[
+              "flex flex-wrap border-[#cbcbcb] border-[2px] py-2 rounded-md",
+              Keyword.has_key?(f.errors, :drop_tags) && "border-rose-600"
+            ]}
+            id="tags-input-container"
+          >
+            <DropComponents.tag
+              :for={tag <- f |> input_value(:drop_tags) |> parse_tags()}
+              tag={tag}
+            />
+
+            <input
+              placeholder="Add a new tag"
+              id="tag-input-field"
+              class="placeholder:text-[#9a9a9a] ml-2 grow focus:outline-none focus:ring-0"
+              phx-update="ignore"
+              phx-hook="TagsInput"
+              list="tag-suggestions"
+              autocomplete="off"
+            />
+          </div>
+
+          <p :if={Keyword.has_key?(f.errors, :drop_tags)} class="text-sm leading-6 text-rose-600">
+            Should have at least 2 drops and at most 10 tags
+          </p>
+        </div>
 
         <p class="text-xs pb-3 flex items-center justify-start">
           <span>Markdown is supported</span>

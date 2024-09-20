@@ -12,11 +12,29 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{})
      |> assign(:end_of_timeline?, false)
-     |> assign(:new_drops?, false)
-     |> assign(:page_title, "ElixirDrops")
-     |> DropsListHelper.assign_drops()}
+     |> assign(:new_drops?, false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_params(params, _uri, socket) do
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  defp apply_action(socket, :index, %{"tag" => tag}) do
+    tag = DropsListHelper.process_tag(tag)
+
+    socket
+    |> assign(:drop_filters, %{tag: tag})
+    |> assign(:page_title, "ElixirDrops | #{tag}")
+    |> DropsListHelper.assign_drops()
+  end
+
+  defp apply_action(socket, :index, _params) do
+    socket
+    |> assign(:drop_filters, %{})
+    |> assign(:page_title, "ElixirDrops")
+    |> DropsListHelper.assign_drops()
   end
 
   @impl Phoenix.LiveView
@@ -50,7 +68,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_info({Drops, [:drop, :created], _drop}, socket) do
-    {:noreply, assign(socket, :new_drops?, true)}
+  def handle_info({Drops, [:drop, :created], drop}, socket) do
+    {:noreply, DropsListHelper.maybe_show_new_drops_notification(socket, drop)}
   end
 end

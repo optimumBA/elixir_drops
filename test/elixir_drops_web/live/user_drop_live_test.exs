@@ -103,6 +103,88 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html_3 =~ last_drop.id
       refute html_3 =~ first_drop.id
     end
+
+    test "user can filter drops by a tag name", %{conn: conn, drop: drop, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile")
+
+      _drop2 =
+        drop_fixture(%Drop{}, user, %{
+          body: "Body for drop 2",
+          drop_tags: "tag4, tag5",
+          title: "Drop 2"
+        })
+
+      [tag1, tag2] = Enum.map(drop.tags, & &1.name)
+
+      assert html =~ tag1
+      assert html =~ tag2
+
+      {:ok, _live, tags_html} =
+        live
+        |> element("#drop-#{drop.id} .drop-card .tag-#{tag1}")
+        |> render_click()
+        |> follow_redirect(conn, ~p"/profile?tag=#{tag1}")
+
+      assert tags_html =~ tag1
+      refute tags_html =~ "tag4"
+    end
+
+    test "gets updated with new drops when a drop with a matching filter tag is created", %{
+      conn: conn,
+      user: user
+    } do
+      tags = "drop_tag, tag4, tag5"
+
+      drop_fixture(%Drop{}, user, %{
+        body: "Body for drop 2",
+        drop_tags: tags,
+        title: "Test Drop"
+      })
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile?tag=drop_tag")
+
+      assert html =~ "Test Drop"
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, drop} =
+        Drops.create_drop(
+          %Drop{},
+          user,
+          %{title: "New Drop title", body: "Drop body", drop_tags: tags}
+        )
+
+      assert has_element?(live, "#new-drops-indicator")
+
+      live
+      |> element("#new-drops-indicator")
+      |> render_click()
+
+      assert has_element?(live, "#drop-#{drop.id}", drop.title)
+    end
+
+    test "does not get updated if the drop created doesn't match the filter drop", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      [tag1 | _rest] = Enum.map(drop.tags, & &1.name)
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile?tag=#{tag1}")
+
+      assert html =~ tag1
+
+      Drops.create_drop(
+        %Drop{},
+        user,
+        %{title: "New Drop title", body: "Drop body", drop_tags: "new, drop"}
+      )
+
+      refute has_element?(live, "#new-drops-indicator")
+    end
   end
 
   describe "/drop/new" do
@@ -115,7 +197,9 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       {:ok, _live, html} =
         live
-        |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
+        |> form("#drops-editor-form",
+          drop: %{title: "New Drop title", body: "Drop body", drop_tags: "tag1, tag2"}
+        )
         |> render_submit()
         |> follow_redirect(conn, ~p"/profile")
 
@@ -130,6 +214,32 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       live
       |> form("#drops-editor-form", drop: %{title: "", body: ""})
       |> render_change() =~ "can&#39;t be blank"
+    end
+
+    test "user cannot create a drop with less than 2 tags", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
+
+      live
+      |> form("#drops-editor-form",
+        drop: %{title: "New Drop title", body: "Drop body", drop_tags: "tag1"}
+      )
+      |> render_submit() =~ "Should have at least 2 drops and at most 10 tags"
+    end
+
+    test "user cannot create a drop with more than 10 tags", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
+
+      tags = Enum.map_join(1..12, ", ", &"tag#{&1}")
+
+      live
+      |> form("#drops-editor-form",
+        drop: %{title: "New Drop title", body: "Drop body", drop_tags: tags}
+      )
+      |> render_submit() =~ "Should have at least 2 drops and at most 10 tags"
     end
 
     test "unauthorized users are redirected", %{conn: conn} do

@@ -91,13 +91,94 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert path == ~p"/drops/#{drop.id}"
     end
 
+    test "user can filter drops by a tag name", %{conn: conn, drop: drop, user: user} do
+      {:ok, live, html} = live(conn, ~p"/")
+
+      _drop2 =
+        drop_fixture(%Drop{}, user, %{
+          body: "Body for drop 2",
+          drop_tags: "tag4, tag5",
+          title: "Drop 2"
+        })
+
+      [tag1, tag2] = Enum.map(drop.tags, & &1.name)
+
+      assert html =~ tag1
+      assert html =~ tag2
+
+      {:ok, _live, tags_html} =
+        live
+        |> element("#drop-#{drop.id} .drop-card .tag-#{tag1}")
+        |> render_click()
+        |> follow_redirect(conn, ~p"/?tag=#{tag1}")
+
+      assert tags_html =~ tag1
+      refute tags_html =~ "tag4"
+    end
+
+    test "gets updated with new drops when a drop with a matching filter tag is created", %{
+      conn: conn,
+      user: user
+    } do
+      tags = "drop_tag, tag4, tag5"
+
+      drop_fixture(%Drop{}, user, %{
+        body: "Body for drop 2",
+        drop_tags: tags,
+        title: "Test Drop"
+      })
+
+      {:ok, live, html} = live(conn, ~p"/?tag=drop_tag")
+
+      assert html =~ "Test Drop"
+
+      {:ok, drop} =
+        Drops.create_drop(
+          %Drop{},
+          user,
+          %{title: "New Drop title", body: "Drop body", drop_tags: tags}
+        )
+
+      assert has_element?(live, "#new-drops-indicator")
+
+      live
+      |> element("#new-drops-indicator")
+      |> render_click()
+
+      assert has_element?(live, "#drop-#{drop.id}", drop.title)
+    end
+
+    test "does not get updated if the drop created doesn't match the filter drop", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      [tag1 | _rest] = Enum.map(drop.tags, & &1.name)
+
+      {:ok, live, html} = live(conn, ~p"/?tag=#{tag1}")
+
+      assert html =~ tag1
+
+      Drops.create_drop(
+        %Drop{},
+        user,
+        %{title: "New Drop title", body: "Drop body", drop_tags: "new, drop"}
+      )
+
+      refute has_element?(live, "#new-drops-indicator")
+    end
+
     test "gets updated with new drops", %{conn: conn, user: user} do
       {:ok, live, _html} = live(conn, ~p"/")
 
       refute has_element?(live, "#new-drops-indicator")
 
       {:ok, drop} =
-        Drops.create_drop(%Drop{}, user, %{title: "New Drop title", body: "Drop body"})
+        Drops.create_drop(%Drop{}, user, %{
+          title: "New Drop title",
+          body: "Drop body",
+          drop_tags: "new, drop"
+        })
 
       assert has_element?(live, "#new-drops-indicator")
 

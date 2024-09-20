@@ -98,6 +98,12 @@ defmodule ElixirDropsWeb.DropComponents do
           <% end %>
         </div>
 
+        <.tag_filter
+          class="bg-[#eae8fd] hover:opacity-80"
+          tags={@drop.tags}
+          user_list?={@show_card_menu?}
+        />
+
         <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
       </div>
 
@@ -117,18 +123,22 @@ defmodule ElixirDropsWeb.DropComponents do
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
       <h1 class="font-[500] text-2xl md:text-4xl"><%= @drop.title %></h1>
-      <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
-        <img
-          src={@drop.user.avatar}
-          alt={@drop.user.github_username}
-          class="rounded-full h-12 w-12 object-cover"
-        />
-        <div>
-          <p class="mb-1"><%= @drop.user.github_username %></p>
-          <p class="text-[#696969] text-xs">
-            Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
-          </p>
+      <div class="border-b-[2.5px] border-b-[#ececec] py-5">
+        <div class="flex gap-x-3 items-center">
+          <img
+            src={@drop.user.avatar}
+            alt={@drop.user.github_username}
+            class="rounded-full h-12 w-12 object-cover"
+          />
+          <div>
+            <p class="mb-1"><%= @drop.user.github_username %></p>
+            <p class="text-[#696969] text-xs">
+              Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
+            </p>
+          </div>
         </div>
+
+        <.tag_filter class="border-[1px] border-[#e2e2e2] mt-3 hover:bg-[#eae8fd]" tags={@drop.tags} />
       </div>
 
       <div
@@ -304,6 +314,23 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :tag, :string, required: true
+
+  @spec tag(assigns()) :: rendered()
+  def tag(assigns) do
+    ~H"""
+    <div class="mx-2 tag">
+      <div class="mb-2 text-sm text-[#252525] flex items-center justify-between bg-[#eae8fd] py-1 px-2 rounded-md">
+        <span class="mr-2 tag-name"><%= @tag %></span>
+        <.icon
+          name="hero-x-mark-mini"
+          class="text-[#575757] h-4 w-4 inline-block cursor-pointer remove-tag"
+        />
+      </div>
+    </div>
+    """
+  end
+
   attr :current_user, User
   attr :class, :string, default: nil
 
@@ -473,6 +500,29 @@ defmodule ElixirDropsWeb.DropComponents do
       <.icon name="hero-link-solid" class="h-4 w-4 md:h-6 md:w-6" />
       <%= render_slot(@inner_text) %>
     </div>
+    """
+  end
+
+  attr :class, :string, default: nil
+  attr :tags, :list, required: true
+  attr :user_list?, :boolean, default: false
+
+  defp tag_filter(assigns) do
+    ~H"""
+    <ul class="flex flex-wrap gap-x-2 mt-3">
+      <li :for={tag <- Enum.map(@tags, & &1.name)} }>
+        <.link
+          class={[
+            "text-sm text-[#252525] flex items-center justify-center py-1 px-2 rounded-md",
+            "tag-#{tag}",
+            @class
+          ]}
+          navigate={if(@user_list?, do: ~p"/profile?tag=#{tag}", else: ~p"/?tag=#{tag}")}
+        >
+          <span class="mr-2"><%= tag %></span>
+        </.link>
+      </li>
+    </ul>
     """
   end
 

@@ -95,4 +95,26 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> assign(:first_drop, first_drop)
     |> assign(:last_drop, last_drop)
   end
+
+  @spec maybe_show_new_drops_notification(socket(), drop()) :: socket()
+  def maybe_show_new_drops_notification(%{assigns: %{drop_filters: %{tag: tag}}} = socket, drop) do
+    drop_tags = Enum.map(drop.tags, & &1.name)
+
+    if tag in drop_tags do
+      assign(socket, :new_drops?, true)
+    else
+      socket
+    end
+  end
+
+  def maybe_show_new_drops_notification(socket, _drop) do
+    assign(socket, :new_drops?, true)
+  end
+
+  @spec process_tag(String.t()) :: String.t()
+  def process_tag(tag) do
+    tag
+    |> String.trim()
+    |> String.downcase()
+  end
 end

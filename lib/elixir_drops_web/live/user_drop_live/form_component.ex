@@ -15,7 +15,10 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
     changeset = Drops.change_drop(socket.assigns.drop)
 
-    {:ok, assign_form(socket, changeset)}
+    {:ok,
+     socket
+     |> assign(:tag_suggestions, [])
+     |> assign_form(changeset)}
   end
 
   @impl Phoenix.LiveComponent
@@ -44,6 +47,15 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     end
   end
 
+  def handle_event("suggest-tags", %{"name" => name}, socket) do
+    tag_suggestions =
+      name
+      |> Drops.get_tag_by_name()
+      |> Enum.map(& &1.name)
+
+    {:noreply, assign(socket, :tag_suggestions, tag_suggestions)}
+  end
+
   defp create_or_update_drop(socket, :edit, drop_params) do
     Drops.update_drop(
       socket.assigns.drop,
@@ -62,5 +74,14 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
   defp assign_form(socket, changeset) do
     assign(socket, :form, to_form(changeset))
+  end
+
+  defp parse_tags(nil), do: []
+
+  defp parse_tags(tags) do
+    tags
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
   end
 end

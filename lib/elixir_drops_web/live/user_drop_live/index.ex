@@ -9,12 +9,14 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
+    if connected?(socket), do: Drops.subscribe()
+
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:end_of_timeline?, false)
-     |> DropsListHelper.assign_drops()}
+     |> assign(:new_drops?, false)}
   end
 
   @impl Phoenix.LiveView
@@ -45,6 +47,18 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     }
   end
 
+  def handle_event("refresh-drops", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:new_drops?, false)
+     |> DropsListHelper.assign_drops()}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info({Drops, [:drop, :created], drop}, socket) do
+    {:noreply, DropsListHelper.maybe_show_new_drops_notification(socket, drop)}
+  end
+
   defp apply_action(socket, :edit, %{"id" => id}) do
     filters = %{
       drop_id: id,
@@ -60,10 +74,24 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     |> assign(:page_title, "Create Drop")
   end
 
+  defp apply_action(socket, :index, %{"tag" => tag}) do
+    tag = DropsListHelper.process_tag(tag)
+
+    drop_filters =
+      Map.merge(socket.assigns.drop_filters, %{tag: tag})
+
+    socket
+    |> assign(:drop, nil)
+    |> assign(:drop_filters, drop_filters)
+    |> assign(:page_title, "ElixirDrops | #{tag}")
+    |> DropsListHelper.assign_drops()
+  end
+
   defp apply_action(socket, :index, _params) do
     socket
     |> assign(:drop, nil)
     |> assign(:page_title, "ElixirDrops | #{socket.assigns.current_user.github_username}")
+    |> DropsListHelper.assign_drops()
   end
 
   defp assign_user_drop(socket, filters) do
