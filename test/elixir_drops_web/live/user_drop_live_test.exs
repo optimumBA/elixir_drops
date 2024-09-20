@@ -187,7 +187,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         )
 
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.unique_url_string}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"
@@ -195,13 +195,13 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
   end
 
-  describe "/drops/:id/edit" do
+  describe "/drops/:unique_url_string/edit" do
     setup [:create_drops_setup]
 
     test "authorized user updates a drop", %{conn: conn, user: user, drop: drop} do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, html} = live(conn, ~p"/drops/#{drop.id}/edit")
+      {:ok, live, html} = live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
 
       assert html =~ "Edit post"
       assert html =~ drop.body
@@ -227,7 +227,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     } do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.id}/edit")
+      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
 
       html =
         live
@@ -250,14 +250,14 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user_2)
 
       assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/drops/#{drop.id}/edit")
+               live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
 
       assert path == ~p"/"
     end
 
     test "unauthorized users are redirected", %{conn: conn, drop: drop} do
       assert {:error, {:redirect, %{to: path, flash: flash}}} =
-               live(conn, ~p"/drops/#{drop.id}/edit")
+               live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
 
       assert path == ~p"/"
       assert flash["error"] == "You must log in to access this page."
@@ -265,10 +265,12 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "one is redirected if drop doesn't exist", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
-      non_existent_drop_id = Ecto.UUID.generate()
+
+      # TODO: This may fail if the generated unique url string is the same as the one in the database
+      non_existent_drop_unique_url_string = Drops.generate_unique_url_string()
 
       assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/drops/#{non_existent_drop_id}/edit")
+               live(conn, ~p"/drops/#{non_existent_drop_unique_url_string}/edit")
 
       assert path == ~p"/"
     end

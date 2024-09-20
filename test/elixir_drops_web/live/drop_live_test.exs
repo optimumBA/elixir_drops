@@ -88,7 +88,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {path, _flash} = assert_redirect(live)
 
-      assert path == ~p"/drops/#{drop.id}"
+      assert path == ~p"/drops/#{drop.unique_url_string}"
     end
 
     test "gets updated with new drops", %{conn: conn, user: user} do
@@ -158,11 +158,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
   end
 
-  describe "/drops/:id" do
+  describe "/drops/:unique_url_string" do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, drop: drop, user: user} do
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.unique_url_string}")
 
       assert html =~ ~r(<p>Drop body text...</p>)
       assert html =~ drop.title
@@ -172,11 +172,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "user redirected to home page when drop does not exist", %{conn: conn} do
-      drop_id = Ecto.UUID.generate()
+      unique_url_string = Drops.generate_unique_url_string()
       path = "/"
 
       assert {:error, {:live_redirect, %{to: ^path}}} =
-               live(conn, ~p"/drops/#{drop_id}")
+               live(conn, ~p"/drops/#{unique_url_string}")
     end
 
     test "Javascript code inside the drop is not executed", %{conn: conn, user: user} do
@@ -191,7 +191,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
           }
         )
 
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.unique_url_string}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"

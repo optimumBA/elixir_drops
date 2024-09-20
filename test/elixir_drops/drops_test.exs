@@ -227,6 +227,20 @@ defmodule ElixirDrops.DropsTest do
     end
   end
 
+  describe "get_drop_by_unique_url_string/1" do
+    setup [:create_drops_setup]
+
+    test "returns the drop with given a unique_url_string", %{drop: drop} do
+      assert %Drop{} = drop = Drops.get_drop_by_unique_url_string(drop.unique_url_string)
+      assert Ecto.assoc_loaded?(drop.user)
+    end
+
+    test "returns nil if the drop does not exist" do
+      non_existent_unique_url_string = Drops.generate_unique_url_string()
+      refute Drops.get_drop_by_unique_url_string(non_existent_unique_url_string)
+    end
+  end
+
   describe "change_drop/1" do
     setup [:create_drops_setup]
 
@@ -249,6 +263,15 @@ defmodule ElixirDrops.DropsTest do
   describe "subscribe/0" do
     test "returns :ok and subscribes caller to the drops topic" do
       assert :ok == Drops.subscribe()
+    end
+  end
+
+  describe "generate_unique_url_string/0" do
+    test "returns a unique url string" do
+      assert is_binary(Drops.generate_unique_url_string())
+      assert String.length(Drops.generate_unique_url_string()) == 8
+      assert String.match?(Drops.generate_unique_url_string(), ~r/^[A-Za-z0-9]+$/)
+      assert Drops.generate_unique_url_string() != Drops.generate_unique_url_string()
     end
   end
 end
