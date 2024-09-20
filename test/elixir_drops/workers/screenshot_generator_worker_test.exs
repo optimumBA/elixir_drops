@@ -3,7 +3,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
-  import ExUnit.CaptureLog
   import Mox
 
   alias ElixirDrops.Drops.Drop
@@ -51,42 +50,26 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       end)
       |> expect(:get_image, fn _drop -> {:error, "Image not found"} end)
 
-      log_output =
-        capture_log(fn ->
-          assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
-        end)
-
-      assert log_output =~ "Failed to upload image"
+      {:error, "Failed to upload image"} =
+        perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
       assert {:error, "Image not found"} = Client.get_image(drop)
     end
 
-    test "no screenshot is created if a drop has no code block", %{user: user} do
-      expect(Client.Mock, :get_image, fn _drop ->
-        {:error, "Image not found"}
-      end)
-
+    test "does not create a screenshot when there is no code block and the job is not retries", %{
+      user: user
+    } do
       drop = drop_fixture(user)
 
-      log_output =
-        capture_log(fn ->
-          assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
-        end)
-
-      assert log_output =~ "No code block found"
-
-      assert Client.get_image(drop) == {:error, "Image not found"}
+      {:cancel, "No code block found"} =
+        perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
     end
 
     test "does not create a screenshot for a non-existent drop" do
       drop_id = Ecto.UUID.generate()
 
-      log_output =
-        capture_log(fn ->
-          assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop_id})
-        end)
-
-      assert log_output =~ "Drop not found"
+      {:cancel, "No code block found"} =
+        perform_job(ScreenshotGeneratorWorker, %{drop_id: drop_id})
     end
   end
 end

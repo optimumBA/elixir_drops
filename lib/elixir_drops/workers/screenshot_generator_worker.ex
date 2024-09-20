@@ -9,28 +9,26 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.ScreenshotGenerator
   alias Wallaby.Browser
 
-  require Logger
-
   @markdown_regex ~r/```([^`]*)```/
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    case check_code_block_and_update(args) do
-      {:ok, image_url} ->
-        Logger.info("Screenshot generated: #{image_url}")
-
-      error ->
-        Logger.error("#{inspect(error)}")
-        error
-    end
-
-    :ok
+    args
+    |> maybe_create_screenshot()
+    |> maybe_retry_job()
   end
 
-  defp check_code_block_and_update(args) do
+  defp maybe_retry_job({:ok, _image_url}), do: :ok
+  defp maybe_retry_job({:cancel, reason}), do: {:cancel, reason}
+  defp maybe_retry_job(error), do: error
+
+  defp maybe_create_screenshot(args) do
     with {:ok, drop} <- get_drop(args["drop_id"]),
          :ok <- check_for_code_block(drop.body) do
       drop_screenshot(drop)
+    else
+      _error ->
+        {:cancel, "No code block found"}
     end
   end
 

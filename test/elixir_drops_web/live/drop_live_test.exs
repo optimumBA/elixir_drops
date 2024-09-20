@@ -264,8 +264,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
 
-      File.write("dump.txt", html)
-
       assert html =~
                "<meta property=\"description\" content=\"In this drop we discussed stuff...\"/>"
 
