@@ -119,9 +119,9 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
-  Gets a single drop by its unique string.
+  Retrieves a single drop based on its unique URL string.
 
-  Returns nil if the Drop does not exist.
+  Returns `nil` if no drop is found with the given string.
 
   ## Examples
 
@@ -129,7 +129,7 @@ defmodule ElixirDrops.Drops do
       %Drop{}
 
       iex> get_drop_by_unique_url_string("non_existent")
-      ** nil
+      nil
 
   """
   @spec get_drop_by_unique_url_string(short_unique_string()) :: drop() | nil
@@ -141,11 +141,17 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
-  Creates a drop.
+  Creates a new drop.
 
-  ### Examples
+  Returns `{:ok, drop}` if the drop is successfully created, or `{:error, changeset}` if there are validation errors.
 
-      iex> create_drop(%Drop{}, %User{}, %{title: "drop", ...})
+  ## Examples
+
+      iex> create_drop(%Drop{}, %User{}, %{
+      ...>   title: "drop",
+      ...>   description: "A sample drop",
+      ...>   unique_url_string: "123abc"
+      ...> })
       {:ok, %Drop{}}
 
       iex> create_drop(%Drop{}, %User{}, %{title: nil})
@@ -191,7 +197,11 @@ defmodule ElixirDrops.Drops do
 
   ### Examples
 
-      iex> update_drop(%Drop{}, %User{}, %{title: "drop", ...})
+      iex> update_drop(%Drop{}, %User{}, %{
+      ...>   title: "Example drop",
+      ...>   description: "A sample drop",
+      ...>   unique_url_string: "123abc"
+      ...> })
       {:ok, %Drop{}}
 
       iex> update_drop(%Drop{}, %User{}, %{title: nil})
