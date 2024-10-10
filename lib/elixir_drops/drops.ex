@@ -9,6 +9,7 @@ defmodule ElixirDrops.Drops do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.DropsBroadcast
 
+  alias ElixirDrops.GenerateShortId
   alias ElixirDrops.Repo
 
   @type attrs :: map()
@@ -162,7 +163,7 @@ defmodule ElixirDrops.Drops do
   """
   @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    unique_url_string = generate_unique_url_string()
+    unique_url_string = GenerateShortId.generate_short_id()
 
     attrs =
       attrs
@@ -184,7 +185,7 @@ defmodule ElixirDrops.Drops do
 
       {:error, changeset} ->
         if changeset.errors[:unique_url_string] do
-          new_unique_url_string = generate_unique_url_string()
+          new_unique_url_string = GenerateShortId.generate_short_id()
 
           attrs = Map.put(attrs, :unique_url_string, new_unique_url_string)
           create_drop(drop, user, attrs)
