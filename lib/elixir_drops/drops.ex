@@ -23,9 +23,6 @@ defmodule ElixirDrops.Drops do
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
-  @topic inspect(__MODULE__)
-
-  @short_unique_string_allowed_chars "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   @doc """
   Subscribes to drops events by calling ElixirDrops.Drops.Broadcast.subscribe/0` function.
 
