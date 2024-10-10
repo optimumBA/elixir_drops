@@ -8,6 +8,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
   alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.GenerateShortId
 
   defp create_drops_setup(%{conn: conn}) do
     conn =
@@ -172,7 +173,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "user redirected to home page when drop does not exist", %{conn: conn} do
-      unique_url_string = Drops.generate_unique_url_string()
+      unique_url_string = GenerateShortId.generate_short_id()
       path = "/"
 
       assert {:error, {:live_redirect, %{to: ^path}}} =

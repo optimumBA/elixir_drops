@@ -6,6 +6,8 @@ defmodule ElixirDrops.DropsTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.DropsBroadcast
+  alias ElixirDrops.GenerateShortId
 
   @invalid_attrs %{title: nil, body: nil}
   @valid_attrs %{title: "some title", body: "some body"}
@@ -236,7 +238,7 @@ defmodule ElixirDrops.DropsTest do
     end
 
     test "returns nil if the drop does not exist" do
-      non_existent_unique_url_string = Drops.generate_unique_url_string()
+      non_existent_unique_url_string = GenerateShortId.generate_short_id()
       refute Drops.get_drop_by_unique_url_string(non_existent_unique_url_string)
     end
   end
@@ -262,16 +264,7 @@ defmodule ElixirDrops.DropsTest do
 
   describe "subscribe/0" do
     test "returns :ok and subscribes caller to the drops topic" do
-      assert :ok == Drops.subscribe()
-    end
-  end
-
-  describe "generate_unique_url_string/0" do
-    test "returns a unique 8 alphanumeric characters long url string" do
-      assert is_binary(Drops.generate_unique_url_string())
-      assert String.length(Drops.generate_unique_url_string()) == 8
-      assert String.match?(Drops.generate_unique_url_string(), ~r/^[A-Za-z0-9]+$/)
-      assert Drops.generate_unique_url_string() != Drops.generate_unique_url_string()
+      assert :ok == DropsBroadcast.subscribe()
     end
   end
 end

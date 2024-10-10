@@ -7,6 +7,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.GenerateShortId
 
   defp create_drops_setup(%{conn: conn}) do
     conn = put_connect_params(conn, %{"timezone_offset" => 0})
@@ -267,7 +268,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user)
 
       # TODO: This may fail if the generated unique url string is the same as the one in the database
-      non_existent_drop_unique_url_string = Drops.generate_unique_url_string()
+      non_existent_drop_unique_url_string = GenerateShortId.generate_short_id()
 
       assert {:error, {:live_redirect, %{to: path}}} =
                live(conn, ~p"/drops/#{non_existent_drop_unique_url_string}/edit")
