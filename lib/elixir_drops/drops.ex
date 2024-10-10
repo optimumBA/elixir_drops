@@ -7,6 +7,8 @@ defmodule ElixirDrops.Drops do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.DropsBroadcast
+
   alias ElixirDrops.Repo
 
   @type attrs :: map()
@@ -34,7 +36,7 @@ defmodule ElixirDrops.Drops do
   """
   @spec subscribe() :: :ok
   def subscribe do
-    Phoenix.PubSub.subscribe(ElixirDrops.PubSub, @topic)
+    DropsBroadcast.subscribe()
   end
 
   @doc """
@@ -231,32 +233,6 @@ defmodule ElixirDrops.Drops do
   end
 
   defp broadcast_drop_creation(drop) do
-    Phoenix.PubSub.broadcast(
-      ElixirDrops.PubSub,
-      @topic,
-      {
-        __MODULE__,
-        [:drop, :created],
-        drop
-      }
-    )
-  end
-
-  @doc """
-  Generates a unique URL string.
-
-  ## Examples
-
-      iex> generate_unique_url_string()
-      "vPfoDMdY"
-
-  """
-  @spec generate_unique_url_string() :: short_unique_string()
-  def generate_unique_url_string do
-    @short_unique_string_allowed_chars
-    |> String.to_charlist()
-    |> Enum.shuffle()
-    |> Enum.take(8)
-    |> List.to_string()
+    DropsBroadcast.broadcast_drop_creation(drop)
   end
 end
