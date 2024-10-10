@@ -27,7 +27,7 @@ defmodule ElixirDrops.Drops do
 
   @short_unique_string_allowed_chars "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   @doc """
-  Subscribes to drops events.
+  Subscribes to drops events by calling ElixirDrops.Drops.Broadcast.subscribe/0` function.
 
   ## Examples
 
