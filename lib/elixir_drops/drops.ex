@@ -182,9 +182,6 @@ defmodule ElixirDrops.Drops do
 
       {:error, changeset} ->
         if changeset.errors[:short_id] do
-          new_short_id = GenerateShortId.generate_short_id()
-
-          attrs = Map.put(attrs, :short_id, new_short_id)
           create_drop(drop, user, attrs)
         else
           {:error, changeset}
