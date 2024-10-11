@@ -7,9 +7,10 @@ defmodule ElixirDrops.Drops do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.ShortIdGenerator
+
   alias ElixirDrops.DropsBroadcast
 
-  alias ElixirDrops.GenerateShortId
   alias ElixirDrops.Repo
 
   @type attrs :: map()
@@ -160,7 +161,7 @@ defmodule ElixirDrops.Drops do
   """
   @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    short_id = GenerateShortId.generate_short_id()
+    short_id = ShortIdGenerator.generate()
 
     attrs =
       attrs

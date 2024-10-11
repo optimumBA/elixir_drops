@@ -6,9 +6,9 @@ defmodule ElixirDrops.DropsTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.DropsBroadcast
-  alias ElixirDrops.GenerateShortId
+  alias ElixirDrops.Drops.ShortIdGenerator
 
+  alias ElixirDrops.DropsBroadcast
   @invalid_attrs %{title: nil, body: nil}
   @valid_attrs %{title: "some title", body: "some body"}
 
@@ -238,7 +238,7 @@ defmodule ElixirDrops.DropsTest do
     end
 
     test "returns nil if the drop does not exist" do
-      non_existent_short_id = GenerateShortId.generate_short_id()
+      non_existent_short_id = ShortIdGenerator.generate()
       refute Drops.get_drop_by_short_id(non_existent_short_id)
     end
   end
