@@ -188,7 +188,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         )
 
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.unique_url_string}")
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"
@@ -196,13 +196,13 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
   end
 
-  describe "/drops/:unique_url_string/edit" do
+  describe "/drops/:short_id/edit" do
     setup [:create_drops_setup]
 
     test "authorized user updates a drop", %{conn: conn, user: user, drop: drop} do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, html} = live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
+      {:ok, live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
 
       assert html =~ "Edit post"
       assert html =~ drop.body
@@ -228,7 +228,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     } do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
+      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
 
       html =
         live
@@ -251,14 +251,14 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user_2)
 
       assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
+               live(conn, ~p"/drops/#{drop.short_id}/edit")
 
       assert path == ~p"/"
     end
 
     test "unauthorized users are redirected", %{conn: conn, drop: drop} do
       assert {:error, {:redirect, %{to: path, flash: flash}}} =
-               live(conn, ~p"/drops/#{drop.unique_url_string}/edit")
+               live(conn, ~p"/drops/#{drop.short_id}/edit")
 
       assert path == ~p"/"
       assert flash["error"] == "You must log in to access this page."
@@ -268,10 +268,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user)
 
       # TODO: This may fail if the generated unique url string is the same as the one in the database
-      non_existent_drop_unique_url_string = GenerateShortId.generate_short_id()
+      non_existent_drop_short_id = GenerateShortId.generate_short_id()
 
       assert {:error, {:live_redirect, %{to: path}}} =
-               live(conn, ~p"/drops/#{non_existent_drop_unique_url_string}/edit")
+               live(conn, ~p"/drops/#{non_existent_drop_short_id}/edit")
 
       assert path == ~p"/"
     end

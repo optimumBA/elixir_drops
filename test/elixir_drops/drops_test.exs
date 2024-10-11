@@ -229,17 +229,17 @@ defmodule ElixirDrops.DropsTest do
     end
   end
 
-  describe "get_drop_by_unique_url_string/1" do
+  describe "get_drop_by_short_id/1" do
     setup [:create_drops_setup]
 
-    test "returns the drop with given a unique_url_string", %{drop: drop} do
-      assert %Drop{} = drop = Drops.get_drop_by_unique_url_string(drop.unique_url_string)
+    test "returns the drop with given a short_id", %{drop: drop} do
+      assert %Drop{} = drop = Drops.get_drop_by_short_id(drop.short_id)
       assert Ecto.assoc_loaded?(drop.user)
     end
 
     test "returns nil if the drop does not exist" do
-      non_existent_unique_url_string = GenerateShortId.generate_short_id()
-      refute Drops.get_drop_by_unique_url_string(non_existent_unique_url_string)
+      non_existent_short_id = GenerateShortId.generate_short_id()
+      refute Drops.get_drop_by_short_id(non_existent_short_id)
     end
   end
 

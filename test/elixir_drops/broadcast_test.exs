@@ -16,7 +16,7 @@ defmodule ElixirDrops.BroadcastTest do
         title: "New Drop",
         body: "This is a new drop.",
         user_id: 1,
-        unique_url_string: "abc123"
+        short_id: "abc123"
       }
 
       assert :ok == DropsBroadcast.broadcast_drop_creation(drop)

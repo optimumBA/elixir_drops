@@ -19,7 +19,7 @@ defmodule ElixirDrops.Drops do
   @type filters :: map()
   @type limit :: integer()
   @type page :: integer()
-  @type short_unique_string :: String.t()
+  @type short_id :: String.t()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
@@ -78,8 +78,8 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.id == ^drop_id)
   end
 
-  defp apply_filter({:unique_url_string, unique_url_string}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.unique_url_string == ^unique_url_string)
+  defp apply_filter({:short_id, short_id}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.short_id == ^short_id)
   end
 
   defp apply_filter({:newer_than, drop}, dynamic) do
@@ -125,17 +125,17 @@ defmodule ElixirDrops.Drops do
 
   ## Examples
 
-      iex> get_drop_by_unique_url_string("vPfoDMdY")
+      iex> get_drop_by_short_id("vPfoDMdY")
       %Drop{}
 
-      iex> get_drop_by_unique_url_string("non_existent")
+      iex> get_drop_by_short_id("non_existent")
       nil
 
   """
-  @spec get_drop_by_unique_url_string(short_unique_string()) :: drop() | nil
-  def get_drop_by_unique_url_string(unique_url_string) do
+  @spec get_drop_by_short_id(short_id()) :: drop() | nil
+  def get_drop_by_short_id(short_id) do
     Drop
-    |> where([d], d.unique_url_string == ^unique_url_string)
+    |> where([d], d.short_id == ^short_id)
     |> preload([:user])
     |> Repo.one()
   end
@@ -150,7 +150,7 @@ defmodule ElixirDrops.Drops do
       iex> create_drop(%Drop{}, %User{}, %{
       ...>   title: "drop",
       ...>   description: "A sample drop",
-      ...>   unique_url_string: "123abc"
+      ...>   short_id: "123abc"
       ...> })
       {:ok, %Drop{}}
 
@@ -160,11 +160,11 @@ defmodule ElixirDrops.Drops do
   """
   @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    unique_url_string = GenerateShortId.generate_short_id()
+    short_id = GenerateShortId.generate_short_id()
 
     attrs =
       attrs
-      |> Map.put(:unique_url_string, unique_url_string)
+      |> Map.put(:short_id, short_id)
       |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
 
     changeset =
@@ -181,10 +181,10 @@ defmodule ElixirDrops.Drops do
         {:ok, drop}
 
       {:error, changeset} ->
-        if changeset.errors[:unique_url_string] do
-          new_unique_url_string = GenerateShortId.generate_short_id()
+        if changeset.errors[:short_id] do
+          new_short_id = GenerateShortId.generate_short_id()
 
-          attrs = Map.put(attrs, :unique_url_string, new_unique_url_string)
+          attrs = Map.put(attrs, :short_id, new_short_id)
           create_drop(drop, user, attrs)
         else
           {:error, changeset}
@@ -200,7 +200,7 @@ defmodule ElixirDrops.Drops do
       iex> update_drop(%Drop{}, %User{}, %{
       ...>   title: "Example drop",
       ...>   description: "A sample drop",
-      ...>   unique_url_string: "123abc"
+      ...>   short_id: "123abc"
       ...> })
       {:ok, %Drop{}}
 
