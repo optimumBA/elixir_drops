@@ -407,7 +407,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
       <.link
         navigate={"/drops/#{@short_id}/edit"}
-        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-4"
+        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
         id={"edit-drop-#{@id}"}
       >
         <.icon name="hero-pencil" class="h-4 md:h-6 w-4 md:w-6" /> Edit drop
