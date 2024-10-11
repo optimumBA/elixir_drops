@@ -188,7 +188,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         )
 
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.short_id}")
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"

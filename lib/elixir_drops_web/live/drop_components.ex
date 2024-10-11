@@ -141,7 +141,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
       <p
         id="copy-link-#{@id}"
-        data-clipboard-text={url(~p"/drops/#{@drop.short_id}")}
+        data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
         phx-hook="CopyToClipboard"
         class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
       >
@@ -464,7 +464,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       id={"card-copy-link-#{@id}"}
-      data-clipboard-text={url(~p"/drops/#{@short_id}")}
+      data-clipboard-text={url(~p"/d/#{@short_id}")}
       phx-hook="CopyToClipboard"
       class={[
         "text-[#797979] hover:text-[#5947F1]",
