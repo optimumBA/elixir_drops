@@ -9,7 +9,9 @@ defmodule ElixirDrops.BroadcastTest do
     end
 
     test "broadcasts a message indicating that a new drop has been created" do
-      drop = %Drops.Drop{
+      DropsBroadcast.subscribe()
+
+      drop = %Drop{
         id: 1,
         title: "New Drop",
         body: "This is a new drop.",
@@ -18,6 +20,7 @@ defmodule ElixirDrops.BroadcastTest do
       }
 
       assert :ok == DropsBroadcast.broadcast_drop_creation(drop)
+      assert_receive {DropsBroadcast, [:drop, :created], ^drop}
     end
   end
 end
