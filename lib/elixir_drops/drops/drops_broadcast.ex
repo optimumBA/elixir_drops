@@ -7,6 +7,7 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
 
   @type short_unique_string :: String.t()
   @type drop :: Drop.t()
+
   @topic inspect(__MODULE__)
 
   @doc """
