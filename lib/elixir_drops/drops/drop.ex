@@ -14,8 +14,8 @@ defmodule ElixirDrops.Drops.Drop do
   @foreign_key_type :binary_id
   schema "drops" do
     field :body, :string
-    field :title, :string
     field :short_id, :string
+    field :title, :string
 
     belongs_to :user, User
 
@@ -25,8 +25,8 @@ defmodule ElixirDrops.Drops.Drop do
   @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
-    |> cast(attrs, [:body, :title, :short_id, :user_id])
-    |> validate_required([:body, :title, :short_id])
+    |> cast(attrs, [:body, :short_id, :title, :user_id])
+    |> validate_required([:body, :short_id, :title])
     |> unique_constraint(:short_id)
   end
 end
