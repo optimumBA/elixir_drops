@@ -6,9 +6,9 @@ defmodule ElixirDrops.DropsTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
 
-  alias ElixirDrops.DropsBroadcast
   @invalid_attrs %{title: nil, body: nil}
   @valid_attrs %{title: "some title", body: "some body"}
 

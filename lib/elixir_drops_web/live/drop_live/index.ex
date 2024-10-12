@@ -2,7 +2,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.DropsBroadcast
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
 

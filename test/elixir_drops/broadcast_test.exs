@@ -1,7 +1,7 @@
 defmodule ElixirDrops.BroadcastTest do
   use ExUnit.Case, async: true
-  alias ElixirDrops.Drops
-  alias ElixirDrops.DropsBroadcast
+  alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
 
   describe "subscribe and broadcast tests" do
     test "returns :ok and subscribes caller to the drops topic" do

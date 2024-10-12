@@ -7,10 +7,8 @@ defmodule ElixirDrops.Drops do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
-
-  alias ElixirDrops.DropsBroadcast
-
   alias ElixirDrops.Repo
 
   @type attrs :: map()
