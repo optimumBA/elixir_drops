@@ -3,7 +3,7 @@ defmodule ElixirDrops.Drops.ShortIdGenerator do
   Generate a short unique string.
   """
 
-  @short_unique_string_allowed_chars "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  @short_unique_string_allowed_chars "ABCDEFGHJKLMNPQRTUVWXYZabcdefghijkmnopqrstuvwxyz12346789"
 
   @type short_unique_string :: String.t()
 
