@@ -1,8 +1,10 @@
-defmodule ElixirDrops.DropsBroadcast do
+defmodule ElixirDrops.Drops.DropsBroadcast do
   @moduledoc """
   Broadcasts drop changes to all connected clients.
   """
+
   alias ElixirDrops.Drops.Drop
+
   @type short_unique_string :: String.t()
   @type drop :: Drop.t()
   @topic inspect(__MODULE__)
