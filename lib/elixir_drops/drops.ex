@@ -23,7 +23,7 @@ defmodule ElixirDrops.Drops do
   @type user_id :: Ecto.UUID.t()
 
   @doc """
-  Subscribes to drops events by calling ElixirDrops.Drops.Broadcast.subscribe/0` function.
+  Subscribes to drops events by calling DropsBroadcast.subscribe/0` function.
 
   ## Examples
 
@@ -118,7 +118,7 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
-  Retrieves a single drop based on its unique URL string.
+  Retrieves a single drop based on its short ID string.
 
   Returns `nil` if no drop is found with the given string.
 
