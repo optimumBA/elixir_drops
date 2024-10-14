@@ -19,7 +19,6 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
     :ok
 
   """
-
   @spec subscribe() :: :ok
   def subscribe do
     Phoenix.PubSub.subscribe(ElixirDrops.PubSub, @topic)
