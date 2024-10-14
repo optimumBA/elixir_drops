@@ -5,7 +5,7 @@ defmodule ElixirDrops.Drops.ShortIdGenerator do
 
   @short_unique_string_allowed_chars "ABCDEFGHJKLMNPQRTUVWXYZabcdefghijkmnopqrstuvwxyz12346789"
 
-  @type short_unique_string :: String.t()
+  @type short_id_string :: String.t()
 
   @doc """
   Generates a short id string.
