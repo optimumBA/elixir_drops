@@ -6,7 +6,7 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
   alias ElixirDrops.Drops.Drop
 
   @type drop :: Drop.t()
-  @type short_unique_string :: String.t()
+  @type short_id_string :: String.t()
 
   @topic inspect(__MODULE__)
 
