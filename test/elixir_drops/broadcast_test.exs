@@ -3,11 +3,13 @@ defmodule ElixirDrops.BroadcastTest do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
 
-  describe "subscribe and broadcast tests" do
+  describe "subscribe/0" do
     test "returns :ok and subscribes caller to the drops topic" do
       assert :ok == DropsBroadcast.subscribe()
     end
+  end
 
+  describe "broadcast_drop_creation/1" do
     test "broadcasts a message indicating that a new drop has been created" do
       DropsBroadcast.subscribe()
 
