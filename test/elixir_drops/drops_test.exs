@@ -6,7 +6,6 @@ defmodule ElixirDrops.DropsTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
 
   @invalid_attrs %{title: nil, body: nil}
@@ -264,7 +263,7 @@ defmodule ElixirDrops.DropsTest do
 
   describe "subscribe/0" do
     test "returns :ok and subscribes caller to the drops topic" do
-      assert :ok == DropsBroadcast.subscribe()
+      assert :ok == Drops.subscribe()
     end
   end
 end
