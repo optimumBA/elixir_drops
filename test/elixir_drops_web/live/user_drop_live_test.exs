@@ -267,7 +267,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     test "one is redirected if drop doesn't exist", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
 
-      # TODO: This may fail if the generated unique url string is the same as the one in the database
+      # TODO: This may fail if the generated short ID string is the same as the one in the database
       non_existent_drop_short_id = ShortIdGenerator.generate()
 
       assert {:error, {:live_redirect, %{to: path}}} =
