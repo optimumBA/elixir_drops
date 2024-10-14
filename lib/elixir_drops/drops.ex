@@ -77,16 +77,16 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.id == ^drop_id)
   end
 
-  defp apply_filter({:short_id, short_id}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.short_id == ^short_id)
-  end
-
   defp apply_filter({:newer_than, drop}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.inserted_at > ^drop.inserted_at)
   end
 
   defp apply_filter({:older_than, drop}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.inserted_at < ^drop.inserted_at)
+  end
+
+  defp apply_filter({:short_id, short_id}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.short_id == ^short_id)
   end
 
   defp apply_filter({:user_id, user_id}, dynamic) do
