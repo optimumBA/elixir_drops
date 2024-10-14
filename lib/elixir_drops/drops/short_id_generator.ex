@@ -3,7 +3,7 @@ defmodule ElixirDrops.Drops.ShortIdGenerator do
   Generate a short unique string.
   """
 
-  @short_unique_string_allowed_chars "ABCDEFGHJKLMNPQRTUVWXYZabcdefghijkmnopqrstuvwxyz12346789"
+  @allowed_chars "ABCDEFGHJKLMNPQRTUVWXYZabcdefghijkmnopqrstuvwxyz12346789"
 
   @type short_id_string :: String.t()
 
@@ -16,9 +16,9 @@ defmodule ElixirDrops.Drops.ShortIdGenerator do
       "vPfoDMdY"
 
   """
-  @spec generate() :: short_unique_string()
+  @spec generate() :: short_id_string()
   def generate do
-    @short_unique_string_allowed_chars
+    @allowed_chars
     |> String.to_charlist()
     |> Enum.shuffle()
     |> Enum.take(8)
