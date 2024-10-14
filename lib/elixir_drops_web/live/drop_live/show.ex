@@ -10,10 +10,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   @impl Phoenix.LiveView
-  def handle_params(%{"id" => id}, _url, socket) do
+  def handle_params(%{"short_id" => short_id}, _url, socket) do
     {:noreply,
-     %{drop_id: id}
-     |> Drops.get_drop()
+     short_id
+     |> Drops.get_drop_by_short_id()
      |> assign_drop(socket)}
   end
 

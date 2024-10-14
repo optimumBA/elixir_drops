@@ -211,6 +211,7 @@
            files: %{
              excluded: [
                "lib/elixir_drops/application.ex",
+               "lib/elixir_drops/drops.ex",
                "lib/elixir_drops_web.ex",
                "lib/elixir_drops_web/endpoint.ex",
                "lib/elixir_drops_web/router.ex"

@@ -7,6 +7,8 @@ defmodule ElixirDrops.Drops do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
+  alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.Repo
 
   @type attrs :: map()
@@ -16,13 +18,12 @@ defmodule ElixirDrops.Drops do
   @type filters :: map()
   @type limit :: integer()
   @type page :: integer()
+  @type short_id :: String.t()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
-  @topic inspect(__MODULE__)
-
   @doc """
-  Subscribes to drops events.
+  Subscribes to drops events by calling DropsBroadcast.subscribe/0` function.
 
   ## Examples
 
@@ -32,7 +33,7 @@ defmodule ElixirDrops.Drops do
   """
   @spec subscribe() :: :ok
   def subscribe do
-    Phoenix.PubSub.subscribe(ElixirDrops.PubSub, @topic)
+    DropsBroadcast.subscribe()
   end
 
   @doc """
@@ -84,6 +85,10 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.inserted_at < ^drop.inserted_at)
   end
 
+  defp apply_filter({:short_id, short_id}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.short_id == ^short_id)
+  end
+
   defp apply_filter({:user_id, user_id}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
@@ -113,11 +118,39 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
-  Creates a drop.
+  Retrieves a single drop based on its short ID string.
 
-  ### Examples
+  Returns `nil` if no drop is found with the given string.
 
-      iex> create_drop(%Drop{}, %User{}, %{title: "drop", ...})
+  ## Examples
+
+      iex> get_drop_by_short_id("vPfoDMdY")
+      %Drop{}
+
+      iex> get_drop_by_short_id("non_existent")
+      nil
+
+  """
+  @spec get_drop_by_short_id(short_id()) :: drop() | nil
+  def get_drop_by_short_id(short_id) do
+    Drop
+    |> where([d], d.short_id == ^short_id)
+    |> preload([:user])
+    |> Repo.one()
+  end
+
+  @doc """
+  Creates a new drop.
+
+  Returns `{:ok, drop}` if the drop is successfully created, or `{:error, changeset}` if there are validation errors.
+
+  ## Examples
+
+      iex> create_drop(%Drop{}, %User{}, %{
+      ...>   title: "drop",
+      ...>   description: "A sample drop",
+      ...>   short_id: "123abc"
+      ...> })
       {:ok, %Drop{}}
 
       iex> create_drop(%Drop{}, %User{}, %{title: nil})
@@ -126,7 +159,19 @@ defmodule ElixirDrops.Drops do
   """
   @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
   def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    case create_or_update_drop(drop, user, attrs) do
+    short_id = ShortIdGenerator.generate()
+
+    attrs =
+      attrs
+      |> Map.put(:short_id, short_id)
+      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+
+    changeset =
+      %Drop{}
+      |> Drop.changeset(attrs)
+      |> Ecto.Changeset.put_change(:user_id, user.id)
+
+    case Repo.insert(changeset) do
       {:ok, drop} ->
         drop = Repo.preload(drop, [:user])
 
@@ -135,7 +180,11 @@ defmodule ElixirDrops.Drops do
         {:ok, drop}
 
       {:error, changeset} ->
-        {:error, changeset}
+        if changeset.errors[:short_id] do
+          create_drop(drop, user, attrs)
+        else
+          {:error, changeset}
+        end
     end
   end
 
@@ -144,7 +193,11 @@ defmodule ElixirDrops.Drops do
 
   ### Examples
 
-      iex> update_drop(%Drop{}, %User{}, %{title: "drop", ...})
+      iex> update_drop(%Drop{}, %User{}, %{
+      ...>   title: "Example drop",
+      ...>   description: "A sample drop",
+      ...>   short_id: "123abc"
+      ...> })
       {:ok, %Drop{}}
 
       iex> update_drop(%Drop{}, %User{}, %{title: nil})
@@ -152,10 +205,7 @@ defmodule ElixirDrops.Drops do
 
   """
   @spec update_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
-  def update_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}),
-    do: create_or_update_drop(drop, user, attrs)
-
-  defp create_or_update_drop(drop, user, attrs) do
+  def update_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
     drop
     |> Drop.changeset(attrs)
     |> Ecto.Changeset.put_assoc(:user, user)
@@ -177,14 +227,6 @@ defmodule ElixirDrops.Drops do
   end
 
   defp broadcast_drop_creation(drop) do
-    Phoenix.PubSub.broadcast(
-      ElixirDrops.PubSub,
-      @topic,
-      {
-        __MODULE__,
-        [:drop, :created],
-        drop
-      }
-    )
+    DropsBroadcast.broadcast_drop_creation(drop)
   end
 end

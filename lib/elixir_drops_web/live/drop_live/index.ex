@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
 
@@ -50,7 +51,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_info({Drops, [:drop, :created], _drop}, socket) do
+  def handle_info({DropsBroadcast, [:drop, :created], _drop}, socket) do
     {:noreply, assign(socket, :new_drops?, true)}
   end
 end
