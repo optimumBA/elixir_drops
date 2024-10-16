@@ -94,14 +94,14 @@ defmodule ElixirDropsWeb.DropComponents do
               <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
             </button>
           <% else %>
-            <.drop_card_action_default id={@drop.id} />
+            <.drop_card_action_default id={@drop.id} short_id={@drop.short_id} />
           <% end %>
         </div>
 
         <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
       </div>
 
-      <.drop_card_menu id={@drop.id} />
+      <.drop_card_menu id={@drop.id} short_id={@drop.short_id} />
     </div>
     """
   end
@@ -140,8 +140,8 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <p
-        id="copy-link-#{@drop.id}"
-        data-clipboard-text={url(~p"/drops/#{@drop.id}")}
+        id="copy-link-#{@id}"
+        data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
         phx-hook="CopyToClipboard"
         class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
       >
@@ -399,14 +399,14 @@ defmodule ElixirDropsWeb.DropComponents do
       id={"drop-card-menu-#{@id}"}
       phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
     >
-      <.drop_card_action_default id={@id}>
+      <.drop_card_action_default id={@id} short_id={@short_id}>
         <:inner_text>
           Copy link
         </:inner_text>
       </.drop_card_action_default>
 
       <.link
-        navigate={"/drops/#{@id}/edit"}
+        navigate={"/drops/#{@short_id}/edit"}
         class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
         id={"edit-drop-#{@id}"}
       >
@@ -456,6 +456,7 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :id, :string, required: true
+  attr :short_id, :string, required: true
 
   slot :inner_text
 
@@ -463,7 +464,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       id={"card-copy-link-#{@id}"}
-      data-clipboard-text={url(~p"/drops/#{@id}")}
+      data-clipboard-text={url(~p"/d/#{@short_id}")}
       phx-hook="CopyToClipboard"
       class={[
         "text-[#797979] hover:text-[#5947F1]",

@@ -45,9 +45,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     }
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
+  defp apply_action(socket, :edit, %{"short_id" => short_id}) do
     filters = %{
-      drop_id: id,
+      short_id: short_id,
       user_id: socket.assigns.current_user.id
     }
 

@@ -9,6 +9,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
   alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.S3Helper.Client
 
   setup :verify_on_exit!
@@ -92,7 +93,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {path, _flash} = assert_redirect(live)
 
-      assert path == ~p"/drops/#{drop.id}"
+      assert path == ~p"/d/#{drop.short_id}"
     end
 
     test "gets updated with new drops", %{conn: conn, user: user} do
@@ -162,7 +163,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
   end
 
-  describe "/drops/:id" do
+  describe "/d/:short_id" do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, drop: drop, user: user} do
@@ -170,7 +171,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
         {:error, "Image not found"}
       end)
 
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       assert html =~ ~r(<p>Drop body text...</p>)
       assert html =~ drop.title
@@ -180,11 +181,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "user redirected to home page when drop does not exist", %{conn: conn} do
-      drop_id = Ecto.UUID.generate()
+      short_id = ShortIdGenerator.generate()
       path = "/"
 
       assert {:error, {:live_redirect, %{to: ^path}}} =
-               live(conn, ~p"/drops/#{drop_id}")
+               live(conn, ~p"/d/#{short_id}")
     end
 
     test "Javascript code inside the drop is not executed", %{conn: conn, user: user} do
@@ -203,7 +204,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
         {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
       end)
 
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"
@@ -218,7 +219,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
         {:error, "Image not found"}
       end)
 
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
       assert html =~ "<meta name=\"twitter:description\" content=\"#{drop.title}...\"/>"
@@ -229,7 +230,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ "<meta name=\"twitter:site\" content=\"@optimumBA\"/>"
 
       assert html =~
-               "<meta name=\"twitter:url\" content=\"http://localhost:4002/drops/#{drop.id}\"/>"
+               "<meta name=\"twitter:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
 
       assert html =~
                "<meta property=\"description\" content=\"#{drop.title}...\"/>"
@@ -244,7 +245,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ "<meta property=\"og:type\" content=\"article\"/>"
 
       assert html =~
-               "<meta property=\"og:url\" content=\"http://localhost:4002/drops/#{drop.id}\"/>"
+               "<meta property=\"og:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
     end
 
     test "links are escaped and images are omitted from the description", %{
@@ -262,7 +263,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
         {:error, "Image not found"}
       end)
 
-      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.id}")
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       assert html =~
                "<meta property=\"description\" content=\"In this drop we discussed stuff...\"/>"

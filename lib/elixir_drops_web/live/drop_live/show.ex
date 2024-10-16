@@ -10,8 +10,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
   @impl Phoenix.LiveView
-  def handle_params(%{"id" => id}, _url, socket) do
-    drop = Drops.get_drop(%{drop_id: id})
+  def handle_params(%{"short_id" => short_id}, _url, socket) do
+    drop = Drops.get_drop_by_short_id(short_id)
 
     {:noreply,
      socket
@@ -39,7 +39,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
       description: seo_description(drop.title),
       image_url: get_image_url(drop),
       type: "article",
-      url: url(~p"/drops/#{drop.id}")
+      url: url(~p"/d/#{drop.short_id}")
     }
 
     assign(socket, :seo_attributes, attributes)
