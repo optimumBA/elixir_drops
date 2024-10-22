@@ -56,7 +56,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       assert {:error, "Image not found"} = Client.get_image(drop)
     end
 
-    test "does not create a screenshot when there is no code block and the job is not retries", %{
+    test "does not create a screenshot when there is no code block and the job is not retried", %{
       user: user
     } do
       drop = drop_fixture(user)
