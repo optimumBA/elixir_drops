@@ -181,7 +181,7 @@ defmodule GithubWorkflows do
           with: [
             name: @preview_app_name,
             secrets:
-              "APPSIGNAL_APP_ENV=preview APPSIGNAL_PUSH_API_KEY=${{ secrets.APPSIGNAL_PUSH_API_KEY }} GITHUB_CLIENT_ID=${{ secrets.GH_CLIENT_ID }} GITHUB_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }} PHX_HOST=${{ env.PHX_HOST }} SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}"
+              "APPSIGNAL_APP_ENV=preview APPSIGNAL_PUSH_API_KEY=${{ secrets.APPSIGNAL_PUSH_API_KEY }} GITHUB_CLIENT_ID=${{ secrets.GH_CLIENT_ID }} GITHUB_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }} WALLABY_AUTH_PASSWORD=${{secrets.WALLABY_AUTH_PASSWORD}} WALLABY_AUTH_USERNAME=${{secrets.WALLABY_AUTH_USERNAME}} PHX_HOST=${{ env.PHX_HOST }} SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}"
           ]
         ]
       ]
