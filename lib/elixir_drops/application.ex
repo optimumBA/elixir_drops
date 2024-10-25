@@ -24,7 +24,7 @@ defmodule ElixirDrops.Application do
            name: ElixirDrops.ScreenshotGenerator,
            idle_shutdown_after: 30_000,
            log: :info,
-           max_concurrency: 10,
+           max_concurrency: 2,
            max: 4,
            min: 0},
         parent: ElixirDropsWeb.Endpoint,
