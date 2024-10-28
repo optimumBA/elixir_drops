@@ -212,8 +212,6 @@ if config_env() == :prod do
       password: wallaby_auth_password
     ]
 
-
-
   # FLAME Backend
   flame_memory_mb = "1024"
 
