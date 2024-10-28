@@ -212,11 +212,7 @@ if config_env() == :prod do
       password: wallaby_auth_password
     ]
 
-  config :optimum_landing,
-    wallaby_auth: [
-      username: wallaby_auth_username,
-      password: wallaby_auth_password
-    ]
+
 
   # FLAME Backend
   flame_memory_mb = "1024"
