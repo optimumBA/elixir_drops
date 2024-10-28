@@ -35,8 +35,11 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorControllerTest do
 
   describe "/screenshot/:drop_id" do
     test "renders first code block of a drop", %{conn: conn, drop: drop} do
-      auth = Application.get_env(:elixir_drops, :wallaby_auth)
-      header_content = "Basic " <> Base.encode64("#{auth[:username]}:#{auth[:password]}")
+      _auth = Application.get_env(:elixir_drops, :wallaby_auth)
+      username = "elixir_drops_wallaby"
+      password = "l3AVAovk4B8g5Sbq"
+      # header_content = "Basic " <> Base.encode64("#{auth[:username]}:#{auth[:password]}")
+      header_content = "Basic " <> Base.encode64("#{username}:#{password}")
 
       response =
         conn
