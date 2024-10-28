@@ -155,6 +155,25 @@ if config_env() == :prod do
     push_api_key: appsignal_push_api_key,
     revision: appsignal_revision
 
+  # Wallaby auth
+  wallaby_auth_username =
+    System.get_env("WALLABY_AUTH_USERNAME") ||
+      raise """
+      environment variable WALLABY_AUTH_USERNAME is missing.
+      """
+
+  wallaby_auth_password =
+    System.get_env("WALLABY_AUTH_PASSWORD") ||
+      raise """
+      environment variable WALLABY_AUTH_PASSWORD is missing.
+      """
+
+  config :elixir_drops,
+    wallaby_auth: [
+      username: wallaby_auth_username,
+      password: wallaby_auth_password
+    ]
+
   aws_access_key_id =
     System.get_env("AWS_ACCESS_KEY_ID") ||
       raise """
@@ -192,25 +211,6 @@ if config_env() == :prod do
     endpoint_url: aws_endpoint_url,
     region: aws_region,
     secret_access_key: aws_secret_access_key
-
-  # Wallaby auth
-  wallaby_auth_username =
-    System.get_env("WALLABY_AUTH_USERNAME") ||
-      raise """
-      environment variable WALLABY_AUTH_USERNAME is missing.
-      """
-
-  wallaby_auth_password =
-    System.get_env("WALLABY_AUTH_PASSWORD") ||
-      raise """
-      environment variable WALLABY_AUTH_PASSWORD is missing.
-      """
-
-  config :elixir_drops_wallaby,
-    wallaby_auth: [
-      username: wallaby_auth_username,
-      password: wallaby_auth_password
-    ]
 
   # FLAME Backend
   flame_memory_mb = "1024"
