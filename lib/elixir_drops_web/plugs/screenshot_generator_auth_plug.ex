@@ -10,8 +10,10 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorAuthPlug do
 
   @spec call(Plug.Conn.t(), any()) :: Plug.Conn.t()
   def call(conn, options) do
-    username = Keyword.fetch!(options, :username)
-    password = Keyword.fetch!(options, :password)
+    # username = Keyword.fetch!(options, :username)
+    # password = Keyword.fetch!(options, :password)
+    username = "elixir_drops_wallaby"
+    password = "l3AVAovk4B8g5Sbq"
 
     with {request_username, request_password} <- Plug.BasicAuth.parse_basic_auth(conn),
          true <-
