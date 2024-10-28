@@ -5,7 +5,8 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorAuthPlug do
 
   @spec init(any()) :: any()
   def init(options) do
-    options ++ Application.get_env(:elixir_drops, :wallaby_auth)
+    (options ++ Application.get_env(:elixir_drops, :wallaby_auth))
+    |> IO.inspect(label: "wallaby_auth")
   end
 
   @spec call(Plug.Conn.t(), any()) :: Plug.Conn.t()
