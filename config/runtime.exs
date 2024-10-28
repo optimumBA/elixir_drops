@@ -206,7 +206,7 @@ if config_env() == :prod do
       environment variable WALLABY_AUTH_PASSWORD is missing.
       """
 
-  config :elixir_drops,
+  config :elixir_drops_wallaby,
     wallaby_auth: [
       username: wallaby_auth_username,
       password: wallaby_auth_password
