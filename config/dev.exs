@@ -96,7 +96,7 @@ config :elixir_drops, :s3,
   region: System.get_env("AWS_REGION"),
   secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY")
 
-config :elixir_drops,
+config :elixir_drops_wallaby,
   wallaby_auth: [
     username: "elixir_drops_wallaby",
     password: "l3AVAovk4B8g5Sbq"
