@@ -6,17 +6,12 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorAuthPlug do
 
   @spec init(any()) :: any()
   def init(options) do
-    Logger.info(
-      "Wallaby auth options: #{inspect(options ++ Application.get_env(:elixir_drops, :wallaby_auth))}"
-    )
-
-    options ++ Application.get_env(:elixir_drops, :wallaby_auth)
+    options
   end
 
   @spec call(Plug.Conn.t(), any()) :: Plug.Conn.t()
-  def call(conn, options) do
-    username = Keyword.fetch!(options, :username)
-    password = Keyword.fetch!(options, :password)
+  def call(conn, _options) do
+    [username: username, password: password] = Application.get_env(:elixir_drops, :wallaby_auth)
 
     with {request_username, request_password} <- Plug.BasicAuth.parse_basic_auth(conn),
          true <-

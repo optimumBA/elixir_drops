@@ -85,13 +85,13 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp build_url_with_auth(drop) do
-    auth_values = Application.get_env(:elixir_drops, :wallaby_auth)
+    [username: username, password: password] = Application.get_env(:elixir_drops, :wallaby_auth)
 
     url = url(~p"/screenshot/#{drop.id}")
 
     [scheme, rest] = String.split(url, "//", parts: 2)
 
-    "#{scheme}//#{auth_values[:username]}:#{auth_values[:password]}@#{rest}"
+    "#{scheme}//#{username}:#{password}@#{rest}"
   end
 
   defp upload_screenshot(screenshot, drop) do
