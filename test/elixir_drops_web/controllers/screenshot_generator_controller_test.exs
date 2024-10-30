@@ -72,6 +72,18 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorControllerTest do
       assert response =~ "404 Not Found"
     end
 
+    test "returns 404 when drop is not found", %{conn: conn} do
+      auth = Application.get_env(:elixir_drops, :wallaby_auth)
+      header_content = "Basic " <> Base.encode64("#{auth[:username]}:#{auth[:password]}")
+
+      response =
+        conn
+        |> put_req_header("authorization", header_content)
+        |> get(~p"/screenshot/#{Ecto.UUID.generate()}")
+        |> response(404)
+
+      assert response =~ "404 Not Found"
+    end
 
     test "cannot access the page without valid credentials", %{conn: conn, drop: drop} do
       conn = get(conn, ~p"/screenshot/#{drop.id}")
