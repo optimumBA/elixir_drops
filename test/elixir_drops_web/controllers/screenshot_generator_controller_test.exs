@@ -30,7 +30,10 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorControllerTest do
 
     drop = drop_fixture(%Drop{}, user, %{body: body, title: "A drop with code blocks"})
 
-    %{conn: conn, user: user, drop: drop}
+    drop_with_no_code_block =
+      drop_fixture(%Drop{}, user, %{body: "No code block", title: "A drop without code blocks"})
+
+    %{conn: conn, user: user, drop: drop, drop_with_no_code_block: drop_with_no_code_block}
   end
 
   describe "/screenshot/:drop_id" do
@@ -52,6 +55,23 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorControllerTest do
       refute response =~ ~r/<span[^>]+>hello[^>]+/
       refute response =~ "The end"
     end
+
+    test "returns 404 when no code block is found", %{
+      conn: conn,
+      drop_with_no_code_block: drop_with_no_code_block
+    } do
+      auth = Application.get_env(:elixir_drops, :wallaby_auth)
+      header_content = "Basic " <> Base.encode64("#{auth[:username]}:#{auth[:password]}")
+
+      response =
+        conn
+        |> put_req_header("authorization", header_content)
+        |> get(~p"/screenshot/#{drop_with_no_code_block.id}")
+        |> response(404)
+
+      assert response =~ "404 Not Found"
+    end
+
 
     test "cannot access the page without valid credentials", %{conn: conn, drop: drop} do
       conn = get(conn, ~p"/screenshot/#{drop.id}")
