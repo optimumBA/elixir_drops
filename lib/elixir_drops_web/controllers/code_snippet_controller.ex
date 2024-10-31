@@ -3,7 +3,6 @@ defmodule ElixirDropsWeb.CodeSnippetController do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  require Logger
 
   @type conn :: Plug.Conn.t()
   @type params :: map()
