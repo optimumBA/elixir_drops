@@ -34,17 +34,11 @@ defmodule ElixirDropsWeb.CodeSnippetController do
   end
 
   defp handle_drop_retrieval(conn, id) do
-    case Drops.get_drop(%{drop_id: id}) do
-      %Drop{body: body} ->
-        case Regex.run(@markdown_regex, body, capture: :first) do
-          [code_block] ->
-            render(conn, :index, code_block: code_block, layout: false)
-
-          _no_code_block ->
-            send_resp(conn, :not_found, "404 Not Found")
-        end
-
-      _drop_not_found ->
+    with %Drop{body: body} <- Drops.get_drop(%{drop_id: id}),
+         [code_block] <- Regex.run(@markdown_regex, body, capture: :first) do
+      render(conn, :index, code_block: code_block, layout: false)
+    else
+      _error ->
         send_resp(conn, :not_found, "404 Not Found")
     end
   end
