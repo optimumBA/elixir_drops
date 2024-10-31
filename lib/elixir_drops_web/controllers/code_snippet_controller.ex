@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.ScreenshotGeneratorController do
+defmodule ElixirDropsWeb.CodeSnippetController do
   use ElixirDropsWeb, :controller
 
   alias ElixirDrops.Drops
