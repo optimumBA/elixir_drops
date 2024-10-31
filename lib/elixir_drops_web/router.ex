@@ -56,6 +56,7 @@ defmodule ElixirDropsWeb.Router do
       ] do
       live "/", DropLive.Index, :index
       live "/d/:short_id", DropLive.Show, :show
+      get "/screenshot/:id", ScreenshotGeneratorController, :index
     end
   end
 
