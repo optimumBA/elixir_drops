@@ -87,7 +87,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp build_url_with_auth(drop) do
     [username: username, password: password] = Application.get_env(:elixir_drops, :wallaby_auth)
 
-    url = url(~p"/screenshot/#{drop.id}")
+    url = url(~p"/d/#{drop.id}/code_snippet")
 
     [scheme, rest] = String.split(url, "//", parts: 2)
 
