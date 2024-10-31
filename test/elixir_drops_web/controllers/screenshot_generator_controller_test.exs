@@ -85,8 +85,27 @@ defmodule ElixirDropsWeb.ScreenshotGeneratorControllerTest do
       assert response =~ "404 Not Found"
     end
 
+    test "clients with valid credentials are allowed", %{conn: conn, drop: drop} do
+      auth = Application.get_env(:elixir_drops, :wallaby_auth)
+
+      header_content = "Basic " <> Base.encode64("#{auth[:username]}:#{auth[:password]}")
+
+      conn =
+        conn
+        |> put_req_header("authorization", header_content)
+        |> get("/screenshot/#{drop.id}")
+
+      assert conn.status == 200
+    end
+
     test "cannot access the page without valid credentials", %{conn: conn, drop: drop} do
       conn = get(conn, ~p"/screenshot/#{drop.id}")
+
+      assert response(conn, 401) == "Unauthorized"
+    end
+
+    test "returns 401 if authentication header is missing", %{conn: conn, drop: drop} do
+      conn = get(conn, "/screenshot/#{drop.id}")
 
       assert response(conn, 401) == "Unauthorized"
     end
