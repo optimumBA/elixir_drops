@@ -213,7 +213,7 @@ if config_env() == :prod do
     secret_access_key: aws_secret_access_key
 
   # FLAME Backend
-  flame_memory_mb = "1024"
+  flame_memory_mb = 2048
 
   fly_api_token =
     System.get_env("FLY_API_TOKEN") ||
