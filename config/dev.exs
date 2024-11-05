@@ -101,3 +101,5 @@ config :elixir_drops,
     username: "elixir_drops_wallaby",
     password: "l3AVAovk4B8g5Sbq"
   ]
+
+config :flame, backend: FLAME.LocalBackend
