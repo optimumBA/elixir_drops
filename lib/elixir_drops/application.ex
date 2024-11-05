@@ -10,6 +10,7 @@ defmodule ElixirDrops.Application do
     children =
       children(
         always: ElixirDropsWeb.Telemetry,
+        always: ElixirDropsWeb.Endpoint,
         parent: ElixirDrops.Repo,
         parent:
           {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
@@ -27,7 +28,6 @@ defmodule ElixirDrops.Application do
            max_concurrency: 2,
            max: 4,
            min: 0},
-        parent: ElixirDropsWeb.Endpoint,
         parent: {Oban, Application.get_env(:elixir_drops, Oban)}
       )
 
