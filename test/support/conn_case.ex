@@ -30,6 +30,7 @@ defmodule ElixirDropsWeb.ConnCase do
       @endpoint ElixirDropsWeb.Endpoint
 
       use ElixirDropsWeb, :verified_routes
+      use Oban.Testing, repo: ElixirDrops.Repo
 
       # Import conveniences for testing with connections
       import Plug.Conn

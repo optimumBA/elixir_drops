@@ -6,6 +6,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.Icons
 
@@ -30,7 +31,9 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
   def handle_event("save", %{"drop" => drop_params}, socket) do
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
-      {:ok, _drop} ->
+      {:ok, drop} ->
+        enqueue_seo_screenshot_creation(drop.id)
+
         {
           :noreply,
           push_navigate(
@@ -58,6 +61,12 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
       socket.assigns.current_user,
       drop_params
     )
+  end
+
+  defp enqueue_seo_screenshot_creation(drop_id) do
+    %{"drop_id" => drop_id}
+    |> ScreenshotGeneratorWorker.new()
+    |> Oban.insert()
   end
 
   defp assign_form(socket, changeset) do

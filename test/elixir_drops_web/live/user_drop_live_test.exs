@@ -3,11 +3,16 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
+  import Mox
   import Phoenix.LiveViewTest
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
+  alias ElixirDrops.S3Helper.Client
+  alias ElixirDrops.Workers.ScreenshotGeneratorWorker
+
+  setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
     conn = put_connect_params(conn, %{"timezone_offset" => 0})
@@ -188,6 +193,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         )
 
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
+      end)
+
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
@@ -254,6 +263,30 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
                live(conn, ~p"/drops/#{drop.short_id}/edit")
 
       assert path == ~p"/"
+    end
+
+    test "an image upload job is enqueued when a drop is updated", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+
+      assert html =~ "Edit post"
+      assert html =~ drop.body
+      assert html =~ drop.title
+
+      live
+      |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
+      |> render_submit()
+
+      assert_enqueued(
+        worker: ScreenshotGeneratorWorker,
+        args: %{drop_id: drop.id},
+        queue: :seo_images
+      )
     end
 
     test "unauthorized users are redirected", %{conn: conn, drop: drop} do

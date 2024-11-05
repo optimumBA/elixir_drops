@@ -3,12 +3,16 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
+  import Mox
   import Phoenix.LiveViewTest
 
   alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
+  alias ElixirDrops.S3Helper.Client
+
+  setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
     conn =
@@ -163,6 +167,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, drop: drop, user: user} do
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:error, "Image not found"}
+      end)
+
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       assert html =~ ~r(<p>Drop body text...</p>)
@@ -187,16 +195,84 @@ defmodule ElixirDropsWeb.DropLiveTest do
           user,
           %{
             body:
-              "Some JS\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
+              "User drop with JS\n\n```js\n<script>\nlet header = document.querySelector('header')\n\nconst tempDiv = document.createElement(\"div\");\ntempDiv.textContent = \"Some malicious code\";\n\nheader.insertAdjacentElement('afterend', tempDiv);\n</script>\n```",
             title: "Drop with script"
           }
         )
+
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
+      end)
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"
-      assert html =~ "Some JS"
+      assert html =~ "User drop with JS"
+    end
+
+    test "rendered HTML includes SEO meta tags for drop", %{
+      conn: conn,
+      drop: drop
+    } do
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:error, "Image not found"}
+      end)
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
+      assert html =~ "<meta name=\"twitter:description\" content=\"#{drop.title}...\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
+
+      assert html =~ "<meta name=\"twitter:site\" content=\"@optimumBA\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
+
+      assert html =~
+               "<meta property=\"description\" content=\"#{drop.title}...\"/>"
+
+      assert html =~
+               "<meta property=\"og:description\" content=\"#{drop.title}...\"/>"
+
+      assert html =~
+               "<meta property=\"og:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
+
+      assert html =~ "<meta property=\"og:title\" content=\"Elixir Drops\"/>"
+      assert html =~ "<meta property=\"og:type\" content=\"article\"/>"
+
+      assert html =~
+               "<meta property=\"og:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
+    end
+
+    test "links are escaped and images are omitted from the description", %{
+      conn: conn,
+      user: user
+    } do
+      drop_attributes = %{
+        description: "Drop body",
+        title: "[In this drop](http://localhost:4002/good_drop) we discussed stuff"
+      }
+
+      drop = drop_fixture(%Drop{}, user, drop_attributes)
+
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:error, "Image not found"}
+      end)
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert html =~
+               "<meta property=\"description\" content=\"In this drop we discussed stuff...\"/>"
+
+      assert html =~
+               "<meta property=\"og:description\" content=\"In this drop we discussed stuff...\"/>"
+
+      assert html =~
+               "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff...\"/>"
     end
   end
 end

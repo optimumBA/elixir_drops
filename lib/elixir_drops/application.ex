@@ -7,18 +7,29 @@ defmodule ElixirDrops.Application do
 
   @impl Application
   def start(_type, _args) do
-    children = [
-      ElixirDropsWeb.Telemetry,
-      ElixirDrops.Repo,
-      {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: ElixirDrops.PubSub},
-      # Start the Finch HTTP client for sending emails
-      {Finch, name: ElixirDrops.Finch},
-      # Start a worker by calling: ElixirDrops.Worker.start_link(arg)
-      # {ElixirDrops.Worker, arg},
-      # Start to serve requests, typically the last entry
-      ElixirDropsWeb.Endpoint
-    ]
+    children =
+      children(
+        always: ElixirDropsWeb.Telemetry,
+        always: ElixirDropsWeb.Endpoint,
+        parent: ElixirDrops.Repo,
+        parent:
+          {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
+        parent: {Phoenix.PubSub, name: ElixirDrops.PubSub},
+        # Start the Finch HTTP client for sending emails
+        parent: {Finch, name: ElixirDrops.Finch},
+        # Start a worker by calling: ElixirDrops.Worker.start_link(arg)
+        # {ElixirDrops.Worker, arg},
+        # Start to serve requests, typically the last entry
+        parent:
+          {FLAME.Pool,
+           name: ElixirDrops.ScreenshotGenerator,
+           idle_shutdown_after: 30_000,
+           log: :info,
+           max_concurrency: 2,
+           max: 4,
+           min: 0},
+        parent: {Oban, Application.get_env(:elixir_drops, Oban)}
+      )
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -32,5 +43,19 @@ defmodule ElixirDrops.Application do
   def config_change(changed, _new, removed) do
     ElixirDropsWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  # Exclude children marked with `parent` in the FLAME environment
+  defp children(child_specs) do
+    is_parent? = is_nil(FLAME.Parent.get())
+    is_flame? = !is_parent? || FLAME.Backend.impl() == FLAME.LocalBackend
+
+    Enum.flat_map(child_specs, fn
+      {:always, spec} -> [spec]
+      {:parent, spec} when is_parent? == true -> [spec]
+      {:parent, _spec} when is_parent? == false -> []
+      {:flame, spec} when is_flame? == true -> [spec]
+      {:flame, _spec} when is_flame? == false -> []
+    end)
   end
 end

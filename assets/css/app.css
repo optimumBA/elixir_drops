@@ -3,7 +3,7 @@
 @import 'tailwindcss/utilities';
 
 /* This file is for your main application CSS */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
 /* Reusable classes for composition */
 .content-grid {
@@ -278,4 +278,17 @@ blockquote *:last-child {
 .drop-form.show-pop-up .drop-preview-container,
 .drop-form.show-pop-up .action {
   @apply bg-white/10;
+}
+
+/* screenshot image generator page */
+.seo-image img {
+  @apply h-[100vh] w-full object-cover;
+}
+
+.seo-image {
+  @apply rounded-b-2xl mx-auto min-w-[55%] w-[95%] max-w-[max-content] overflow-hidden;
+}
+
+.seo-image pre {
+  @apply text-[1.1rem] font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
 }

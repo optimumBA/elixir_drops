@@ -65,9 +65,13 @@ defmodule ElixirDrops.MixProject do
   defp app_deps do
     [
       {:autumn, "~> 0.2"},
+      {:flame, "~> 0.5.1"},
       {:mdex, "~> 0.1"},
+      {:mox, "~> 1.1", only: :test},
+      {:oban, "~> 2.18"},
       {:timex, "~> 3.7"},
-      {:ueberauth_github, "~> 0.8.3"}
+      {:ueberauth_github, "~> 0.8.3"},
+      {:wallaby, github: "almirsarajcic/wallaby", branch: "releases"}
     ]
   end
 
@@ -137,7 +141,11 @@ defmodule ElixirDrops.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.setup": [
+        "tailwind.install --if-missing",
+        "esbuild.install --if-missing",
+        "cmd --cd assets npm install"
+      ],
       "assets.build": ["tailwind elixir_drops", "esbuild elixir_drops"],
       "assets.deploy": [
         "tailwind elixir_drops --minify",
