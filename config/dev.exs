@@ -29,53 +29,6 @@ config :elixir_drops, ElixirDropsWeb.Endpoint,
     tailwind: {Tailwind, :install_and_run, [:elixir_drops, ~w(--watch)]}
   ]
 
-aws_access_key_id =
-  System.get_env("AWS_ACCESS_KEY_ID") ||
-    raise """
-    environment variable AWS_ACCESS_KEY_ID is missing.
-    """
-
-aws_bucket =
-  System.get_env("BUCKET_NAME") ||
-    raise """
-    environment variable AWS_BUCKET_NAME is missing.
-    """
-
-aws_endpoint_url =
-  System.get_env("AWS_ENDPOINT_URL_S3") ||
-    raise """
-    environment variable AWS_ENDPOINT_URL_S3 is missing.
-    """
-
-aws_region =
-  System.get_env("AWS_REGION") ||
-    raise """
-    environment variable AWS_REGION is missing.
-    """
-
-aws_secret_access_key =
-  System.get_env("AWS_SECRET_ACCESS_KEY") ||
-    raise """
-    environment variable AWS_SECRET_ACCESS_KEY is missing.
-    """
-
-fly_api_token =
-  System.get_env("FLY_API_TOKEN") ||
-    raise "environment variable FLY_API_TOKEN is missing."
-
-flame_memory_mb = 2048
-
-config :flame, FLAME.FlyBackend,
-  env: %{
-    "AWS_ACCESS_KEY_ID" => aws_access_key_id,
-    "AWS_ENDPOINT_URL_S3" => aws_endpoint_url,
-    "AWS_REGION" => aws_region,
-    "AWS_SECRET_ACCESS_KEY" => aws_secret_access_key,
-    "BUCKET_NAME" => aws_bucket
-  },
-  memory_mb: flame_memory_mb,
-  token: fly_api_token
-
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed
