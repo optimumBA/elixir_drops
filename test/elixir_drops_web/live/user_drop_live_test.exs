@@ -308,4 +308,53 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert path == ~p"/"
     end
   end
+
+  describe "Close editor with confirmation pop-up" do
+    setup %{conn: conn} do
+      user =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "user2_username",
+          name: "user_2_name"
+        })
+
+      %{conn: conn, user: user}
+    end
+
+    test "initially hides the confirmation pop-up", %{user: user, conn: conn} do
+      conn = sign_in_user(conn, user)
+      {:ok, view, _html} = live(conn, "/drops/new")
+
+      assert has_element?(view, "#edit-form-cancel-confirm.hidden")
+    end
+
+    # test "shows confirmation pop-up when 'Close editor' is clicked", %{user: user, conn: conn} do
+    #   conn = sign_in_user(conn, user)
+
+    #   {:ok, view, _html} = live(conn, "/drops/new")
+
+    #   view
+    #   |> element("#close-editor_button")
+    #   |> render_click(%{"pop_up_message_id" => "edit-form-cancel-confirm"})
+
+    #   # refute has_element?(view, "#edit-form-cancel-confirm.hidden")
+    #   # assert has_element?(view, "#edit-form-cancel-confirm")
+    # end
+
+    # test "redirects to '/' when 'Close editor' is confirmed", %{view: view} do
+    #   view
+    #   |> element("[phx-click=\"close_editor\"]")
+    #   |> render_click(%{"pop-up-message" => "edit-form-cancel-confirm"})
+
+    #   refute has_element?(view, "#edit-form-cancel-confirm.hidden")
+
+    #   view
+    #   |> element("#edit-form-cancel-confirm [phx-click=\"close_editor\"]")
+    #   |> render_click(%{"pop-up-message" => "edit-form-cancel-confirm"})
+
+    #   assert_redirected(view, "/")
+    # end
+  end
 end
