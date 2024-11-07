@@ -259,7 +259,6 @@ defmodule ElixirDropsWeb.DropComponents do
         "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
         "w-[95%] md:w-[60%] py-4 md:py-8 px-4 md:px-6"
       ]}
-      phx-click-away={hide_popup("edit-form-cancel-confirm")}
     >
       <div class="grid gap-y-2">
         <.icon name="hero-exclamation-triangle" class="text-[#efd343] h-8 w-8 mx-auto" />
@@ -269,14 +268,13 @@ defmodule ElixirDropsWeb.DropComponents do
         </p>
         <div class="flex justify-center items-center gap-x-3 mx-auto w-full">
           <button
-            type="button"
             class="text-[#4f4f4f] text-sm rounded-lg w-[30%] py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
-            phx-click={JS.navigate(~p"/profile")}
+            phx-click="close_editor"
+            phx-value-pop-up-message="edit-form-cancel-confirm"
           >
             Close editor
           </button>
           <button
-            type="button"
             class="text-sm text-[#d3cffb] rounded-lg w-[30%] py-2 bg-blue_primary hover:opacity-80"
             phx-click={hide_popup("edit-form-cancel-confirm")}
           >

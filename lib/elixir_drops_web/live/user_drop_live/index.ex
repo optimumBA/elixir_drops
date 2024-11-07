@@ -7,6 +7,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
+  require Logger
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
     {:ok,
@@ -43,6 +44,21 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       :noreply,
       DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.first_drop, at: 0)
     }
+  end
+
+  def handle_event(
+        "close_editor",
+        %{"pop-up-message" => pop_up_message_id},
+        socket
+      ) do
+    Logger.info("Closing editor...")
+
+    %JS{}
+    |> JS.add_class("hidden", to: "##{pop_up_message_id}")
+    |> JS.remove_class("show-pop-up", to: ".drops-container")
+    |> JS.remove_class("show-pop-up", to: ".drop-form")
+
+    {:noreply, push_navigate(socket, to: ~p"/")}
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
