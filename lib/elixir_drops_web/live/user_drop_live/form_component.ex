@@ -16,7 +16,10 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
     changeset = Drops.change_drop(socket.assigns.drop)
 
-    {:ok, assign_form(socket, changeset)}
+    {:ok,
+     socket
+     |> assign(:disabled, true)
+     |> assign_form(changeset)}
   end
 
   @impl Phoenix.LiveComponent
@@ -26,7 +29,14 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
       |> Drops.change_drop(drop_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign_form(socket, changeset)}
+    %{"body" => body, "title" => title} = drop_params
+
+    disabled = String.trim(body) == "" or String.trim(title) == ""
+
+    {:noreply,
+     socket
+     |> assign(:disabled, disabled)
+     |> assign_form(changeset)}
   end
 
   def handle_event("save", %{"drop" => drop_params}, socket) do
