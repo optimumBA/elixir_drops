@@ -279,7 +279,13 @@ blockquote *:last-child {
 .drop-form.show-pop-up .action {
   @apply bg-white/10;
 }
-
+.drops-container.show-pop-up::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4); 
+  z-index: 9;
+}
 /* screenshot image generator page */
 .seo-image img {
   @apply h-[100vh] w-full object-cover;
