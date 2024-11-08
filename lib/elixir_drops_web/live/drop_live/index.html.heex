@@ -30,14 +30,16 @@
       <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
       <span>New Drops</span>
     </button>
-    <button
-      id="backToTopBtn"
-      style=""
-      phx-hook="BackToTopButton"
-      class=" gap-2 h-14 w-14 rounded-full fixed top-[50%] shadow-xl right-32 place-content-center text-base font-medium text-[black] bg-[#efe8f9]   transition-opacity duration-300 hidden"
-    >
-      <.icon name="hero-arrow-up" class="text-[black] " />
-    </button>
+    <div class="hidden md:block">
+      <button
+        id="backToTopBtn"
+        style=""
+        phx-hook="BackToTopButton"
+        class=" gap-2 h-14 w-14 rounded-full fixed top-[50%] shadow-xl right-32 place-content-center text-base font-medium text-[black] bg-[#efe8f9]   transition-opacity duration-300 hidden"
+      >
+        <.icon name="hero-arrow-up" class="text-[black] " />
+      </button>
+    </div>
   </section>
 
   <DropComponents.copied_link_popup_message />
