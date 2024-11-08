@@ -161,7 +161,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       :if={@condition}
-      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width welcome-message"
+      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width mt-20  welcome-message"
       id="welcome-message"
       phx-hook="WelcomeMessage"
     >
@@ -313,7 +313,7 @@ defmodule ElixirDropsWeb.DropComponents do
       id="create-post-btn-mobile"
       phx-hook="CreatePostButtonMobile"
       class={[
-        "bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80",
+        "bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80  shadow-xl",
         @class
       ]}
       phx-click={
