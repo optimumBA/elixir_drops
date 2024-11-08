@@ -8,7 +8,7 @@
     id="drops-editor-form"
     class="drops-editor h-full  w-full pt-12"
   >
-    <div class="drop-text-editor mt-16 text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
+    <div class="drop-text-editor mt-8 md:mt-16 text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
       <h2 class="font-semibold text-base md:text-lg text-[#252525] tracking-wide grid grid-cols-2">
         <span :if={@live_action == :new} class="py-3 px-4">Write a new post</span>
         <span :if={@live_action == :edit} class="py-3 px-4">Edit post</span>
@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <div class="drop-preview-container text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
+    <div class="drop-preview-container mt-8 md:mt-16 text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
       <h2 class="font-semibold text-base md:text-lg text-[#252525] tracking-wide grid grid-cols-2">
         <span class="py-3 px-4">Preview</span>
         <span class="py-3 bg-[#dfdbfc]"></span>
@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <div class="action w-[100%]  fixed bottom-0  bg-white py-2 pb-6 shadow-upper">
+    <div class="action w-[100%]  md:fixed md:bottom-0  bg-white py-2 pb-6 shadow-upper">
       <div class="flex justify-end items-center gap-x-3">
         <button
           class="text-[#4f4f4f] text-sm rounded-lg px-3 py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
