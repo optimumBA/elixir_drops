@@ -280,10 +280,10 @@ blockquote *:last-child {
   @apply bg-white/10;
 }
 .drops-container.show-pop-up::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4); 
+  background: rgba(0, 0, 0, 0.4);
   z-index: 9;
 }
 /* screenshot image generator page */
