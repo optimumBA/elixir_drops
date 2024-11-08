@@ -143,7 +143,7 @@ defmodule ElixirDropsWeb.DropComponents do
         id="copy-link-#{@id}"
         data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
         phx-hook="CopyToClipboard"
-        class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
+        class="mt-4 text-sm text-[#4f4f4f] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer focus:outline-none active:text-[#5947F1] focus:text-[#5947F1]"
       >
         <span><.icon name="hero-link" class="h-4 w-4 stroke-2" /></span>
         <span>Copy link</span>
