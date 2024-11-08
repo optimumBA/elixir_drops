@@ -188,15 +188,22 @@ blockquote *:last-child {
 /* Code Blocks */
 .drop-body pre {
   @apply rounded-b-xl;
+  white-space: pre-wrap; /* Ensures long lines wrap */
+  word-wrap: break-word; /* Breaks long words */
+  overflow-wrap: break-word; /* Another way to ensure word wrapping */
 }
 
 .drop-preview pre {
   @apply rounded-xl;
+  white-space: pre-wrap; /* Ensures long lines wrap */
+  word-wrap: break-word; /* Breaks long words */
+  overflow-wrap: break-word; /* Another way to ensure word wrapping */
 }
 
 .drop-body pre,
 .drop-preview pre {
   @apply text-xs md:text-sm p-4 overflow-x-scroll;
+  tab-size: 2;
 }
 
 .copy-prompt {
@@ -297,4 +304,8 @@ blockquote *:last-child {
 
 .seo-image pre {
   @apply text-[1.1rem] font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  tab-size: 2;
 }
