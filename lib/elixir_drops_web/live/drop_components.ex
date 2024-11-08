@@ -24,12 +24,12 @@ defmodule ElixirDropsWeb.DropComponents do
 
         <div>
           <%= if @current_user do %>
-            <div class="flex items-center gap-x-4">
+            <div class="w-[100%] flex items-center gap-x-4">
               <.create_post_button current_user={@current_user} live_action={@live_action} />
 
               <div
-                class="flex items-center gap-x-3 cursor-pointer"
-                phx-click={JS.toggle_class("hidden", to: "#slide-menu")}
+                class="w-[100%] flex items-center gap-x-3 cursor-pointer"
+                phx-click={JS.toggle_class("hidden", to: ["#slide-menu", "#blur-overlay"])}
               >
                 <img
                   src={@current_user.avatar}
@@ -41,6 +41,12 @@ defmodule ElixirDropsWeb.DropComponents do
                   <.icon name="hero-chevron-down" class="text-[#4F4F4F]" />
                 </button>
                 <.slide_menu current_user={@current_user} />
+              </div>
+              <div
+                id="blur-overlay"
+                class="fixed inset-0 bg-black bg-opacity-70  hidden  md:hidden"
+                phx-click={JS.toggle_class("hidden", to: ["#slide-menu", "#blur-overlay"])}
+              >
               </div>
             </div>
           <% else %>
@@ -418,7 +424,7 @@ defmodule ElixirDropsWeb.DropComponents do
   defp slide_menu(assigns) do
     ~H"""
     <div
-      class="hidden w-[100%] md:w-[25%] shadow-md shadow-[#c4c1c8] md:rounded-b-md pt-10 pb-4 absolute top-[101%] right-0 md:right-[2rem] grid z-[10000] bg-white"
+      class="hidden  w-[100%] md:w-[25%] shadow-md shadow-[#c4c1c8] md:rounded-b-md pt-10 pb-4 absolute top-[101%] right-0 md:right-[2rem] grid z-[1000] bg-white"
       id="slide-menu"
       phx-click-away={JS.toggle_class("hidden", to: "#slide-menu")}
     >
