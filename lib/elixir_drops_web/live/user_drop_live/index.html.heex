@@ -13,14 +13,15 @@
 
   <section :if={@live_action == :index} class="content-grid text-[#252525] relative user-drops">
     <DropComponents.user_drops_header current_user={@current_user} />
-
-    <DropsListHelper.drops_list
-      drops={@streams.drops}
-      end_of_timeline?={@end_of_timeline?}
-      id="user-drops"
-      show_user_drops?={true}
-      timezone_offset={@timezone_offset}
-    />
+    <section>
+      <DropsListHelper.drops_list
+        drops={@streams.drops}
+        end_of_timeline?={@end_of_timeline?}
+        id="user-drops"
+        show_user_drops?={true}
+        timezone_offset={@timezone_offset}
+      />
+    </section>
 
     <DropComponents.create_post_button_mobile
       current_user={@current_user}

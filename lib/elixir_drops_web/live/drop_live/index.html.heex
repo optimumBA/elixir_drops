@@ -7,14 +7,15 @@
 
   <section class="content-grid text-[#252525] relative">
     <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
-
-    <DropsListHelper.drops_list
-      drops={@streams.drops}
-      end_of_timeline?={@end_of_timeline?}
-      id="drops"
-      show_user_drops?={false}
-      timezone_offset={@timezone_offset}
-    />
+    <section class="mt-12">
+      <DropsListHelper.drops_list
+        drops={@streams.drops}
+        end_of_timeline?={@end_of_timeline?}
+        id="drops"
+        show_user_drops?={false}
+        timezone_offset={@timezone_offset}
+      />
+    </section>
 
     <button
       :if={@new_drops?}
