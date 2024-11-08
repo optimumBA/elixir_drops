@@ -268,9 +268,10 @@ defmodule ElixirDropsWeb.DropComponents do
         </p>
         <div class="flex justify-center items-center gap-x-3 mx-auto w-full">
           <button
+            id="close-editor-button"
+            phx-hook="GoBack"
             class="text-[#4f4f4f] text-sm rounded-lg w-[30%] py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
-            phx-click="close_editor"
-            phx-value-pop-up-message="edit-form-cancel-confirm"
+            phx-click={JS.dispatch("go-back")}
           >
             Close editor
           </button>

@@ -26,6 +26,7 @@ import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
 import WelcomeMessageHooks from './hooks/welcome_message'
 import BackToTopHooks from './hooks/back_to_top'
+import GoBackHooks from './hooks/go_back'
 
 let Hooks = {
   ...BackToTopHooks,
@@ -33,6 +34,7 @@ let Hooks = {
   ...DropBodyHooks,
   ...DropsContainerHooks,
   ...WelcomeMessageHooks,
+  ...GoBackHooks,
 }
 
 let csrfToken = document

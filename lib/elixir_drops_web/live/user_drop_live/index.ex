@@ -46,21 +46,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     }
   end
 
-  def handle_event(
-        "close_editor",
-        %{"pop-up-message" => pop_up_message_id},
-        socket
-      ) do
-    Logger.info("Closing editor...")
-
-    %JS{}
-    |> JS.add_class("hidden", to: "##{pop_up_message_id}")
-    |> JS.remove_class("show-pop-up", to: ".drops-container")
-    |> JS.remove_class("show-pop-up", to: ".drop-form")
-
-    {:noreply, push_navigate(socket, to: ~p"/")}
-  end
-
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
     filters = %{
       short_id: short_id,
