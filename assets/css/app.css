@@ -291,7 +291,7 @@ blockquote *:last-child {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 9;
+  z-index: 1000;
 }
 /* screenshot image generator page */
 .seo-image img {
