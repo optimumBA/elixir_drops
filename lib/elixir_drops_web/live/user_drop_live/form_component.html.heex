@@ -77,10 +77,15 @@
 
         <button
           class={[
-            "text-sm text-[#d3cffb] rounded-lg px-3 py-2 bg-blue_primary hover:opacity-80",
+            "text-sm text-[#d3cffb] rounded-lg px-3 py-2 hover:opacity-80",
+            if(!input_value(f, :title) || !input_value(f, :body),
+              do: "bg-[#9F95F7] ",
+              else: "bg-blue_primary"
+            ),
             "phx-submit-loading:opacity-80 phx-submit-loading:px-12"
           ]}
           type="submit"
+          disabled={!input_value(f, :title) || !input_value(f, :body)}
         >
           <span :if={@live_action == :new} class="phx-submit-loading:hidden">Post Drop</span>
           <span :if={@live_action == :edit} class="phx-submit-loading:hidden">Update Drop</span>
