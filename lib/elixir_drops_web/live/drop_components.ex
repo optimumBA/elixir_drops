@@ -14,8 +14,8 @@ defmodule ElixirDropsWeb.DropComponents do
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
-    <header class="header content-grid py-2 w-full relative z-30">
-      <nav class="breakout flex items-center justify-between nav-primary">
+    <header class="header  content-grid py-2 w-full fixed bg-white z-50 ">
+      <nav class="breakout flex items-center justify-between relative nav-primary">
         <div>
           <.link href={~p"/"}>
             <Icons.elixir_drops_logo class="w-32 md:w-48" />
@@ -113,7 +113,7 @@ defmodule ElixirDropsWeb.DropComponents do
   def drop(assigns) do
     ~H"""
     <div
-      class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
+      class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative  "
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
       <h1 class="font-[500] text-2xl md:text-4xl"><%= @drop.title %></h1>
@@ -188,7 +188,7 @@ defmodule ElixirDropsWeb.DropComponents do
   def user_drops_header(assigns) do
     ~H"""
     <div class="full-width" phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}>
-      <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 full-width">
+      <div class="mt-12 text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 full-width">
         <div class="flex flex-col md:flex-row items-center gap-x-3 breakout md:pl-6">
           <div>
             <img
