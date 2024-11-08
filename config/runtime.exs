@@ -229,5 +229,6 @@ if config_env() == :prod do
       "BUCKET_NAME" => aws_bucket
     },
     memory_mb: 1024,
-    token: fly_api_token
+    token: fly_api_token,
+    cpu_kind: "shared"
 end
