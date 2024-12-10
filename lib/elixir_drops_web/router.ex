@@ -13,17 +13,13 @@ defmodule ElixirDropsWeb.Router do
     plug :fetch_current_user
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
-  end
-
   scope "/", ElixirDropsWeb do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :require_authenticated_user,
       on_mount: [
         {ElixirDropsWeb.UserAuth, :ensure_authenticated},
-        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
+        {ElixirDropsWeb.LiveHelpers, :assign_timezone},
         {ElixirDropsWeb.UserAuth, :assign_current_user}
       ] do
       live "/profile", UserDropLive.Index, :index
@@ -38,7 +34,7 @@ defmodule ElixirDropsWeb.Router do
 
     live_session :default,
       on_mount: [
-        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
+        {ElixirDropsWeb.LiveHelpers, :assign_timezone},
         {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
         {ElixirDropsWeb.UserAuth, :assign_current_user}
       ] do
