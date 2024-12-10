@@ -54,7 +54,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
         <DropComponents.drop_card
           drop={drop}
           show_card_menu?={@show_user_drops?}
-          timezone_offset={@timezone_offset}
+          timezone={@timezone}
         />
       </div>
     </div>

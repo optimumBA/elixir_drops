@@ -15,7 +15,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
-    conn = put_connect_params(conn, %{"timezone_offset" => 0})
+    conn = put_connect_params(conn, %{"timezone" => "UTC"})
     user = user_fixture()
     drop = drop_fixture(user)
 

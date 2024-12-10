@@ -20,7 +20,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
         conn,
         %{
           "show_welcome_message" => "true",
-          "timezone_offset" => 0
+          "timezone" =>"UTC"
         }
       )
 

@@ -4,13 +4,13 @@ defmodule ElixirDrops.DateTimeHelperTest do
   alias ElixirDrops.DateTimeHelper
 
   describe "convert_to_relative_time/2" do
-    test "adds timezone offset and converts to relative time" do
+    test "gets relative time based on timezone" do
       now = DateTime.utc_now()
       naive_time_now = DateTime.to_naive(now)
-      timezone_offset = 3600
+      timezone = "UTC"
 
-      assert DateTimeHelper.convert_to_relative_time(naive_time_now, timezone_offset) ==
-               "in 59 minutes"
+      assert DateTimeHelper.convert_to_relative_time(naive_time_now, timezone) ==
+               "now"
     end
   end
 end

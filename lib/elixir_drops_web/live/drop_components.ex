@@ -64,7 +64,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   attr :drop, Drop, required: true
   attr :show_card_menu?, :boolean, default: false
-  attr :timezone_offset, :integer, required: true
+  attr :timezone, :integer, required: true
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
@@ -80,7 +80,7 @@ defmodule ElixirDropsWeb.DropComponents do
             />
             <p><%= @drop.user.github_username %></p>
             <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
-              Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
+              Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone) %>
             </p>
           </div>
 
@@ -107,7 +107,7 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :drop, Drop, required: true
-  attr :timezone_offset, :integer, required: true
+  attr :timezone, :integer, required: true
 
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do
@@ -126,7 +126,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <div>
           <p class="mb-1"><%= @drop.user.github_username %></p>
           <p class="text-[#696969] text-xs">
-            Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
+            Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone) %>
           </p>
         </div>
       </div>
