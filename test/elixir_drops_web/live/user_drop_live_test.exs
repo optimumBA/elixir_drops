@@ -278,12 +278,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ drop.body
       assert html =~ drop.title
 
-      # Simulate a form submission with a changed body
       live
       |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Updated body"})
       |> render_submit()
 
-      # Assert the job is enqueued when the body changes
       assert_enqueued(
         worker: ScreenshotGeneratorWorker,
         args: %{drop_id: drop.id},
