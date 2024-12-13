@@ -265,7 +265,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert path == ~p"/"
     end
 
-    test "an image upload job is enqueued when a drop is updated", %{
+    test "an image upload job is enqueued when drop body changes", %{
       conn: conn,
       drop: drop,
       user: user
@@ -278,11 +278,39 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ drop.body
       assert html =~ drop.title
 
+      # Simulate a form submission with a changed body
       live
-      |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
+      |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Updated body"})
       |> render_submit()
 
+      # Assert the job is enqueued when the body changes
       assert_enqueued(
+        worker: ScreenshotGeneratorWorker,
+        args: %{drop_id: drop.id},
+        queue: :seo_images
+      )
+    end
+
+    test "no image upload job is enqueued when drop body does not change", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+
+      assert html =~ "Edit post"
+      assert html =~ drop.body
+      assert html =~ drop.title
+
+      # Simulate a form submission with the same body
+      live
+      |> form("#drops-editor-form", drop: %{title: "New Drop title with change", body: drop.body})
+      |> render_submit()
+
+      # Assert no job is enqueued when the body remains unchanged
+      refute_enqueued(
         worker: ScreenshotGeneratorWorker,
         args: %{drop_id: drop.id},
         queue: :seo_images
