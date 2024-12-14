@@ -41,7 +41,7 @@ defmodule ElixirDropsWeb.GithubAuthController do
          {:ok, user} <- Accounts.get_or_create_user(user_params) do
       Accounts.clear_all_tokens_for_user(user)
       UserAuth.log_in_user(conn, user, github_token)
-        else
+    else
       _error ->
         redirect(conn, to: ~p"/")
     end
