@@ -264,7 +264,7 @@ blockquote *:last-child {
 
 /* Showing popup message */
 .drops-container.show-pop-up {
-  @apply bg-[#acacac] pointer-events-none z-[10];
+  @apply bg-[#acacac] z-[10];
 }
 
 .drops-container.show-pop-up .drop-card {

@@ -25,8 +25,10 @@ import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
 import WelcomeMessageHooks from './hooks/welcome_message'
+import GoBackHooks from './hooks/go_back'
 
 let Hooks = {
+  ...GoBackHooks,
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
   ...DropsContainerHooks,
