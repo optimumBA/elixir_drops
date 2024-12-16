@@ -34,9 +34,10 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
       {:ok, drop} ->
         case socket.assigns do
           %{live_action: :edit, drop: %{body: old_body}} when old_body != drop.body ->
-            enqueue_seo_screenshot_creation(drop.id)
+            enqueue_seo_screenshot_creation(drop.id, old_body, :edit)
+
           _assigns ->
-            enqueue_seo_screenshot_creation(drop.id)
+            enqueue_seo_screenshot_creation(drop.id, nil, :new)
         end
 
         {
@@ -68,8 +69,8 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     )
   end
 
-  defp enqueue_seo_screenshot_creation(drop_id) do
-    %{"drop_id" => drop_id}
+  defp enqueue_seo_screenshot_creation(drop_id, old_body, action) do
+    %{"drop_id" => drop_id, "old_body" => old_body, "action" => action}
     |> ScreenshotGeneratorWorker.new()
     |> Oban.insert()
   end
