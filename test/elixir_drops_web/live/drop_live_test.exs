@@ -275,4 +275,20 @@ defmodule ElixirDropsWeb.DropLiveTest do
                "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff...\"/>"
     end
   end
+
+  describe "close editor button" do
+    setup [:create_drops_setup]
+
+    test "clicking 'Close editor' button redirects", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, html} = live(conn, ~p"/drops/new")
+
+      live
+      |> element("#close-editor-button")
+      |> render_click()
+
+      refute html =~ "close editor"
+    end
+  end
 end

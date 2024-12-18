@@ -25,10 +25,8 @@ import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
 import WelcomeMessageHooks from './hooks/welcome_message'
-import GoBackHooks from './hooks/go_back'
 
 let Hooks = {
-  ...GoBackHooks,
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
   ...DropsContainerHooks,
@@ -65,7 +63,14 @@ let liveSocket = new LiveSocket('/live', Socket, {
 topbar.config({ barColors: { 0: '#29d' }, shadowColor: 'rgba(0, 0, 0, .3)' })
 window.addEventListener('phx:page-loading-start', (_info) => topbar.show(300))
 window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
-
+window.addEventListener('phx:close_editor', () => {
+  // Check if there is a valid history state to go back to
+  if (window.history.length > 1) {
+    window.history.back()
+  } else {
+    console.error('No history to go back to.')
+  }
+})
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 

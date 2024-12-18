@@ -54,6 +54,10 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     assign_user_drop(socket, filters)
   end
 
+  def handle_event("close_editor", _params, socket) do
+    {:noreply, push_event(socket, "close_editor", %{})}
+  end
+
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:drop, %Drop{})

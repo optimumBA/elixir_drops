@@ -272,7 +272,7 @@ defmodule ElixirDropsWeb.DropComponents do
             id="close-editor-button"
             type="button"
             class="text-[#4f4f4f] text-sm rounded-lg w-[30%] py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
-            phx-hook="GoBack"
+            phx-click="close_editor"
           >
             Close editor
           </button>
