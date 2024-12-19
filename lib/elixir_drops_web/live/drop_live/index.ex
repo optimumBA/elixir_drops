@@ -6,8 +6,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
 
-  require Logger
-
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
     if connected?(socket), do: Drops.subscribe()
@@ -18,7 +16,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:drop_filters, %{})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
-     # Add initial page number
      |> assign(:page, 1)
      |> assign(:page_title, "ElixirDrops")
      |> DropsListHelper.assign_drops()}
@@ -38,12 +35,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   def handle_event("prev-page", %{"_overran" => true}, socket) do
-    Logger.info("Overran")
-
     {
       :noreply,
       socket
-      # Reset page number
       |> assign(:page, 1)
       |> DropsListHelper.assign_drops()
     }
@@ -56,7 +50,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
       {
         :noreply,
         socket
-        # Decrement page number
         |> assign(:page, socket.assigns.page - 1)
         |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.first_drop)
       }
