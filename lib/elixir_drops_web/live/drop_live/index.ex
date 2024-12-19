@@ -6,6 +6,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
 
+  require Logger
+
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
     if connected?(socket), do: Drops.subscribe()
@@ -16,6 +18,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:drop_filters, %{})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
+     # Add initial page number
+     |> assign(:page, 1)
      |> assign(:page_title, "ElixirDrops")
      |> DropsListHelper.assign_drops()}
   end
@@ -26,21 +30,39 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
     {
       :noreply,
-      DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.last_drop)
+      socket
+      # Increment page number
+      |> assign(:page, socket.assigns.page + 1)
+      |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.last_drop)
     }
   end
 
   def handle_event("prev-page", %{"_overran" => true}, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_event("prev-page", _params, socket) do
-    filters = %{newer_than: socket.assigns.first_drop}
+    Logger.info("Overran")
 
     {
       :noreply,
-      DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.first_drop, at: 0)
+      socket
+      # Reset page number
+      |> assign(:page, 1)
+      |> DropsListHelper.assign_drops()
     }
+  end
+
+  def handle_event("prev-page", _params, socket) do
+    if socket.assigns.page > 1 do
+      filters = %{newer_than: socket.assigns.first_drop}
+
+      {
+        :noreply,
+        socket
+        # Decrement page number
+        |> assign(:page, socket.assigns.page - 1)
+        |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.first_drop)
+      }
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("refresh-drops", _params, socket) do
