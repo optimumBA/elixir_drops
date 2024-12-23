@@ -80,7 +80,7 @@ defmodule ElixirDropsWeb.DropComponents do
             />
             <p><%= @drop.user.github_username %></p>
             <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
-              Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
+              Created <%= created_at(assigns) %>
             </p>
           </div>
 
@@ -106,6 +106,19 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  @spec created_at(assigns()) :: rendered()
+  def created_at(assigns) do
+    ~H"""
+    <relative-time datetime={"#{DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset)}+00:00"}>
+      <%= Timex.format!(
+        DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset),
+        "{relative}",
+        :relative
+      ) %>
+    </relative-time>
+    """
+  end
+
   attr :drop, Drop, required: true
   attr :timezone_offset, :integer, required: true
 
@@ -126,7 +139,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <div>
           <p class="mb-1"><%= @drop.user.github_username %></p>
           <p class="text-[#696969] text-xs">
-            Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
+            Created <%= created_at(assigns) %>
           </p>
         </div>
       </div>

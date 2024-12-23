@@ -78,10 +78,14 @@ defmodule ElixirDropsWeb.DropLiveTest do
     test "show a list of drops", %{conn: conn, drop: drop, user: user} do
       {:ok, _live, html} = live(conn, ~p"/")
 
+      {:ok, time} =
+        DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+        |> Timex.format("{relative}", :relative)
+
       assert html =~ drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
-      assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+      assert html =~ time
     end
 
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
@@ -173,11 +177,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
+      {:ok, time} =
+        DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+        |> Timex.format("{relative}", :relative)
+
       assert html =~ ~r(<p>Drop body text...</p>)
       assert html =~ drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
-      assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+      assert html =~ time
     end
 
     test "user redirected to home page when drop does not exist", %{conn: conn} do
