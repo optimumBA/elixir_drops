@@ -9,6 +9,8 @@ defmodule ElixirDropsWeb.UserAuth do
   alias ElixirDrops.Accounts
   alias ElixirDrops.Accounts.User
 
+  require Logger 
+
   @type plug_conn :: Plug.Conn.t()
 
   @max_age 60 * 60 * 24 * 60
@@ -213,6 +215,7 @@ defmodule ElixirDropsWeb.UserAuth do
   """
   @spec require_authenticated_user(plug_conn(), map()) :: plug_conn()
   def require_authenticated_user(conn, _opts) do
+   Logger.info("===============#{inspect(conn.assigns[:current_user])}====================")
     if conn.assigns[:current_user] do
       conn
     else
