@@ -80,7 +80,7 @@ defmodule ElixirDropsWeb.DropComponents do
             />
             <p><%= @drop.user.github_username %></p>
             <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
-              Created <%= created_at(assigns) %>
+              Created <.created_at drop={@drop} timezone_offset={@timezone_offset} />
             </p>
           </div>
 
@@ -139,7 +139,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <div>
           <p class="mb-1"><%= @drop.user.github_username %></p>
           <p class="text-[#696969] text-xs">
-            Created <%= created_at(assigns) %>
+            Created <.created_at drop={@drop} timezone_offset={@timezone_offset} />
           </p>
         </div>
       </div>
