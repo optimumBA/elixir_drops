@@ -9,8 +9,6 @@ defmodule ElixirDropsWeb.UserAuth do
   alias ElixirDrops.Accounts
   alias ElixirDrops.Accounts.User
 
-  require Logger
-
   @type plug_conn :: Plug.Conn.t()
 
   @max_age 60 * 60 * 24 * 60
