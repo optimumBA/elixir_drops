@@ -79,7 +79,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, _live, html} = live(conn, ~p"/")
 
       {:ok, time} =
-        DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+        drop.inserted_at
+        |> DateTimeHelper.convert_to_relative_time(0)
         |> Timex.format("{relative}", :relative)
 
       assert html =~ drop.title
@@ -178,7 +179,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       {:ok, time} =
-        DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+        drop.inserted_at
+        |> DateTimeHelper.convert_to_relative_time(0)
         |> Timex.format("{relative}", :relative)
 
       assert html =~ ~r(<p>Drop body text...</p>)

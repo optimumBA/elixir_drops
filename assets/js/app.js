@@ -25,8 +25,8 @@ import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
 import WelcomeMessageHooks from './hooks/welcome_message'
-import '@github/relative-time-element';
- 
+import '@github/relative-time-element'
+
 let Hooks = {
   ...CopyToClipboardHooks,
   ...DropBodyHooks,

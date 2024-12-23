@@ -12,11 +12,9 @@ defmodule ElixirDrops.DateTimeHelper do
       "5 years ago"
 
   """
-  @spec convert_to_relative_time(NaiveDateTime.t(), integer()) :: String.t()
+  @spec convert_to_relative_time(NaiveDateTime.t(), integer()) :: NaiveDateTime.t()
   def convert_to_relative_time(time, timezone_offset) do
-    created_at_time =
-      time
-      |> NaiveDateTime.add(timezone_offset, :second)
+    created_at_time = NaiveDateTime.add(time, timezone_offset, :second)
 
     created_at_time
   end
