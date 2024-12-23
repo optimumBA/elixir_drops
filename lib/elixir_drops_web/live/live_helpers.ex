@@ -5,7 +5,6 @@ defmodule ElixirDropsWeb.LiveHelpers do
   import Phoenix.Component
 
   @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t()) :: {:cont, map}
-  @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t()) :: {:cont, map}
   def on_mount(:assign_timezone_offset, _params, _session, socket) do
     timezone_offset =
       if Map.has_key?(socket.assigns, :timezone_offset) do
@@ -13,7 +12,7 @@ defmodule ElixirDropsWeb.LiveHelpers do
       else
         0
       end
-  
+
     {:cont, assign(socket, :timezone_offset, timezone_offset)}
   end
 
