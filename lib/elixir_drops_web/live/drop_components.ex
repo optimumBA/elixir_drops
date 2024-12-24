@@ -107,9 +107,15 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   defp created_at(assigns) do
+    assigns =
+      assign(assigns,
+        adjusted_time:
+          DateTimeHelper.apply_timezone_offset(assigns.drop.inserted_at, assigns.timezone_offset)
+      )
+
     ~H"""
-    <relative-time datetime={"#{adjusted_time=DateTimeHelper.apply_timezone_offset(@drop.inserted_at, @timezone_offset)}+00:00"}>
-      <%= Timex.format!(adjusted_time, "{relative}", :relative) %>
+    <relative-time datetime={"#{@adjusted_time}+00:00"}>
+      <%= @adjusted_time %>
     </relative-time>
     """
   end
