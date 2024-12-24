@@ -80,7 +80,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, time} =
         drop.inserted_at
-        |> DateTimeHelper.convert_to_relative_time(0)
+        |> DateTimeHelper.apply_timezone_offset(0)
         |> Timex.format("{relative}", :relative)
 
       assert html =~ drop.title
@@ -180,7 +180,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, time} =
         drop.inserted_at
-        |> DateTimeHelper.convert_to_relative_time(0)
+        |> DateTimeHelper.apply_timezone_offset(0)
         |> Timex.format("{relative}", :relative)
 
       assert html =~ ~r(<p>Drop body text...</p>)

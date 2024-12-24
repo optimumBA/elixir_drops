@@ -15,7 +15,7 @@ defmodule ElixirDropsWeb.LiveHelpers do
           socket.assigns.timezone_offset
 
         true ->
-          timezone_offset = 0
+          0
       end
 
     {:cont, assign(socket, :timezone_offset, timezone_offset)}

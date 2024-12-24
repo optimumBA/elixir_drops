@@ -15,6 +15,8 @@
 //     import "some-package"
 //
 
+import '@github/relative-time-element'
+
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import 'phoenix_html'
 // Establish Phoenix Socket and LiveView configuration.
@@ -25,7 +27,6 @@ import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
 import WelcomeMessageHooks from './hooks/welcome_message'
-import '@github/relative-time-element'
 
 let Hooks = {
   ...CopyToClipboardHooks,
