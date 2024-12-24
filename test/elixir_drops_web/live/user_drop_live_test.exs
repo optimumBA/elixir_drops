@@ -289,6 +289,30 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
     end
 
+    test "an image upload job is not enqueued when drop body does not changed", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+
+      assert html =~ "Edit post"
+      assert html =~ drop.body
+      assert html =~ drop.title
+
+      live
+      |> form("#drops-editor-form", drop: %{title: "New Drop title"})
+      |> render_submit()
+
+      refute_enqueued(
+        worker: ScreenshotGeneratorWorker,
+        args: %{drop_id: drop.id},
+        queue: :seo_images
+      )
+    end
+
     test "unauthorized users are redirected", %{conn: conn, drop: drop} do
       assert {:error, {:redirect, %{to: path, flash: flash}}} =
                live(conn, ~p"/drops/#{drop.short_id}/edit")

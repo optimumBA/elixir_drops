@@ -13,6 +13,10 @@ defmodule ElixirDropsWeb.Router do
     plug :fetch_current_user
   end
 
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
+
   scope "/", ElixirDropsWeb do
     pipe_through [:browser, :require_authenticated_user]
 

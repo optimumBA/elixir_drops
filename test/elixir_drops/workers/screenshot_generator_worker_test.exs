@@ -101,7 +101,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       user: user
     } do
       updated_body = ~S"""
-      This is the change. Lorem ipsum odor amet, consectetuer adipiscing elit. Habitant cras lacinia pellentesque potenti faucibus quam turpis. \n```go\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"Hello, 世界\")\n}\n```\n Cursus vestibulum lobortis lectus nam, nec ullamcorper pellentesque. \n```js\nconst new = () => {\n    console.log(\"js\")\n}\n```\nNunc dignissim magna dapibus mauris malesuada duis. Vivamus augue risus volutpat lacus dolor.\n
+      Lorem ipsum odor amet, consectetuer adipiscing elit. Habitant cras lacinia pellentesque potenti faucibus quam turpis. \n```go\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"Hello, 世界\")\n}\n```\n Cursus vestibulum lobortis lectus nam, nec ullamcorper pellentesque. \n```js\nconst new = () => {\n    console.log(\"js\")\n}\n```\nNunc dignissim magna dapibus mauris malesuada duis. Vivamus augue risus volutpat lacus dolor.\n Small change.
       """
 
       # Simulate drop body update with a changed code block
@@ -115,7 +115,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
                })
     end
 
-    test "does not create  screenshot when the title changes", %{
+    test "does not create screenshot when the title changes", %{
       drop: drop,
       user: user
     } do
