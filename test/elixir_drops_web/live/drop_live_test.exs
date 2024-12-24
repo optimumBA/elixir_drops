@@ -282,13 +282,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
     test "clicking 'Close editor' button redirects", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, html} = live(conn, ~p"/drops/new")
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      live
-      |> element("#close-editor-button")
-      |> render_click()
-
-      refute html =~ "close editor"
+      refute live
+             |> element("#close-editor-button")
+             |> render_click() =~ "close editor"
     end
   end
 end
