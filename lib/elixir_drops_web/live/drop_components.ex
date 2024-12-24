@@ -115,7 +115,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
     ~H"""
     <relative-time datetime={"#{@adjusted_time}+00:00"}>
-      <%= @adjusted_time %>
+      <%= Timex.format!(@adjusted_time, "{relative}", :relative) %>
     </relative-time>
     """
   end
