@@ -9,13 +9,11 @@ defmodule ElixirDrops.DateTimeHelper do
   ## Examples
 
       iex> ElixirDrops.DateTimeHelper.apply_timezone_offset(~N[2019-01-01 00:00:00], 3600)
-      "5 years ago"
+      ~N[2019-01-01 01:00:00]
 
   """
   @spec apply_timezone_offset(NaiveDateTime.t(), integer()) :: NaiveDateTime.t()
   def apply_timezone_offset(time, timezone_offset) do
-    created_at_time = NaiveDateTime.add(time, timezone_offset, :second)
-
-    created_at_time
+    NaiveDateTime.add(time, timezone_offset, :second)
   end
 end
