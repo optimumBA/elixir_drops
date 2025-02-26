@@ -173,13 +173,15 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       :if={@condition}
-      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width welcome-message"
+      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 pb-6 full-width welcome-message px-12"
       id="welcome-message"
       phx-hook="WelcomeMessage"
     >
-      <button class="ml-auto breakout" phx-click={hide_welcome_message()}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5" />
-      </button>
+      <div class="w-full flex justify-end items-center">
+        <button class="ml-auto breakout" phx-click={hide_welcome_message()}>
+          <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+        </button>
+      </div>
 
       <h2 class="breakout font-[500] text-[1.15rem] tracking-wide mb-3 md:ml-3">
         Welcome to ElixirDrops!

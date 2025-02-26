@@ -24,7 +24,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
       phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
       phx-page-loading
       class={[
-        "grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 py-8 auto-rows-auto"
+        "grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 py-8 auto-rows-auto px-12"
       ]}
     >
       <div
