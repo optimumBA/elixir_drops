@@ -6,6 +6,7 @@ defmodule ElixirDropsWeb.DropComponents do
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDropsWeb.Icons
 
   @type assigns :: map()
@@ -14,7 +15,7 @@ defmodule ElixirDropsWeb.DropComponents do
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
-    <header class="header content-grid py-2 w-full relative z-30">
+    <header class="header px-10 py-2 w-full relative z-30">
       <nav class="breakout flex items-center justify-between nav-primary">
         <div>
           <.link href={~p"/"}>
@@ -69,8 +70,21 @@ defmodule ElixirDropsWeb.DropComponents do
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
     ~H"""
-    <div class="drop-card bg-[#f6f6f6] px-6 md:px-4 py-6 md:py-8 rounded-lg shadow-md shadow-[#bebbc2] relative">
-      <div>
+    <div class="grid space-y-5 bg-white px-6 md:px-6 py-6 md:py-8 rounded-[16px]  relative border border-[#CBCBCB]">
+      <div :if={get_code(@drop)} class="seo-img" id="drop-body" phx-hook="DropBodyContainer">
+        <div class="rounded-t-2xl bg-[#252525] py-5"></div>
+        <%= to_html(get_code(@drop)) %>
+      </div>
+      <div class="grid space-y-5">
+        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
+        <div>
+          <%= if String.length(get_text(@drop.body)) > 100 do %>
+            <%= String.slice(get_text(@drop.body), 0, 100) <> "..." %>
+          <% else %>
+            <%= get_text(@drop.body) %>
+          <% end %>
+        </div>
+
         <div class="flex justify-between">
           <div class="flex gap-1 md:gap-2 items-center">
             <img
@@ -97,8 +111,6 @@ defmodule ElixirDropsWeb.DropComponents do
             <.drop_card_action_default id={@drop.id} short_id={@drop.short_id} />
           <% end %>
         </div>
-
-        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
       </div>
 
       <.drop_card_menu id={@drop.id} short_id={@drop.short_id} />
@@ -500,6 +512,16 @@ defmodule ElixirDropsWeb.DropComponents do
     |> JS.remove_class("show-pop-up", to: ".drop-form")
   end
 
+  @spec get_text(String.t()) :: String.t()
+  def get_text(markdown) do
+    remove_code_blocks(markdown)
+  end
+
+  @spec remove_code_blocks(String.t()) :: String.t()
+  defp remove_code_blocks(markdown) do
+    Regex.replace(~r/```[^`]*```/s, markdown, "")
+  end
+
   @spec to_html(binary()) :: Phoenix.HTML.safe()
   def to_html(markdown) do
     markdown
@@ -526,5 +548,31 @@ defmodule ElixirDropsWeb.DropComponents do
       ]
     )
     |> raw()
+  end
+
+  @spec get_code(map()) :: String.t() | nil
+  def get_code(drop) do
+    case maybe_drop_has_code(drop) do
+      {:cancel, "No code block found"} ->
+        nil
+
+      {:ok} ->
+        markdown_regex = ~r/```(?:\w+\n)?(.+?)```/s
+
+        case Regex.run(markdown_regex, drop.body, capture: :first) do
+          [code_block] -> code_block
+          nil -> nil
+        end
+    end
+  end
+
+  defp maybe_drop_has_code(drop) do
+    case ScreenshotGeneratorWorker.check_for_code_block(drop.body) do
+      :ok ->
+        {:ok}
+
+      _error ->
+        {:cancel, "No code block found"}
+    end
   end
 end

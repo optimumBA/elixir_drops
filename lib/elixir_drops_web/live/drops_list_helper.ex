@@ -24,13 +24,13 @@ defmodule ElixirDropsWeb.DropsListHelper do
       phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
       phx-page-loading
       class={[
-        "grid gap-y-2 md:gap-y-5 py-8"
+        "grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 py-8 auto-rows-auto"
       ]}
     >
       <div
         :if={@show_user_drops?}
         id="drops-empty"
-        class="drops-empty only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+        class="drops-empty only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center md:col-span-3"
       >
         <div class="flex flex-col items-center justify-center">
           <p>You haven't created any post yet.</p>
@@ -48,7 +48,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
         :for={{dom_id, drop} <- @drops}
         id={dom_id}
         phx-click={JS.navigate(~p"/d/#{drop.short_id}")}
-        class="last:mb-6 cursor-pointer"
+        class="last:mb-6 cursor-pointer self-start"
         role="link"
       >
         <DropComponents.drop_card

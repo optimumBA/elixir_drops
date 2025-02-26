@@ -292,3 +292,29 @@ blockquote *:last-child {
 .seo-image pre {
   @apply text-[1.1rem] font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
 }
+
+/* code image on drops page */
+.seo-img {
+  @apply rounded-b-2xl overflow-hidden text-sm;
+}
+
+.seo-img pre.autumn-hl {
+  @apply font-lotion text-[#303030];
+}
+
+.seo-img code {
+  @apply leading-none tracking-tight px-10;
+}
+
+.seo-img pre.autumn-hl {
+  margin: 0;
+  padding: 2rem 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  width: 100%;
+  text-align: left;
+}
+
+.seo-img pre.autumn-hl code.language-plaintext {
+  display: block;
+}
