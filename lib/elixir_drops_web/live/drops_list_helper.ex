@@ -23,9 +23,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
       phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
       phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
       phx-page-loading
-      class={[
-        "grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 py-8 auto-rows-auto px-12"
-      ]}
+      class="wrapper masonry py-8 gap-5"
     >
       <div
         :if={@show_user_drops?}
@@ -48,7 +46,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
         :for={{dom_id, drop} <- @drops}
         id={dom_id}
         phx-click={JS.navigate(~p"/d/#{drop.short_id}")}
-        class="last:mb-6 cursor-pointer self-start"
+        class="last:mb-6 cursor-pointer"
         role="link"
       >
         <DropComponents.drop_card

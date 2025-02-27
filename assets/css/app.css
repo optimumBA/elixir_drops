@@ -318,3 +318,28 @@ blockquote *:last-child {
 .seo-img pre.autumn-hl code.language-plaintext {
   display: block;
 }
+
+.masonry {
+  --gutter: 1rem;
+  column-gap: var(--gutter);
+  column-count: 1;
+}
+
+@media (min-width: 768px) {
+  .masonry {
+    column-count: 3;
+  }
+}
+
+.masonry > div {
+  break-inside: avoid;
+  margin-bottom: var(--gutter);
+  display: inline-block;
+  width: 100%;
+}
+
+.wrapper {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
