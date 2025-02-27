@@ -295,20 +295,19 @@ blockquote *:last-child {
 
 /* code image on drops page */
 .seo-img {
-  @apply rounded-b-2xl overflow-hidden text-sm;
+  @apply rounded-2xl overflow-hidden text-sm bg-red-500;
 }
 
 .seo-img pre.autumn-hl {
-  @apply font-lotion text-[#303030];
+  @apply font-lotion;
 }
 
 .seo-img code {
-  @apply leading-none tracking-tight px-10;
+  @apply leading-none tracking-tight px-10 opacity-[90%] bg-[#303030] text-[#EEEEEE];
 }
 
 .seo-img pre.autumn-hl {
   margin: 0;
-  padding: 2rem 0;
   white-space: pre-wrap;
   word-break: break-word;
   width: 100%;
@@ -317,6 +316,8 @@ blockquote *:last-child {
 
 .seo-img pre.autumn-hl code.language-plaintext {
   display: block;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .masonry {
