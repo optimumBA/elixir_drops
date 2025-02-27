@@ -327,19 +327,30 @@ blockquote *:last-child {
 
 @media (min-width: 768px) {
   .masonry {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry {
     column-count: 3;
   }
 }
 
+/*@media (min-width: 768px) {*/
+/*  .masonry {*/
+/*    column-count: 3;*/
+/*  }*/
+/*}*/
+
 .masonry > div {
   break-inside: avoid;
   margin-bottom: var(--gutter);
-  display: inline-block;
+  /*display: inline-block;*/
+  display: grid;
   width: 100%;
 }
 
 .wrapper {
-  max-width: 80rem;
   margin-inline: auto;
-  padding-inline: var(--gutter);
 }

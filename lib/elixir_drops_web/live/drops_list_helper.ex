@@ -23,7 +23,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
       phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
       phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
       phx-page-loading
-      class="wrapper masonry py-8 gap-5"
+      class="wrapper masonry py-8 md:px-12 px-2"
     >
       <div
         :if={@show_user_drops?}
