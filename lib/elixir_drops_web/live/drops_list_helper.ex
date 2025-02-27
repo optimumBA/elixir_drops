@@ -17,14 +17,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @spec drops_list(assigns()) :: rendered()
   def drops_list(assigns) do
     ~H"""
-    <div
-      id={@id}
-      phx-update="stream"
-      phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
-      phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
-      phx-page-loading
-      class="wrapper masonry py-8 md:px-12 px-2"
-    >
+    <div class="py-8 md:px-12 px-2">
       <div
         :if={@show_user_drops?}
         id="drops-empty"
@@ -41,19 +34,27 @@ defmodule ElixirDropsWeb.DropsListHelper do
           </.link>
         </div>
       </div>
-
       <div
-        :for={{dom_id, drop} <- @drops}
-        id={dom_id}
-        phx-click={JS.navigate(~p"/d/#{drop.short_id}")}
-        class="last:mb-6 cursor-pointer"
-        role="link"
+        id={@id}
+        phx-update="stream"
+        phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
+        phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
+        phx-page-loading
+        class="wrapper masonry"
       >
-        <DropComponents.drop_card
-          drop={drop}
-          show_card_menu?={@show_user_drops?}
-          timezone_offset={@timezone_offset}
-        />
+        <div
+          :for={{dom_id, drop} <- @drops}
+          id={dom_id}
+          phx-click={JS.navigate(~p"/d/#{drop.short_id}")}
+          class="last:mb-6 cursor-pointer"
+          role="link"
+        >
+          <DropComponents.drop_card
+            drop={drop}
+            show_card_menu?={@show_user_drops?}
+            timezone_offset={@timezone_offset}
+          />
+        </div>
       </div>
     </div>
     """

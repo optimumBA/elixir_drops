@@ -70,12 +70,12 @@ defmodule ElixirDropsWeb.DropComponents do
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
     ~H"""
-    <div class="grid space-y-5 bg-white px-6 md:px-6 py-6 md:py-8 rounded-[16px]  relative border border-[#CBCBCB]">
+    <div class="grid space-y-5 bg-white px-6 md:px-6 py-6 md:py-8 rounded-[16px] relative border border-[#CBCBCB] hover:bg-[#CBCBCB]">
       <div :if={get_code(@drop)} class="seo-img" id="drop-body" phx-hook="DropBodyContainer">
         <div class="rounded-t-2xl bg-[#252525] py-5"></div>
         <%= to_html(get_code(@drop)) %>
       </div>
-      <div class="grid space-y-5">
+      <div class="grid space-y-5 text-[#252525]">
         <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
         <div>
           <%= if String.length(get_text(@drop.body)) > 100 do %>
@@ -92,8 +92,8 @@ defmodule ElixirDropsWeb.DropComponents do
               alt={@drop.user.github_username}
               class="rounded-full h-8 md:h-10 w-8 md:w-10 object-cover"
             />
-            <p><%= @drop.user.github_username %></p>
-            <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
+            <p class="text-[#252525]"><%= @drop.user.github_username %></p>
+            <p class="text-[#575757] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
               Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
             </p>
           </div>
@@ -202,7 +202,7 @@ defmodule ElixirDropsWeb.DropComponents do
   def user_drops_header(assigns) do
     ~H"""
     <div class="full-width" phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}>
-      <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 full-width">
+      <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 md:pl-6">
         <div class="flex flex-col md:flex-row items-center gap-x-3 breakout md:pl-6">
           <div>
             <img
@@ -217,7 +217,7 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
       </div>
 
-      <nav class="full-width bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
+      <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary grid justify-center md:justify-start">
         <ul class="flex" id="secondary-nav-links">
           <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center">
             <.link href={~p"/profile"}>

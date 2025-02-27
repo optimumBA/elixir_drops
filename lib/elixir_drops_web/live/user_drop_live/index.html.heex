@@ -11,7 +11,7 @@
     />
   </section>
 
-  <section :if={@live_action == :index} class="content-grid text-[#252525] relative user-drops">
+  <section :if={@live_action == :index} class="text-[#252525] relative user-drops">
     <DropComponents.user_drops_header current_user={@current_user} />
 
     <DropsListHelper.drops_list
