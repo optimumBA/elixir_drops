@@ -295,15 +295,11 @@ blockquote *:last-child {
 
 /* code image on drops page */
 .seo-img {
-  @apply rounded-2xl overflow-hidden text-sm bg-red-500;
-}
-
-.seo-img pre.autumn-hl {
-  @apply font-lotion;
+  @apply rounded-2xl overflow-hidden;
 }
 
 .seo-img code {
-  @apply leading-none tracking-tight px-10 opacity-[90%] bg-[#303030] text-[#EEEEEE];
+  @apply leading-[18px] tracking-[0.5%] px-10  bg-[#303030] text-[#EEEEEE] font-lotion text-[14px] trim-cap font-[400];
 }
 
 .seo-img pre.autumn-hl {
@@ -311,7 +307,6 @@ blockquote *:last-child {
   white-space: pre-wrap;
   word-break: break-word;
   width: 100%;
-  text-align: left;
 }
 
 .seo-img pre.autumn-hl code.language-plaintext {
