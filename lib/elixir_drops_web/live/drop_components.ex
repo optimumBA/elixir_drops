@@ -554,27 +554,12 @@ defmodule ElixirDropsWeb.DropComponents do
 
   @spec get_code(map()) :: String.t() | nil
   def get_code(drop) do
-    case maybe_drop_has_code(drop) do
-      {:cancel, "No code block found"} ->
+    case ScreenshotGeneratorWorker.check_for_code_block(drop.body) do
+      {:error, "No code block found"} ->
         nil
 
-      {:ok} ->
-        markdown_regex = ~r/```(?:\w+\n)?(.+?)```/s
-
-        case Regex.run(markdown_regex, drop.body, capture: :first) do
-          [code_block] -> code_block
-          nil -> nil
-        end
-    end
-  end
-
-  defp maybe_drop_has_code(drop) do
-    case ScreenshotGeneratorWorker.check_for_code_block(drop.body) do
-      :ok ->
-        {:ok}
-
-      _error ->
-        {:cancel, "No code block found"}
+      {:ok, code_block} ->
+        code_block
     end
   end
 end
