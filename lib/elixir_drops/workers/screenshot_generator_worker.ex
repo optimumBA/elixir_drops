@@ -24,7 +24,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp maybe_create_screenshot(args) do
     with {:ok, drop} <- get_drop(args["drop_id"]),
-         :ok <- check_for_code_block(drop.body) do
+         {:ok, _code_block} <- check_for_code_block(drop.body) do
       drop_screenshot(drop)
     else
       _error ->
