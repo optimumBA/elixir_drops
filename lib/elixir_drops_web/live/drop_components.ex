@@ -552,8 +552,7 @@ defmodule ElixirDropsWeb.DropComponents do
     |> raw()
   end
 
-  @spec get_code(map()) :: String.t() | nil
-  def get_code(drop) do
+  defp get_code(drop) do
     case ScreenshotGeneratorWorker.check_for_code_block(drop.body) do
       {:error, "No code block found"} ->
         nil
