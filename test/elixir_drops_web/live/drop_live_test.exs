@@ -84,6 +84,22 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
     end
 
+    # test "drop card displays code block when present", %{conn: conn, user: user} do
+    #   drop_with_code = drop_fixture(user, %{body: "```elixir\nIO.puts 'test'\n```\nSome text"})
+    #   IO.inspect(drop_with_code, label: "HERE IS THE DROP WITH CODE")
+    #   {:ok, _live, html} = live(conn, ~p"/")
+    #   assert html =~ ~r(<div class="seo-img")
+    #   assert html =~ ~r(<code class="elixir")
+    # end
+
+    # test "drop card truncates long text", %{conn: conn, user: user} do
+    #   long_body = String.duplicate("a", 150)
+    #   drop = drop_fixture(user, %{body: long_body})
+    #   {:ok, _live, html} = live(conn, ~p"/")
+    #   truncated_text = String.slice(long_body, 0, 100) <> "..."
+    #   assert html =~ truncated_text
+    # end
+
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
       {:ok, live, _html} = live(conn, ~p"/")
 
