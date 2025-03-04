@@ -16,6 +16,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:drop_filters, %{})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
+     |> assign(:page, 1)
      |> assign(:page_title, "ElixirDrops")
      |> DropsListHelper.assign_drops()}
   end
@@ -26,12 +27,17 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
     {
       :noreply,
-      DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.last_drop)
+      socket
+      |> assign(:page, socket.assigns.page + 1)
+      |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.last_drop)
     }
   end
 
   def handle_event("prev-page", %{"_overran" => true}, socket) do
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> assign(:page, 1)
+     |> DropsListHelper.assign_drops()}
   end
 
   def handle_event("prev-page", _params, socket) do
@@ -39,7 +45,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
     {
       :noreply,
-      DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.first_drop, at: 0)
+      socket
+      |> assign(:page, max(socket.assigns.page - 1, 1))
+      |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.first_drop, at: 0)
     }
   end
 

@@ -3,6 +3,8 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
   use ElixirDropsWeb, :html
 
+  import Phoenix.LiveView
+
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.DropComponents
@@ -20,11 +22,13 @@ defmodule ElixirDropsWeb.DropsListHelper do
     <div
       id={@id}
       phx-update="stream"
-      phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
-      phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
+      phx-viewport-top={@page > 1 && "prev-page"}
+      phx-viewport-bottom={!@end_of_timeline? && "next-page"}
       phx-page-loading
       class={[
-        "grid gap-y-2 md:gap-y-5 py-8"
+        "grid gap-y-2 md:gap-y-5",
+        if(@page == 1, do: "pt-10", else: "pt-[calc(100vh)]"),
+        if(@end_of_timeline?, do: "pb-10", else: "pb-[calc(100vh)]")
       ]}
     >
       <div
@@ -72,6 +76,8 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: 10)
     |> assign(:first_drop, first_drop)
     |> assign(:last_drop, last_drop)
+    |> assign(:page, 1)
+    |> assign(:end_of_timeline?, Enum.empty?(drops))
   end
 
   @spec maybe_insert_drops(socket(), filters(), drop(), opts()) :: socket()
@@ -91,7 +97,8 @@ defmodule ElixirDropsWeb.DropsListHelper do
     last_drop = List.last(drops)
 
     socket
-    |> Phoenix.LiveView.stream(:drops, drops, opts)
+    |> stream(:drops, drops, opts)
+    |> assign(:end_of_timeline?, Enum.empty?(drops))
     |> assign(:first_drop, first_drop)
     |> assign(:last_drop, last_drop)
   end
