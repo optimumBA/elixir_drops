@@ -293,26 +293,13 @@ blockquote *:last-child {
   @apply text-[1.1rem] font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
 }
 
-/* code image on drops page */
-.seo-img {
-  @apply rounded-2xl overflow-hidden;
+/*new screenshot styling*/
+.drop-image pre {
+  background: #303030 !important;
 }
 
-.seo-img code {
-  @apply leading-[18px] tracking-[0.5%] px-10  bg-[#303030] text-[#EEEEEE] font-lotion text-[14px] font-[400];
-}
-
-.seo-img pre.autumn-hl {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  width: 100%;
-}
-
-.seo-img pre.autumn-hl code.language-plaintext {
-  display: block;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+.drop-image code {
+  @apply tracking-widest font-lotion;
 }
 
 .masonry {
@@ -333,20 +320,9 @@ blockquote *:last-child {
   }
 }
 
-/*@media (min-width: 768px) {*/
-/*  .masonry {*/
-/*    column-count: 3;*/
-/*  }*/
-/*}*/
-
 .masonry > div {
   break-inside: avoid;
   margin-bottom: var(--gutter);
-  /*display: inline-block;*/
   display: grid;
   width: 100%;
-}
-
-.wrapper {
-  margin-inline: auto;
 }

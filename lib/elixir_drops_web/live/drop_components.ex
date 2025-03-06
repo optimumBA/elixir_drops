@@ -6,6 +6,7 @@ defmodule ElixirDropsWeb.DropComponents do
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDropsWeb.Icons
 
@@ -69,12 +70,21 @@ defmodule ElixirDropsWeb.DropComponents do
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
+    image = get_image_url(assigns.drop)
+
+    is_code_present? =
+      case ScreenshotGeneratorWorker.check_for_code_block(assigns.drop.body) do
+        {:error, "No code block found"} -> false
+        {:ok, code_block} -> true
+      end
+
     ~H"""
     <div class="grid space-y-5 bg-white px-6 md:px-6 py-6 md:py-8 rounded-[16px] relative border border-[#CBCBCB] hover:bg-[#CBCBCB]">
-      <div :if={get_code(@drop)} class="seo-img" id="drop-body" phx-hook="DropBodyContainer">
-        <div class="bg-[#252525] py-5"></div>
-        <%= to_html(get_code(@drop)) %>
+      <div :if={is_code_present?} class="w-full">
+        <div :if={image} class="bg-[#252525] py-5 rounded-t-2xl"></div>
+        <img src={image} class="object-cover rounded-b-2xl" />
       </div>
+
       <div class="grid space-y-5 text-[#252525]">
         <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
         <div>
@@ -552,13 +562,10 @@ defmodule ElixirDropsWeb.DropComponents do
     |> raw()
   end
 
-  defp get_code(drop) do
-    case ScreenshotGeneratorWorker.check_for_code_block(drop.body) do
-      {:error, "No code block found"} ->
-        nil
-
-      {:ok, code_block} ->
-        code_block
+  defp get_image_url(drop) do
+    case Client.get_image(drop) do
+      {:ok, url} -> url
+      _error -> nil
     end
   end
 end

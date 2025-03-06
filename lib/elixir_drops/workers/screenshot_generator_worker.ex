@@ -64,9 +64,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
             args: [
               "--headless",
               "--no-sandbox",
-              "window-size=1280,800",
-              "--fullscreen",
               "--disable-gpu",
+              "--fullscreen",
               "--disable-dev-shm-usage"
             ]
           }
@@ -75,13 +74,26 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     url = build_url_with_auth(drop)
 
-    %Wallaby.Session{screenshots: [screenshot]} =
-      session
-      |> Browser.visit(url)
-      |> Browser.take_screenshot()
+    code_block_size =
+      case check_for_code_block(drop.body) do
+        {:ok, code_block} ->
+          lines = length(String.split(code_block, ~r/\n/))
+          # Adjust based on your CSS padding/margins
+          base_height = 100
+          # Typical line height for code
+          line_height = 24
+          size = base_height + line_height * lines
+          ceil(min(1100, size) / 100) * 100
 
+        {:error, "No code block found"} ->
+          0
+      end
+
+    resized_window_session = Browser.resize_window(session, 1000, code_block_size)
+    new_session = Browser.visit(resized_window_session, url)
+
+    %Wallaby.Session{screenshots: [screenshot]} = Browser.take_screenshot(new_session)
     Wallaby.end_session(session)
-
     {:ok, screenshot}
   end
 
