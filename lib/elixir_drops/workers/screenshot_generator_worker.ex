@@ -93,7 +93,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     new_session = Browser.visit(resized_window_session, url)
 
     %Wallaby.Session{screenshots: [screenshot]} = Browser.take_screenshot(new_session)
-    Wallaby.end_session(session)
+    Wallaby.end_session(new_session)
     {:ok, screenshot}
   end
 
