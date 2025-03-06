@@ -161,6 +161,25 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html_3 =~ last_drop.id
       refute html_3 =~ first_drop.id
     end
+
+    test "user can navigate their own drops with infinite scroll and handle overrun condition", %{
+      conn: conn,
+      user: user
+    } do
+      drops = create_multiple_drops(user, 25)
+
+      first_drop = List.first(drops)
+      last_drop = List.last(drops)
+
+      {:ok, live, html} = live(conn, ~p"/")
+      assert html =~ last_drop.id
+      refute html =~ first_drop.id
+
+      assert html_after_overrun = render_hook(live, "prev-page", %{"_overran" => true})
+
+      refute html_after_overrun =~ first_drop.id
+      assert html_after_overrun =~ last_drop.id
+    end
   end
 
   describe "/d/:short_id" do
