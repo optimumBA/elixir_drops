@@ -73,7 +73,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
     last_drop = List.last(drops)
 
     socket
-    |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: 10)
+    |> stream(:drops, drops, reset: true, limit: 10)
     |> assign(:first_drop, first_drop)
     |> assign(:last_drop, last_drop)
     |> assign(:page, 1)

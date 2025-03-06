@@ -41,14 +41,18 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   def handle_event("prev-page", _params, socket) do
-    filters = %{newer_than: socket.assigns.first_drop}
+    if socket.assigns.page > 1 && socket.assigns.first_drop do
+      filters = %{newer_than: socket.assigns.first_drop}
 
-    {
-      :noreply,
-      socket
-      |> assign(:page, max(socket.assigns.page - 1, 1))
-      |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.first_drop, at: 0)
-    }
+      {
+        :noreply,
+        socket
+        |> assign(:page, max(socket.assigns.page - 1, 1))
+        |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.first_drop, at: 0)
+      }
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("refresh-drops", _params, socket) do
