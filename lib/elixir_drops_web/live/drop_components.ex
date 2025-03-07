@@ -72,11 +72,16 @@ defmodule ElixirDropsWeb.DropComponents do
   def drop_card(assigns) do
     image = get_image_url(assigns.drop)
 
-    is_code_present? =
+   is_code_present? =
       case ScreenshotGeneratorWorker.check_for_code_block(assigns.drop.body) do
         {:error, "No code block found"} -> false
-        {:ok, code_block} -> true
+        {:ok, _code_block} -> true
       end
+
+    assigns =
+      assigns
+      |> assign(:is_code_present?, is_code_present?)
+      |> assign(:image, image)
 
     ~H"""
     <div class="grid space-y-5 bg-white px-6 md:px-6 py-6 md:py-8 rounded-[16px] relative border border-[#CBCBCB] hover:bg-[#CBCBCB]">
