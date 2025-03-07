@@ -26,9 +26,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
       phx-viewport-bottom={!@end_of_timeline? && "next-page"}
       phx-page-loading
       class={[
-        "grid gap-y-2 md:gap-y-5",
-        if(@page == 1, do: "pt-10", else: "pt-[calc(100vh)]"),
-        if(@end_of_timeline?, do: "pb-10", else: "pb-[calc(100vh)]")
+        "grid gap-y-2 md:gap-y-5 py-8"
       ]}
     >
       <div
@@ -101,5 +99,19 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> assign(:end_of_timeline?, Enum.empty?(drops))
     |> assign(:first_drop, first_drop)
     |> assign(:last_drop, last_drop)
+  end
+
+  @spec handle_prev_page(socket()) :: {:noreply, socket()}
+  def handle_prev_page(socket) do
+    if socket.assigns.page > 1 do
+      filters = %{newer_than: socket.assigns.first_drop}
+
+      {:noreply,
+       socket
+       |> assign(:page, max(socket.assigns.page - 1, 1))
+       |> maybe_insert_drops(filters, socket.assigns.first_drop, at: 0)}
+    else
+      {:noreply, socket}
+    end
   end
 end
