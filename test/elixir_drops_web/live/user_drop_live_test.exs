@@ -29,6 +29,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       expect(Client.Mock, :get_image, 2, fn _drop ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
+
       user_2 =
         user_fixture(%{
           avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
@@ -66,6 +67,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       expect(Client.Mock, :get_image, 36, fn _drop ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
+
       drops = create_multiple_drops(user, 25)
 
       list_midpoint =
@@ -96,6 +98,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       expect(Client.Mock, :get_image, 40, fn _drop ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
+
       drops = create_multiple_drops(user, 25)
 
       list_midpoint =
@@ -127,6 +130,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       expect(Client.Mock, :get_image, 4, fn _drop ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
+
       conn = sign_in_user(conn, user)
 
       {:ok, live, _html} = live(conn, ~p"/drops/new")
@@ -224,6 +228,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       expect(Client.Mock, :get_image, 2, fn _drop ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
+
       conn = sign_in_user(conn, user)
 
       {:ok, live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")

@@ -72,7 +72,7 @@ defmodule ElixirDropsWeb.DropComponents do
   def drop_card(assigns) do
     image = get_image_url(assigns.drop)
 
-   is_code_present? =
+    is_code_present? =
       case ScreenshotGeneratorWorker.check_for_code_block(assigns.drop.body) do
         {:error, "No code block found"} -> false
         {:ok, _code_block} -> true
