@@ -122,7 +122,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       refute html_3 =~ first_drop.id
     end
 
-     test "shows image when there is code in the markdown", %{conn: conn, user: user} do
+    test "shows image when there is code in the markdown", %{conn: conn, user: user} do
       # Mock the image retrieval
       expect(Client.Mock, :get_image, 4, fn _drop ->
         {:ok, "http://image.com/drop-meta-image.png"}
@@ -143,7 +143,11 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ ~r|<img[^>]+id="drop-image:#{drop_with_code.id}"[^>]*>|
     end
 
-    test "does not show image when there is no code in the markdown", %{conn: conn, drop: drop, user: user} do
+    test "does not show image when there is no code in the markdown", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
       expect(Client.Mock, :get_image, 2, fn _drop ->
         {:error, nil}
       end)

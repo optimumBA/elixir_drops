@@ -220,7 +220,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ ~r|<img[^>]+id="drop-image:#{drop_with_code.id}"[^>]*>|
     end
 
-    test "does not show image when there is no code in the markdown", %{conn: conn, drop: drop, user: user} do
+    test "does not show image when there is no code in the markdown", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
       expect(Client.Mock, :get_image, 2, fn _drop ->
         {:error, nil}
       end)
