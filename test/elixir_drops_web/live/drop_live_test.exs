@@ -197,6 +197,43 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html_3 =~ last_drop.id
       refute html_3 =~ first_drop.id
     end
+
+    test "shows image when there is code in the markdown", %{conn: conn, user: user} do
+      # Mock the image retrieval
+      expect(Client.Mock, :get_image, 4, fn _drop ->
+        {:ok, "http://image.com/drop-meta-image.png"}
+      end)
+
+      # Create a drop with code in the body
+      drop_with_code =
+        drop_fixture(%Drop{}, user, %{
+          title: "Drop with code",
+          body: "Drop body ```elixir conn = sign_in_user(conn, user) ```"
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      assert html =~ drop_with_code.title
+      assert html =~ user.github_username
+      assert html =~ user.avatar
+      assert html =~ DateTimeHelper.convert_to_relative_time(drop_with_code.inserted_at, 0)
+      assert html =~ ~r|<img[^>]+id="drop-image:#{drop_with_code.id}"[^>]*>|
+    end
+
+    test "does not show image when there is no code in the markdown", %{conn: conn, drop: drop, user: user} do
+      expect(Client.Mock, :get_image, 2, fn _drop ->
+        {:error, nil}
+      end)
+
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      assert html =~ drop.title
+      assert html =~ user.github_username
+      assert html =~ user.avatar
+      assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+
+      refute html =~ ~r|<img[^>]+id="drop-image:#{drop.id}"[^>]*>|
+    end
   end
 
   describe "/d/:short_id" do
