@@ -280,4 +280,28 @@ defmodule ElixirDropsWeb.DropLiveTest do
                "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff...\"/>"
     end
   end
+
+  describe "close editor button" do
+    setup [:create_drops_setup]
+
+    test "closing editor navigates to profile page when confirmed",
+         %{
+           conn: conn,
+           user: user
+         } do
+      conn = sign_in_user(conn, user)
+
+      # Start on the new drop page and verify we're in editor mode
+      {:ok, live, html} = live(conn, ~p"/drops/new")
+      assert html =~ "Write a new post"
+
+      live
+      |> element("#confirm-close-editor-button")
+      |> render_click()
+
+      {path, _flash} = assert_redirect(live)
+
+      assert path == "/profile"
+    end
+  end
 end
