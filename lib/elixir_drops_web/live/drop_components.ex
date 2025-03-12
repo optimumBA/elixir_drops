@@ -4,7 +4,6 @@ defmodule ElixirDropsWeb.DropComponents do
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.Accounts.User
-  alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.Icons
 
@@ -80,7 +79,7 @@ defmodule ElixirDropsWeb.DropComponents do
             />
             <p><%= @drop.user.github_username %></p>
             <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
-              Created <.created_at drop={@drop} timezone_offset={@timezone_offset} />
+              Created <.created_at drop={@drop} />
             </p>
           </div>
 
@@ -107,15 +106,9 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   defp created_at(assigns) do
-    assigns =
-      assign(assigns,
-        adjusted_time:
-          DateTimeHelper.apply_timezone_offset(assigns.drop.inserted_at, assigns.timezone_offset)
-      )
-
     ~H"""
-    <relative-time datetime={"#{@adjusted_time}+00:00"}>
-      <%= Timex.format!(@adjusted_time, "{relative}", :relative) %>
+    <relative-time datetime={"#{assigns.drop.inserted_at}Z"}>
+      <%= Timex.format!(assigns.drop.inserted_at, "{relative}", :relative) %>
     </relative-time>
     """
   end
@@ -140,7 +133,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <div>
           <p class="mb-1"><%= @drop.user.github_username %></p>
           <p class="text-[#696969] text-xs">
-            Created <.created_at drop={@drop} timezone_offset={@timezone_offset} />
+            Created <.created_at drop={@drop} />
           </p>
         </div>
       </div>

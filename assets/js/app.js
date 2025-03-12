@@ -46,12 +46,9 @@ let showOrHideWelcomeMessage = () => {
   return localStorage.getItem('show-welcome-message')
 }
 
-let timezoneOffset = new Date().getTimezoneOffset()
-
 params = {
   _csrf_token: csrfToken,
   show_welcome_message: showOrHideWelcomeMessage(),
-  timezone_offset: timezoneOffset,
 }
 
 let liveSocket = new LiveSocket('/live', Socket, {
