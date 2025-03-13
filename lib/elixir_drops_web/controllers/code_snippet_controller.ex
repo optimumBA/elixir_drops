@@ -10,10 +10,11 @@ defmodule ElixirDropsWeb.CodeSnippetController do
   @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 
   @spec index(conn(), params()) :: conn()
-  def index(conn, %{"id" => id}) do
+  def index(conn, %{"id" => id} = params) do
     case authenticate(conn) do
       :ok ->
-        handle_drop_retrieval(conn, id)
+        type = Map.get(params, "type")
+        handle_drop_retrieval(conn, id, type)
 
       :error ->
         request_auth(conn)
@@ -32,10 +33,10 @@ defmodule ElixirDropsWeb.CodeSnippetController do
     end
   end
 
-  defp handle_drop_retrieval(conn, id) do
+  defp handle_drop_retrieval(conn, id, type) do
     with %Drop{body: body} <- Drops.get_drop(%{drop_id: id}),
          [code_block] <- Regex.run(@markdown_regex, body, capture: :first) do
-      render(conn, :index, code_block: code_block, layout: false)
+      render(conn, :index, code_block: code_block, type: type, layout: false)
     else
       _error ->
         send_resp(conn, :not_found, "404 Not Found")

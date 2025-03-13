@@ -40,7 +40,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
-      assert {:ok, _image_url} = Client.get_image(drop)
+      assert {:ok, _image_url} = Client.get_image(drop, :meta)
     end
 
     test "does not create a screenshot when there is an error", %{drop: drop} do
@@ -53,7 +53,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       {:error, "Failed to upload image"} =
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
-      assert {:error, "Image not found"} = Client.get_image(drop)
+      assert {:error, "Image not found"} = Client.get_image(drop, :meta)
     end
 
     test "does not create a screenshot when there is no code block and the job is not retried", %{

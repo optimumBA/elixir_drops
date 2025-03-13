@@ -568,7 +568,7 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   defp get_image_url(drop) do
-    case Client.get_image(drop) do
+    case Client.get_image(drop, :internal) do
       {:ok, url} -> url
       _error -> nil
     end

@@ -46,7 +46,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   defp get_image_url(drop) do
-    case Client.get_image(drop) do
+    case Client.get_image(drop, :meta) do
       {:ok, url} -> url
       _error -> nil
     end

@@ -44,7 +44,7 @@ defmodule ElixirDrops.S3HelperTest do
         {:ok, "http://image.com/image.png"}
       end)
 
-      assert Client.get_image(drop) ==
+      assert Client.get_image(drop, :meta) ==
                {:ok, "http://image.com/image.png"}
     end
 
@@ -53,7 +53,7 @@ defmodule ElixirDrops.S3HelperTest do
         {:error, "Image not found"}
       end)
 
-      assert Client.get_image(drop) ==
+      assert Client.get_image(drop, :meta) ==
                {:error, "Image not found"}
     end
   end
