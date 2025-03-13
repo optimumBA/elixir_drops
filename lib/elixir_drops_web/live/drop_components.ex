@@ -4,7 +4,6 @@ defmodule ElixirDropsWeb.DropComponents do
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.Accounts.User
-  alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
@@ -107,9 +106,9 @@ defmodule ElixirDropsWeb.DropComponents do
               alt={@drop.user.github_username}
               class="rounded-full h-8 md:h-10 w-8 md:w-10 object-cover"
             />
-            <p class="text-[#252525]"><%= @drop.user.github_username %></p>
-            <p class="text-[#575757] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
-              Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
+            <p><%= @drop.user.github_username %></p>
+            <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
+              Created <.created_at drop={@drop} />
             </p>
           </div>
 
@@ -133,6 +132,14 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  defp created_at(assigns) do
+    ~H"""
+    <relative-time datetime={"#{assigns.drop.inserted_at}Z"}>
+      <%= Timex.format!(assigns.drop.inserted_at, "{relative}", :relative) %>
+    </relative-time>
+    """
+  end
+
   attr :drop, Drop, required: true
   attr :timezone_offset, :integer, required: true
 
@@ -153,7 +160,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <div>
           <p class="mb-1"><%= @drop.user.github_username %></p>
           <p class="text-[#696969] text-xs">
-            Created <%= DateTimeHelper.convert_to_relative_time(@drop.inserted_at, @timezone_offset) %>
+            Created <.created_at drop={@drop} />
           </p>
         </div>
       </div>
@@ -297,13 +304,14 @@ defmodule ElixirDropsWeb.DropComponents do
           Are you sure you want to leave this page? All changes you've made will be lost.
         </p>
         <div class="flex justify-center items-center gap-x-3 mx-auto w-full">
-          <button
-            type="button"
-            class="text-[#4f4f4f] text-sm rounded-lg w-[30%] py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
-            phx-click={JS.navigate(~p"/profile")}
+          <.link
+            id="confirm-close-editor-button"
+            navigate={~p"/profile"}
+            class="text-[#4f4f4f] text-sm text-center rounded-lg w-[30%] py-2 bg-[#eeeeee] hover:bg-[#eae8fd]"
+            phx-click={hide_popup("edit-form-cancel-confirm")}
           >
             Close editor
-          </button>
+          </.link>
           <button
             type="button"
             class="text-sm text-[#d3cffb] rounded-lg w-[30%] py-2 bg-blue_primary hover:opacity-80"
