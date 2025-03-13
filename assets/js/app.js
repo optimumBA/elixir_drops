@@ -15,6 +15,7 @@
 //     import "some-package"
 //
 
+import '@github/relative-time-element'
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import 'phoenix_html'
 // Establish Phoenix Socket and LiveView configuration.
@@ -45,12 +46,9 @@ let showOrHideWelcomeMessage = () => {
   return localStorage.getItem('show-welcome-message')
 }
 
-let timezoneOffset = new Date().getTimezoneOffset()
-
 params = {
   _csrf_token: csrfToken,
   show_welcome_message: showOrHideWelcomeMessage(),
-  timezone_offset: timezoneOffset,
 }
 
 let liveSocket = new LiveSocket('/live', Socket, {

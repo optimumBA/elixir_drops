@@ -6,7 +6,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
   import Mox
   import Phoenix.LiveViewTest
 
-  alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
@@ -78,10 +77,13 @@ defmodule ElixirDropsWeb.DropLiveTest do
     test "show a list of drops", %{conn: conn, drop: drop, user: user} do
       {:ok, _live, html} = live(conn, ~p"/")
 
+      {:ok, _time} =
+        Timex.format(drop.inserted_at, "{relative}", :relative)
+
       assert html =~ drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
-      assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+      assert html =~ ~s(datetime="#{drop.inserted_at}Z")
     end
 
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
@@ -173,11 +175,14 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
+      {:ok, _time} =
+        Timex.format(drop.inserted_at, "{relative}", :relative)
+
       assert html =~ ~r(<p>Drop body text...</p>)
       assert html =~ drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
-      assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+      assert html =~ ~s(datetime="#{drop.inserted_at}Z")
     end
 
     test "user redirected to home page when drop does not exist", %{conn: conn} do
