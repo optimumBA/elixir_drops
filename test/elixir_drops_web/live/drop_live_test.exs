@@ -6,7 +6,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
   import Mox
   import Phoenix.LiveViewTest
 
-  alias ElixirDrops.DateTimeHelper
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
@@ -78,10 +77,13 @@ defmodule ElixirDropsWeb.DropLiveTest do
     test "show a list of drops", %{conn: conn, drop: drop, user: user} do
       {:ok, _live, html} = live(conn, ~p"/")
 
+      {:ok, _time} =
+        Timex.format(drop.inserted_at, "{relative}", :relative)
+
       assert html =~ drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
-      assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+      assert html =~ ~s(datetime="#{drop.inserted_at}Z")
     end
 
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
@@ -173,11 +175,14 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
+      {:ok, _time} =
+        Timex.format(drop.inserted_at, "{relative}", :relative)
+
       assert html =~ ~r(<p>Drop body text...</p>)
       assert html =~ drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
-      assert html =~ DateTimeHelper.convert_to_relative_time(drop.inserted_at, 0)
+      assert html =~ ~s(datetime="#{drop.inserted_at}Z")
     end
 
     test "user redirected to home page when drop does not exist", %{conn: conn} do
@@ -273,6 +278,30 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~
                "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff...\"/>"
+    end
+  end
+
+  describe "close editor button" do
+    setup [:create_drops_setup]
+
+    test "closing editor navigates to profile page when confirmed",
+         %{
+           conn: conn,
+           user: user
+         } do
+      conn = sign_in_user(conn, user)
+
+      # Start on the new drop page and verify we're in editor mode
+      {:ok, live, html} = live(conn, ~p"/drops/new")
+      assert html =~ "Write a new post"
+
+      live
+      |> element("#confirm-close-editor-button")
+      |> render_click()
+
+      {path, _flash} = assert_redirect(live)
+
+      assert path == "/profile"
     end
   end
 end
