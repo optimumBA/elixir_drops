@@ -58,70 +58,83 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp generate_screenshot(drop) do
-    # Meta screenshot
-    {:ok, session_meta} =
-      Wallaby.start_session(
-        capabilities: %{
-          chromeOptions: %{
-            args: [
-              "--headless",
-              "--no-sandbox",
-              "window-size=1280,800",
-              "--fullscreen",
-              "--disable-gpu",
-              "--disable-dev-shm-usage"
-            ]
-          }
-        }
-      )
+    with {:ok, meta_screenshot} <- generate_meta_screenshot(drop),
+         {:ok, internal_screenshot} <- generate_internal_screenshot(drop) do
+      {:ok, %{meta: meta_screenshot, internal: internal_screenshot}}
+    end
+  end
 
-    url_meta = build_url_with_auth(drop, :meta)
+  defp generate_meta_screenshot(drop) do
+    with {:ok, session} <- start_wallaby_session(:meta),
+         url <- build_url_with_auth(drop, :meta),
+         {:ok, screenshot} <- take_screenshot(session, url) do
+      Wallaby.end_session(session)
+      {:ok, screenshot}
+    end
+  end
 
-    %Wallaby.Session{screenshots: [meta_screenshot]} =
-      session_meta
-      |> Browser.visit(url_meta)
-      |> Browser.take_screenshot()
+  defp generate_internal_screenshot(drop) do
+    with {:ok, session} <- start_wallaby_session(:internal),
+         url <- build_url_with_auth(drop, :internal),
+         resized_session <- resize_window(session, drop),
+         {:ok, screenshot} <- take_screenshot(resized_session, url) do
+      Wallaby.end_session(resized_session)
+      {:ok, screenshot}
+    end
+  end
 
-    Wallaby.end_session(session_meta)
+  defp start_wallaby_session(type) do
+    base_args = [
+      "--headless",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--fullscreen",
+      "--disable-dev-shm-usage"
+    ]
 
-    # Internal screenshot
-    {:ok, session_internal} =
-      Wallaby.start_session(
-        capabilities: %{
-          chromeOptions: %{
-            args: [
-              "--headless",
-              "--no-sandbox",
-              "--disable-gpu",
-              "--fullscreen",
-              "--disable-dev-shm-usage"
-            ]
-          }
-        }
-      )
-
-    code_block_size =
-      case check_for_code_block(drop.body) do
-        {:ok, code_block} ->
-          lines = length(String.split(code_block, ~r/\n/))
-          min_height = 100
-          line_height = 30
-          raw_size = line_height * lines
-          size = max(min_height, raw_size) |> min(1100)
-          round(size / 50) * 50
-
-        {:error, "No code block found"} ->
-          0
+    args =
+      case type do
+        :meta -> ["window-size=1280,800" | base_args]
+        :internal -> base_args
       end
 
-    url_internal = build_url_with_auth(drop, :internal)
-    resized_window_session = Browser.resize_window(session_internal, 900, code_block_size)
-    new_session = Browser.visit(resized_window_session, url_internal)
+    Wallaby.start_session(
+      capabilities: %{
+        chromeOptions: %{
+          args: args
+        }
+      }
+    )
+  end
 
-    %Wallaby.Session{screenshots: [internal_screenshot]} = Browser.take_screenshot(new_session)
-    Wallaby.end_session(new_session)
+  defp take_screenshot(session, url) do
+    session
+    |> Browser.visit(url)
+    |> Browser.take_screenshot()
+    |> case do
+      %Wallaby.Session{screenshots: [screenshot]} -> {:ok, screenshot}
+      _ -> {:error, "Failed to take screenshot"}
+    end
+  end
 
-    {:ok, %{meta: meta_screenshot, internal: internal_screenshot}}
+  defp resize_window(session, drop) do
+    code_block_size = calculate_code_block_size(drop.body)
+    Browser.resize_window(session, 900, code_block_size)
+  end
+
+  defp calculate_code_block_size(body) do
+    case check_for_code_block(body) do
+      {:ok, code_block} ->
+        lines = length(String.split(code_block, ~r/\n/))
+        min_height = 100
+        line_height = 30
+        raw_size = line_height * lines
+        size = max(min_height, raw_size) |> min(1100)
+        round(size / 50) * 50
+
+      {:error, "No code block found"} ->
+        0
+    end
   end
 
   defp build_url_with_auth(drop, type) do

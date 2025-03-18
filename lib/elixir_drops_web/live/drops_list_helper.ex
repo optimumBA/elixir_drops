@@ -49,11 +49,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
           class="last:mb-6 cursor-pointer"
           role="link"
         >
-          <DropComponents.drop_card
-            drop={drop}
-            show_card_menu?={@show_user_drops?}
-            timezone_offset={@timezone_offset}
-          />
+          <DropComponents.drop_card drop={drop} show_card_menu?={@show_user_drops?} />
         </div>
       </div>
     </div>
