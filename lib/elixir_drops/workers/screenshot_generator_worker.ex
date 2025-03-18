@@ -127,7 +127,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     {:ok, %{meta: meta_screenshot, internal: internal_screenshot}}
   end
 
-  defp build_url_with_auth(drop, type \\ :internal) do
+  defp build_url_with_auth(drop, type) do
     [username: username, password: password] = Application.get_env(:elixir_drops, :wallaby_auth)
 
     url =
@@ -142,7 +142,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp upload_screenshot(screenshot, drop, type) do
-    IO.inspect([screenshot, type], label: "IMAGE BEING UPLOADED!!!")
     timestamp = Timex.to_unix(drop.updated_at)
 
     image_name = image_name(type, drop.id, timestamp)
