@@ -83,9 +83,9 @@ defmodule ElixirDropsWeb.DropComponents do
 
     ~H"""
     <div class="grid space-y-5 bg-white px-6 md:px-6 py-6 md:py-8 rounded-[16px] relative border border-[#CBCBCB] hover:bg-[#CBCBCB]">
-      <div :if={is_code_present?} class="w-full">
-        <div :if={image} class="bg-[#252525] py-5 rounded-t-2xl"></div>
-        <img src={image} class="object-cover rounded-b-2xl" id={"drop-image:#{@drop.id}"} />
+      <div :if={@is_code_present?} class="w-full">
+        <div :if={@image} class="bg-[#252525] py-5 rounded-t-2xl"></div>
+        <img src={@image} class="object-cover rounded-b-2xl" id={"drop-image:#{@drop.id}"} />
       </div>
 
       <div class="grid space-y-5 text-[#252525]">
