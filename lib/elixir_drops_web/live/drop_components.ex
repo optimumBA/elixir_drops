@@ -65,7 +65,6 @@ defmodule ElixirDropsWeb.DropComponents do
 
   attr :drop, Drop, required: true
   attr :show_card_menu?, :boolean, default: false
-  attr :timezone_offset, :integer, required: true
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
@@ -115,7 +114,7 @@ defmodule ElixirDropsWeb.DropComponents do
           <%= if @show_card_menu? do %>
             <button
               class="text-[#797979] hover:text-[#5947F1]"
-              id="drop-card-menu-btn"
+              id={"drop-card-menu-btn-#{@drop.id}"}
               data-drop-id={@drop.id}
               phx-click={JS.toggle(to: "#drop-card-menu-#{@drop.id}")}
             >
