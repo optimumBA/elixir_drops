@@ -40,7 +40,7 @@ defmodule ElixirDrops.S3HelperTest do
     setup [:create_drops_setup]
 
     test "returns an image url if image exists", %{drop: drop} do
-      expect(Client.Mock, :get_image, fn _drop ->
+      expect(Client.Mock, :get_image, fn _drop, _type ->
         {:ok, "http://image.com/image.png"}
       end)
 
@@ -49,7 +49,7 @@ defmodule ElixirDrops.S3HelperTest do
     end
 
     test "returns an error if image does not exist", %{drop: drop} do
-      expect(Client.Mock, :get_image, fn _drop ->
+      expect(Client.Mock, :get_image, fn _drop, _type ->
         {:error, "Image not found"}
       end)
 

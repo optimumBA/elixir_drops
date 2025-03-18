@@ -26,7 +26,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     setup [:create_drops_setup]
 
     test "authorized users can view their their own drops", %{conn: conn, drop: drop, user: user} do
-      expect(Client.Mock, :get_image, 2, fn _drop ->
+      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
 
@@ -64,7 +64,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
 
     test "user can view older drops with infinite scroll", %{conn: conn, user: user} do
-      expect(Client.Mock, :get_image, 36, fn _drop ->
+      expect(Client.Mock, :get_image, 36, fn _drop, _type ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
 
@@ -95,7 +95,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
 
     test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
-      expect(Client.Mock, :get_image, 40, fn _drop ->
+      expect(Client.Mock, :get_image, 40, fn _drop, _type ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
 
@@ -124,7 +124,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "shows image when there is code in the markdown", %{conn: conn, user: user} do
       # Mock the image retrieval
-      expect(Client.Mock, :get_image, 4, fn _drop ->
+      expect(Client.Mock, :get_image, 4, fn _drop, _type ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
 
@@ -148,7 +148,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       drop: drop,
       user: user
     } do
-      expect(Client.Mock, :get_image, 2, fn _drop ->
+      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
         {:error, nil}
       end)
 
@@ -166,7 +166,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     setup [:create_drops_setup]
 
     test "authorized users can create drops", %{conn: conn, user: user} do
-      expect(Client.Mock, :get_image, 4, fn _drop ->
+      expect(Client.Mock, :get_image, 4, fn _drop, _type ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
 
@@ -248,7 +248,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         )
 
-      expect(Client.Mock, :get_image, 2, fn _drop ->
+      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
         {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
       end)
 
@@ -264,7 +264,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     setup [:create_drops_setup]
 
     test "authorized user updates a drop", %{conn: conn, user: user, drop: drop} do
-      expect(Client.Mock, :get_image, 2, fn _drop ->
+      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
         {:ok, "http://image.com/drop-meta-image.png"}
       end)
 
