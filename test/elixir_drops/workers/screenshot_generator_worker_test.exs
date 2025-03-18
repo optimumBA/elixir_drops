@@ -33,10 +33,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
 
       Client.Mock
-      |> expect(:upload_image, fn _image, _filename, _type ->
+      |> expect(:upload_image, 2, fn _image, _filename, _type ->
         {:ok, image_url}
       end)
-      |> expect(:get_image, fn _drop -> {:ok, image_url} end)
+      |> expect(:get_image, fn _drop, _type -> {:ok, image_url} end)
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
@@ -48,7 +48,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       |> expect(:upload_image, fn _image, _filename, _type ->
         {:error, "Failed to upload image"}
       end)
-      |> expect(:get_image, fn _drop -> {:error, "Image not found"} end)
+      |> expect(:get_image, fn _drop, _type -> {:error, "Image not found"} end)
 
       {:error, "Failed to upload image"} =
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})

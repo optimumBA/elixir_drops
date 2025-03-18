@@ -24,7 +24,7 @@ defmodule ElixirDrops.S3Helper.Client do
   end
 
   @spec get_image(drop(), screenshot_type()) :: {:ok, url()} | {:error, any()}
-  def get_image(drop, type \\ :meta), do: impl().get_image(drop, type)
+  def get_image(drop, type), do: impl().get_image(drop, type)
 
   defp impl, do: Application.get_env(:elixir_drops, :s3_helper, Http)
 end

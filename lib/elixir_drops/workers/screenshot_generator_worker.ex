@@ -37,10 +37,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       with {:ok, screenshots} <- generate_screenshot(drop),
            {:ok, meta_image} <- File.read(screenshots.meta),
            {:ok, internal_image} <- File.read(screenshots.internal) do
-        with {:ok, meta_url} <- upload_screenshot(meta_image, drop, :meta),
-             {:ok, internal_url} <- upload_screenshot(internal_image, drop, :internal) do
-          {:ok, %{meta: meta_url, internal: internal_url}}
-        end
+        upload_screenshots(%{meta: meta_image, internal: internal_image}, drop)
       end
     end)
   end
@@ -141,14 +138,21 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     "#{scheme}//#{username}:#{password}@#{rest}"
   end
 
-  defp upload_screenshot(screenshot, drop, type) do
+  defp upload_screenshots(images, drop) do
     timestamp = Timex.to_unix(drop.updated_at)
+    meta_image_name = image_name(:meta, drop.id, timestamp)
 
-    image_name = image_name(type, drop.id, timestamp)
+    case Client.upload_image(images.meta, meta_image_name, "image/png") do
+      {:ok, meta_url} ->
+        internal_image_name = image_name(:internal, drop.id, timestamp)
 
-    case Client.upload_image(screenshot, image_name, "image/png") do
-      {:ok, image_url} ->
-        {:ok, image_url}
+        case Client.upload_image(images.internal, internal_image_name, "image/png") do
+          {:ok, internal_url} ->
+            {:ok, %{meta: meta_url, internal: internal_url}}
+
+          error ->
+            error
+        end
 
       error ->
         error
