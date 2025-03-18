@@ -108,12 +108,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp take_screenshot(session, url) do
-    session
-    |> Browser.visit(url)
-    |> Browser.take_screenshot()
-    |> case do
+    session = Browser.visit(session, url)
+    result = Browser.take_screenshot(session)
+
+    case result do
       %Wallaby.Session{screenshots: [screenshot]} -> {:ok, screenshot}
-      _ -> {:error, "Failed to take screenshot"}
+      _error -> {:error, "Failed to take screenshot"}
     end
   end
 
@@ -129,7 +129,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         min_height = 100
         line_height = 30
         raw_size = line_height * lines
-        size = max(min_height, raw_size) |> min(1100)
+        size = raw_size |> max(min_height) |> min(1100)
         round(size / 50) * 50
 
       {:error, "No code block found"} ->
