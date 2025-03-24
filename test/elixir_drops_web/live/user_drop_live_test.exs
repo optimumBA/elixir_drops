@@ -288,7 +288,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
     end
 
-    test "an image upload job is not enqueued when drop body does not changed", %{
+    test "an image upload job is not enqueued with unchanged drop body", %{
       conn: conn,
       drop: drop,
       user: user
