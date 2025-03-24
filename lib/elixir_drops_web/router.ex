@@ -23,7 +23,6 @@ defmodule ElixirDropsWeb.Router do
     live_session :require_authenticated_user,
       on_mount: [
         {ElixirDropsWeb.UserAuth, :ensure_authenticated},
-        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
         {ElixirDropsWeb.UserAuth, :assign_current_user}
       ] do
       live "/profile", UserDropLive.Index, :index
@@ -38,7 +37,6 @@ defmodule ElixirDropsWeb.Router do
 
     live_session :default,
       on_mount: [
-        {ElixirDropsWeb.LiveHelpers, :assign_timezone_offset},
         {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
         {ElixirDropsWeb.UserAuth, :assign_current_user}
       ] do
