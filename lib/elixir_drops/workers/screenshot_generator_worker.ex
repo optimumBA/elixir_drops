@@ -153,9 +153,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     case check_for_code_block(body) do
       {:ok, code_block} ->
         lines = length(String.split(code_block, ~r/\n/))
-        min_height = 150
+        min_height = 120
         line_height = 35
-        padding = 80
+        padding = 20
         raw_size = line_height * lines + padding
         max_height = 1100
 
