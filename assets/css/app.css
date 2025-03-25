@@ -299,7 +299,8 @@ blockquote *:last-child {
 }
 
 .drop-image code {
-  @apply tracking-widest font-lotion text-[1rem];
+  @apply text-[1rem];
+  font-family: var(--font-lotion) !important;
 }
 
 .masonry {
