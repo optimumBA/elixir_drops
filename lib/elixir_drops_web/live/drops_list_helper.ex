@@ -40,7 +40,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
         phx-viewport-top={!@end_of_timeline? && JS.push("prev-page")}
         phx-viewport-bottom={!@end_of_timeline? && JS.push("next-page")}
         phx-page-loading
-        class="masonry"
+        class="masonry px-4 md:px-0"
       >
         <div
           :for={{dom_id, drop} <- @drops}

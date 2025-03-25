@@ -303,7 +303,7 @@ blockquote *:last-child {
 }
 
 .masonry {
-  --gutter: 1rem;
+  --gutter: 1.5rem;
   column-gap: var(--gutter);
   column-count: 1;
 }
