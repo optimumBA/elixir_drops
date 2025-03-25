@@ -156,7 +156,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         min_height = 150
         line_height = 35
         padding = 80
-        raw_size = (line_height * lines) + padding
+        raw_size = line_height * lines + padding
         max_height = 1100
 
         size =

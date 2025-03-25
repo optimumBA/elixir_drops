@@ -108,7 +108,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       timestamp = Timex.to_unix(drop.updated_at)
       image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
 
-      expect(Client.Mock, :upload_image, fn _image, _filename, _type -> {:ok, image_url} end)
+      expect(Client.Mock, :upload_image, 2, fn _image, _filename, _type -> {:ok, image_url} end)
 
       assert :ok =
                perform_job(ScreenshotGeneratorWorker, %{
