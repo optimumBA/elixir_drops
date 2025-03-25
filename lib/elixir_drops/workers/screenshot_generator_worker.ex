@@ -23,12 +23,36 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp maybe_retry_job(error), do: error
 
   defp maybe_create_screenshot(args) do
+    case args["action"] do
+      "edit" -> handle_edit(args)
+      _new -> handle_new(args)
+    end
+  end
+
+  defp handle_edit(args) do
     with {:ok, drop} <- get_drop(args["drop_id"]),
-         {:ok, _code_block} <- check_for_code_block(drop.body) do
+         {:ok, old_code_snippet} <-
+           check_for_code_block(args["old_body"]),
+         {:ok, new_code_snippet} <-
+           check_for_code_block(drop.body),
+         :ok <-
+           compare_code_blocks(old_code_snippet, new_code_snippet) do
       drop_screenshot(drop)
     else
+      {:cancel, _reason} ->
+        {:cancel, "Code block unchanged"}
+
       _error ->
         {:cancel, "No code block found"}
+    end
+  end
+
+  defp handle_new(args) do
+    with {:ok, drop} <- get_drop(args["drop_id"]),
+         {:ok, _code_snippet} <- check_for_code_block(drop.body) do
+      drop_screenshot(drop)
+    else
+      _error -> {:cancel, "No code block found"}
     end
   end
 
@@ -56,6 +80,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       [code_block] -> {:ok, code_block}
     end
   end
+
+  defp compare_code_blocks(old, new) when old != new, do: :ok
+  defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
 
   defp generate_screenshot(drop) do
     with {:ok, meta_screenshot} <- generate_meta_screenshot(drop),

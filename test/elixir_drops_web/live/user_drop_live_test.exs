@@ -15,7 +15,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
-    conn = put_connect_params(conn, %{"timezone_offset" => 0})
     user = user_fixture()
     drop = drop_fixture(user)
 
@@ -324,7 +323,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert path == ~p"/"
     end
 
-    test "an image upload job is enqueued when a drop is updated", %{
+    test "an image upload job is enqueued when drop body changes", %{
       conn: conn,
       drop: drop,
       user: user
@@ -338,10 +337,34 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ drop.title
 
       live
-      |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
+      |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Updated body"})
       |> render_submit()
 
       assert_enqueued(
+        worker: ScreenshotGeneratorWorker,
+        args: %{drop_id: drop.id},
+        queue: :seo_images
+      )
+    end
+
+    test "an image upload job is not enqueued with unchanged drop body", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+
+      assert html =~ "Edit post"
+      assert html =~ drop.body
+      assert html =~ drop.title
+
+      live
+      |> form("#drops-editor-form", drop: %{title: "New Drop title"})
+      |> render_submit()
+
+      refute_enqueued(
         worker: ScreenshotGeneratorWorker,
         args: %{drop_id: drop.id},
         queue: :seo_images

@@ -18,8 +18,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       put_connect_params(
         conn,
         %{
-          "show_welcome_message" => "true",
-          "timezone_offset" => 0
+          "show_welcome_message" => "true"
         }
       )
 
