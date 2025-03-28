@@ -1,4 +1,12 @@
 <div id={@id} class="drop-form min-h-[calc(100vh-12px)] bg-[#eae8fd]">
+  <div
+    id="drops-editor-overlay"
+    class={[
+      "drops-editor-overlay absolute inset-0 bg-black opacity-50",
+      @screenshot_status not in [:generating, :completed] && "hidden"
+    ]}
+  >
+  </div>
   <.form
     :let={f}
     for={@form}
@@ -90,4 +98,11 @@
       </div>
     </div>
   </.form>
+
+  <DropComponents.generating_screenshots_popup
+    myself={@myself}
+    screenshot_status={@screenshot_status}
+    progress_value={@progress_value}
+    screenshot_url={@screenshot_url}
+  />
 </div>

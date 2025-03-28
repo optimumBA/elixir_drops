@@ -336,6 +336,83 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :myself, :any, required: true
+  attr :screenshot_status, :atom, default: :idle
+  attr :progress_value, :integer, default: 0
+  attr :screenshot_url, :string, default: nil
+
+  @spec generating_screenshots_popup(assigns()) :: rendered()
+  def generating_screenshots_popup(assigns) do
+    ~H"""
+    <div
+      id="generating-screenshots-popup"
+      class={[
+        "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
+        "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
+        "w-[90%] md:w-[80%] lg:w-[40%]",
+        @screenshot_status == :idle && "hidden"
+      ]}
+      phx-click-away={hide_popup("generating-screenshots-popup")}
+    >
+      <button class="bg-black" phx-click={hide_popup("generating-screenshots-popup")}>
+        <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
+      </button>
+      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto">
+        <%= if @screenshot_status == :generating do %>
+          <p class=" w-[75%] mx-auto mb-2">
+            Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
+          </p>
+        <% else %>
+          <p class="mx-auto">
+            Here's your code screenshot!
+            <span class="text-xs text-black block">
+              You can now view and share your drop post.
+            </span>
+          </p>
+        <% end %>
+
+        <div class={[
+          "py-8 w-[80%] mx-auto",
+          @screenshot_status != :completed &&
+            "bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2]"
+        ]}>
+          <%= if @screenshot_status == :generating do %>
+            <div class="mx-auto mb-4 text-white rounded-lg flex flex-col items-center justify-center py-8 px-12">
+              <.progress variant="radial" value={@progress_value} text={"#{@progress_value}%"} />
+              <p class="text-sm md:text-base text-white mx-auto mt-4 mb-6">
+                Generating Code Screenshots...
+              </p>
+            </div>
+          <% else %>
+            <div class="mx-auto mb-4">
+              <img src={@screenshot_url} class="max-w-full rounded" alt="Generated code screenshot" />
+            </div>
+          <% end %>
+
+          <div class="text-xs md:text-sm flex justify-center gap-x-4 mt-4">
+            <%= if @screenshot_status == :completed do %>
+              <button
+                type="button"
+                class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
+                phx-click={hide_popup("generating-screenshots-popup")}
+              >
+                Edit Drop Post
+              </button>
+              <button
+                type="button"
+                class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
+                phx-click={JS.navigate(~p"/profile")}
+              >
+                View Drop Posts
+              </button>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   @spec copy_prompt(assigns()) :: rendered()
   defp copy_prompt(assigns) do
     ~H"""
@@ -505,6 +582,7 @@ defmodule ElixirDropsWeb.DropComponents do
     |> JS.add_class("hidden", to: "##{pop_up_message_id}")
     |> JS.remove_class("show-pop-up", to: ".drops-container")
     |> JS.remove_class("show-pop-up", to: ".drop-form")
+    |> JS.add_class("hidden", to: ".drops-editor-overlay")
   end
 
   @spec to_html(binary()) :: Phoenix.HTML.safe()
@@ -534,4 +612,70 @@ defmodule ElixirDropsWeb.DropComponents do
     )
     |> raw()
   end
+
+  attr :class, :any, doc: "Extend existing component styles"
+  attr :color, :string, default: "blue", doc: "The color of the component."
+  attr :rest, :global, doc: "Arbitrary HTML or phx attributes"
+  attr :size, :any, default: "md", doc: "The size of the component"
+  attr :square, :boolean, default: false, doc: "If true, rounded corners are disabled"
+  attr :text, :string, default: nil, doc: "Draws a graphics element consisting of text"
+  attr :value, :integer, default: 30, doc: "The value of the progress indicator"
+  attr :variant, :string, default: "radial", values: ["linear", "radial"]
+
+  @spec progress(map()) :: Phoenix.LiveView.Rendered.t()
+  def progress(%{variant: "radial"} = assigns) do
+    ~H"""
+    <svg
+      aria-hidden="true"
+      class={[
+        "progress block",
+        styles(:size, assigns),
+        assigns[:class]
+      ]}
+      fill="none"
+      viewBox="0 0 36 36"
+      xmlns="http://www.w3.org/2000/svg"
+      {@rest}
+    >
+      <path
+        class="stroke-gray-400"
+        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+        fill="none"
+        stroke-width="3.8"
+      />
+      <path
+        class="stroke-current"
+        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+        fill="none"
+        stroke-dasharray={"#{@value}, 100"}
+        stroke-width="3.8"
+        stroke-linecap={@square == false && "round"}
+      />
+      <text :if={@text} class="fill-white text-[0.5em]" text-anchor="middle" x="18" y="20.35">
+        <%= @text %>
+      </text>
+    </svg>
+    """
+  end
+
+  defp styles(:size, %{size: "sm", variant: "linear"}), do: "h-3.5 text-xs"
+  defp styles(:size, %{size: "md", variant: "linear"}), do: "h-5 text-sm font-semibold"
+  defp styles(:size, %{size: "lg", variant: "linear"}), do: "h-7 text-base font-medium"
+
+  defp styles(:size, %{size: "sm", variant: "radial"}), do: "h-8 w-8 text-sm"
+  defp styles(:size, %{size: "md", variant: "radial"}), do: "h-12 w-12 text-sm"
+  defp styles(:size, %{size: "lg", variant: "radial"}), do: "h-16 w-16 text-sm"
+
+  defp styles(:size, %{size: "xs"}), do: "[&_.icon]:w-6 [&_.icon]:h-6 w-6 h-6 text-xs"
+  defp styles(:size, %{size: "sm"}), do: "[&_.icon]:w-8 [&_.icon]:h-8 w-8 h-8 text-xs"
+  defp styles(:size, %{size: "md"}), do: "[&_.icon]:w-10 [&_.icon]:h-10 w-10 h-10 text-base"
+  defp styles(:size, %{size: "lg"}), do: "[&_.icon]:w-12 [&_.icon]:h-12 w-12 h-12 text-lg"
+  defp styles(:size, %{size: "xl"}), do: "[&_.icon]:w-14 [&_.icon]:h-14 w-14 h-14 text-xl"
+  defp styles(:size, %{size: override}), do: override
+
+  # Variant
+  defp styles(:variant, %{variant: "circular"}), do: "rounded-full"
+  defp styles(:variant, %{variant: "rounded"}), do: "rounded"
+
+  defp styles(_rule_group, _assigns), do: nil
 end
