@@ -34,13 +34,9 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
       {:ok, drop} ->
         enqueue_seo_screenshot_creation(drop.id)
 
-        {
-          :noreply,
-          push_navigate(
-            socket,
-            to: ~p"/profile"
-          )
-        }
+        send(self(), {:screenshot_generation_started, drop.id})
+
+        {:noreply, socket}
 
       {:error, changeset} ->
         {:noreply, assign_form(socket, changeset)}

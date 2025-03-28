@@ -5,6 +5,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   use ElixirDropsWeb, :verified_routes
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
   alias Wallaby.Browser
@@ -36,6 +37,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     FLAME.call(ScreenshotGenerator, fn ->
       with {:ok, screenshot} <- generate_screenshot(drop),
            {:ok, image} <- File.read(screenshot) do
+        broadcast_drop_screenshot_progress(drop, 50, :generating)
+
         upload_screenshot(image, drop)
       end
     end)
@@ -56,6 +59,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp generate_screenshot(drop) do
+    broadcast_drop_screenshot_progress(drop, 10, :generating)
+
     {:ok, session} =
       Wallaby.start_session(
         capabilities: %{
@@ -81,11 +86,15 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     Wallaby.end_session(session)
 
+    broadcast_drop_screenshot_progress(drop, 20, :generating)
+
     {:ok, screenshot}
   end
 
   defp build_url_with_auth(drop) do
     [username: username, password: password] = Application.get_env(:elixir_drops, :wallaby_auth)
+
+    broadcast_drop_screenshot_progress(drop, 40, :generating)
 
     url = url(~p"/d/#{drop.id}/code_snippet")
 
@@ -101,10 +110,18 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     case Client.upload_image(screenshot, image_name, "image/png") do
       {:ok, image_url} ->
+        drop = Map.put(drop, :screenshot_url, image_url)
+
+        broadcast_drop_screenshot_progress(drop, 100, :completed)
+
         {:ok, image_url}
 
       error ->
         error
     end
+  end
+
+  defp broadcast_drop_screenshot_progress(drop, progress, status) do
+    DropsBroadcast.broadcast_drop_screenshot_progress(drop, progress, status)
   end
 end

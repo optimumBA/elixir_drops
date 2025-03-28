@@ -3,16 +3,22 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
+    if connected?(socket), do: Drops.subscribe()
+
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
+     |> assign(:screenshot_status, :idle)
+     |> assign(:progress_value, 0)
+     |> assign(:screenshot_url, nil)
      |> assign(:end_of_timeline?, false)
      |> DropsListHelper.assign_drops()}
   end
@@ -77,6 +83,39 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         socket
         |> assign(:drop, drop)
         |> assign(:page_title, "Edit Drop")
+    end
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info({DropsBroadcast, [:drop, :created], _drop}, socket) do
+    {:noreply, socket}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info({:screenshot_generation_started, _drop_id}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_progress],
+         %{drop: drop, progress: progress, status: status}},
+        socket
+      ) do
+    if drop.screenshot_url do
+      socket =
+        socket
+        |> assign(:progress_value, 100)
+        |> assign(:screenshot_status, :completed)
+        |> assign(:screenshot_url, drop.screenshot_url)
+
+      {:noreply, socket}
+    else
+      socket =
+        socket
+        |> assign(:progress_value, progress)
+        |> assign(:screenshot_status, status)
+
+      {:noreply, socket}
     end
   end
 end
