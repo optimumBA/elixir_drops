@@ -12,16 +12,14 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 
-  # Stages of the screenshot process with their respective percentage values
   @stages %{
     started: 5,
     drop_found: 10,
-    code_block_verified: 15,
+    # code_block_verified: 15,
     session_started: 25,
     screenshot_taken: 50,
     processing_image: 70,
     uploading: 85,
-    # Leave the completed status at 95% to avoid showing 100% before the URL is actually available
     ready_for_preview: 95
   }
 
@@ -94,8 +92,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp check_for_code_block(body) do
     case Regex.run(@markdown_regex, body, capture: :first) do
-      nil -> {:error, "No code block found"}
-      code_block -> {:ok, code_block}
+      nil ->
+        {:error, "No code block found"}
+
+      code_block ->
+        # broadcast_drop_screenshot_progress(drop, @stages.code_block_verified, :generating)
+        {:ok, code_block}
     end
   end
 
@@ -103,8 +105,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
 
   defp generate_screenshot(drop) do
-    broadcast_drop_screenshot_progress(drop, @stages.code_block_verified, :generating)
-
     {:ok, session} =
       Wallaby.start_session(
         capabilities: %{
@@ -158,8 +158,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       {:ok, image_url} ->
         drop = Map.put(drop, :screenshot_url, image_url)
 
-        # Set to ready_for_preview (95%) instead of 100% to indicate that the image
-        # is available but waiting for user confirmation
         broadcast_drop_screenshot_progress(drop, @stages.ready_for_preview, :completed)
 
         {:ok, image_url}
