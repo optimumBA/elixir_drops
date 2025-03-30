@@ -56,7 +56,10 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_info(:screenshot_generation_progress, socket) do
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, _status},
+        socket
+      ) do
     {:noreply, socket}
   end
 end

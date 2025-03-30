@@ -662,20 +662,8 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp styles(:size, %{size: "sm", variant: "linear"}), do: "h-3.5 text-xs"
-  defp styles(:size, %{size: "md", variant: "linear"}), do: "h-5 text-sm font-semibold"
-  defp styles(:size, %{size: "lg", variant: "linear"}), do: "h-7 text-base font-medium"
-
   defp styles(:size, %{size: "sm", variant: "radial"}), do: "h-8 w-8 text-sm"
   defp styles(:size, %{size: "md", variant: "radial"}), do: "h-12 w-12 text-sm"
   defp styles(:size, %{size: "lg", variant: "radial"}), do: "h-16 w-16 text-sm"
-
-  defp styles(:size, %{size: "xs"}), do: "[&_.icon]:w-6 [&_.icon]:h-6 w-6 h-6 text-xs"
-  defp styles(:size, %{size: "sm"}), do: "[&_.icon]:w-8 [&_.icon]:h-8 w-8 h-8 text-xs"
-  defp styles(:size, %{size: "md"}), do: "[&_.icon]:w-10 [&_.icon]:h-10 w-10 h-10 text-base"
-  defp styles(:size, %{size: "lg"}), do: "[&_.icon]:w-12 [&_.icon]:h-12 w-12 h-12 text-lg"
-  defp styles(:size, %{size: "xl"}), do: "[&_.icon]:w-14 [&_.icon]:h-14 w-14 h-14 text-xl"
-  defp styles(:size, %{size: override}), do: override
-
   defp styles(_rule_group, _assigns), do: nil
 end

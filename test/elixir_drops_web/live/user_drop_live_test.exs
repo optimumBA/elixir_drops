@@ -132,7 +132,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      # Submit the form with a drop containing a code block
       live
       |> form("#drops-editor-form",
         drop: %{
@@ -142,7 +141,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
-      # Simulate progress updates
       # send(live.pid, {
       #   DropsBroadcast,
       #   [:drop, :screenshot_generation_progress],
@@ -150,10 +148,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       #   :generating
       # })
 
-      # Verify progress update
       assert render(live) =~ "50%"
 
-      # Simulate completion
       # send(live.pid, {
       #   DropsBroadcast,
       #   [:drop, :screenshot_generation_progress],
@@ -161,7 +157,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       #   :completed
       # })
 
-      # Verify completion state
       assert render(live) =~ "You can now view and share your drop post."
     end
 
@@ -267,26 +262,22 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ drop.body
       assert html =~ drop.title
 
-      # Submit the form
       updated_html =
         live
         |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
         |> render_submit()
 
-      # # Simulate the screenshot generation progress broadcast
-      # send(live.pid, {
-      #   DropsBroadcast,
-      #   [:drop, :screenshot_generation_progress],
-      #   100,
-      #   :completed
-      # })
+      send(live.pid, {
+        DropsBroadcast,
+        [:drop, :screenshot_generation_progress],
+        100,
+        :generating
+      })
 
-      # Verify the database was updated
       assert updated_drop = Drops.get_drop(%{drop_id: drop.id})
       assert updated_drop.title == "New Drop title"
       assert updated_drop.body == "New Drop body"
 
-      # Verify the UI shows success state
       assert updated_html =~ "You can now view and share your drop post"
     end
 
