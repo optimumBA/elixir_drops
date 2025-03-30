@@ -113,7 +113,6 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :drop, Drop, required: true
-  attr :timezone_offset, :integer, required: true
 
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do

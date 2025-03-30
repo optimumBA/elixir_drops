@@ -37,14 +37,36 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp maybe_retry_job(error), do: error
 
   defp maybe_create_screenshot(args) do
-    # broadcast_drop_screenshot_progress(nil, @stages.started, :generating)
+    case args["action"] do
+      "edit" -> handle_edit(args)
+      _new -> handle_new(args)
+    end
+  end
 
+  defp handle_edit(args) do
     with {:ok, drop} <- get_drop(args["drop_id"]),
-         :ok <- check_for_code_block(drop) do
+         {:ok, old_code_snippet} <-
+           check_for_code_block(args["old_body"]),
+         {:ok, new_code_snippet} <-
+           check_for_code_block(drop.body),
+         :ok <-
+           compare_code_blocks(old_code_snippet, new_code_snippet) do
       drop_screenshot(drop)
     else
+      {:cancel, _reason} ->
+        {:cancel, "Code block unchanged"}
+
       _error ->
         {:cancel, "No code block found"}
+    end
+  end
+
+  defp handle_new(args) do
+    with {:ok, drop} <- get_drop(args["drop_id"]),
+         {:ok, _code_snippet} <- check_for_code_block(drop.body) do
+      drop_screenshot(drop)
+    else
+      _error -> {:cancel, "No code block found"}
     end
   end
 
@@ -70,16 +92,15 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp check_for_code_block(drop) do
-    case Regex.run(@markdown_regex, drop.body, capture: :first) do
-      nil ->
-        {:error, "No code block found"}
-
-      _code_block ->
-        broadcast_drop_screenshot_progress(drop, @stages.code_block_verified, :generating)
-        :ok
+  defp check_for_code_block(body) do
+    case Regex.run(@markdown_regex, body, capture: :first) do
+      nil -> {:error, "No code block found"}
+      code_block -> {:ok, code_block}
     end
   end
+
+  defp compare_code_blocks(old, new) when old != new, do: :ok
+  defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
 
   defp generate_screenshot(drop) do
     broadcast_drop_screenshot_progress(drop, @stages.code_block_verified, :generating)

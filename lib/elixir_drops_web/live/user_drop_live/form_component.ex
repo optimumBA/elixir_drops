@@ -32,7 +32,16 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   def handle_event("save", %{"drop" => drop_params}, socket) do
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
       {:ok, drop} ->
-        enqueue_seo_screenshot_creation(drop.id)
+        case socket.assigns do
+          %{live_action: :edit, drop: %{body: old_body}} when old_body != drop.body ->
+            enqueue_seo_screenshot_creation(drop.id, old_body, :edit)
+
+          %{live_action: :new} ->
+            enqueue_seo_screenshot_creation(drop.id, nil, :new)
+
+          _assigns ->
+            :ok
+        end
 
         send(self(), {:screenshot_generation_started, drop.id})
 
@@ -59,8 +68,8 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     )
   end
 
-  defp enqueue_seo_screenshot_creation(drop_id) do
-    %{"drop_id" => drop_id}
+  defp enqueue_seo_screenshot_creation(drop_id, old_body, action) do
+    %{"drop_id" => drop_id, "old_body" => old_body, "action" => action}
     |> ScreenshotGeneratorWorker.new()
     |> Oban.insert()
   end
