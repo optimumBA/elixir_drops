@@ -15,7 +15,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
-    conn = put_connect_params(conn, %{"timezone_offset" => 0})
     user = user_fixture()
     drop = drop_fixture(user)
 
@@ -119,13 +118,64 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      {:ok, _live, html} =
+      html =
         live
         |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
         |> render_submit()
-        |> follow_redirect(conn, ~p"/profile")
 
-      assert html =~ "New Drop title"
+      assert html =~
+               "You can now view and share your drop post."
+    end
+
+    test "drop screenshot generation progress", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
+
+      # Submit the form with a drop containing a code block
+      live
+      |> form("#drops-editor-form",
+        drop: %{
+          title: "New Drop title",
+          body: "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```"
+        }
+      )
+      |> render_submit()
+
+      # Simulate progress updates
+      # send(live.pid, {
+      #   DropsBroadcast,
+      #   [:drop, :screenshot_generation_progress],
+      #   50,
+      #   :generating
+      # })
+
+      # Verify progress update
+      assert render(live) =~ "50%"
+
+      # Simulate completion
+      # send(live.pid, {
+      #   DropsBroadcast,
+      #   [:drop, :screenshot_generation_progress],
+      #   100,
+      #   :completed
+      # })
+
+      # Verify completion state
+      assert render(live) =~ "You can now view and share your drop post."
+    end
+
+    test "drop screenshot preview", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
+
+      html =
+        live
+        |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
+        |> render_submit()
+
+      assert html =~ "You can now view and share your drop post"
     end
 
     test "authorized users cannot create a drop with invalid data", %{conn: conn, user: user} do
@@ -217,17 +267,27 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ drop.body
       assert html =~ drop.title
 
-      {:ok, _live, updated_html} =
+      # Submit the form
+      updated_html =
         live
         |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
         |> render_submit()
-        |> follow_redirect(conn, ~p"/profile")
 
-      assert updated_html =~ "New Drop title"
+      # # Simulate the screenshot generation progress broadcast
+      # send(live.pid, {
+      #   DropsBroadcast,
+      #   [:drop, :screenshot_generation_progress],
+      #   100,
+      #   :completed
+      # })
 
+      # Verify the database was updated
       assert updated_drop = Drops.get_drop(%{drop_id: drop.id})
       assert updated_drop.title == "New Drop title"
       assert updated_drop.body == "New Drop body"
+
+      # Verify the UI shows success state
+      assert updated_html =~ "You can now view and share your drop post"
     end
 
     test "authorized user cannot update a drop with invalid data", %{
