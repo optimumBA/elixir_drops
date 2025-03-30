@@ -385,7 +385,11 @@ defmodule ElixirDropsWeb.DropComponents do
             </div>
           <% else %>
             <div class="mx-auto mb-4">
-              <img src={@screenshot_url} class="max-w-full rounded" alt="Generated code screenshot" />
+              <%= if @screenshot_url do %>
+                <img src={@screenshot_url} class="max-w-full rounded" alt="Generated code screenshot" />
+              <% else %>
+                <div class="min-h-[200px] min-w-[350px]"></div>
+              <% end %>
             </div>
           <% end %>
 
@@ -672,10 +676,6 @@ defmodule ElixirDropsWeb.DropComponents do
   defp styles(:size, %{size: "lg"}), do: "[&_.icon]:w-12 [&_.icon]:h-12 w-12 h-12 text-lg"
   defp styles(:size, %{size: "xl"}), do: "[&_.icon]:w-14 [&_.icon]:h-14 w-14 h-14 text-xl"
   defp styles(:size, %{size: override}), do: override
-
-  # Variant
-  defp styles(:variant, %{variant: "circular"}), do: "rounded-full"
-  defp styles(:variant, %{variant: "rounded"}), do: "rounded"
 
   defp styles(_rule_group, _assigns), do: nil
 end

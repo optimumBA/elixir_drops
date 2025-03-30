@@ -97,8 +97,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_progress],
-         %{drop: drop, progress: progress, status: status}},
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, progress, status},
         socket
       ) do
     if drop.screenshot_url do

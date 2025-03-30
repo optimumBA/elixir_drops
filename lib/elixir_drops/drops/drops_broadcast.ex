@@ -6,7 +6,9 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
   alias ElixirDrops.Drops.Drop
 
   @type drop :: Drop.t()
+  @type progress :: number()
   @type short_id_string :: String.t()
+  @type status :: atom()
 
   @topic inspect(__MODULE__)
 
@@ -85,13 +87,12 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
       :ok
 
   """
-  @spec broadcast_drop_screenshot_progress(drop(), number(), String.t()) :: :ok
+  @spec broadcast_drop_screenshot_progress(drop(), progress(), status()) :: :ok
   def broadcast_drop_screenshot_progress(drop, progress, status) do
     Phoenix.PubSub.broadcast(
       ElixirDrops.PubSub,
       @topic,
-      {__MODULE__, [:drop, :screenshot_generation_progress],
-       %{drop: drop, progress: progress, status: status}}
+      {__MODULE__, [:drop, :screenshot_generation_progress], drop, progress, status}
     )
   end
 end
