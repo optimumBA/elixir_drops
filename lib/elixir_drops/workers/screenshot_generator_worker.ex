@@ -73,17 +73,17 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp drop_screenshot(drop) do
     FLAME.call(ScreenshotGenerator, fn ->
-      broadcast_drop_screenshot_progress(drop, @stages.preparing_session, :generating)
+      # broadcast_drop_screenshot_progress(drop, @stages.preparing_session, :generating)
 
       with {:ok, screenshot} <- generate_screenshot(drop),
            {:ok, image} <- File.read(screenshot) do
-        broadcast_drop_screenshot_progress(drop, @stages.processing_image, :generating)
+        # broadcast_drop_screenshot_progress(drop, @stages.processing_image, :generating)
 
-        Process.sleep(500)
-        broadcast_drop_screenshot_progress(drop, @stages.compressing, :generating)
+        # Process.sleep(500)
+        # broadcast_drop_screenshot_progress(drop, @stages.compressing, :generating)
 
-        Process.sleep(300)
-        broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, :generating)
+        # Process.sleep(300)
+        # broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, :generating)
 
         upload_screenshot(image, drop)
       end
