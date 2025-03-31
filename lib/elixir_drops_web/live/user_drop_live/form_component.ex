@@ -32,28 +32,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   def handle_event("save", %{"drop" => drop_params}, socket) do
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
       {:ok, drop} ->
-        case socket.assigns do
-          %{live_action: :edit, drop: %{body: old_body}} when old_body != drop.body ->
-            enqueue_seo_screenshot_creation(drop.id, old_body, :edit)
-
-            send(self(), {:screenshot_generation_started, drop.id})
-
-            {:noreply, socket}
-
-          %{live_action: :edit, drop: %{body: old_body}} when old_body == drop.body ->
-            socket = push_navigate(socket, to: ~p"/profile")
-            {:noreply, socket}
-
-          %{live_action: :new} ->
-            enqueue_seo_screenshot_creation(drop.id, nil, :new)
-
-            send(self(), {:screenshot_generation_started, drop.id})
-
-            {:noreply, socket}
-
-          _assigns ->
-            {:noreply, socket}
-        end
+        maybe_enqueue_screenshot_generation(socket, drop)
 
       {:error, changeset} ->
         {:noreply, assign_form(socket, changeset)}
@@ -84,5 +63,30 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
   defp assign_form(socket, changeset) do
     assign(socket, :form, to_form(changeset))
+  end
+
+  defp maybe_enqueue_screenshot_generation(socket, drop) do
+    case socket.assigns do
+      %{live_action: :edit, drop: %{body: old_body}} when old_body != drop.body ->
+        enqueue_seo_screenshot_creation(drop.id, old_body, :edit)
+
+        send(self(), {:screenshot_generation_started, drop.id})
+
+        {:noreply, socket}
+
+      %{live_action: :edit, drop: %{body: old_body}} when old_body == drop.body ->
+        socket = push_navigate(socket, to: ~p"/profile")
+        {:noreply, socket}
+
+      %{live_action: :new} ->
+        enqueue_seo_screenshot_creation(drop.id, nil, :new)
+
+        send(self(), {:screenshot_generation_started, drop.id})
+
+        {:noreply, socket}
+
+      _assigns ->
+        {:noreply, socket}
+    end
   end
 end
