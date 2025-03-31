@@ -336,8 +336,9 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :myself, :any, required: true
-  attr :screenshot_status, :atom, default: :idle
   attr :progress_value, :integer, default: 0
+  attr :screenshot_drop_short_id, :string, default: nil
+  attr :screenshot_status, :atom, default: :idle
   attr :screenshot_url, :string, default: nil
 
   @spec generating_screenshots_popup(assigns()) :: rendered()
@@ -377,7 +378,14 @@ defmodule ElixirDropsWeb.DropComponents do
         ]}>
           <%= if @screenshot_status == :generating do %>
             <div class="mx-auto mb-4 text-white rounded-lg flex flex-col items-center justify-center py-8 px-12">
-              <.progress variant="radial" value={@progress_value} text={"#{@progress_value}%"} />
+              <.progress
+                variant="radial"
+                value={@progress_value}
+                text={"#{@progress_value}%"}
+                id="progress-bar"
+                phx-hook="SmoothProgress"
+                data-target={@progress_value}
+              />
               <p class="text-sm md:text-base text-white mx-auto mt-4 mb-6">
                 Generating Code Screenshots...
               </p>

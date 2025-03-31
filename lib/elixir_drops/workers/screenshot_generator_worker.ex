@@ -13,13 +13,16 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 
   @stages %{
-    started: 5,
     drop_found: 10,
-    # code_block_verified: 15,
+    preparing_session: 15,
     session_started: 25,
-    screenshot_taken: 50,
+    preparing_screenshot: 40,
+    screenshot_taken: 55,
     processing_image: 70,
+    compressing: 75,
+    preparing_upload: 80,
     uploading: 85,
+    finalizing: 90,
     ready_for_preview: 95
   }
 
@@ -70,9 +73,17 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp drop_screenshot(drop) do
     FLAME.call(ScreenshotGenerator, fn ->
+      broadcast_drop_screenshot_progress(drop, @stages.preparing_session, :generating)
+
       with {:ok, screenshot} <- generate_screenshot(drop),
            {:ok, image} <- File.read(screenshot) do
         broadcast_drop_screenshot_progress(drop, @stages.processing_image, :generating)
+
+        Process.sleep(500)
+        broadcast_drop_screenshot_progress(drop, @stages.compressing, :generating)
+
+        Process.sleep(300)
+        broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, :generating)
 
         upload_screenshot(image, drop)
       end
@@ -96,7 +107,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         {:error, "No code block found"}
 
       code_block ->
-        # broadcast_drop_screenshot_progress(drop, @stages.code_block_verified, :generating)
         {:ok, code_block}
     end
   end
@@ -130,8 +140,11 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       |> Browser.visit(url)
       |> Browser.take_screenshot()
 
+    broadcast_drop_screenshot_progress(drop, @stages.preparing_screenshot, :generating)
+
     Wallaby.end_session(session)
 
+    Process.sleep(300)
     broadcast_drop_screenshot_progress(drop, @stages.screenshot_taken, :generating)
 
     {:ok, screenshot}
@@ -158,6 +171,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       {:ok, image_url} ->
         drop = Map.put(drop, :screenshot_url, image_url)
 
+        broadcast_drop_screenshot_progress(drop, @stages.finalizing, :generating)
+        Process.sleep(300)
         broadcast_drop_screenshot_progress(drop, @stages.ready_for_preview, :completed)
 
         {:ok, image_url}
