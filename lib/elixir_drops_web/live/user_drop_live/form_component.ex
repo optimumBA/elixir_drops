@@ -36,16 +36,24 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
           %{live_action: :edit, drop: %{body: old_body}} when old_body != drop.body ->
             enqueue_seo_screenshot_creation(drop.id, old_body, :edit)
 
+            send(self(), {:screenshot_generation_started, drop.id})
+
+            {:noreply, socket}
+
+          %{live_action: :edit, drop: %{body: old_body}} when old_body == drop.body ->
+            socket = push_navigate(socket, to: ~p"/profile")
+            {:noreply, socket}
+
           %{live_action: :new} ->
             enqueue_seo_screenshot_creation(drop.id, nil, :new)
 
+            send(self(), {:screenshot_generation_started, drop.id})
+
+            {:noreply, socket}
+
           _assigns ->
-            :ok
+            {:noreply, socket}
         end
-
-        send(self(), {:screenshot_generation_started, drop.id})
-
-        {:noreply, socket}
 
       {:error, changeset} ->
         {:noreply, assign_form(socket, changeset)}

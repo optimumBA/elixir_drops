@@ -394,20 +394,21 @@ defmodule ElixirDropsWeb.DropComponents do
 
           <div class="text-xs md:text-sm flex justify-center gap-x-4 mt-4">
             <%= if @screenshot_status == :completed do %>
-              <button
+              <.link
                 type="button"
                 class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
                 phx-click={hide_popup("generating-screenshots-popup")}
+                navigate={~p"/drops/#{@screenshot_drop_short_id}/edit"}
               >
                 Edit Drop Post
-              </button>
-              <button
+              </.link>
+              <.link
                 type="button"
                 class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
-                phx-click={JS.navigate(~p"/profile")}
+                navigate={~p"/profile"}
               >
                 View Drop Posts
-              </button>
+              </.link>
             <% end %>
           </div>
         </div>
