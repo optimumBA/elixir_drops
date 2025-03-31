@@ -93,10 +93,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_info({:screenshot_generation_started, _drop_id}, socket) do
+  def handle_info(:screenshot_generation_started, socket) do
     {:noreply, socket}
   end
 
+  @impl Phoenix.LiveView
   def handle_info(
         {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, progress, status},
         socket

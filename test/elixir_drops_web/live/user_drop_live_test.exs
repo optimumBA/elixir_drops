@@ -123,6 +123,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
         |> render_submit()
 
+      send(live.pid, :screenshot_generation_started)
+
       assert html =~
                "You can now view and share your drop post."
     end
@@ -141,21 +143,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
-      # send(live.pid, {
-      #   DropsBroadcast,
-      #   [:drop, :screenshot_generation_progress],
-      #   50,
-      #   :generating
-      # })
-
       assert render(live) =~ "50%"
-
-      # send(live.pid, {
-      #   DropsBroadcast,
-      #   [:drop, :screenshot_generation_progress],
-      #   100,
-      #   :completed
-      # })
 
       assert render(live) =~ "You can now view and share your drop post."
     end
@@ -270,6 +258,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       send(live.pid, {
         DropsBroadcast,
         [:drop, :screenshot_generation_progress],
+        drop,
         100,
         :generating
       })
