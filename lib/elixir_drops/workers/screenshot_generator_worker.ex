@@ -21,9 +21,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     session_started: 50,
     preparing_screenshot: 60,
     screenshot_taken: 70,
-    processing_image: 80,
-    preparing_upload: 90,
-    uploading: 95,
+    preparing_upload: 80,
+    uploading: 99,
     finalizing: 100
   }
 
@@ -82,9 +81,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
       with {:ok, screenshot} <- generate_screenshot(drop),
            {:ok, image} <- File.read(screenshot) do
-        broadcast_drop_screenshot_progress(drop, @stages.processing_image, :generating)
-
-        Process.sleep(300)
         broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, :generating)
 
         upload_screenshot(image, drop)
