@@ -14,16 +14,18 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   @stages %{
     drop_found: 10,
-    preparing_session: 15,
-    session_started: 25,
+    initializing_flame: 12,
+    creating_machine: 15,
+    waiting_for_machine: 18,
+    preparing_session: 20,
+    session_started: 30,
     preparing_screenshot: 40,
-    screenshot_taken: 55,
-    processing_image: 70,
-    compressing: 75,
-    preparing_upload: 80,
-    uploading: 85,
+    screenshot_taken: 50,
+    processing_image: 60,
+    preparing_upload: 70,
+    uploading: 80,
     finalizing: 90,
-    ready_for_preview: 95
+    ready_for_preview: 100
   }
 
   @impl Oban.Worker
@@ -72,6 +74,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp drop_screenshot(drop) do
+    Task.start(fn ->
+      animate_flame_startup(drop)
+    end)
+
     FLAME.call(ScreenshotGenerator, fn ->
       broadcast_drop_screenshot_progress(drop, @stages.preparing_session, :generating)
 
@@ -79,15 +85,21 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
            {:ok, image} <- File.read(screenshot) do
         broadcast_drop_screenshot_progress(drop, @stages.processing_image, :generating)
 
-        Process.sleep(500)
-        broadcast_drop_screenshot_progress(drop, @stages.compressing, :generating)
-
         Process.sleep(300)
         broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, :generating)
 
         upload_screenshot(image, drop)
       end
     end)
+  end
+
+  defp animate_flame_startup(drop) do
+    broadcast_drop_screenshot_progress(drop, @stages.initializing_flame, :generating)
+    Process.sleep(300)
+    broadcast_drop_screenshot_progress(drop, @stages.creating_machine, :generating)
+    Process.sleep(300)
+    broadcast_drop_screenshot_progress(drop, @stages.waiting_for_machine, :generating)
+    Process.sleep(300)
   end
 
   defp get_drop(id) do
