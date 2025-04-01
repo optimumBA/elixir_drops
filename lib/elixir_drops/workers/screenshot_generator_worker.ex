@@ -13,19 +13,18 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 
   @stages %{
-    drop_found: 10,
-    initializing_flame: 12,
-    creating_machine: 15,
-    waiting_for_machine: 18,
-    preparing_session: 20,
-    session_started: 30,
-    preparing_screenshot: 40,
-    screenshot_taken: 50,
-    processing_image: 60,
-    preparing_upload: 70,
-    uploading: 80,
-    finalizing: 90,
-    ready_for_preview: 100
+    drop_found: 5,
+    initializing_flame: 10,
+    creating_machine: 20,
+    waiting_for_machine: 30,
+    preparing_session: 40,
+    session_started: 50,
+    preparing_screenshot: 60,
+    screenshot_taken: 70,
+    processing_image: 80,
+    preparing_upload: 90,
+    uploading: 95,
+    finalizing: 100
   }
 
   @impl Oban.Worker
@@ -184,8 +183,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         drop = Map.put(drop, :screenshot_url, image_url)
 
         broadcast_drop_screenshot_progress(drop, @stages.finalizing, :generating)
-        Process.sleep(300)
-        broadcast_drop_screenshot_progress(drop, @stages.ready_for_preview, :completed)
 
         {:ok, image_url}
 
