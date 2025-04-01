@@ -358,14 +358,14 @@ defmodule ElixirDropsWeb.DropComponents do
         <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
       </button>
       <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[400px] min-w-[350px] flex flex-col justify-between items-center">
-          <p class={["w-[75%] mx-auto mb-2", @screenshot_status == :completed && "hidden"]}>
-            Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
-          </p>
+        <p class={["w-[75%] mx-auto mb-2", @screenshot_status == :completed && "hidden"]}>
+          Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
+        </p>
         <p class={["mx-auto", @screenshot_status == :generating && "hidden"]}>
           Here's your code screenshot!
           <span class="text-xs text-black block">
-              You can now view and share your drop post.
-            </span>
+            You can now view and share your drop post.
+          </span>
         </p>
 
         <div class={[
@@ -373,37 +373,47 @@ defmodule ElixirDropsWeb.DropComponents do
           @screenshot_status != :completed &&
             "bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2]"
         ]}>
-            <div class={["mx-auto mb-4 text-white rounded-lg flex flex-col items-center justify-center py-8 px-12", @screenshot_status == :completed && "hidden"]}>
-              <.progress
-                variant="radial"
-                value={@progress_value}
-                text={"#{@progress_value}%"}
-                id="progress-bar"
-                phx-hook="SmoothProgress"
-                data-target={@progress_value}
-              />
-              <p class="text-sm md:text-base text-white mx-auto mt-4 mb-6">
-                Generating Code Screenshots...
-              </p>
-            </div>
-            <img src={@screenshot_url} class={["max-w-full rounded", @screenshot_url == nil && "hidden"]} alt="Generated code screenshot" />
+          <div class={[
+            "mx-auto mb-4 text-white rounded-lg flex flex-col items-center justify-center py-8 px-12",
+            @screenshot_status == :completed && "hidden"
+          ]}>
+            <.progress
+              variant="radial"
+              value={@progress_value}
+              text={"#{@progress_value}%"}
+              id="progress-bar"
+              phx-hook="SmoothProgress"
+              data-target={@progress_value}
+            />
+            <p class="text-sm md:text-base text-white mx-auto mt-4 mb-6">
+              Generating Code Screenshots...
+            </p>
+          </div>
+          <img
+            src={@screenshot_url}
+            class={["max-w-full rounded", @screenshot_url == nil && "hidden"]}
+            alt="Generated code screenshot"
+          />
 
-          <div class={["text-xs md:text-sm flex justify-center gap-x-4 mt-4", @screenshot_status == :generating && "hidden"]}>
-              <.link
-                type="button"
-                class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
-                phx-click={hide_popup("generating-screenshots-popup")}
-                navigate={~p"/drops/#{@screenshot_drop_short_id}/edit"}
-              >
-                Edit Drop Post
-              </.link>
-              <.link
-                type="button"
-                class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
-                navigate={~p"/profile"}
-              >
-                View Drop Posts
-              </.link>
+          <div class={[
+            "text-xs md:text-sm flex justify-center gap-x-4 mt-4",
+            @screenshot_status == :generating && "hidden"
+          ]}>
+            <.link
+              type="button"
+              class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
+              phx-click={hide_popup("generating-screenshots-popup")}
+              navigate={~p"/drops/#{@screenshot_drop_short_id}/edit"}
+            >
+              Edit Drop Post
+            </.link>
+            <.link
+              type="button"
+              class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
+              navigate={~p"/profile"}
+            >
+              View Drop Posts
+            </.link>
           </div>
         </div>
       </div>

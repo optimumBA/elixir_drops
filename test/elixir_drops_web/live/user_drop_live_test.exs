@@ -8,6 +8,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
@@ -123,8 +124,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
         |> render_submit()
 
-      send(live.pid, :screenshot_generation_started)
-
       assert html =~
                "You can now view and share your drop post."
     end
@@ -151,12 +150,27 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     test "drop screenshot preview", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
 
+      drop_params = %{title: "New Drop unique title", body: "Drop body"}
+
       {:ok, live, _html} = live(conn, ~p"/drops/new")
 
       html =
         live
-        |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
+        |> form("#drops-editor-form", drop: drop_params)
         |> render_submit()
+
+      drop = Drops.get_drop(%{title: drop_params.title})
+
+      updated_drop = Map.put(drop, :screenshot_url, "https://example.com/test-screenshot.png")
+
+      send(
+        live.pid,
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], updated_drop, 100, :completed}
+      )
+
+      updated_html = render(live)
+
+      assert updated_html =~ "https://example.com/test-screenshot.png"
 
       assert html =~ "You can now view and share your drop post"
     end

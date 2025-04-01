@@ -89,6 +89,10 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.short_id == ^short_id)
   end
 
+  defp apply_filter({:title, title}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.title == ^title)
+  end
+
   defp apply_filter({:user_id, user_id}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
