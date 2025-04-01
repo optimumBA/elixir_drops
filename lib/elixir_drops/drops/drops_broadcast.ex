@@ -6,7 +6,7 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
   alias ElixirDrops.Drops.Drop
 
   @type drop :: Drop.t()
-  @type progress :: number()
+  @type progress :: integer()
   @type short_id_string :: String.t()
   @type status :: atom()
 

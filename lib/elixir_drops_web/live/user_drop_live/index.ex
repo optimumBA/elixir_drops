@@ -17,7 +17,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:screenshot_status, :idle)
-     |> assign(:screenshot_drop_short_id, nil)
+     |> assign(:screenshot_drop_short_id, "")
      |> assign(:progress_value, 0)
      |> assign(:screenshot_url, nil)
      |> assign(:end_of_timeline?, false)

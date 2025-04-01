@@ -349,7 +349,7 @@ defmodule ElixirDropsWeb.DropComponents do
       class={[
         "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
         "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
-        "w-[90%] md:w-[80%] lg:w-[40%]",
+        "w-[90%] md:w-[80%] lg:max-w-[40em]",
         @screenshot_status == :idle && "hidden"
       ]}
       phx-click-away={hide_popup("generating-screenshots-popup")}
@@ -357,27 +357,23 @@ defmodule ElixirDropsWeb.DropComponents do
       <button class="bg-black" phx-click={hide_popup("generating-screenshots-popup")}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
       </button>
-      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto">
-        <%= if @screenshot_status == :generating do %>
-          <p class=" w-[75%] mx-auto mb-2">
+      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[400px] min-w-[350px] flex flex-col justify-between items-center">
+          <p class={["w-[75%] mx-auto mb-2", @screenshot_status == :completed && "hidden"]}>
             Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
           </p>
-        <% else %>
-          <p class="mx-auto">
-            Here's your code screenshot!
-            <span class="text-xs text-black block">
+        <p class={["mx-auto", @screenshot_status == :generating && "hidden"]}>
+          Here's your code screenshot!
+          <span class="text-xs text-black block">
               You can now view and share your drop post.
             </span>
-          </p>
-        <% end %>
+        </p>
 
         <div class={[
           "py-8 w-[80%] mx-auto",
           @screenshot_status != :completed &&
             "bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2]"
         ]}>
-          <%= if @screenshot_status == :generating do %>
-            <div class="mx-auto mb-4 text-white rounded-lg flex flex-col items-center justify-center py-8 px-12">
+            <div class={["mx-auto mb-4 text-white rounded-lg flex flex-col items-center justify-center py-8 px-12", @screenshot_status == :completed && "hidden"]}>
               <.progress
                 variant="radial"
                 value={@progress_value}
@@ -390,18 +386,9 @@ defmodule ElixirDropsWeb.DropComponents do
                 Generating Code Screenshots...
               </p>
             </div>
-          <% else %>
-            <div class="mx-auto mb-4">
-              <%= if @screenshot_url do %>
-                <img src={@screenshot_url} class="max-w-full rounded" alt="Generated code screenshot" />
-              <% else %>
-                <div class="min-h-[200px] min-w-[350px]"></div>
-              <% end %>
-            </div>
-          <% end %>
+            <img src={@screenshot_url} class={["max-w-full rounded", @screenshot_url == nil && "hidden"]} alt="Generated code screenshot" />
 
-          <div class="text-xs md:text-sm flex justify-center gap-x-4 mt-4">
-            <%= if @screenshot_status == :completed do %>
+          <div class={["text-xs md:text-sm flex justify-center gap-x-4 mt-4", @screenshot_status == :generating && "hidden"]}>
               <.link
                 type="button"
                 class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
@@ -417,7 +404,6 @@ defmodule ElixirDropsWeb.DropComponents do
               >
                 View Drop Posts
               </.link>
-            <% end %>
           </div>
         </div>
       </div>
@@ -626,7 +612,6 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :class, :any, doc: "Extend existing component styles"
-  attr :color, :string, default: "blue", doc: "The color of the component."
   attr :rest, :global, doc: "Arbitrary HTML or phx attributes"
   attr :size, :any, default: "md", doc: "The size of the component"
   attr :square, :boolean, default: false, doc: "If true, rounded corners are disabled"
