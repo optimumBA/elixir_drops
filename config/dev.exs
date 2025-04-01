@@ -102,4 +102,8 @@ config :elixir_drops,
     password: "l3AVAovk4B8g5Sbq"
   ]
 
-config :flame, backend: FLAME.LocalBackend
+config :flame,
+  backend: FLAME.LocalBackend,
+  env: %{
+    "PUBSUB_SERVER" => "ElixirDrops.PubSub"
+  }

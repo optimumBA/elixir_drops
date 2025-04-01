@@ -225,7 +225,8 @@ if config_env() == :prod do
       "AWS_ENDPOINT_URL_S3" => aws_endpoint_url,
       "AWS_REGION" => aws_region,
       "AWS_SECRET_ACCESS_KEY" => aws_secret_access_key,
-      "BUCKET_NAME" => aws_bucket
+      "BUCKET_NAME" => aws_bucket,
+      "PUBSUB_SERVER" => "ElixirDrops.PubSub"
     },
     memory_mb: 1024,
     token: fly_api_token

@@ -11,10 +11,10 @@ defmodule ElixirDrops.Application do
       children(
         always: ElixirDropsWeb.Telemetry,
         always: ElixirDropsWeb.Endpoint,
+        always: {Phoenix.PubSub, name: ElixirDrops.PubSub},
         parent: ElixirDrops.Repo,
         parent:
           {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
-        parent: {Phoenix.PubSub, name: ElixirDrops.PubSub},
         # Start the Finch HTTP client for sending emails
         parent: {Finch, name: ElixirDrops.Finch},
         # Start a worker by calling: ElixirDrops.Worker.start_link(arg)
