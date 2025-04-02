@@ -1,5 +1,4 @@
 defmodule ElixirDropsWeb.DropLive.Index do
-  require Logger
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
@@ -38,8 +37,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   def handle_event("refresh-drops", _params, socket) do
-    Logger.warning("new drop")
-
     {:noreply,
      socket
      |> assign(:new_drops?, false)
