@@ -1,4 +1,5 @@
 defmodule ElixirDropsWeb.DropLive.Index do
+  require Logger
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
@@ -14,36 +15,31 @@ defmodule ElixirDropsWeb.DropLive.Index do
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{})
-     |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
+     |> assign(:end_of_timeline?, false)
      |> assign(:page_title, "ElixirDrops")
+     |> assign(page: 1)
      |> DropsListHelper.assign_drops()}
   end
 
-  @impl Phoenix.LiveView
-  def handle_event("next-page", _params, socket) do
-    filters = %{older_than: socket.assigns.last_drop}
+  @impl true
+  def handle_event("load-more", _, %{assigns: assigns} = socket) do
+    case assigns.end_of_timeline? == true do
+      true ->
+        {:noreply, socket}
 
-    {
-      :noreply,
-      DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.last_drop)
-    }
-  end
+      false ->
+        filters = %{older_than: socket.assigns.last_drop}
 
-  def handle_event("prev-page", %{"_overran" => true}, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_event("prev-page", _params, socket) do
-    filters = %{newer_than: socket.assigns.first_drop}
-
-    {
-      :noreply,
-      DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.first_drop, at: 0)
-    }
+        {:noreply,
+         assign(socket, page: assigns.page + 1)
+         |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.last_drop)}
+    end
   end
 
   def handle_event("refresh-drops", _params, socket) do
+    Logger.warning("new drop")
+
     {:noreply,
      socket
      |> assign(:new_drops?, false)

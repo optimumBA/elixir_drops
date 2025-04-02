@@ -14,6 +14,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:end_of_timeline?, false)
+     |> assign(:page, 1)
      |> DropsListHelper.assign_drops()}
   end
 
@@ -22,27 +23,19 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  @impl Phoenix.LiveView
-  def handle_event("next-page", _params, socket) do
-    filters = %{older_than: socket.assigns.last_drop}
+  @impl true
+  def handle_event("load-more", _, %{assigns: assigns} = socket) do
+    case assigns.end_of_timeline? == true do
+      true ->
+        {:noreply, socket}
 
-    {
-      :noreply,
-      DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.last_drop)
-    }
-  end
+      false ->
+        filters = %{older_than: socket.assigns.last_drop}
 
-  def handle_event("prev-page", %{"_overran" => true}, socket) do
-    {:noreply, socket}
-  end
-
-  def handle_event("prev-page", _params, socket) do
-    filters = %{newer_than: socket.assigns.first_drop}
-
-    {
-      :noreply,
-      DropsListHelper.maybe_insert_drops(socket, filters, socket.assigns.first_drop, at: 0)
-    }
+        {:noreply,
+         assign(socket, page: assigns.page + 1)
+         |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.last_drop)}
+    end
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
