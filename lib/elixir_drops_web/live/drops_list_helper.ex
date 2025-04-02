@@ -1,7 +1,6 @@
 defmodule ElixirDropsWeb.DropsListHelper do
   @moduledoc false
 
-  require Logger
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.Drops

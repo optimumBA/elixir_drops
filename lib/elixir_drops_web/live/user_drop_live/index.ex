@@ -1,6 +1,7 @@
 defmodule ElixirDropsWeb.UserDropLive.Index do
   use ElixirDropsWeb, :live_view
 
+  import ElixirDropsWeb.DropLive.Index, only: [load_more: 1]
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.DropComponents
@@ -23,19 +24,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  @impl true
-  def handle_event("load-more", _, %{assigns: assigns} = socket) do
-    case assigns.end_of_timeline? == true do
-      true ->
-        {:noreply, socket}
-
-      false ->
-        filters = %{older_than: socket.assigns.last_drop}
-
-        {:noreply,
-         assign(socket, page: assigns.page + 1)
-         |> DropsListHelper.maybe_insert_drops(filters, socket.assigns.last_drop)}
-    end
+  @impl Phoenix.LiveView
+  def handle_event("load-more", _params, socket) do
+    load_more(socket)
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
