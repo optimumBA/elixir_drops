@@ -1,7 +1,6 @@
 defmodule ElixirDropsWeb.UserDropLive.Index do
   use ElixirDropsWeb, :live_view
 
-  import ElixirDropsWeb.DropLive.Index, only: [load_more: 1]
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.DropComponents
@@ -26,7 +25,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_event("load-more", _params, socket) do
-    load_more(socket)
+    DropsListHelper.load_more(socket)
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do

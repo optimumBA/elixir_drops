@@ -87,4 +87,19 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> Phoenix.LiveView.stream(:drops, drops, opts)
     |> assign(:last_drop, last_drop)
   end
+
+  @spec load_more(any()) :: {:noreply, any()}
+  def load_more(socket) do
+    case socket.assigns.end_of_timeline? == true do
+      true ->
+        {:noreply, socket}
+
+      false ->
+        filters = %{older_than: socket.assigns.last_drop}
+
+        socket = assign(socket, page: socket.assigns.page + 1)
+
+        {:noreply, maybe_insert_drops(socket, filters, socket.assigns.last_drop)}
+    end
+  end
 end

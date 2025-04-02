@@ -25,15 +25,14 @@ import topbar from '../vendor/topbar'
 import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
+import InfiniteScrollHooks from './hooks/infinite_scroll'
 import WelcomeMessageHooks from './hooks/welcome_message'
 
-import InfiniteScroll from './hooks/infinite_scroll'
-
 let Hooks = {
-  InfiniteScroll,
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
   ...DropsContainerHooks,
+  InfiniteScrollHooks,
   ...WelcomeMessageHooks,
 }
 

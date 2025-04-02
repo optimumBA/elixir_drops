@@ -9,9 +9,9 @@
     <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
 
     <DropsListHelper.drops_list
-      page={@page}
       drops={@streams.drops}
       id="drops"
+      page={@page}
       show_user_drops?={false}
     />
 

@@ -59,7 +59,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
 
     test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
-      drops = create_multiple_drops(user, 16)
+      drops = create_multiple_drops(user, 25)
 
       list_midpoint =
         drops
@@ -72,15 +72,17 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       conn = sign_in_user(conn, user)
       {:ok, live, html} = live(conn, ~p"/profile")
-      # Since we take 10 drops at a time the midpoint and last drop should appear on the page
       assert html =~ last_drop.id
-      assert html =~ midpoint_drop.id
+      refute html =~ midpoint_drop.id
       refute html =~ first_drop.id
 
       assert html_2 = render_hook(live, "load-more", %{})
-      assert html_2 =~ first_drop.id
+      refute html_2 =~ first_drop.id
       assert html_2 =~ midpoint_drop.id
       assert html_2 =~ last_drop.id
+
+      assert html_3 = render_hook(live, "load-more", %{})
+      assert html_3 =~ first_drop.id
     end
   end
 
