@@ -52,7 +52,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
           <DropComponents.drop_card drop={drop} show_card_menu?={@show_user_drops?} />
         </div>
       </div>
-      <div id="infinite-scroll-marker" phx-hook="InfiniteScroll" data-page={@page}></div>
+      <div id="infinite-scroll-marker" phx-hook="InfiniteScrollHooks" data-page={@page}></div>
     </div>
     """
   end
