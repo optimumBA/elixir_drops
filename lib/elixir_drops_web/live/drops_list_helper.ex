@@ -52,7 +52,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
           <DropComponents.drop_card drop={drop} show_card_menu?={@show_user_drops?} />
         </div>
       </div>
-      <div id="infinite-scroll-marker" phx-hook="InfiniteScrollHooks" data-page={@page}></div>
+      <div id="infinite-scroll-marker" phx-hook="InfiniteScroll" data-page={@page}></div>
     </div>
     """
   end
@@ -88,18 +88,13 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> assign(:last_drop, last_drop)
   end
 
-  @spec load_more(any()) :: {:noreply, any()}
+  @spec load_more(socket()) :: {:noreply, socket()}
+  def load_more(%{assigns: %{end_of_timeline?: true}} = socket),
+    do: {:noreply, socket}
+
   def load_more(socket) do
-    case socket.assigns.end_of_timeline? == true do
-      true ->
-        {:noreply, socket}
-
-      false ->
-        filters = %{older_than: socket.assigns.last_drop}
-
-        socket = assign(socket, page: socket.assigns.page + 1)
-
-        {:noreply, maybe_insert_drops(socket, filters, socket.assigns.last_drop)}
-    end
+    socket = assign(socket, :page, socket.assigns.page + 1)
+    filters = %{older_than: socket.assigns.last_drop}
+    {:noreply, maybe_insert_drops(socket, filters, socket.assigns.last_drop)}
   end
 end

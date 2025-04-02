@@ -32,7 +32,7 @@ let Hooks = {
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
   ...DropsContainerHooks,
-  InfiniteScrollHooks,
+  ...InfiniteScrollHooks,
   ...WelcomeMessageHooks,
 }
 

@@ -135,7 +135,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       refute html_2 =~ first_drop.id
       assert html_2 =~ midpoint_drop.id
-      # When load more is invoked the second time ....30 items are on the page now
       assert html_3 = render_hook(live, "load-more", %{})
       assert html_3 =~ first_drop.id
     end

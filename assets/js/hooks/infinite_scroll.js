@@ -1,4 +1,6 @@
-export default InfiniteScrollHooks = {
+let InfiniteScrollHooks = {}
+
+InfiniteScrollHooks.InfiniteScroll = {
   page() {
     return this.el.dataset.page
   },
@@ -30,3 +32,5 @@ export default InfiniteScrollHooks = {
     this.pending = this.page()
   },
 }
+
+export default InfiniteScrollHooks
