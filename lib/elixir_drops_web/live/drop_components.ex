@@ -350,7 +350,7 @@ defmodule ElixirDropsWeb.DropComponents do
         "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
         "top-[40%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
         "w-[90%] md:w-[80%] lg:max-w-[40em]",
-        @screenshot_status == :idle && "hidden"
+        @screenshot_status == "idle" && "hidden"
       ]}
       phx-click-away={hide_popup("generating-screenshots-popup")}
     >
@@ -358,10 +358,10 @@ defmodule ElixirDropsWeb.DropComponents do
         <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
       </button>
       <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
-        <p class={["w-[75%] mx-auto mb-2", @screenshot_status == :completed && "hidden"]}>
+        <p class={["w-[75%] mx-auto mb-2", @screenshot_status == "published" && "hidden"]}>
           Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
         </p>
-        <p class={["mx-auto", @screenshot_status == :generating && "hidden"]}>
+        <p class={["mx-auto", @screenshot_status == "pending" && "hidden"]}>
           Here's your code screenshot!
           <span class="text-xs text-black block">
             You can now view and share your drop post.
@@ -370,12 +370,12 @@ defmodule ElixirDropsWeb.DropComponents do
 
         <div class={[
           "py-8 min-w-[80%] mx-auto",
-          @screenshot_status != :completed &&
+          @screenshot_status != "published" &&
             "flex h-[80%] bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2] my-auto"
         ]}>
           <div class={[
             "mx-auto text-white rounded-lg flex flex-col items-center justify-center",
-            @screenshot_status == :completed && "hidden"
+            @screenshot_status == "published" && "hidden"
           ]}>
             <.progress
               variant="radial"
@@ -396,7 +396,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
           <div class={[
             "text-xs md:text-sm flex justify-center gap-x-4 mt-4",
-            @screenshot_status == :generating && "hidden"
+            @screenshot_status == "pending" && "hidden"
           ]}>
             <.link
               type="button"
@@ -618,6 +618,27 @@ defmodule ElixirDropsWeb.DropComponents do
       ]
     )
     |> raw()
+  end
+
+  @spec loading_spinner(map()) :: Phoenix.LiveView.Rendered.t()
+  def loading_spinner(assigns) do
+    ~H"""
+    <svg
+      class="animate-spin h-8 w-8 text-white"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+      </circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      >
+      </path>
+    </svg>
+    """
   end
 
   attr :class, :any, doc: "Extend existing component styles"

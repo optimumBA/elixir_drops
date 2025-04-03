@@ -82,7 +82,7 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
       ...>     short_id: "abc123"
       ...>   },
       ...>   50,
-      ...>   :generating
+      ...>   "pending"
       ...> )
       :ok
 
