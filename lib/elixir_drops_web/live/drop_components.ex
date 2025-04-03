@@ -348,7 +348,7 @@ defmodule ElixirDropsWeb.DropComponents do
       id="generating-screenshots-popup"
       class={[
         "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
-        "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
+        "top-[40%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
         "w-[90%] md:w-[80%] lg:max-w-[40em]",
         @screenshot_status == :idle && "hidden"
       ]}
@@ -357,7 +357,7 @@ defmodule ElixirDropsWeb.DropComponents do
       <button class="bg-black" phx-click={hide_popup("generating-screenshots-popup")}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
       </button>
-      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[400px] min-w-[350px] flex flex-col justify-between items-center">
+      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
         <p class={["w-[75%] mx-auto mb-2", @screenshot_status == :completed && "hidden"]}>
           Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
         </p>
@@ -369,12 +369,12 @@ defmodule ElixirDropsWeb.DropComponents do
         </p>
 
         <div class={[
-          "py-8 w-[80%] mx-auto",
+          "py-8 min-w-[80%] mx-auto",
           @screenshot_status != :completed &&
-            "bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2]"
+            "flex h-[80%] bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2] my-auto"
         ]}>
           <div class={[
-            "mx-auto mb-4 text-white rounded-lg flex flex-col items-center justify-center py-8 px-12",
+            "mx-auto text-white rounded-lg flex flex-col items-center justify-center",
             @screenshot_status == :completed && "hidden"
           ]}>
             <.progress
@@ -382,7 +382,6 @@ defmodule ElixirDropsWeb.DropComponents do
               value={@progress_value}
               text={"#{@progress_value}%"}
               id="progress-bar"
-              phx-hook="SmoothProgress"
               data-target={@progress_value}
             />
             <p class="text-sm md:text-base text-white mx-auto mt-4 mb-6">
@@ -391,7 +390,7 @@ defmodule ElixirDropsWeb.DropComponents do
           </div>
           <img
             src={@screenshot_url}
-            class={["max-w-full rounded", @screenshot_url == nil && "hidden"]}
+            class={["max-w-[80%] rounded mx-auto", @screenshot_url == nil && "hidden"]}
             alt="Generated code screenshot"
           />
 
@@ -645,13 +644,13 @@ defmodule ElixirDropsWeb.DropComponents do
       {@rest}
     >
       <path
-        class="stroke-gray-400"
+        class="stroke-gray-400 transition-all duration-300 ease-out"
         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
         fill="none"
         stroke-width="3.8"
       />
       <path
-        class="stroke-current"
+        class="stroke-current transition-all duration-300 ease-out"
         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
         fill="none"
         stroke-dasharray={"#{@value}, 100"}
@@ -665,8 +664,8 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp styles(:size, %{size: "sm", variant: "radial"}), do: "h-8 w-8 text-sm"
-  defp styles(:size, %{size: "md", variant: "radial"}), do: "h-12 w-12 text-sm"
+  defp styles(:size, %{size: "sm", variant: "radial"}), do: "h-16 w-16 text-sm"
+  defp styles(:size, %{size: "md", variant: "radial"}), do: "h-16 w-16 text-sm"
   defp styles(:size, %{size: "lg", variant: "radial"}), do: "h-16 w-16 text-sm"
   defp styles(_rule_group, _assigns), do: nil
 end

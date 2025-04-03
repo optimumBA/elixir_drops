@@ -15,9 +15,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   @stages %{
     drop_found: 5,
     initializing_flame: 10,
-    creating_machine: 20,
-    waiting_for_machine: 30,
-    preparing_session: 40,
+    preparing_session: 20,
+    preparing_session: 30,
+    waiting_for_machine: 40,
     session_started: 50,
     preparing_screenshot: 60,
     screenshot_taken: 70,
