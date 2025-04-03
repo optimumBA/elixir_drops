@@ -40,18 +40,22 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp create_or_update_drop(socket, :edit, drop_params) do
+    updated_params = add_screenshot_status(:edit, drop_params, socket.assigns.drop.body)
+
     Drops.update_drop(
       socket.assigns.drop,
       socket.assigns.current_user,
-      drop_params
+      updated_params
     )
   end
 
   defp create_or_update_drop(socket, :new, drop_params) do
+    updated_params = add_screenshot_status(:new, drop_params)
+
     Drops.create_drop(
       socket.assigns.drop,
       socket.assigns.current_user,
-      drop_params
+      updated_params
     )
   end
 
@@ -87,6 +91,28 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
       _assigns ->
         {:noreply, socket}
+    end
+  end
+
+  defp add_screenshot_status(:new, drop_params) do
+    case ScreenshotGeneratorWorker.check_for_code_block(drop_params["body"]) do
+      {:ok, _code_block} -> Map.put(drop_params, "screenshot_status", "pending")
+      {:error, _no_code_block} -> Map.put(drop_params, "screenshot_status", "published")
+    end
+  end
+
+  defp add_screenshot_status(:edit, drop_params, old_body) do
+    new_body = drop_params["body"]
+
+    cond do
+      match?({:error, _no_code_block}, ScreenshotGeneratorWorker.check_for_code_block(new_body)) ->
+        Map.put(drop_params, "screenshot_status", "published")
+
+      new_body == old_body ->
+        drop_params
+
+      true ->
+        Map.put(drop_params, "screenshot_status", "pending")
     end
   end
 end

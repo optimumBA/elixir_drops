@@ -26,7 +26,7 @@ defmodule ElixirDrops.Drops.Drop do
   @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
-    |> cast(attrs, [:body, :short_id, :title, :user_id])
+    |> cast(attrs, [:body, :short_id, :title, :user_id, :screenshot_status])
     |> validate_required([:body, :short_id, :title])
     |> unique_constraint(:short_id)
   end
