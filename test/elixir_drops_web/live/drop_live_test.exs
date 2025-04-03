@@ -22,10 +22,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
         }
       )
 
-    user = user_fixture()
+    user = user_fixture(%{github_id: 1_456_872})
+    user2 = user_fixture(%{github_id: 9_456_872})
     drop = drop_fixture(user)
 
-    %{conn: conn, drop: drop, user: user}
+    %{conn: conn, drop: drop, user: user, user2: user2}
   end
 
   describe "/" do
@@ -95,6 +96,28 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {path, _flash} = assert_redirect(live)
 
       assert path == ~p"/d/#{drop.short_id}"
+    end
+
+    test "unathorized users cannot edit drops", %{conn: conn} do
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      refute html =~ "Edit drop"
+    end
+
+    test "only the author can edit a drop", %{
+      conn: conn,
+      user: user,
+      user2: user2
+    } do
+      conn = sign_in_user(conn, user)
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      assert html =~ "Edit drop"
+
+      conn2 = sign_in_user(conn, user2)
+      {:ok, _live, html2} = live(conn2, ~p"/")
+
+      refute html2 =~ "Edit drop"
     end
 
     test "gets updated with new drops", %{conn: conn, user: user} do
