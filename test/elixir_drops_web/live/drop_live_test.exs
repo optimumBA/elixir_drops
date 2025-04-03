@@ -22,8 +22,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
         }
       )
 
-    user = user_fixture()
-    user2 = user_fixture_2()
+    user = user_fixture(%{github_id: 1_456_872})
+    user2 = user_fixture(%{github_id: 9_456_872})
     drop = drop_fixture(user)
 
     %{conn: conn, drop: drop, user: user, user2: user2}
@@ -104,7 +104,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html =~ "Edit drop"
     end
 
-    test "only a user who authored a drop can edit it", %{
+    test "only the author can edit a drop", %{
       conn: conn,
       user: user,
       user2: user2

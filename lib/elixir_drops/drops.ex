@@ -139,23 +139,6 @@ defmodule ElixirDrops.Drops do
     |> Repo.one()
   end
 
-  @spec drop_belongs_to_user?(short_id(), user_id()) :: boolean()
-  def drop_belongs_to_user?(short_id, user_id) do
-    case get_drop_by_short_id(short_id) do
-      nil ->
-        false
-
-      drop ->
-        %Drop{user_id: id} = drop
-
-        if id == user_id do
-          true
-        else
-          false
-        end
-    end
-  end
-
   @doc """
   Creates a new drop.
 

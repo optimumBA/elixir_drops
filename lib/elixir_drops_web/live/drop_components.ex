@@ -4,7 +4,6 @@ defmodule ElixirDropsWeb.DropComponents do
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.Accounts.User
-  alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.Icons
 
@@ -64,6 +63,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   attr :drop, Drop, required: true
   attr :show_card_menu?, :boolean, default: false
+  attr :drop_user_id, :string
   attr :user_id, :string
 
   @spec drop_card(assigns()) :: rendered()
@@ -102,7 +102,12 @@ defmodule ElixirDropsWeb.DropComponents do
         <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
       </div>
 
-      <.drop_card_menu id={@drop.id} short_id={@drop.short_id} user_id={@user_id} />
+      <.drop_card_menu
+        id={@drop.id}
+        short_id={@drop.short_id}
+        drop_user_id={@drop.user_id}
+        user_id={@user_id}
+      />
     </div>
     """
   end
@@ -415,7 +420,7 @@ defmodule ElixirDropsWeb.DropComponents do
       </.drop_card_action_default>
 
       <.link
-        :if={Drops.drop_belongs_to_user?(@short_id, @user_id)}
+        :if={@drop_user_id == @user_id}
         navigate={"/drops/#{@short_id}/edit"}
         class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
         id={"edit-drop-#{@id}"}

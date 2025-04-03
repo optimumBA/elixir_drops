@@ -31,20 +31,4 @@ defmodule ElixirDrops.AccountsFixtures do
 
     user
   end
-
-  @spec user_fixture_2(map()) :: User.t()
-  def user_fixture_2(attrs \\ %{}) do
-    {:ok, user2} =
-      attrs
-      |> Enum.into(%{
-        avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
-        email: unique_user_email(),
-        github_id: 9_456_872,
-        github_username: "github_username_2",
-        name: "some_name_2"
-      })
-      |> Accounts.register_user()
-
-    user2
-  end
 end
