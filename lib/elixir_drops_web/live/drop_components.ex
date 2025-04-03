@@ -103,9 +103,9 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <.drop_card_menu
+      drop_user_id={@drop.user_id}
         id={@drop.id}
         short_id={@drop.short_id}
-        drop_user_id={@drop.user_id}
         user_id={@user_id}
       />
     </div>
