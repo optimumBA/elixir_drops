@@ -85,6 +85,10 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.inserted_at < ^drop.inserted_at)
   end
 
+  defp apply_filter({:screenshot_status, status}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.screenshot_status == ^status)
+  end
+
   defp apply_filter({:short_id, short_id}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.short_id == ^short_id)
   end

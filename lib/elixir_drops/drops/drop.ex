@@ -14,7 +14,7 @@ defmodule ElixirDrops.Drops.Drop do
   @foreign_key_type :binary_id
   schema "drops" do
     field :body, :string
-    field :screenshot_url, :string
+    field :screenshot_status, :string
     field :short_id, :string
     field :title, :string
 
