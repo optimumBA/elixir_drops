@@ -57,10 +57,10 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, "published"},
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, _progress, "published"},
         socket
       ) do
-    {:noreply, assign(socket, :new_drops?, true)}
+    {:noreply, socket |> assign(:new_drops?, true) |> DropsListHelper.assign_drops()}
   end
 
   def handle_info(

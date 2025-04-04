@@ -95,9 +95,9 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp add_screenshot_status(:new, drop_params) do
-    case ScreenshotGeneratorWorker.check_for_code_block(drop_params["body"]) do
-      {:ok, _code_block} -> Map.put(drop_params, "screenshot_status", "pending")
-      {:error, _no_code_block} -> Map.put(drop_params, "screenshot_status", "published")
+    case has_code_block?(drop_params["body"]) do
+      true -> Map.put(drop_params, "screenshot_status", "pending")
+      false -> Map.put(drop_params, "screenshot_status", "published")
     end
   end
 
@@ -105,7 +105,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     new_body = drop_params["body"]
 
     cond do
-      match?({:error, _no_code_block}, ScreenshotGeneratorWorker.check_for_code_block(new_body)) ->
+      !has_code_block?(new_body) ->
         Map.put(drop_params, "screenshot_status", "published")
 
       new_body == old_body ->
@@ -113,6 +113,13 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
       true ->
         Map.put(drop_params, "screenshot_status", "pending")
+    end
+  end
+
+  defp has_code_block?(body) do
+    case ScreenshotGeneratorWorker.check_for_code_block(body) do
+      {:ok, _code_block} -> true
+      {:error, _no_code_block} -> false
     end
   end
 end

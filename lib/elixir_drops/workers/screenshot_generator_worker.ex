@@ -13,16 +13,14 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 
   @stages %{
-    drop_found: 5,
-    initializing_flame: 10,
-    preparing_session: 20,
-    preparing_session: 30,
+    drop_found: 10,
+    initializing_flame: 20,
+    creating_machine: 30,
     waiting_for_machine: 40,
     session_started: 50,
-    preparing_screenshot: 60,
-    screenshot_taken: 70,
-    preparing_upload: 80,
-    uploading: 99,
+    preparing_screenshot: 65,
+    screenshot_taken: 90,
+    preparing_upload: 100,
     finalizing: 100
   }
 
@@ -77,11 +75,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end)
 
     FLAME.call(ScreenshotGenerator, fn ->
-      broadcast_drop_screenshot_progress(drop, @stages.preparing_session, :generating)
-
       with {:ok, screenshot} <- generate_screenshot(drop),
            {:ok, image} <- File.read(screenshot) do
-        broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, :generating)
+        broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, "pending")
 
         upload_screenshot(image, drop)
       end
@@ -89,11 +85,11 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp animate_flame_startup(drop) do
-    broadcast_drop_screenshot_progress(drop, @stages.initializing_flame, :generating)
+    broadcast_drop_screenshot_progress(drop, @stages.initializing_flame, "pending")
     Process.sleep(300)
-    broadcast_drop_screenshot_progress(drop, @stages.creating_machine, :generating)
+    broadcast_drop_screenshot_progress(drop, @stages.creating_machine, "pending")
     Process.sleep(300)
-    broadcast_drop_screenshot_progress(drop, @stages.waiting_for_machine, :generating)
+    broadcast_drop_screenshot_progress(drop, @stages.waiting_for_machine, "pending")
     Process.sleep(300)
   end
 
@@ -103,12 +99,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         {:error, "Drop not found"}
 
       drop ->
-        broadcast_drop_screenshot_progress(drop, @stages.drop_found, :generating)
+        broadcast_drop_screenshot_progress(drop, @stages.drop_found, "pending")
         {:ok, drop}
     end
   end
 
-  defp check_for_code_block(body) do
+  def check_for_code_block(body) do
     case Regex.run(@markdown_regex, body, capture: :first) do
       nil ->
         {:error, "No code block found"}
@@ -138,7 +134,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         }
       )
 
-    broadcast_drop_screenshot_progress(drop, @stages.session_started, :generating)
+    broadcast_drop_screenshot_progress(drop, @stages.session_started, "pending")
 
     url = build_url_with_auth(drop)
 
@@ -147,12 +143,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       |> Browser.visit(url)
       |> Browser.take_screenshot()
 
-    broadcast_drop_screenshot_progress(drop, @stages.preparing_screenshot, :generating)
+    broadcast_drop_screenshot_progress(drop, @stages.preparing_screenshot, "pending")
 
     Wallaby.end_session(session)
 
     Process.sleep(300)
-    broadcast_drop_screenshot_progress(drop, @stages.screenshot_taken, :generating)
+    broadcast_drop_screenshot_progress(drop, @stages.screenshot_taken, "pending")
 
     {:ok, screenshot}
   end
@@ -168,17 +164,19 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp upload_screenshot(screenshot, drop) do
-    broadcast_drop_screenshot_progress(drop, @stages.uploading, :generating)
-
     timestamp = Timex.to_unix(drop.updated_at)
 
     image_name = "drop-meta-image-#{timestamp}-#{drop.id}.png"
 
     case Client.upload_image(screenshot, image_name, "image/png") do
       {:ok, image_url} ->
-        drop = Map.put(drop, :screenshot_url, image_url)
+        updated_drop =
+          drop
+          |> Map.put(:screenshot_url, image_url)
+          |> Map.put(:screenshot_status, "published")
+          |> Map.put(:screenshot_progress, 100)
 
-        broadcast_drop_screenshot_progress(drop, @stages.finalizing, :generating)
+        broadcast_drop_screenshot_progress(updated_drop, @stages.finalizing, "published")
 
         {:ok, image_url}
 

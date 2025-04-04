@@ -16,7 +16,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
-     |> assign(:screenshot_status, :idle)
+     |> assign(:screenshot_status, "idle")
      |> assign(:screenshot_drop_short_id, "")
      |> assign(:progress_value, 0)
      |> assign(:screenshot_url, nil)
@@ -102,20 +102,28 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, progress, status},
         socket
       ) do
-    if drop.screenshot_url do
+    if drop.screenshot_status == "published" do
+      drop_to_update = Drops.get_drop_by_short_id(drop.short_id)
+
+      {:ok, _updated_drop} =
+        Drops.update_drop(drop_to_update, socket.assigns.current_user, %{
+          screenshot_status: "published"
+        })
+
       socket =
         socket
-        |> assign(:screenshot_drop_short_id, drop.short_id)
         |> assign(:progress_value, 100)
-        |> assign(:screenshot_status, :completed)
+        |> assign(:screenshot_status, status)
         |> assign(:screenshot_url, drop.screenshot_url)
+        |> assign(:screenshot_drop_short_id, drop.short_id)
 
-      {:noreply, socket}
+      {:noreply, DropsListHelper.assign_drops(socket)}
     else
       socket =
         socket
         |> assign(:progress_value, progress)
         |> assign(:screenshot_status, status)
+        |> assign(:screenshot_drop_short_id, drop.short_id)
 
       {:noreply, socket}
     end
