@@ -22,10 +22,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
         }
       )
 
-    user = user_fixture()
+    user = user_fixture(%{github_id: 1_456_872})
+    user2 = user_fixture(%{github_id: 9_456_872})
     drop = drop_fixture(user)
 
-    %{conn: conn, drop: drop, user: user}
+    %{conn: conn, drop: drop, user: user, user2: user2}
   end
 
   describe "/" do
@@ -97,6 +98,28 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert path == ~p"/d/#{drop.short_id}"
     end
 
+    test "unathorized users cannot edit drops", %{conn: conn} do
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      refute html =~ "Edit drop"
+    end
+
+    test "only the author can edit a drop", %{
+      conn: conn,
+      user: user,
+      user2: user2
+    } do
+      conn = sign_in_user(conn, user)
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      assert html =~ "Edit drop"
+
+      conn2 = sign_in_user(conn, user2)
+      {:ok, _live, html2} = live(conn2, ~p"/")
+
+      refute html2 =~ "Edit drop"
+    end
+
     test "gets updated with new drops", %{conn: conn, user: user} do
       {:ok, live, _html} = live(conn, ~p"/")
 
@@ -114,7 +137,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert has_element?(live, "#drop-#{drop.id}", drop.title)
     end
 
-    test "user can view older drops with infinite scroll", %{conn: conn, user: user} do
+    test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
       drops = create_multiple_drops(user, 25)
 
       list_midpoint =
@@ -131,36 +154,12 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ last_drop.id
       refute html =~ midpoint_drop.id
       refute html =~ first_drop.id
+      assert html_2 = render_hook(live, "load-more", %{})
 
-      assert html_2 = render_hook(live, "next-page", %{})
-      assert html_2 =~ midpoint_drop.id
       refute html_2 =~ first_drop.id
-
-      assert html_3 = render_hook(live, "next-page", %{})
-      assert html_3 =~ first_drop.id
-    end
-
-    test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
-      drops = create_multiple_drops(user, 25)
-
-      list_midpoint =
-        drops
-        |> length()
-        |> div(2)
-
-      first_drop = List.first(drops)
-      last_drop = List.last(drops)
-      midpoint_drop = Enum.at(drops, list_midpoint)
-
-      {:ok, live, html} = live(conn, ~p"/")
-      assert html =~ last_drop.id
-
-      assert html_2 = render_hook(live, "next-page", %{})
       assert html_2 =~ midpoint_drop.id
-
-      assert html_3 = render_hook(live, "prev-page", %{})
-      assert html_3 =~ last_drop.id
-      refute html_3 =~ first_drop.id
+      assert html_3 = render_hook(live, "load-more", %{})
+      assert html_3 =~ first_drop.id
     end
   end
 
