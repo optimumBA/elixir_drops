@@ -82,33 +82,36 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, _progress, "published"},
+        socket
+      ) do
+    drop_to_update = Drops.get_drop_by_short_id(drop.short_id)
+
+    {:ok, _updated_drop} =
+      Drops.update_drop(drop_to_update, socket.assigns.current_user, %{
+        screenshot_status: "published"
+      })
+
+    socket =
+      socket
+      |> assign(:progress_value, 100)
+      |> assign(:screenshot_status, "published")
+      |> assign(:screenshot_url, drop.screenshot_url)
+      |> assign(:screenshot_drop_short_id, drop.short_id)
+
+    {:noreply, DropsListHelper.assign_drops(socket)}
+  end
+
+  def handle_info(
         {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, progress, status},
         socket
       ) do
-    if drop.screenshot_status == "published" do
-      drop_to_update = Drops.get_drop_by_short_id(drop.short_id)
+    socket =
+      socket
+      |> assign(:progress_value, progress)
+      |> assign(:screenshot_status, status)
+      |> assign(:screenshot_drop_short_id, drop.short_id)
 
-      {:ok, _updated_drop} =
-        Drops.update_drop(drop_to_update, socket.assigns.current_user, %{
-          screenshot_status: "published"
-        })
-
-      socket =
-        socket
-        |> assign(:progress_value, 100)
-        |> assign(:screenshot_status, status)
-        |> assign(:screenshot_url, drop.screenshot_url)
-        |> assign(:screenshot_drop_short_id, drop.short_id)
-
-      {:noreply, DropsListHelper.assign_drops(socket)}
-    else
-      socket =
-        socket
-        |> assign(:progress_value, progress)
-        |> assign(:screenshot_status, status)
-        |> assign(:screenshot_drop_short_id, drop.short_id)
-
-      {:noreply, socket}
-    end
+    {:noreply, socket}
   end
 end

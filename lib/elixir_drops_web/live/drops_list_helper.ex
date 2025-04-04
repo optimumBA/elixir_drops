@@ -54,13 +54,13 @@ defmodule ElixirDropsWeb.DropsListHelper do
             show_card_menu?={@show_user_drops?}
             user_id={if @current_user, do: @current_user.id, else: nil}
           />
-        </div>
 
-        <div
-          :if={drop.screenshot_status == "pending"}
-          class="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center z-10"
-        >
-          <DropComponents.loading_spinner />
+          <div
+            :if={drop.screenshot_status == "pending"}
+            class="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center z-10"
+          >
+            <DropComponents.loading_spinner />
+          </div>
         </div>
       </div>
       <div id="infinite-scroll-marker" phx-hook="InfiniteScroll" data-page={@page}></div>

@@ -20,7 +20,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     session_started: 50,
     preparing_screenshot: 65,
     screenshot_taken: 90,
-    preparing_upload: 100,
+    preparing_upload: 95,
     finalizing: 100
   }
 
@@ -147,7 +147,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     Wallaby.end_session(session)
 
-    Process.sleep(300)
     broadcast_drop_screenshot_progress(drop, @stages.screenshot_taken, "pending")
 
     {:ok, screenshot}
@@ -186,6 +185,11 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp broadcast_drop_screenshot_progress(drop, progress, status) do
-    DropsBroadcast.broadcast_drop_screenshot_progress(drop, progress, status)
+    updated_drop =
+      drop
+      |> Map.put(:screenshot_progress, progress)
+      |> Map.put(:screenshot_status, status)
+
+    DropsBroadcast.broadcast_drop_screenshot_progress(updated_drop, progress, status)
   end
 end
