@@ -13,7 +13,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{})
+     |> assign(:drop_filters, %{screenshot_status: "published"})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
      |> assign(:page_title, "ElixirDrops")
@@ -56,6 +56,13 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, "published"},
+        socket
+      ) do
+    {:noreply, assign(socket, :new_drops?, true)}
+  end
+
   def handle_info(
         {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, _status},
         socket
