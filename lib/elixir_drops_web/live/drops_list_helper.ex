@@ -48,10 +48,17 @@ defmodule ElixirDropsWeb.DropsListHelper do
         :for={{dom_id, drop} <- @drops}
         id={dom_id}
         phx-click={JS.navigate(~p"/d/#{drop.short_id}")}
-        class="last:mb-6 cursor-pointer"
+        class="last:mb-6 cursor-pointer relative"
         role="link"
       >
         <DropComponents.drop_card drop={drop} show_card_menu?={@show_user_drops?} />
+
+        <div
+          :if={drop.screenshot_status == "pending"}
+          class="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center z-10"
+        >
+          <DropComponents.loading_spinner />
+        </div>
       </div>
     </div>
     """
