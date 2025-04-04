@@ -42,21 +42,47 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   defp create_or_update_drop(socket, :edit, drop_params) do
     updated_params = add_screenshot_status(:edit, drop_params, socket.assigns.drop.body)
 
-    Drops.update_drop(
-      socket.assigns.drop,
-      socket.assigns.current_user,
-      updated_params
-    )
+    case Drops.update_drop(
+           socket.assigns.drop,
+           socket.assigns.current_user,
+           updated_params
+         ) do
+      {:ok, drop} ->
+        updated_drop =
+          Map.put(
+            drop,
+            :needs_screenshot,
+            needs_screenshot?(:edit, drop_params["body"], socket.assigns.drop.body)
+          )
+
+        {:ok, updated_drop}
+
+      error ->
+        error
+    end
   end
 
   defp create_or_update_drop(socket, :new, drop_params) do
     updated_params = add_screenshot_status(:new, drop_params)
 
-    Drops.create_drop(
-      socket.assigns.drop,
-      socket.assigns.current_user,
-      updated_params
-    )
+    case Drops.create_drop(
+           socket.assigns.drop,
+           socket.assigns.current_user,
+           updated_params
+         ) do
+      {:ok, drop} ->
+        updated_drop =
+          Map.put(
+            drop,
+            :needs_screenshot,
+            has_code_block?(drop_params["body"])
+          )
+
+        {:ok, updated_drop}
+
+      error ->
+        error
+    end
   end
 
   defp enqueue_seo_screenshot_creation(drop_id, old_body, action) do
@@ -69,29 +95,27 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     assign(socket, :form, to_form(changeset))
   end
 
-  defp maybe_enqueue_screenshot_generation(socket, drop) do
+  defp maybe_enqueue_screenshot_generation(socket, %{needs_screenshot: true} = drop) do
     case socket.assigns do
-      %{live_action: :edit, drop: %{body: old_body}} when old_body != drop.body ->
-        enqueue_seo_screenshot_creation(drop.id, old_body, :edit)
-
+      %{live_action: :edit} ->
+        enqueue_seo_screenshot_creation(drop.id, drop.body, :edit)
         send(self(), :screenshot_generation_started)
-
-        {:noreply, socket}
-
-      %{live_action: :edit, drop: %{body: old_body}} when old_body == drop.body ->
-        socket = push_navigate(socket, to: ~p"/profile")
         {:noreply, socket}
 
       %{live_action: :new} ->
         enqueue_seo_screenshot_creation(drop.id, nil, :new)
-
         send(self(), :screenshot_generation_started)
-
-        {:noreply, socket}
-
-      _assigns ->
         {:noreply, socket}
     end
+  end
+
+  defp maybe_enqueue_screenshot_generation(socket, _drop) do
+    socket = push_navigate(socket, to: ~p"/profile")
+    {:noreply, socket}
+  end
+
+  defp needs_screenshot?(:edit, new_body, old_body) do
+    has_code_block?(new_body) && new_body != old_body
   end
 
   defp add_screenshot_status(:new, drop_params) do

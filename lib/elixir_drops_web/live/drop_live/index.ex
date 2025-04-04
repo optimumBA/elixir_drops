@@ -40,10 +40,16 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, _progress, "published"},
+        {DropsBroadcast, [:drop, :screenshot_generation_progress],
+         %{inserted_at: inserted_at} = drop, _progress, "published"},
         socket
       ) do
-    {:noreply, socket |> assign(:new_drops?, true) |> DropsListHelper.assign_drops()}
+    is_new = NaiveDateTime.diff(NaiveDateTime.utc_now(), inserted_at, :second) <= 60
+
+    {:noreply,
+     socket
+     |> assign(:new_drops?, is_new)
+     |> DropsListHelper.assign_drops()}
   end
 
   def handle_info(
