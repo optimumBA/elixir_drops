@@ -126,7 +126,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute has_element?(live, "#new-drops-indicator")
 
       {:ok, drop} =
-        Drops.create_drop(%Drop{}, user, %{title: "New Drop title", body: "Drop body"})
+        Drops.create_drop(%Drop{}, user, %{
+          title: "New Drop title",
+          body: "Drop body",
+          screenshot_status: "published"
+        })
 
       assert has_element?(live, "#new-drops-indicator")
 

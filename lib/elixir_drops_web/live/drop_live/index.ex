@@ -41,7 +41,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   @impl Phoenix.LiveView
   def handle_info(
         {DropsBroadcast, [:drop, :screenshot_generation_progress],
-         %{inserted_at: inserted_at} = drop, _progress, "published"},
+         %{inserted_at: inserted_at} = _drop, _progress, "published"},
         socket
       ) do
     is_new = NaiveDateTime.diff(NaiveDateTime.utc_now(), inserted_at, :second) <= 60

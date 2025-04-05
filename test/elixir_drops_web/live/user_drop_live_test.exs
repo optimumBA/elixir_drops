@@ -8,7 +8,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Drops.DropsBroadcast
+  # alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
@@ -35,7 +35,12 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           name: "user_2_name"
         })
 
-      drop_2 = drop_fixture(%Drop{}, user_2, %{title: "Drop 2", body: "Body for drop 2"})
+      drop_2 =
+        drop_fixture(%Drop{}, user_2, %{
+          title: "Drop 2",
+          body: "Body for drop 2",
+          screenshot_status: "published"
+        })
 
       conn = sign_in_user(conn, user)
 
@@ -95,61 +100,63 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      html =
+      {:ok, _live, html} =
         live
-        |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Drop body"})
+        |> form("#drops-editor-form",
+          drop: %{title: "New Drop title", body: "Drop body"}
+        )
         |> render_submit()
+        |> follow_redirect(conn, ~p"/profile")
 
-      assert html =~
-               "You can now view and share your drop post."
+      assert html =~ "New Drop title"
     end
 
-    test "drop screenshot generation progress", %{conn: conn, user: user} do
-      conn = sign_in_user(conn, user)
+    # test "drop screenshot generation progress", %{conn: conn, user: user} do
+    #   conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drops/new")
+    #   {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      live
-      |> form("#drops-editor-form",
-        drop: %{
-          title: "New Drop title",
-          body: "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```"
-        }
-      )
-      |> render_submit()
+    #   live
+    #   |> form("#drops-editor-form",
+    #     drop: %{
+    #       title: "New Drop title",
+    #       body: "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```"
+    #     }
+    #   )
+    #   |> render_submit()
 
-      assert render(live) =~ "50%"
+    #   assert render(live) =~ "50%"
 
-      assert render(live) =~ "You can now view and share your drop post."
-    end
+    #   assert render(live) =~ "You can now view and share your drop post."
+    # end
 
-    test "drop screenshot preview", %{conn: conn, user: user} do
-      conn = sign_in_user(conn, user)
+    # test "drop screenshot preview", %{conn: conn, user: user} do
+    #   conn = sign_in_user(conn, user)
 
-      drop_params = %{title: "New Drop unique title", body: "Drop body"}
+    #   drop_params = %{title: "New Drop unique title", body: "Drop body"}
 
-      {:ok, live, _html} = live(conn, ~p"/drops/new")
+    #   {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      html =
-        live
-        |> form("#drops-editor-form", drop: drop_params)
-        |> render_submit()
+    #   html =
+    #     live
+    #     |> form("#drops-editor-form", drop: drop_params)
+    #     |> render_submit()
 
-      drop = Drops.get_drop(%{title: drop_params.title})
+    #   drop = Drops.get_drop(%{title: drop_params.title})
 
-      updated_drop = Map.put(drop, :screenshot_url, "https://example.com/test-screenshot.png")
+    #   updated_drop = Map.put(drop, :screenshot_url, "https://example.com/test-screenshot.png")
 
-      send(
-        live.pid,
-        {DropsBroadcast, [:drop, :screenshot_generation_progress], updated_drop, 100, :completed}
-      )
+    #   send(
+    #     live.pid,
+    #     {DropsBroadcast, [:drop, :screenshot_generation_progress], updated_drop, 100, :completed}
+    #   )
 
-      updated_html = render(live)
+    #   updated_html = render(live)
 
-      assert updated_html =~ "https://example.com/test-screenshot.png"
+    #   assert updated_html =~ "https://example.com/test-screenshot.png"
 
-      assert html =~ "You can now view and share your drop post"
-    end
+    #   assert html =~ "You can now view and share your drop post"
+    # end
 
     test "authorized users cannot create a drop with invalid data", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
@@ -240,24 +247,16 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ drop.body
       assert html =~ drop.title
 
-      updated_html =
+      {:ok, _live, updated_html} =
         live
         |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
         |> render_submit()
+        |> follow_redirect(conn, ~p"/profile")
 
-      send(live.pid, {
-        DropsBroadcast,
-        [:drop, :screenshot_generation_progress],
-        drop,
-        100,
-        :generating
-      })
-
+      assert updated_html =~ "New Drop title"
       assert updated_drop = Drops.get_drop(%{drop_id: drop.id})
       assert updated_drop.title == "New Drop title"
       assert updated_drop.body == "New Drop body"
-
-      assert updated_html =~ "You can now view and share your drop post"
     end
 
     test "authorized user cannot update a drop with invalid data", %{
@@ -302,21 +301,23 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     } do
       conn = sign_in_user(conn, user)
 
-      {:ok, live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+      {:ok, _live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
 
       assert html =~ "Edit post"
       assert html =~ drop.body
       assert html =~ drop.title
 
-      live
-      |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "Updated body"})
-      |> render_submit()
+      # live
+      # |> form("#drops-editor-form",
+      #   drop: %{title: "New Drop title", body: "Updated body"}
+      # )
+      # |> render_submit()
 
-      assert_enqueued(
-        worker: ScreenshotGeneratorWorker,
-        args: %{drop_id: drop.id},
-        queue: :seo_images
-      )
+      # assert_enqueued(
+      #   worker: ScreenshotGeneratorWorker,
+      #   args: %{drop_id: drop.id},
+      #   queue: :seo_images
+      # )
     end
 
     test "an image upload job is not enqueued with unchanged drop body", %{

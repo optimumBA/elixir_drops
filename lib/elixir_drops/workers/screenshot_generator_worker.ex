@@ -104,6 +104,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
+  @spec check_for_code_block(String.t()) :: {:ok, String.t()} | {:error, String.t()}
   def check_for_code_block(body) do
     case Regex.run(@markdown_regex, body, capture: :first) do
       nil ->
