@@ -46,10 +46,14 @@ defmodule ElixirDropsWeb.DropLive.Index do
       ) do
     is_new = NaiveDateTime.diff(NaiveDateTime.utc_now(), inserted_at, :second) <= 60
 
-    {:noreply,
-     socket
-     |> assign(:new_drops?, is_new)
-     |> DropsListHelper.assign_drops()}
+    if is_new do
+      {:noreply,
+       socket
+       |> assign(:new_drops?, is_new)
+       |> DropsListHelper.assign_drops()}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_info(

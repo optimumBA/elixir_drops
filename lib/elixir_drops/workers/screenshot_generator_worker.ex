@@ -43,20 +43,25 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp handle_edit(args) do
-    with {:ok, drop} <- get_drop(args["drop_id"]),
-         {:ok, old_code_snippet} <-
-           check_for_code_block(args["old_body"]),
-         {:ok, new_code_snippet} <-
-           check_for_code_block(drop.body),
-         :ok <-
-           compare_code_blocks(old_code_snippet, new_code_snippet) do
-      drop_screenshot(drop)
-    else
-      {:cancel, _reason} ->
-        {:cancel, "Code block unchanged"}
+    with {:ok, drop} <- get_drop(args["drop_id"]) do
+      case check_for_code_block(drop.body) do
+        {:ok, new_code_snippet} ->
+          case check_for_code_block(args["old_body"]) do
+            {:error, _new_code_snippet_in_old_body} ->
+              drop_screenshot(drop)
 
-      _error ->
-        {:cancel, "No code block found"}
+            {:ok, old_code_snippet} ->
+              case compare_code_blocks(old_code_snippet, new_code_snippet) do
+                :ok -> drop_screenshot(drop)
+                {:cancel, reason} -> {:cancel, reason}
+              end
+          end
+
+        {:error, _} ->
+          {:cancel, "No code block found in updated drop"}
+      end
+    else
+      error -> error
     end
   end
 
@@ -99,7 +104,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         {:error, "Drop not found"}
 
       drop ->
-        broadcast_drop_screenshot_progress(drop, @stages.drop_found, "pending")
         {:ok, drop}
     end
   end
@@ -115,8 +119,13 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp compare_code_blocks(old, new) when old != new, do: :ok
-  defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
+  defp compare_code_blocks(old_body, new_body) when old_body != new_body do
+    :ok
+  end
+
+  defp compare_code_blocks(_old_body, _new_body) do
+    {:cancel, "Code block unchanged"}
+  end
 
   defp generate_screenshot(drop) do
     {:ok, session} =

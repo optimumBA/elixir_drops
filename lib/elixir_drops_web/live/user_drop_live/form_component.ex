@@ -98,7 +98,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   defp maybe_enqueue_screenshot_generation(socket, %{needs_screenshot: true} = drop) do
     case socket.assigns do
       %{live_action: :edit} ->
-        enqueue_seo_screenshot_creation(drop.id, drop.body, :edit)
+        enqueue_seo_screenshot_creation(drop.id, socket.assigns.drop.body, :edit)
         send(self(), :screenshot_generation_started)
         {:noreply, socket}
 
@@ -141,6 +141,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp has_code_block?(body) do
+    # move the function to some helper and call it for both the modules and maybe do additional tests scenarios
     case ScreenshotGeneratorWorker.check_for_code_block(body) do
       {:ok, _code_block} -> true
       {:error, _no_code_block} -> false
