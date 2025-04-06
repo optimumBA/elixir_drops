@@ -350,8 +350,8 @@ defmodule ElixirDropsWeb.DropComponents do
       id="generating-screenshots-popup"
       class={[
         "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
-        "top-[40%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
-        "w-[90%] md:w-[80%] lg:max-w-[40em]",
+        "top-[48%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
+        "w-[90%] md:w-[80%] lg:max-w-[45em]",
         @screenshot_status == "idle" && "hidden"
       ]}
       phx-click-away={hide_popup("generating-screenshots-popup")}
@@ -360,12 +360,18 @@ defmodule ElixirDropsWeb.DropComponents do
         <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
       </button>
       <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
-        <p class={["w-[75%] mx-auto mb-2", @screenshot_status == "published" && "hidden"]}>
+        <p class={[
+          "w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2",
+          @screenshot_status == "published" && "hidden"
+        ]}>
           Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
         </p>
-        <p class={["mx-auto", @screenshot_status == "pending" && "hidden"]}>
-          Here's your code screenshot!
-          <span class="text-xs text-black block">
+        <p class={[
+          "text-gray-700 font-normal text-xl md:text-2xl lg:text-3xl mx-auto",
+          @screenshot_status == "pending" && "hidden"
+        ]}>
+          Here's your screenshot!
+          <span class="text-base lg:text-xl block">
             You can now view and share your drop post.
           </span>
         </p>
@@ -386,7 +392,7 @@ defmodule ElixirDropsWeb.DropComponents do
               id="progress-bar"
               data-target={@progress_value}
             />
-            <p class="text-sm md:text-base text-white mx-auto mt-4 mb-6">
+            <p class="text-base md:text-xl lg:text-2xl text-white mx-auto mt-4 mb-6">
               Generating Code Screenshots...
             </p>
           </div>
@@ -681,7 +687,7 @@ defmodule ElixirDropsWeb.DropComponents do
         stroke-width="3.8"
         stroke-linecap={@square == false && "round"}
       />
-      <text :if={@text} class="fill-white text-[0.5em]" text-anchor="middle" x="18" y="20.35">
+      <text :if={@text} class="fill-white text-[0.6em]" text-anchor="middle" x="18" y="20.35">
         <%= @text %>
       </text>
     </svg>
@@ -689,7 +695,7 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   defp styles(:size, %{size: "sm", variant: "radial"}), do: "h-16 w-16 text-sm"
-  defp styles(:size, %{size: "md", variant: "radial"}), do: "h-16 w-16 text-sm"
-  defp styles(:size, %{size: "lg", variant: "radial"}), do: "h-16 w-16 text-sm"
+  defp styles(:size, %{size: "md", variant: "radial"}), do: "h-20 w-20 text-sm"
+  defp styles(:size, %{size: "lg", variant: "radial"}), do: "h-24 w-24 text-sm"
   defp styles(_rule_group, _assigns), do: nil
 end

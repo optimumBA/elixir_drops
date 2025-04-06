@@ -3,7 +3,7 @@
     id="drops-editor-overlay"
     class={[
       "drops-editor-overlay absolute inset-0 bg-black opacity-50",
-      @screenshot_status not in [:generating, :completed] && "hidden"
+      @screenshot_status == "idle" && "hidden"
     ]}
   >
   </div>
