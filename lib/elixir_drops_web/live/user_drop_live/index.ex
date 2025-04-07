@@ -98,8 +98,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       |> assign(:screenshot_status, "published")
       |> assign(:screenshot_url, drop.screenshot_url)
       |> assign(:screenshot_drop_short_id, drop.short_id)
+      |> DropsListHelper.assign_drops()
 
-    {:noreply, DropsListHelper.assign_drops(socket)}
+    {:noreply, socket}
   end
 
   def handle_info(
@@ -111,6 +112,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       |> assign(:progress_value, progress)
       |> assign(:screenshot_status, status)
       |> assign(:screenshot_drop_short_id, drop.short_id)
+      |> DropsListHelper.assign_drops()
 
     {:noreply, socket}
   end

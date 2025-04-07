@@ -175,7 +175,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         updated_drop =
           drop
           |> Map.put(:screenshot_url, image_url)
-          |> Map.put(:screenshot_status, "published")
           |> Map.put(:screenshot_progress, 100)
 
         broadcast_drop_screenshot_progress(updated_drop, @stages.finalizing, "published")
