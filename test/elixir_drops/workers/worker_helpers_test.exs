@@ -1,11 +1,11 @@
 defmodule ElixirDrops.WorkerHelpersTest do
-  use ElixirDrops.DataCase
+  use ElixirDrops.DataCase, async: false
 
   alias ElixirDrops.WorkerHelpers
 
   describe "check_for_code_block/1" do
     test "returns {:ok, code_block} when a code block is found" do
-      assert {:ok, ["```elixir\nIO.puts(\"Hello, World!\")```"]} =
+      assert {:ok, "IO.puts(\"Hello, World!\")"} =
                WorkerHelpers.check_for_code_block("```elixir\nIO.puts(\"Hello, World!\")```")
     end
 

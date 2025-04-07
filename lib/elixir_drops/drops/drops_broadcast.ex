@@ -8,7 +8,7 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
   @type drop :: Drop.t()
   @type progress :: integer()
   @type short_id_string :: String.t()
-  @type status :: atom()
+  @type status :: String.t()
 
   @topic inspect(__MODULE__)
 

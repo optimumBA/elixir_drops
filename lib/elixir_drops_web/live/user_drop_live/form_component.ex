@@ -6,8 +6,8 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDrops.WorkerHelpers
+  alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.Icons
 

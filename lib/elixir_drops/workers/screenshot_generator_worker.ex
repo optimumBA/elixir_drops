@@ -41,25 +41,31 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp handle_edit(args) do
-    with {:ok, drop} <- get_drop(args["drop_id"]) do
-      case WorkerHelpers.check_for_code_block(drop.body) do
-        {:ok, new_code_snippet} ->
-          case WorkerHelpers.check_for_code_block(args["old_body"]) do
-            {:error, _new_code_snippet_in_old_body} ->
-              drop_screenshot(drop)
+    case get_drop(args["drop_id"]) do
+      {:ok, drop} ->
+        case WorkerHelpers.check_for_code_block(drop.body) do
+          {:ok, new_code_block} ->
+            check_old_body_and_maybe_compare_code_blocks(drop, args["old_body"], new_code_block)
 
-            {:ok, old_code_snippet} ->
-              case compare_code_blocks(old_code_snippet, new_code_snippet) do
-                :ok -> drop_screenshot(drop)
-                {:cancel, reason} -> {:cancel, reason}
-              end
-          end
+          {:error, _} ->
+            {:cancel, "No code block found in updated drop"}
+        end
 
-        {:error, _} ->
-          {:cancel, "No code block found in updated drop"}
-      end
-    else
-      error -> error
+      error ->
+        error
+    end
+  end
+
+  defp check_old_body_and_maybe_compare_code_blocks(drop, old_body, new_code_block) do
+    case WorkerHelpers.check_for_code_block(old_body) do
+      {:ok, old_code_snippet} ->
+        case compare_code_blocks(old_code_snippet, new_code_block) do
+          :ok -> drop_screenshot(drop)
+          {:cancel, reason} -> {:cancel, reason}
+        end
+
+      {:error, _no_old_code_snippet} ->
+        drop_screenshot(drop)
     end
   end
 

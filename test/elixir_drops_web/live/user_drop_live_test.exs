@@ -103,7 +103,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       {:ok, live, _html} = live(conn, ~p"/drops/new")
 
-      {:ok, live, html} =
+      {:ok, updated_live, html} =
         live
         |> form("#drops-editor-form",
           drop: %{title: "New Drop title", body: "Drop body"}
@@ -111,7 +111,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         |> render_submit()
         |> follow_redirect(conn, ~p"/profile")
 
-      refute has_element?(live, "#loading-spinner")
+      refute has_element?(updated_live, "#loading-spinner")
       assert html =~ "New Drop title"
     end
 
@@ -261,7 +261,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ drop.body
       assert html =~ drop.title
 
-      {:ok, live, updated_html} =
+      {:ok, updated_live, updated_html} =
         live
         |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
         |> render_submit()
@@ -273,7 +273,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         queue: :seo_images
       )
 
-      refute has_element?(live, "#loading-spinner")
+      refute has_element?(updated_live, "#loading-spinner")
 
       assert updated_html =~ "New Drop title"
       assert updated_drop = Drops.get_drop(%{drop_id: drop.id})

@@ -163,7 +163,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       refute has_element?(live, "#drop-#{drop.id}")
 
-      {:ok, drop} =
+      {:ok, _drop} =
         Drops.update_drop(drop, user, %{screenshot_status: "published"})
 
       assert has_element?(live, "#new-drops-indicator")
