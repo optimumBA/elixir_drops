@@ -83,6 +83,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
 
   defp generate_screenshot(drop) do
+    height = calc_height(drop.body)
+
     {:ok, session} =
       Wallaby.start_session(
         capabilities: %{
@@ -90,7 +92,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
             args: [
               "--headless",
               "--no-sandbox",
-              "window-size=1280,800",
+              "window-size=1280,#{height}",
               "--fullscreen",
               "--disable-gpu",
               "--disable-dev-shm-usage"
@@ -132,6 +134,33 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
       error ->
         error
+    end
+  end
+
+  defp calc_height(body) do
+    case Regex.run(@markdown_regex, body, capture: :first) do
+      nil ->
+        "0"
+
+      regex ->
+        lines =
+          regex
+          |> Enum.at(0)
+          |> String.split("\n")
+          |> length()
+
+        code_height = 19.2 * lines + 500
+
+        code_height =
+          if code_height >= 2000 do
+            2000
+          else
+            code_height
+          end
+
+        code_height
+        |> trunc()
+        |> Integer.to_string()
     end
   end
 end
