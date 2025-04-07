@@ -8,12 +8,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
+  alias ElixirDrops.WorkerHelpers
   alias Wallaby.Browser
 
-  @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
-
   @stages %{
-    drop_found: 10,
     initializing_flame: 20,
     creating_machine: 30,
     waiting_for_machine: 40,
@@ -44,9 +42,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp handle_edit(args) do
     with {:ok, drop} <- get_drop(args["drop_id"]) do
-      case check_for_code_block(drop.body) do
+      case WorkerHelpers.check_for_code_block(drop.body) do
         {:ok, new_code_snippet} ->
-          case check_for_code_block(args["old_body"]) do
+          case WorkerHelpers.check_for_code_block(args["old_body"]) do
             {:error, _new_code_snippet_in_old_body} ->
               drop_screenshot(drop)
 
@@ -67,7 +65,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp handle_new(args) do
     with {:ok, drop} <- get_drop(args["drop_id"]),
-         {:ok, _code_snippet} <- check_for_code_block(drop.body) do
+         {:ok, _code_snippet} <- WorkerHelpers.check_for_code_block(drop.body) do
       drop_screenshot(drop)
     else
       _error -> {:cancel, "No code block found"}
@@ -105,17 +103,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
       drop ->
         {:ok, drop}
-    end
-  end
-
-  @spec check_for_code_block(String.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def check_for_code_block(body) do
-    case Regex.run(@markdown_regex, body, capture: :first) do
-      nil ->
-        {:error, "No code block found"}
-
-      code_block ->
-        {:ok, code_block}
     end
   end
 

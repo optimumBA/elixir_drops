@@ -7,6 +7,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
+  alias ElixirDrops.WorkerHelpers
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.Icons
 
@@ -141,8 +142,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp has_code_block?(body) do
-    # move the function to some helper and call it for both the modules and maybe do additional tests scenarios
-    case ScreenshotGeneratorWorker.check_for_code_block(body) do
+    case WorkerHelpers.check_for_code_block(body) do
       {:ok, _code_block} -> true
       {:error, _no_code_block} -> false
     end
