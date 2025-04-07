@@ -137,7 +137,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp calc_height(body) do
+  @spec calc_height(String.t()) :: String.t()
+  def calc_height(body) do
     case Regex.run(@markdown_regex, body, capture: :first) do
       nil ->
         "0"

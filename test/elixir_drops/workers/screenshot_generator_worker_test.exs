@@ -150,5 +150,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
                  old_body: drop.body
                })
     end
+
+    test "calc_height returns 0 when body has no markdown code block" do
+      body = "fjdjdjd\n"
+      assert ScreenshotGeneratorWorker.calc_height(body) == "0"
+    end
   end
 end
