@@ -120,7 +120,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html2 =~ "Edit drop"
     end
 
-    test "gets updated with new drops", %{conn: conn, user: user} do
+    test "user gets updated with new a drop not requiring screenshot generation", %{
+      conn: conn,
+      user: user
+    } do
       {:ok, live, _html} = live(conn, ~p"/")
 
       refute has_element?(live, "#new-drops-indicator")
@@ -139,6 +142,37 @@ defmodule ElixirDropsWeb.DropLiveTest do
       |> render_click()
 
       assert has_element?(live, "#drop-#{drop.id}", drop.title)
+    end
+
+    test "user does not see a drop requiring screenshot generation until it is has a published screenshot",
+         %{
+           conn: conn,
+           user: user
+         } do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, drop} =
+        Drops.create_drop(%Drop{}, user, %{
+          title: "New Drop title",
+          body:
+            "Drop body ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
+          screenshot_status: "pending"
+        })
+
+      refute has_element?(live, "#drop-#{drop.id}")
+
+      {:ok, drop} =
+        Drops.update_drop(drop, user, %{screenshot_status: "published"})
+
+      assert has_element?(live, "#new-drops-indicator")
+
+      live
+      |> element("#new-drops-indicator")
+      |> render_click()
+
+      assert has_element?(live, "#drop-#{drop.id}")
     end
 
     test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do

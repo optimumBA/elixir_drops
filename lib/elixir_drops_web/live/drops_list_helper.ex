@@ -59,7 +59,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
             :if={drop.screenshot_status == "pending"}
             class="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center z-10"
           >
-            <DropComponents.loading_spinner />
+            <DropComponents.loading_spinner id="loading-spinner" />
           </div>
         </div>
       </div>

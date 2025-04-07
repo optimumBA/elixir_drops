@@ -356,7 +356,11 @@ defmodule ElixirDropsWeb.DropComponents do
       ]}
       phx-click-away={hide_popup("generating-screenshots-popup")}
     >
-      <button class="bg-black" phx-click={hide_popup("generating-screenshots-popup")}>
+      <button
+        id="close-generating-screenshots-popup"
+        class="bg-black"
+        phx-click={hide_popup("generating-screenshots-popup")}
+      >
         <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
       </button>
       <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
