@@ -87,7 +87,7 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
       :ok
 
   """
-  @spec broadcast_drop_screenshot_progress(drop(), progress(), status()) :: :ok
+  @spec broadcast_drop_screenshot_progress(map(), progress(), status()) :: :ok
   def broadcast_drop_screenshot_progress(drop, progress, status) do
     Phoenix.PubSub.broadcast(
       ElixirDrops.PubSub,
