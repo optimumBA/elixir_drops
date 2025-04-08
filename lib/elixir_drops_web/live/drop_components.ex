@@ -371,11 +371,11 @@ defmodule ElixirDropsWeb.DropComponents do
           Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
         </p>
         <p class={[
-          "text-gray-700 font-normal text-xl md:text-2xl lg:text-3xl mx-auto",
+          "text-gray-700 font-normal text-lg md:text-xl lg:text-2xl mx-auto",
           @screenshot_status == "pending" && "hidden"
         ]}>
           Here's your screenshot!
-          <span class="text-base lg:text-xl block">
+          <span class="text-sm md:text-base lg:text-lg block">
             You can now view and share your drop post.
           </span>
         </p>
@@ -396,7 +396,7 @@ defmodule ElixirDropsWeb.DropComponents do
               id="progress-bar"
               data-target={@progress_value}
             />
-            <p class="text-base md:text-xl lg:text-2xl text-white mx-auto mt-4 mb-6">
+            <p class="text-base md:text-lg lg:text-xl text-white mx-auto mt-4 mb-6">
               Generating Code Screenshots...
             </p>
           </div>
@@ -698,8 +698,8 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp styles(:size, %{size: "sm", variant: "radial"}), do: "h-16 w-16 text-sm"
-  defp styles(:size, %{size: "md", variant: "radial"}), do: "h-20 w-20 text-sm"
-  defp styles(:size, %{size: "lg", variant: "radial"}), do: "h-24 w-24 text-sm"
+  defp styles(:size, %{size: "sm", variant: "radial"}), do: "h-12 w-12 text-sm"
+  defp styles(:size, %{size: "md", variant: "radial"}), do: "h-16 w-16 text-sm"
+  defp styles(:size, %{size: "lg", variant: "radial"}), do: "h-20 w-20 text-sm"
   defp styles(_rule_group, _assigns), do: nil
 end
