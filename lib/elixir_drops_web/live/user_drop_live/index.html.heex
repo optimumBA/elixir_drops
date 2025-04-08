@@ -4,11 +4,11 @@
   <section :if={@live_action in [:edit, :new]}>
     <.live_component
       current_user={@current_user}
-      screenshot_status={@screenshot_status}
-      progress_value={@progress_value}
-      screenshot_url={@screenshot_url}
+      screenshot_status={@screenshot.status}
+      progress_value={@screenshot.progress_value}
+      screenshot_url={@screenshot.screenshot_url}
       drop={@drop}
-      screenshot_drop_short_id={@screenshot_drop_short_id}
+      screenshot_drop_short_id={@screenshot.drop_short_id}
       id="drops-form"
       live_action={@live_action}
       module={FormComponent}
@@ -23,7 +23,7 @@
       drops={@streams.drops}
       id="user-drops"
       page={@page}
-      screenshot_status={@screenshot_status}
+      screenshot_status={@screenshot.status}
       show_user_drops?={true}
     />
 

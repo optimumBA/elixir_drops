@@ -16,10 +16,12 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
-     |> assign(:screenshot_status, "idle")
-     |> assign(:screenshot_drop_short_id, "")
-     |> assign(:progress_value, 0)
-     |> assign(:screenshot_url, nil)
+     |> assign(:screenshot, %{
+       status: "idle",
+       drop_short_id: "",
+       progress_value: 0,
+       screenshot_url: nil
+     })
      |> assign(:end_of_timeline?, false)
      |> assign(:page, 1)
      |> DropsListHelper.assign_drops()}
@@ -89,15 +91,18 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     {:ok, _updated_drop} =
       Drops.update_drop(drop_to_update, socket.assigns.current_user, %{
-        screenshot_status: "published"
+        screenshot_status: "published",
+        screenshot_url: drop.screenshot_url
       })
 
     socket =
       socket
-      |> assign(:progress_value, 100)
-      |> assign(:screenshot_status, "published")
-      |> assign(:screenshot_url, drop.screenshot_url)
-      |> assign(:screenshot_drop_short_id, drop.short_id)
+      |> assign(:screenshot, %{
+        status: "published",
+        drop_short_id: drop.short_id,
+        progress_value: 100,
+        screenshot_url: drop.screenshot_url
+      })
       |> DropsListHelper.assign_drops()
 
     {:noreply, socket}
@@ -110,16 +115,27 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       when current_progress < progress do
     {:noreply,
      socket
-     |> assign(:progress_value, progress)
-     |> assign(:screenshot_status, status)
-     |> assign(:screenshot_drop_short_id, drop.short_id)
+     |> assign(:screenshot, %{
+       status: status,
+       drop_short_id: drop.short_id,
+       progress_value: progress,
+       screenshot_url: drop.screenshot_url
+     })
      |> DropsListHelper.assign_drops()}
   end
 
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, _status},
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, progress, status},
         socket
       ) do
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> assign(:screenshot, %{
+       status: status,
+       drop_short_id: drop.short_id,
+       progress_value: progress,
+       screenshot_url: nil
+     })
+     |> DropsListHelper.assign_drops()}
   end
 end
