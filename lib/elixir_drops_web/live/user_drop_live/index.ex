@@ -105,15 +105,21 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   def handle_info(
         {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, progress, status},
+        %{assigns: %{progress_value: current_progress}} = socket
+      )
+      when current_progress < progress do
+    {:noreply,
+     socket
+     |> assign(:progress_value, progress)
+     |> assign(:screenshot_status, status)
+     |> assign(:screenshot_drop_short_id, drop.short_id)
+     |> DropsListHelper.assign_drops()}
+  end
+
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, _status},
         socket
       ) do
-    socket =
-      socket
-      |> assign(:progress_value, progress)
-      |> assign(:screenshot_status, status)
-      |> assign(:screenshot_drop_short_id, drop.short_id)
-      |> DropsListHelper.assign_drops()
-
     {:noreply, socket}
   end
 end
