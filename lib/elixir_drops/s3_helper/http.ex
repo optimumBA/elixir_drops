@@ -6,16 +6,15 @@ defmodule ElixirDrops.S3Helper.Http do
   @impl ElixirDrops.S3Helper.Client
   def get_image(drop) do
     s3 = Application.fetch_env!(:elixir_drops, :s3)
-    timestamp = Timex.to_unix(drop.updated_at)
 
-    screenshot_url =
-      "#{s3[:endpoint_url]}/#{s3[:bucket]}/#{"drop-meta-image-#{timestamp}-#{drop.id}.png"}"
+    latest_screenshot_url =
+      "#{s3[:endpoint_url]}/#{s3[:bucket]}/drop-meta-image-latest-#{drop.id}.png"
 
-    case Req.get(screenshot_url) do
+    case Req.get(latest_screenshot_url) do
       {:ok, %{status: 200, body: _body}} ->
-        {:ok, screenshot_url}
+        {:ok, latest_screenshot_url}
 
-      _other ->
+      _not_found ->
         {:error, "Image not found"}
     end
   end

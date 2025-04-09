@@ -122,16 +122,11 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp upload_screenshot(screenshot, drop) do
-    timestamp = Timex.to_unix(drop.updated_at)
+    latest_image_name = "drop-meta-image-latest-#{drop.id}.png"
 
-    image_name = "drop-meta-image-#{timestamp}-#{drop.id}.png"
-
-    case Client.upload_image(screenshot, image_name, "image/png") do
-      {:ok, image_url} ->
-        {:ok, image_url}
-
-      error ->
-        error
+    case Client.upload_image(screenshot, latest_image_name, "image/png") do
+      {:ok, image_url} -> {:ok, image_url}
+      error -> error
     end
   end
 end

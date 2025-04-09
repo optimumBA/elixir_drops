@@ -56,8 +56,11 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
 
   defp assign_image_url(assigns) do
     assign_new(assigns, :image_url, fn
-      %{attributes: %{image_url: image_url}} when is_binary(image_url) -> image_url
-      _assigns -> static_url(Endpoint, ~p"/images/seo_default_image.png")
+      %{attributes: %{image_url: image_url}} when is_binary(image_url) and image_url != "" ->
+        image_url
+
+      _assigns ->
+        static_url(Endpoint, ~p"/images/seo_default_image.png")
     end)
   end
 
