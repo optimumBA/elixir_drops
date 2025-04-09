@@ -13,7 +13,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{screenshot_status: "published"})
+     |> assign(:drop_filters, %{screenshot: %{status: "published"}})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
      |> assign(:page_title, "ElixirDrops")
@@ -56,8 +56,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     if is_new do
       {:noreply,
        socket
-       |> assign(:new_drops?, is_new)
-       |> DropsListHelper.assign_drops()}
+       |> assign(:new_drops?, is_new)}
     else
       {:noreply, DropsListHelper.assign_drops(socket)}
     end
