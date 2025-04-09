@@ -28,7 +28,10 @@ defmodule ElixirDrops.DropsFixtures do
       Enum.into(attrs, %{
         body: "Drop body text...",
         title: drop_title,
-        screenshot_status: "published"
+        screenshot: %{
+          status: "published",
+          url: nil
+        }
       })
 
     {:ok, drop} =
@@ -59,7 +62,11 @@ defmodule ElixirDrops.DropsFixtures do
       |> drop_fixture(user, %{
         title: "Drop title #{drop}",
         body: "Body for drop #{drop}",
-        screenshot_status: "published"
+        screenshot: %{
+          status: "published",
+          progress_value: 100,
+          url: nil
+        }
       })
       |> update_drop_inserted_at(offset_time)
     end

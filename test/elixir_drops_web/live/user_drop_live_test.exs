@@ -139,7 +139,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         queue: :seo_images
       )
 
-      assert created_drop.screenshot_status == "pending"
+      assert created_drop.screenshot.status == "pending"
 
       assert html =~ "Generating Code Screenshots..."
 

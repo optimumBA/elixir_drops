@@ -132,7 +132,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
         Drops.create_drop(%Drop{}, user, %{
           title: "New Drop title",
           body: "Drop body",
-          screenshot_status: "published"
+          screenshot: %{status: "published"}
         })
 
       assert has_element?(live, "#new-drops-indicator")
