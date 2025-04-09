@@ -218,8 +218,10 @@ if config_env() == :prod do
       environment variable FLY_API_TOKEN is missing.
       """
 
-  config :flame,
-    backend: FLAME.FlyBackend,
+  config :flame, :backend, FLAME.FlyBackend
+
+  config :flame, FLAME.FlyBackend,
+    cpu_kind: "shared",
     env: %{
       "AWS_ACCESS_KEY_ID" => aws_access_key_id,
       "AWS_ENDPOINT_URL_S3" => aws_endpoint_url,
