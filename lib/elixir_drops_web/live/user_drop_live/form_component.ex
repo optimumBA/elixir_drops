@@ -120,25 +120,36 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp add_screenshot_status(:new, drop_params) do
-    case has_code_block?(drop_params["body"]) do
-      true -> Map.put(drop_params, "screenshot_status", "pending")
-      false -> Map.put(drop_params, "screenshot_status", "published")
-    end
+    status = if has_code_block?(drop_params["body"]), do: "pending", else: "published"
+
+    screenshot_data = %{
+      "screenshot" => %{
+        "status" => status,
+        "url" => nil
+      }
+    }
+
+    Map.merge(drop_params, screenshot_data)
   end
 
   defp add_screenshot_status(:edit, drop_params, old_body) do
     new_body = drop_params["body"]
 
-    cond do
-      !has_code_block?(new_body) ->
-        Map.put(drop_params, "screenshot_status", "published")
+    status =
+      cond do
+        !has_code_block?(new_body) -> "published"
+        new_body == old_body -> "published"
+        true -> "pending"
+      end
 
-      new_body == old_body ->
-        drop_params
+    screenshot_data = %{
+      "screenshot" => %{
+        "status" => status,
+        "url" => nil
+      }
+    }
 
-      true ->
-        Map.put(drop_params, "screenshot_status", "pending")
-    end
+    Map.merge(drop_params, screenshot_data)
   end
 
   defp has_code_block?(body) do

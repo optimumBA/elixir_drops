@@ -172,14 +172,19 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     case Client.upload_image(screenshot, image_name, "image/png") do
       {:ok, image_url} ->
-        updated_drop =
-          drop
-          |> Map.put(:screenshot_url, image_url)
-          |> Map.put(:progress_value, 100)
+        screenshot_attrs = %{
+          status: "published",
+          url: image_url
+        }
 
-        broadcast_drop_screenshot_progress(updated_drop, @stages.finalizing, "published")
+        case Drops.update_drop(drop, drop.user, %{screenshot: screenshot_attrs}) do
+          {:ok, updated_drop} ->
+            broadcast_drop_screenshot_progress(updated_drop, @stages.finalizing, "published")
+            {:ok, image_url}
 
-        {:ok, image_url}
+          error ->
+            error
+        end
 
       error ->
         error
@@ -187,11 +192,20 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp broadcast_drop_screenshot_progress(drop, progress, status) do
-    updated_drop =
-      drop
-      |> Map.put(:progress_value, progress)
-      |> Map.put(:status, status)
-      |> Map.put(:screenshot_url, drop.screenshot_url)
+    screenshot_attrs =
+      if drop.screenshot do
+        %{
+          status: status,
+          url: drop.screenshot.url
+        }
+      else
+        %{
+          status: status,
+          url: nil
+        }
+      end
+
+    {:ok, updated_drop} = Drops.update_drop(drop, drop.user, %{screenshot: screenshot_attrs})
 
     DropsBroadcast.broadcast_drop_screenshot_progress(updated_drop, progress, status)
   end

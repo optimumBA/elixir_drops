@@ -20,7 +20,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
        status: "idle",
        drop_short_id: "",
        progress_value: 0,
-       screenshot_url: nil
+       url: nil
      })
      |> assign(:end_of_timeline?, false)
      |> assign(:page, 1)
@@ -89,11 +89,16 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       ) do
     drop_to_update = Drops.get_drop_by_short_id(drop.short_id)
 
+    screenshot_params = %{
+      screenshot: %{
+        status: "published",
+        url: drop.screenshot.url,
+        progress_value: 100
+      }
+    }
+
     {:ok, _updated_drop} =
-      Drops.update_drop(drop_to_update, socket.assigns.current_user, %{
-        screenshot_status: "published",
-        screenshot_url: drop.screenshot_url
-      })
+      Drops.update_drop(drop_to_update, socket.assigns.current_user, screenshot_params)
 
     socket =
       socket
@@ -101,7 +106,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         status: "published",
         drop_short_id: drop.short_id,
         progress_value: 100,
-        screenshot_url: drop.screenshot_url
+        url: drop.screenshot.url
       })
       |> DropsListHelper.assign_drops()
 
@@ -113,13 +118,15 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         %{assigns: %{progress_value: current_progress}} = socket
       )
       when current_progress < progress do
+    url = if drop.screenshot, do: drop.screenshot.url, else: nil
+
     {:noreply,
      socket
      |> assign(:screenshot, %{
        status: status,
        drop_short_id: drop.short_id,
        progress_value: progress,
-       screenshot_url: drop.screenshot_url
+       url: url
      })
      |> DropsListHelper.assign_drops()}
   end
@@ -134,7 +141,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
        status: status,
        drop_short_id: drop.short_id,
        progress_value: progress,
-       screenshot_url: nil
+       url: nil
      })
      |> DropsListHelper.assign_drops()}
   end

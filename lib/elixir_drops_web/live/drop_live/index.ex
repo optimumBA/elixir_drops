@@ -35,7 +35,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info({DropsBroadcast, [:drop, :created], drop}, socket) do
-    if drop.screenshot_status != "pending" do
+    has_screenshot = drop.screenshot && drop.screenshot.status != "pending"
+
+    if has_screenshot do
       {:noreply, assign(socket, :new_drops?, true)}
     else
       {:noreply, socket}
