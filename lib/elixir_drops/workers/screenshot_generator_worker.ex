@@ -32,7 +32,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     try do
       :ets.new(@flame_status_table, [:named_table, :set, :public])
     rescue
-      _ -> :ok
+      _other -> :ok
     end
 
     args
@@ -90,7 +90,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp drop_screenshot(drop) do
-    flame_running? = is_flame_running?()
+    flame_running? = check_flame_status()
 
     progress_task =
       Task.async(fn ->
@@ -99,30 +99,38 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     :ets.insert(@flame_status_table, {:flame_running, true})
 
-    result =
-      FLAME.call(ScreenshotGenerator, fn ->
-        with {:ok, screenshot} <- generate_screenshot(drop),
-             {:ok, image} <- File.read(screenshot) do
-          :ets.insert(@flame_status_table, {:progress_completed, true})
-          broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, "pending")
-
-          upload_screenshot(image, drop)
-        end
-      end)
+    result = call_flame(drop)
 
     :ets.insert(@flame_status_table, {:flame_running, false})
-    :ets.insert(@flame_status_table, {:progress_completed, false})
+    :ets.insert(@flame_status_table, {:progress_completed, true})
 
-    try do
-      Task.await(progress_task, 10_000)
-    rescue
-      _ -> :ok
+    timeout = Application.get_env(:elixir_drops, :progress_task_timeout, 30_000)
+
+    if timeout == :no_wait do
+      Task.shutdown(progress_task, :brutal_kill)
+    else
+      try do
+        Task.await(progress_task, timeout)
+      rescue
+        _other -> :ok
+      end
     end
 
     result
   end
 
-  defp is_flame_running? do
+  defp call_flame(drop) do
+    FLAME.call(ScreenshotGenerator, fn ->
+      with {:ok, screenshot} <- generate_screenshot(drop),
+           {:ok, image} <- File.read(screenshot) do
+        :ets.insert(@flame_status_table, {:progress_completed, true})
+        broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, "pending")
+        upload_screenshot(image, drop)
+      end
+    end)
+  end
+
+  defp check_flame_status do
     case :ets.lookup(@flame_status_table, :flame_running) do
       [{:flame_running, true}] ->
         true
@@ -133,6 +141,16 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp simulate_continuous_progress(drop, flame_already_running?) do
+    handle_initial_progress(drop, flame_already_running?)
+
+    simulate_range_progress(drop, @stages.machine_warming_up, @stages.session_started, 800)
+
+    simulate_range_progress(drop, @stages.session_started, @stages.preparing_screenshot, 1000)
+
+    wait_or_continue_to_completion(drop, @stages.preparing_screenshot, @stages.screenshot_taken)
+  end
+
+  defp handle_initial_progress(drop, flame_already_running?) do
     if flame_already_running? do
       progress_value = @stages.machine_warming_up
       broadcast_drop_screenshot_progress(drop, progress_value, "pending")
@@ -145,12 +163,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
       broadcast_drop_screenshot_progress(drop, @stages.machine_warming_up, "pending")
     end
-
-    simulate_range_progress(drop, @stages.machine_warming_up, @stages.session_started, 800)
-
-    simulate_range_progress(drop, @stages.session_started, @stages.preparing_screenshot, 1000)
-
-    wait_or_continue_to_completion(drop, @stages.preparing_screenshot, @stages.screenshot_taken)
   end
 
   defp simulate_range_progress(drop, start_value, end_value, duration_ms) do
@@ -174,7 +186,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       [{:progress_completed, true}] ->
         current_value
 
-      _ ->
+      _other ->
         if current_value < max_value do
           next_value = current_value + 1
           broadcast_drop_screenshot_progress(drop, next_value, "pending")
