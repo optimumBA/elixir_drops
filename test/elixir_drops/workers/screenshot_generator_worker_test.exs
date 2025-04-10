@@ -52,29 +52,29 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
     test "creates a screenshot for a drop with a code block", %{drop: drop} do
       image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
 
-      Client.Mock
-      |> expect(:upload_image, fn _image, filename, _type ->
+      expect(Client.Mock, :upload_image, fn _image, filename, _type ->
         assert filename == "drop-meta-image-latest-#{drop.id}.png"
         {:ok, image_url}
       end)
-      |> expect(:get_image, fn _drop -> {:ok, image_url} end)
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
-      assert {:ok, ^image_url} = Client.get_image(drop)
+      updated_drop = Repo.reload(drop)
+      assert updated_drop.screenshot.status == :completed
+      assert updated_drop.screenshot.url == image_url
     end
 
     test "does not create a screenshot when there is an error", %{drop: drop} do
-      Client.Mock
-      |> expect(:upload_image, fn _image, _filename, _type ->
+      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
         {:error, "Failed to upload image"}
       end)
-      |> expect(:get_image, fn _drop -> {:error, "Image not found"} end)
 
       {:error, "Failed to upload image"} =
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
-      assert {:error, "Image not found"} = Client.get_image(drop)
+      updated_drop = Repo.reload(drop)
+      assert updated_drop.screenshot.status == :failed
+      refute updated_drop.screenshot.url
     end
 
     test "does not create a screenshot when there is no code block and the job is not retried", %{

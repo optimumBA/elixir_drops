@@ -4,22 +4,6 @@ defmodule ElixirDrops.S3Helper.Http do
   @behaviour ElixirDrops.S3Helper.Client
 
   @impl ElixirDrops.S3Helper.Client
-  def get_image(drop) do
-    s3 = Application.fetch_env!(:elixir_drops, :s3)
-
-    latest_screenshot_url =
-      "#{s3[:endpoint_url]}/#{s3[:bucket]}/drop-meta-image-latest-#{drop.id}.png"
-
-    case Req.get(latest_screenshot_url) do
-      {:ok, %{status: 200, body: _body}} ->
-        {:ok, latest_screenshot_url}
-
-      _not_found ->
-        {:error, "Image not found"}
-    end
-  end
-
-  @impl ElixirDrops.S3Helper.Client
   def upload_image(image, filename, type) do
     s3 = Application.fetch_env!(:elixir_drops, :s3)
     url = "#{s3[:endpoint_url]}/#{s3[:bucket]}/#{filename}"

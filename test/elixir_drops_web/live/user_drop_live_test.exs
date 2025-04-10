@@ -9,7 +9,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
-  alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
 
   setup :verify_on_exit!
@@ -167,10 +166,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
             title: "Drop with script"
           }
         )
-
-      expect(Client.Mock, :get_image, 2, fn _drop ->
-        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
-      end)
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 

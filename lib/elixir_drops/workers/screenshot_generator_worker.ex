@@ -13,16 +13,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    args
-    |> maybe_create_screenshot()
-    |> maybe_retry_job()
-  end
-
-  defp maybe_retry_job({:ok, _image_url}), do: :ok
-  defp maybe_retry_job({:cancel, reason}), do: {:cancel, reason}
-  defp maybe_retry_job(error), do: error
-
-  defp maybe_create_screenshot(args) do
     case args["action"] do
       "edit" -> handle_edit(args)
       _new -> handle_new(args)
@@ -125,8 +115,17 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     latest_image_name = "drop-meta-image-latest-#{drop.id}.png"
 
     case Client.upload_image(screenshot, latest_image_name, "image/png") do
-      {:ok, image_url} -> {:ok, image_url}
-      error -> error
+      {:ok, image_url} ->
+        screenshot_data = %{screenshot: %{status: :completed, url: image_url}}
+
+        case Drops.update_drop_screenshot(drop, screenshot_data) do
+          {:ok, _updated_drop} -> :ok
+          error -> error
+        end
+
+      error ->
+        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
+        error
     end
   end
 end
