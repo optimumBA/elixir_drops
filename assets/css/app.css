@@ -249,8 +249,10 @@ blockquote *:last-child {
 }
 
 .drops-editor .action {
-  @apply pr-[1rem] lg:pr-[2rem];
+  @apply pr-[1rem] lg:pr-[2rem] fixed bottom-0 left-0 right-0 z-10;
   grid-area: action;
+  background-color: white;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .drop-preview > * {
