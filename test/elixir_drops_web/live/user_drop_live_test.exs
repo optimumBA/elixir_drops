@@ -9,7 +9,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
-  alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
 
   setup :verify_on_exit!
@@ -168,10 +167,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         )
 
-      expect(Client.Mock, :get_image, 2, fn _drop ->
-        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
@@ -305,6 +300,33 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
                live(conn, ~p"/drops/#{non_existent_drop_short_id}/edit")
 
       assert path == ~p"/"
+    end
+
+    test "screenshot job uses correct old body value when updating drop", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+      old_body = drop.body
+      new_body = "#{old_body} with a change"
+
+      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+
+      live
+      |> form("#drops-editor-form", drop: %{body: new_body})
+      |> render_submit()
+
+      # Verify job is enqueued with the correct old body
+      assert_enqueued(
+        worker: ScreenshotGeneratorWorker,
+        args: %{
+          "drop_id" => drop.id,
+          "old_body" => old_body,
+          "action" => "edit"
+        },
+        queue: :seo_images
+      )
     end
   end
 end

@@ -7,13 +7,16 @@ defmodule ElixirDrops.Drops.Drop do
   import Ecto.Query, warn: false
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Drops.Screenshot
 
+  @type attrs :: map()
   @type t :: %__MODULE__{}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "drops" do
     field :body, :string
+    embeds_one :screenshot, Screenshot, on_replace: :update
     field :short_id, :string
     field :title, :string
 
@@ -22,11 +25,19 @@ defmodule ElixirDrops.Drops.Drop do
     timestamps()
   end
 
-  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t(), attrs()) :: Ecto.Changeset.t()
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
     |> cast(attrs, [:body, :short_id, :title, :user_id])
     |> validate_required([:body, :short_id, :title])
     |> unique_constraint(:short_id)
+  end
+
+  @spec screenshot_changeset(t(), attrs()) :: Ecto.Changeset.t()
+  def screenshot_changeset(%__MODULE__{} = drop, attrs \\ %{}) do
+    drop
+    |> cast(attrs, [])
+    |> cast_embed(:screenshot)
+    |> validate_required([:screenshot])
   end
 end
