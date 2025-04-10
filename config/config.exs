@@ -89,7 +89,7 @@ config :ueberauth, Ueberauth,
 
 config :elixir_drops, Oban,
   engine: Oban.Engines.Basic,
-  queues: [default: 10, seo_images: 20],
+  queues: [default: 10, seo_images: 1],
   repo: ElixirDrops.Repo
 
 # Import environment specific config. This must remain at the bottom
