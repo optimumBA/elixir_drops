@@ -30,20 +30,16 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   def handle_event("save", %{"drop" => drop_params}, socket) do
-    # Capture the old body before any updates
-    old_body = socket.assigns.drop.body
-    new_body = drop_params["body"]
-
     case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
       {:ok, drop} ->
-        case socket.assigns.live_action do
-          :edit when old_body != new_body ->
+        case socket.assigns do
+          %{live_action: :edit, drop: %{body: old_body}} when old_body != drop.body ->
             enqueue_seo_screenshot_creation(drop.id, old_body, :edit)
 
-          :new ->
+          %{live_action: :new} ->
             enqueue_seo_screenshot_creation(drop.id, nil, :new)
 
-          _other ->
+          _assigns ->
             :ok
         end
 

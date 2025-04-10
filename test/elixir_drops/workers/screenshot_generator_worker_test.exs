@@ -49,21 +49,19 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
   describe "perform/1" do
     setup [:drop_setup]
 
-    test "creates a screenshot for a drop with a code block",
-         %{drop: drop} do
-      timestamp = Timex.to_unix(drop.updated_at)
-
-      image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
+    test "creates a screenshot for a drop with a code block", %{drop: drop} do
+      image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
 
       Client.Mock
-      |> expect(:upload_image, fn _image, _filename, _type ->
+      |> expect(:upload_image, fn _image, filename, _type ->
+        assert filename == "drop-meta-image-latest-#{drop.id}.png"
         {:ok, image_url}
       end)
       |> expect(:get_image, fn _drop -> {:ok, image_url} end)
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
-      assert {:ok, _image_url} = Client.get_image(drop)
+      assert {:ok, ^image_url} = Client.get_image(drop)
     end
 
     test "does not create a screenshot when there is an error", %{drop: drop} do
@@ -105,10 +103,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       # Simulate drop body update with a changed code block
       Drops.update_drop(drop, user, %{body: updated_body})
 
-      timestamp = Timex.to_unix(drop.updated_at)
-      image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
+      image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
 
-      expect(Client.Mock, :upload_image, fn _image, _filename, _type -> {:ok, image_url} end)
+      expect(Client.Mock, :upload_image, fn _image, filename, _type ->
+        assert filename == "drop-meta-image-latest-#{drop.id}.png"
+        {:ok, image_url}
+      end)
 
       assert :ok =
                perform_job(ScreenshotGeneratorWorker, %{

@@ -204,7 +204,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
         )
 
       expect(Client.Mock, :get_image, 2, fn _drop ->
-        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
+        {:ok, "http://image.com/drop-meta-image-latest-#{drop.id}.png"}
       end)
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
