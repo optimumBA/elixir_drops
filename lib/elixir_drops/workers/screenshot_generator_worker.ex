@@ -12,18 +12,29 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias Wallaby.Browser
 
   @stages %{
+    starting: 10,
     initializing_flame: 20,
     creating_machine: 30,
     waiting_for_machine: 40,
+    machine_warming_up: 45,
     session_started: 50,
     preparing_screenshot: 65,
     screenshot_taken: 90,
-    preparing_upload: 95,
+    preparing_upload: 100,
     finalizing: 100
   }
 
+  @flame_status_table :flame_machine_status
+  @progress_interval 100
+
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
+    try do
+      :ets.new(@flame_status_table, [:named_table, :set, :public])
+    rescue
+      _ -> :ok
+    end
+
     args
     |> maybe_create_screenshot()
     |> maybe_retry_job()
@@ -79,27 +90,101 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp drop_screenshot(drop) do
-    Task.start(fn ->
-      animate_flame_startup(drop)
-    end)
+    flame_running? = is_flame_running?()
 
-    FLAME.call(ScreenshotGenerator, fn ->
-      with {:ok, screenshot} <- generate_screenshot(drop),
-           {:ok, image} <- File.read(screenshot) do
-        broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, "pending")
+    progress_task =
+      Task.async(fn ->
+        simulate_continuous_progress(drop, flame_running?)
+      end)
 
-        upload_screenshot(image, drop)
+    :ets.insert(@flame_status_table, {:flame_running, true})
+
+    result =
+      FLAME.call(ScreenshotGenerator, fn ->
+        with {:ok, screenshot} <- generate_screenshot(drop),
+             {:ok, image} <- File.read(screenshot) do
+          :ets.insert(@flame_status_table, {:progress_completed, true})
+          broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, "pending")
+
+          upload_screenshot(image, drop)
+        end
+      end)
+
+    :ets.insert(@flame_status_table, {:flame_running, false})
+    :ets.insert(@flame_status_table, {:progress_completed, false})
+
+    try do
+      Task.await(progress_task, 10_000)
+    rescue
+      _ -> :ok
+    end
+
+    result
+  end
+
+  defp is_flame_running? do
+    case :ets.lookup(@flame_status_table, :flame_running) do
+      [{:flame_running, true}] ->
+        true
+
+      _flame_not_running ->
+        false
+    end
+  end
+
+  defp simulate_continuous_progress(drop, flame_already_running?) do
+    if flame_already_running? do
+      progress_value = @stages.machine_warming_up
+      broadcast_drop_screenshot_progress(drop, progress_value, "pending")
+    else
+      broadcast_drop_screenshot_progress(drop, @stages.starting, "pending")
+
+      simulate_range_progress(drop, @stages.starting, @stages.waiting_for_machine, 1500)
+
+      Process.sleep(300)
+
+      broadcast_drop_screenshot_progress(drop, @stages.machine_warming_up, "pending")
+    end
+
+    simulate_range_progress(drop, @stages.machine_warming_up, @stages.session_started, 800)
+
+    simulate_range_progress(drop, @stages.session_started, @stages.preparing_screenshot, 1000)
+
+    wait_or_continue_to_completion(drop, @stages.preparing_screenshot, @stages.screenshot_taken)
+  end
+
+  defp simulate_range_progress(drop, start_value, end_value, duration_ms) do
+    step_count = div(duration_ms, @progress_interval)
+    step_size = (end_value - start_value) / step_count
+
+    Enum.reduce(1..step_count, start_value, fn step, current_value ->
+      next_value = current_value + step_size
+
+      if next_value - current_value > 0.5 do
+        broadcast_drop_screenshot_progress(drop, trunc(next_value), "pending")
       end
+
+      Process.sleep(@progress_interval)
+      next_value
     end)
   end
 
-  defp animate_flame_startup(drop) do
-    broadcast_drop_screenshot_progress(drop, @stages.initializing_flame, "pending")
-    Process.sleep(300)
-    broadcast_drop_screenshot_progress(drop, @stages.creating_machine, "pending")
-    Process.sleep(300)
-    broadcast_drop_screenshot_progress(drop, @stages.waiting_for_machine, "pending")
-    Process.sleep(300)
+  defp wait_or_continue_to_completion(drop, current_value, max_value) do
+    case :ets.lookup(@flame_status_table, :progress_completed) do
+      [{:progress_completed, true}] ->
+        current_value
+
+      _ ->
+        if current_value < max_value do
+          next_value = current_value + 1
+          broadcast_drop_screenshot_progress(drop, next_value, "pending")
+          Process.sleep(@progress_interval)
+          wait_or_continue_to_completion(drop, next_value, max_value)
+        else
+          Process.sleep(500)
+          wait_or_continue_to_completion(drop, current_value, max_value)
+        end
+    end
   end
 
   defp get_drop(id) do
