@@ -35,16 +35,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       _other -> :ok
     end
 
-    args
-    |> maybe_create_screenshot()
-    |> maybe_retry_job()
-  end
-
-  defp maybe_retry_job({:ok, _image_url}), do: :ok
-  defp maybe_retry_job({:cancel, reason}), do: {:cancel, reason}
-  defp maybe_retry_job(error), do: error
-
-  defp maybe_create_screenshot(args) do
     case args["action"] do
       "edit" -> handle_edit(args)
       _new -> handle_new(args)
@@ -263,27 +253,23 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp upload_screenshot(screenshot, drop) do
-    timestamp = Timex.to_unix(drop.updated_at)
+    latest_image_name = "drop-meta-image-latest-#{drop.id}.png"
 
-    image_name = "drop-meta-image-#{timestamp}-#{drop.id}.png"
-
-    case Client.upload_image(screenshot, image_name, "image/png") do
+    case Client.upload_image(screenshot, latest_image_name, "image/png") do
       {:ok, image_url} ->
-        screenshot_attrs = %{
-          status: "published",
-          url: image_url
-        }
+        screenshot_data = %{screenshot: %{status: :completed, url: image_url}}
 
-        case Drops.update_drop(drop, drop.user, %{screenshot: screenshot_attrs}) do
+        case Drops.update_drop_screenshot(drop, screenshot_data) do
           {:ok, updated_drop} ->
-            broadcast_drop_screenshot_progress(updated_drop, @stages.finalizing, "published")
-            {:ok, image_url}
+            broadcast_drop_screenshot_progress(updated_drop, @stages.finalizing, :completed)
+            :ok
 
           error ->
             error
         end
 
       error ->
+        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
         error
     end
   end

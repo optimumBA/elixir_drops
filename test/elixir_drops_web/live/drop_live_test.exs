@@ -9,7 +9,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
-  alias ElixirDrops.S3Helper.Client
 
   setup :verify_on_exit!
 
@@ -207,10 +206,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, drop: drop, user: user} do
-      expect(Client.Mock, :get_image, 2, fn _drop ->
-        {:error, "Image not found"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       {:ok, _time} =
@@ -243,10 +238,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
           }
         )
 
-      expect(Client.Mock, :get_image, 2, fn _drop ->
-        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
@@ -258,10 +249,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       conn: conn,
       drop: drop
     } do
-      expect(Client.Mock, :get_image, 2, fn _drop ->
-        {:error, "Image not found"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
@@ -289,6 +276,21 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~
                "<meta property=\"og:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
+
+      Drops.update_drop_screenshot(drop, %{
+        screenshot: %{
+          status: :completed,
+          url: "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+        }
+      })
+
+      {:ok, _live, updated_html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert updated_html =~
+               "<meta property=\"og:image\" content=\"http://image.com/drop-meta-image-latest-#{drop.id}.png\"/>"
+
+      assert updated_html =~
+               "<meta name=\"twitter:image\" content=\"http://image.com/drop-meta-image-latest-#{drop.id}.png\"/>"
     end
 
     test "links are escaped and images are omitted from the description", %{
@@ -301,10 +303,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       }
 
       drop = drop_fixture(%Drop{}, user, drop_attributes)
-
-      expect(Client.Mock, :get_image, 2, fn _drop ->
-        {:error, "Image not found"}
-      end)
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 

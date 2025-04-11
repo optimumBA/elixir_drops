@@ -11,8 +11,8 @@ defmodule ElixirDrops.Application do
       children(
         always: ElixirDropsWeb.Telemetry,
         always: ElixirDropsWeb.Endpoint,
+        always: ElixirDrops.Repo,
         always: {Phoenix.PubSub, name: ElixirDrops.PubSub},
-        parent: ElixirDrops.Repo,
         parent:
           {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
         # Start the Finch HTTP client for sending emails

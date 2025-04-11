@@ -217,6 +217,27 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
+  Updates only the screenshot information of a drop.
+
+  ## Examples
+
+      iex> update_drop_screenshot(%Drop{}, %{
+      ...>   screenshot: %{status: :completed, url: "https://example.com/image.png"}
+      ...> })
+      {:ok, %Drop{}}
+
+      iex> update_drop_screenshot(%Drop{}, %{screenshot: %{status: :failed}})
+      {:ok, %Drop{}}
+
+  """
+  @spec update_drop_screenshot(drop(), attrs()) :: {:ok, drop()} | {:error, changeset()}
+  def update_drop_screenshot(%Drop{} = drop, attrs) do
+    drop
+    |> Drop.screenshot_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking drop changes.
 
   ## Examples
