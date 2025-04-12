@@ -10,7 +10,6 @@ defmodule ElixirDrops.S3Helper.Client do
   @type type :: binary()
   @type url :: binary()
 
-  @callback get_image(drop()) :: {:ok, url()} | {:error, any()}
   @callback upload_image(image(), filename(), type()) :: {:ok, url()} | {:error, any()}
 
   @spec upload_image(image(), filename(), type()) :: {:ok, url()} | {:error, any()}
@@ -21,9 +20,6 @@ defmodule ElixirDrops.S3Helper.Client do
       type
     )
   end
-
-  @spec get_image(drop()) :: {:ok, url()} | {:error, any()}
-  def get_image(drop), do: impl().get_image(drop)
 
   defp impl, do: Application.get_env(:elixir_drops, :s3_helper, Http)
 end

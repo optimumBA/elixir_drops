@@ -49,34 +49,32 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
   describe "perform/1" do
     setup [:drop_setup]
 
-    test "creates a screenshot for a drop with a code block",
-         %{drop: drop} do
-      timestamp = Timex.to_unix(drop.updated_at)
+    test "creates a screenshot for a drop with a code block", %{drop: drop} do
+      image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
 
-      image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
-
-      Client.Mock
-      |> expect(:upload_image, fn _image, _filename, _type ->
+      expect(Client.Mock, :upload_image, fn _image, filename, _type ->
+        assert filename == "drop-meta-image-latest-#{drop.id}.png"
         {:ok, image_url}
       end)
-      |> expect(:get_image, fn _drop -> {:ok, image_url} end)
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
-      assert {:ok, _image_url} = Client.get_image(drop)
+      updated_drop = Repo.reload(drop)
+      assert updated_drop.screenshot.status == :completed
+      assert updated_drop.screenshot.url == image_url
     end
 
     test "does not create a screenshot when there is an error", %{drop: drop} do
-      Client.Mock
-      |> expect(:upload_image, fn _image, _filename, _type ->
+      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
         {:error, "Failed to upload image"}
       end)
-      |> expect(:get_image, fn _drop -> {:error, "Image not found"} end)
 
       {:error, "Failed to upload image"} =
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
-      assert {:error, "Image not found"} = Client.get_image(drop)
+      updated_drop = Repo.reload(drop)
+      assert updated_drop.screenshot.status == :failed
+      refute updated_drop.screenshot.url
     end
 
     test "does not create a screenshot when there is no code block and the job is not retried", %{
@@ -105,10 +103,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       # Simulate drop body update with a changed code block
       Drops.update_drop(drop, user, %{body: updated_body})
 
-      timestamp = Timex.to_unix(drop.updated_at)
-      image_url = "http://image.com/drop-meta-image-#{timestamp}-#{drop.id}.png"
+      image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
 
-      expect(Client.Mock, :upload_image, fn _image, _filename, _type -> {:ok, image_url} end)
+      expect(Client.Mock, :upload_image, fn _image, filename, _type ->
+        assert filename == "drop-meta-image-latest-#{drop.id}.png"
+        {:ok, image_url}
+      end)
 
       assert :ok =
                perform_job(ScreenshotGeneratorWorker, %{
@@ -149,11 +149,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
                  action: "edit",
                  old_body: drop.body
                })
-    end
-
-    test "calc_height returns 0 when body has no markdown code block" do
-      body = "fjdjdjd\n"
-      assert ScreenshotGeneratorWorker.calc_height(body) == "0"
     end
   end
 end

@@ -3,11 +3,13 @@ defmodule ElixirDropsWeb.CodeSnippetController do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDropsWeb.CodeSnippetHelper
 
   @type conn :: Plug.Conn.t()
   @type params :: map()
 
   @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
+  @threshold 10
 
   @spec index(conn(), params()) :: conn()
   def index(conn, %{"id" => id}) do
@@ -35,34 +37,18 @@ defmodule ElixirDropsWeb.CodeSnippetController do
   defp handle_drop_retrieval(conn, id) do
     with %Drop{body: body} <- Drops.get_drop(%{drop_id: id}),
          [code_block] <- Regex.run(@markdown_regex, body, capture: :first) do
-      lines = calc_lines([code_block])
+      lines = CodeSnippetHelper.calc_lines(code_block)
 
-      conn = assign(conn, :lines_of_code, lines)
+      small_window = lines < @threshold
 
-      render(conn, :index, code_block: code_block, layout: false)
+      render(conn, :index,
+        code_block: code_block,
+        layout: false,
+        small_window: small_window
+      )
     else
       _error ->
         send_resp(conn, :not_found, "404 Not Found")
-    end
-  end
-
-  @spec calc_lines([String.t()]) :: integer()
-  def calc_lines(code_block) do
-    lines =
-      code_block
-      |> Enum.at(0)
-      |> String.split("\n")
-      |> length()
-
-    lines
-  end
-
-  @spec get_font_size(integer()) :: String.t()
-  def get_font_size(lines) do
-    if lines < 8 do
-      "text-[2rem]"
-    else
-      "text-base"
     end
   end
 

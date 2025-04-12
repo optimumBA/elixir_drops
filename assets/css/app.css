@@ -286,7 +286,7 @@ blockquote *:last-child {
 }
 
 .seo-image {
-  @apply rounded-b-2xl min-w-[55%] overflow-hidden;
+  @apply rounded-b-2xl min-w-[55%] max-w-[70%] overflow-hidden;
 }
 
 .seo-image pre {

@@ -7,22 +7,13 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.Drops
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
+  alias ElixirDrops.ScreenshotGeneratorWorkerHelper
   alias Wallaby.Browser
 
   @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    args
-    |> maybe_create_screenshot()
-    |> maybe_retry_job()
-  end
-
-  defp maybe_retry_job({:ok, _image_url}), do: :ok
-  defp maybe_retry_job({:cancel, reason}), do: {:cancel, reason}
-  defp maybe_retry_job(error), do: error
-
-  defp maybe_create_screenshot(args) do
     case args["action"] do
       "edit" -> handle_edit(args)
       _new -> handle_new(args)
@@ -83,7 +74,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
 
   defp generate_screenshot(drop) do
-    height = calc_height(drop.body)
+    height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
 
     {:ok, session} =
       Wallaby.start_session(
@@ -124,44 +115,20 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp upload_screenshot(screenshot, drop) do
-    timestamp = Timex.to_unix(drop.updated_at)
+    latest_image_name = "drop-meta-image-latest-#{drop.id}.png"
 
-    image_name = "drop-meta-image-#{timestamp}-#{drop.id}.png"
-
-    case Client.upload_image(screenshot, image_name, "image/png") do
+    case Client.upload_image(screenshot, latest_image_name, "image/png") do
       {:ok, image_url} ->
-        {:ok, image_url}
+        screenshot_data = %{screenshot: %{status: :completed, url: image_url}}
+
+        case Drops.update_drop_screenshot(drop, screenshot_data) do
+          {:ok, _updated_drop} -> :ok
+          error -> error
+        end
 
       error ->
+        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
         error
-    end
-  end
-
-  @spec calc_height(String.t()) :: String.t()
-  def calc_height(body) do
-    case Regex.run(@markdown_regex, body, capture: :first) do
-      nil ->
-        "0"
-
-      regex ->
-        lines =
-          regex
-          |> Enum.at(0)
-          |> String.split("\n")
-          |> length()
-
-        code_height = 19.2 * lines + 500
-
-        code_height =
-          if code_height >= 2000 do
-            2000
-          else
-            code_height
-          end
-
-        code_height
-        |> trunc()
-        |> Integer.to_string()
     end
   end
 end
