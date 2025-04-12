@@ -118,7 +118,7 @@ defmodule ElixirDropsWeb.CodeSnippetControllerTest do
     end
 
     test "get_font_size returns the font size according to number of lines" do
-      lines = 3
+      lines = 4
       assert CodeSnippetController.get_font_size(lines) == "text-[2rem]"
     end
   end
