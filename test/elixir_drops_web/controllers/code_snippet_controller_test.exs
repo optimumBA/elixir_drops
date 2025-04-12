@@ -6,6 +6,8 @@ defmodule ElixirDropsWeb.CodeSnippetControllerTest do
 
   alias ElixirDrops.Drops.Drop
 
+  alias ElixirDropsWeb.CodeSnippetController
+
   setup %{conn: conn} do
     user = user_fixture()
 
@@ -108,6 +110,16 @@ defmodule ElixirDropsWeb.CodeSnippetControllerTest do
       conn = get(conn, "/d/#{drop.id}/code_snippet")
 
       assert response(conn, 401) == "Unauthorized"
+    end
+
+    test "calc_lines returns the number of lines in a code block" do
+      code_block = ["```elixir\n  defp handle_drop_retrieval(conn, id) d\n```"]
+      assert CodeSnippetController.calc_lines(code_block) == 3
+    end
+
+    test "get_font_size returns the font size according to number of lines" do
+      lines = 3
+      assert CodeSnippetController.get_font_size(lines) == "text-[2rem]"
     end
   end
 end
