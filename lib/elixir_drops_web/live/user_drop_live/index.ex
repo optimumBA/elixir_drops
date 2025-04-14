@@ -84,14 +84,14 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, _progress, "published"},
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, _progress, :completed},
         socket
       ) do
     drop_to_update = Drops.get_drop_by_short_id(drop.short_id)
 
     screenshot_params = %{
       screenshot: %{
-        status: "published",
+        status: :completed,
         url: drop.screenshot.url,
         progress_value: 100
       }
@@ -103,7 +103,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     socket =
       socket
       |> assign(:screenshot, %{
-        status: "published",
+        status: :completed,
         drop_short_id: drop.short_id,
         progress_value: 100,
         url: drop.screenshot.url

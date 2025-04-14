@@ -120,7 +120,10 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp add_screenshot_status(:new, drop_params) do
-    status = if has_code_block?(drop_params["body"]), do: "pending", else: "published"
+    status =
+      if has_code_block?(drop_params["body"]),
+        do: :pending,
+        else: :completed
 
     screenshot_data = %{
       "screenshot" => %{
@@ -137,9 +140,9 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
     status =
       cond do
-        !has_code_block?(new_body) -> "published"
-        new_body == old_body -> "published"
-        true -> "pending"
+        !has_code_block?(new_body) -> :completed
+        new_body == old_body -> :completed
+        true -> :pending
       end
 
     screenshot_data = %{
