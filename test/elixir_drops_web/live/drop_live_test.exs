@@ -8,6 +8,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
 
   setup :verify_on_exit!
@@ -73,7 +74,14 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert path == ~p"/drops/new"
     end
 
-    test "show a list of drops", %{conn: conn, drop: drop, user: user} do
+    test "only shows a list of drops with screenshot status :completed", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      pending_drop = drop_fixture(drop, user, %{screenshot: %{status: :pending}})
+      failed_drop = drop_fixture(drop, user, %{screenshot: %{status: :failed}})
+
       {:ok, _live, html} = live(conn, ~p"/")
 
       {:ok, _time} =
@@ -83,6 +91,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ user.github_username
       assert html =~ user.avatar
       assert html =~ ~s(datetime="#{drop.inserted_at}Z")
+
+      refute html =~ pending_drop.title
+      refute html =~ failed_drop.title
     end
 
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
@@ -131,7 +142,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
         Drops.create_drop(%Drop{}, user, %{
           title: "New Drop title",
           body: "Drop body",
-          screenshot: %{status: "published"}
+          screenshot: %{
+            status: :completed,
+            url: nil
+          }
         })
 
       assert has_element?(live, "#new-drops-indicator")
@@ -143,11 +157,13 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert has_element?(live, "#drop-#{drop.id}", drop.title)
     end
 
-    test "user does not see a drop requiring screenshot generation until it is has a published screenshot",
+    test "user sees an indicator for new drop only when screenshot generation completes",
          %{
            conn: conn,
            user: user
          } do
+      Drops.subscribe()
+
       {:ok, live, _html} = live(conn, ~p"/")
 
       refute has_element?(live, "#new-drops-indicator")
@@ -157,23 +173,84 @@ defmodule ElixirDropsWeb.DropLiveTest do
           title: "New Drop title",
           body:
             "Drop body ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
-          screenshot_status: "pending"
+          screenshot: %{status: :pending}
         })
 
       refute has_element?(live, "#new-drops-indicator")
 
       refute has_element?(live, "#drop-#{drop.id}")
 
-      {:ok, _drop} =
-        Drops.update_drop(drop, user, %{screenshot_status: "published"})
+      {:ok, updated_drop} =
+        Drops.update_drop_screenshot(drop, %{
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+        })
 
-      # assert has_element?(live, "#new-drops-indicator")
+      DropsBroadcast.broadcast_drop_screenshot_progress(
+        updated_drop,
+        100,
+        :completed
+      )
 
-      # updated_live
-      # |> element("#new-drops-indicator")
-      # |> render_click()
+      # Wait for the LiveView to process the broadcast
+      Process.sleep(100)
 
-      # assert has_element?(updated_live, "#drop-#{drop.id}")
+      render(live)
+
+      assert has_element?(live, "#new-drops-indicator")
+
+      live
+      |> element("#new-drops-indicator")
+      |> render_click()
+
+      assert has_element?(live, "#drop-#{drop.id}")
+    end
+
+    test "user does not see an indicator when an existing drop's screenshot is regenerated",
+         %{
+           conn: conn,
+           user: user
+         } do
+      {:ok, drop} =
+        Drops.create_drop(%Drop{}, user, %{
+          title: "Existing Drop title",
+          body:
+            "Drop body with code ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+        })
+
+      Drops.subscribe()
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert has_element?(live, "#drop-#{drop.id}")
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, updated_drop} =
+        Drops.update_drop_screenshot(drop, %{
+          screenshot: %{status: :pending, url: nil}
+        })
+
+      {:ok, completed_drop} =
+        Drops.update_drop_screenshot(updated_drop, %{
+          screenshot: %{status: :completed, url: "http://example.com/new-screenshot.png"}
+        })
+
+      DropsBroadcast.broadcast_drop_screenshot_progress(
+        completed_drop,
+        100,
+        :completed,
+        %{action: :edit}
+      )
+
+      # Wait for the LiveView to process the broadcast
+      Process.sleep(100)
+
+      render(live)
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      assert has_element?(live, "#drop-#{drop.id}")
     end
 
     test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
