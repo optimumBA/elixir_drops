@@ -26,6 +26,7 @@ import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
 import InfiniteScrollHooks from './hooks/infinite_scroll'
+import ScreenshotProgressHooks from './hooks/screenshot_progress'
 import WelcomeMessageHooks from './hooks/welcome_message'
 
 let Hooks = {
@@ -33,6 +34,7 @@ let Hooks = {
   ...DropBodyHooks,
   ...DropsContainerHooks,
   ...InfiniteScrollHooks,
+  ...ScreenshotProgressHooks,
   ...WelcomeMessageHooks,
 }
 

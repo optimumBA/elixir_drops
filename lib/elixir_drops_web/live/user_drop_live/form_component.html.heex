@@ -1,4 +1,8 @@
-<div id={@id} class="drop-form min-h-[calc(100vh-12px)] bg-[#eae8fd]">
+<div
+  id={@id}
+  phx-hook="ScreenshotProgress"
+  class="drop-form min-h-[calc(100vh-12px)] bg-[#eae8fd]"
+>
   <div
     id="drops-editor-overlay"
     class={[
@@ -100,6 +104,7 @@
   </.form>
 
   <DropComponents.generating_screenshots_popup
+    id="screenshot-progress"
     myself={@myself}
     screenshot_drop_short_id={@screenshot_drop_short_id}
     screenshot_status={@screenshot_status}
