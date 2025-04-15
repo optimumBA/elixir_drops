@@ -3,6 +3,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
+  alias ElixirDrops.WorkerHelpers
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
 
@@ -13,7 +14,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{screenshot: %{status: "published"}})
+     |> assign(:drop_filters, %{screenshot_status: :completed})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
      |> assign(:page_title, "ElixirDrops")
@@ -35,35 +36,35 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info({DropsBroadcast, [:drop, :created], drop}, socket) do
-    has_screenshot = drop.screenshot && drop.screenshot.status != "pending"
+    needs_screenshot =
+      case WorkerHelpers.check_for_code_block(drop.body) do
+        {:ok, _code_block} -> true
+        {:error, _reason} -> false
+      end
 
-    if has_screenshot do
+    has_completed_screenshot = drop.screenshot && drop.screenshot.status == :completed
+
+    if !needs_screenshot or has_completed_screenshot do
       {:noreply, assign(socket, :new_drops?, true)}
     else
       {:noreply, socket}
     end
   end
 
-  @impl Phoenix.LiveView
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_progress],
-         %{inserted_at: inserted_at} = _drop, _progress, "published"},
-        socket
-      ) do
-    # TODO: Find a better way to do this
-    is_new = NaiveDateTime.diff(NaiveDateTime.utc_now(), inserted_at, :second) <= 60
-
-    if is_new do
-      {:noreply, assign(socket, :new_drops?, is_new)}
-    else
-      {:noreply, DropsListHelper.assign_drops(socket)}
-    end
-  end
-
-  def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, _status},
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, :completed,
+         %{action: "edit"} = _metadata},
         socket
       ) do
     {:noreply, socket}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_progress], _drop, _progress, :completed,
+         %{action: "new"} = _metadata},
+        socket
+      ) do
+    {:noreply, assign(socket, :new_drops?, true)}
   end
 end

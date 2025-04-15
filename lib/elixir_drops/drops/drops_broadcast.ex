@@ -8,7 +8,8 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
   @type drop :: Drop.t()
   @type progress :: integer()
   @type short_id_string :: String.t()
-  @type status :: String.t()
+  @type status :: atom()
+  @type metadata :: map()
 
   @topic inspect(__MODULE__)
 
@@ -82,17 +83,18 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
       ...>     short_id: "abc123"
       ...>   },
       ...>   50,
-      ...>   "pending"
+      ...>   :pending,
+      ...>   %{action: :new}
       ...> )
       :ok
 
   """
-  @spec broadcast_drop_screenshot_progress(map(), progress(), status()) :: :ok
-  def broadcast_drop_screenshot_progress(drop, progress, status) do
+  @spec broadcast_drop_screenshot_progress(map(), progress(), status(), metadata()) :: :ok
+  def broadcast_drop_screenshot_progress(drop, progress, status, metadata \\ %{action: :new}) do
     Phoenix.PubSub.broadcast(
       ElixirDrops.PubSub,
       @topic,
-      {__MODULE__, [:drop, :screenshot_generation_progress], drop, progress, status}
+      {__MODULE__, [:drop, :screenshot_generation_progress], drop, progress, status, metadata}
     )
   end
 end

@@ -11,30 +11,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.WorkerHelpers
   alias Wallaby.Browser
 
-  @stages %{
-    starting: 10,
-    initializing_flame: 20,
-    creating_machine: 30,
-    waiting_for_machine: 40,
-    machine_warming_up: 45,
-    session_started: 50,
-    preparing_screenshot: 65,
-    screenshot_taken: 90,
-    preparing_upload: 100,
-    finalizing: 100
-  }
-
-  @flame_status_table :flame_machine_status
-  @progress_interval 100
-
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    try do
-      :ets.new(@flame_status_table, [:named_table, :set, :public])
-    rescue
-      _other -> :ok
-    end
-
     case args["action"] do
       "edit" -> handle_edit(args)
       _new -> handle_new(args)
@@ -46,7 +24,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       {:ok, drop} ->
         case WorkerHelpers.check_for_code_block(drop.body) do
           {:ok, new_code_block} ->
-            check_old_body_and_maybe_compare_code_blocks(drop, args["old_body"], new_code_block)
+            check_old_body_and_maybe_compare_code_blocks(drop, args, new_code_block)
 
           {:error, _} ->
             {:cancel, "No code block found in updated drop"}
@@ -57,136 +35,35 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp check_old_body_and_maybe_compare_code_blocks(drop, old_body, new_code_block) do
-    case WorkerHelpers.check_for_code_block(old_body) do
+  defp check_old_body_and_maybe_compare_code_blocks(drop, args, new_code_block) do
+    case WorkerHelpers.check_for_code_block(args["old_body"]) do
       {:ok, old_code_snippet} ->
         case compare_code_blocks(old_code_snippet, new_code_block) do
-          :ok -> drop_screenshot(drop)
+          :ok -> drop_screenshot(drop, args)
           {:cancel, reason} -> {:cancel, reason}
         end
 
       {:error, _no_old_code_snippet} ->
-        drop_screenshot(drop)
+        drop_screenshot(drop, args)
     end
   end
 
   defp handle_new(args) do
     with {:ok, drop} <- get_drop(args["drop_id"]),
          {:ok, _code_snippet} <- WorkerHelpers.check_for_code_block(drop.body) do
-      drop_screenshot(drop)
+      drop_screenshot(drop, args)
     else
       _error -> {:cancel, "No code block found"}
     end
   end
 
-  defp drop_screenshot(drop) do
-    flame_running? = check_flame_status()
-
-    progress_task =
-      Task.async(fn ->
-        simulate_continuous_progress(drop, flame_running?)
-      end)
-
-    :ets.insert(@flame_status_table, {:flame_running, true})
-
-    result = call_flame(drop)
-
-    :ets.insert(@flame_status_table, {:flame_running, false})
-    :ets.insert(@flame_status_table, {:progress_completed, true})
-
-    timeout = Application.get_env(:elixir_drops, :progress_task_timeout, 30_000)
-
-    if timeout == :no_wait do
-      Task.shutdown(progress_task, :brutal_kill)
-    else
-      try do
-        Task.await(progress_task, timeout)
-      rescue
-        _other -> :ok
-      end
-    end
-
-    result
-  end
-
-  defp call_flame(drop) do
+  defp drop_screenshot(drop, args) do
     FLAME.call(ScreenshotGenerator, fn ->
       with {:ok, screenshot} <- generate_screenshot(drop),
            {:ok, image} <- File.read(screenshot) do
-        :ets.insert(@flame_status_table, {:progress_completed, true})
-        broadcast_drop_screenshot_progress(drop, @stages.preparing_upload, "pending")
-        upload_screenshot(image, drop)
+        upload_screenshot(image, drop, args)
       end
     end)
-  end
-
-  defp check_flame_status do
-    case :ets.lookup(@flame_status_table, :flame_running) do
-      [{:flame_running, true}] ->
-        true
-
-      _flame_not_running ->
-        false
-    end
-  end
-
-  defp simulate_continuous_progress(drop, flame_already_running?) do
-    handle_initial_progress(drop, flame_already_running?)
-
-    simulate_range_progress(drop, @stages.machine_warming_up, @stages.session_started, 800)
-
-    simulate_range_progress(drop, @stages.session_started, @stages.preparing_screenshot, 1000)
-
-    wait_or_continue_to_completion(drop, @stages.preparing_screenshot, @stages.screenshot_taken)
-  end
-
-  defp handle_initial_progress(drop, flame_already_running?) do
-    if flame_already_running? do
-      progress_value = @stages.machine_warming_up
-      broadcast_drop_screenshot_progress(drop, progress_value, "pending")
-    else
-      broadcast_drop_screenshot_progress(drop, @stages.starting, "pending")
-
-      simulate_range_progress(drop, @stages.starting, @stages.waiting_for_machine, 1500)
-
-      Process.sleep(300)
-
-      broadcast_drop_screenshot_progress(drop, @stages.machine_warming_up, "pending")
-    end
-  end
-
-  defp simulate_range_progress(drop, start_value, end_value, duration_ms) do
-    step_count = div(duration_ms, @progress_interval)
-    step_size = (end_value - start_value) / step_count
-
-    Enum.reduce(1..step_count, start_value, fn step, current_value ->
-      next_value = current_value + step_size
-
-      if next_value - current_value > 0.5 do
-        broadcast_drop_screenshot_progress(drop, trunc(next_value), "pending")
-      end
-
-      Process.sleep(@progress_interval)
-      next_value
-    end)
-  end
-
-  defp wait_or_continue_to_completion(drop, current_value, max_value) do
-    case :ets.lookup(@flame_status_table, :progress_completed) do
-      [{:progress_completed, true}] ->
-        current_value
-
-      _other ->
-        if current_value < max_value do
-          next_value = current_value + 1
-          broadcast_drop_screenshot_progress(drop, next_value, "pending")
-          Process.sleep(@progress_interval)
-          wait_or_continue_to_completion(drop, next_value, max_value)
-        else
-          Process.sleep(500)
-          wait_or_continue_to_completion(drop, current_value, max_value)
-        end
-    end
   end
 
   defp get_drop(id) do
@@ -224,8 +101,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         }
       )
 
-    broadcast_drop_screenshot_progress(drop, @stages.session_started, "pending")
-
     url = build_url_with_auth(drop)
 
     %Wallaby.Session{screenshots: [screenshot]} =
@@ -233,11 +108,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       |> Browser.visit(url)
       |> Browser.take_screenshot()
 
-    broadcast_drop_screenshot_progress(drop, @stages.preparing_screenshot, "pending")
-
     Wallaby.end_session(session)
-
-    broadcast_drop_screenshot_progress(drop, @stages.screenshot_taken, "pending")
 
     {:ok, screenshot}
   end
@@ -252,16 +123,19 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     "#{scheme}//#{username}:#{password}@#{rest}"
   end
 
-  defp upload_screenshot(screenshot, drop) do
+  defp upload_screenshot(screenshot, drop, args) do
     latest_image_name = "drop-meta-image-latest-#{drop.id}.png"
 
     case Client.upload_image(screenshot, latest_image_name, "image/png") do
       {:ok, image_url} ->
-        screenshot_data = %{screenshot: %{status: :completed, url: image_url}}
-
-        case Drops.update_drop_screenshot(drop, screenshot_data) do
+        case Drops.update_drop_screenshot(drop, %{
+               screenshot: %{status: :completed, url: image_url}
+             }) do
           {:ok, updated_drop} ->
-            broadcast_drop_screenshot_progress(updated_drop, @stages.finalizing, :completed)
+            broadcast_drop_screenshot_progress(updated_drop, 100, :completed, %{
+              action: args["action"]
+            })
+
             :ok
 
           error ->
@@ -274,22 +148,22 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp broadcast_drop_screenshot_progress(drop, progress, status) do
-    screenshot_attrs =
-      if drop.screenshot do
-        %{
-          status: status,
-          url: drop.screenshot.url
-        }
-      else
-        %{
-          status: status,
-          url: nil
-        }
-      end
+  defp broadcast_drop_screenshot_progress(drop, progress, status, metadata) do
+    # screenshot_attrs =
+    #   if drop.screenshot do
+    #     %{
+    #       status: status,
+    #       url: drop.screenshot.url
+    #     }
+    #   else
+    #     %{
+    #       status: status,
+    #       url: nil
+    #     }
+    #   end
 
-    {:ok, updated_drop} = Drops.update_drop(drop, drop.user, %{screenshot: screenshot_attrs})
+    # {:ok, updated_drop} = Drops.update_drop_screenshot(drop, screenshot_attrs)
 
-    DropsBroadcast.broadcast_drop_screenshot_progress(updated_drop, progress, status)
+    DropsBroadcast.broadcast_drop_screenshot_progress(drop, progress, status, metadata)
   end
 end
