@@ -36,9 +36,6 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
-# Skip waiting for progress tasks in tests
-config :elixir_drops, :progress_task_timeout, :no_wait
-
 config :elixir_drops, Oban, testing: :manual
 
 config :elixir_drops,

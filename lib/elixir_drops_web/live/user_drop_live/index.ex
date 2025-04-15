@@ -17,9 +17,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:screenshot, %{
-       status: :idle,
        drop_short_id: "",
        progress_value: 0,
+       status: :idle,
        url: nil
      })
      |> assign(:end_of_timeline?, false)
@@ -39,9 +39,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     {:noreply,
      assign(socket, :screenshot, %{
-       status: status,
        drop_short_id: socket.assigns.screenshot.drop_short_id,
        progress_value: 100,
+       status: status,
        url: url
      })}
   end
@@ -97,9 +97,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      socket
      |> push_event("screenshot_generation_started", %{})
      |> assign(:screenshot, %{
-       status: :pending,
        drop_short_id: socket.assigns.screenshot.drop_short_id,
        progress_value: 0,
+       status: :pending,
        url: nil
      })}
   end
@@ -121,9 +121,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
        url: url
      })
      |> assign(:screenshot, %{
-       status: status,
        drop_short_id: drop.short_id,
        progress_value: progress,
+       status: status,
        url: url
      })
      |> DropsListHelper.assign_drops()}

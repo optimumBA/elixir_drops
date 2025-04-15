@@ -7,7 +7,7 @@
     id="drops-editor-overlay"
     class={[
       "drops-editor-overlay absolute inset-0 bg-black opacity-30 z-[9000]",
-      @screenshot_status == :idle && "hidden"
+      @screenshot.status == :idle && "hidden"
     ]}
   >
   </div>
@@ -105,10 +105,7 @@
 
   <DropComponents.generating_screenshots_popup
     id="screenshot-progress"
-    myself={@myself}
-    screenshot_drop_short_id={@screenshot_drop_short_id}
-    screenshot_status={@screenshot_status}
-    progress_value={@progress_value}
-    screenshot_url={@screenshot_url}
+    screenshot={@screenshot}
+    target={@myself}
   />
 </div>

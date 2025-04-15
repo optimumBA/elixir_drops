@@ -31,11 +31,11 @@ defmodule ElixirDrops.BroadcastTest do
       DropsBroadcast.subscribe()
 
       drop = %Drop{
-        id: 1,
-        title: "New Drop",
         body: "This is a new drop.",
-        user_id: 1,
-        short_id: "abc123"
+        id: 1,
+        short_id: "abc123",
+        title: "New Drop",
+        user_id: 1
       }
 
       assert :ok == DropsBroadcast.broadcast_drop_screenshot_progress(drop, 10, :pending)
