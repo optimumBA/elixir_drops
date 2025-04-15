@@ -116,7 +116,13 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp needs_screenshot?(:edit, new_body, old_body) do
-    has_code_block?(new_body) && new_body != old_body
+    case {WorkerHelpers.check_for_code_block(new_body),
+          WorkerHelpers.check_for_code_block(old_body)} do
+      {{:ok, new_code_block}, {:ok, old_code_block}} -> new_code_block != old_code_block
+      {{:ok, _new_code_block}, {:error, _}} -> true
+      {{:error, _}, {:ok, _old_code_block}} -> false
+      {{:error, _}, {:error, _}} -> false
+    end
   end
 
   defp add_screenshot_status(:new, drop_params) do

@@ -453,6 +453,43 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
     end
 
+    test "a drop to change part of body but not code block that the screenshot captures (does not require screenshot regeneration)",
+         %{
+           conn: conn,
+           user: user
+         } do
+      drop =
+        drop_fixture(
+          %Drop{},
+          user,
+          %{
+            body: "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
+            title: "Drop with code block"
+          }
+        )
+
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+
+      live
+      |> form("#drops-editor-form",
+        drop: %{
+          title: "New Drop title",
+          body:
+            "Edited body but not code block ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```"
+        }
+      )
+      |> render_submit()
+      |> follow_redirect(conn, ~p"/profile")
+
+      refute_enqueued(
+        worker: ScreenshotGeneratorWorker,
+        args: %{drop_id: drop.id},
+        queue: :seo_images
+      )
+    end
+
     test "authorized user cannot update a drop with invalid data", %{
       conn: conn,
       drop: drop,
