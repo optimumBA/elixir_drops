@@ -50,11 +50,11 @@ ScreenshotProgressHooks.ScreenshotProgress = {
         const elapsedTime = Date.now() - startTime
 
         // Calculate progress percentage (only up to 50%)
-        let progressPercent = Math.min(50, (elapsedTime / totalTime) * 50)
+        let progressPercent = Math.min(99, (elapsedTime / totalTime) * 99)
 
         // Check for random completion
-        if (randomCheck() && progressPercent < 50) {
-          progressPercent = 50
+        if (randomCheck() && progressPercent < 99) {
+          progressPercent = 99
           clearInterval(updateInterval)
         }
 
@@ -72,18 +72,9 @@ ScreenshotProgressHooks.ScreenshotProgress = {
     this.handleEvent(
       'screenshot_progress_update',
       ({ progress, status, url }) => {
-        console.log(
-          'Progress update:',
-          progress,
-          'Status:',
-          status,
-          'URL:',
-          url
-        )
-
         // When we receive the completed status
         // Note: status can be "completed" (string) or :completed (atom serialized as "completed")
-        if (status === 'completed' || status === ':completed') {
+        if (status === 'completed') {
           // First, show 100% before transitioning to the screenshot
           progressCircle.classList.add(
             'transition-all',
@@ -95,7 +86,6 @@ ScreenshotProgressHooks.ScreenshotProgress = {
             'duration-500',
             'ease-out'
           )
-
           // Force progress to 100% regardless of the progress value sent
           setProgress(100)
 
