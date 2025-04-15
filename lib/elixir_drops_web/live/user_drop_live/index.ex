@@ -32,19 +32,20 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  @impl Phoenix.LiveView
-  def handle_event("progress_animation_complete", _params, socket) do
-    url = socket.assigns.screenshot.url
-    status = if url, do: :completed, else: socket.assigns.screenshot.status
+  # TODO: Check if this will be needed
+  # @impl Phoenix.LiveView
+  # def handle_event("progress_animation_complete", _params, socket) do
+  #   url = socket.assigns.screenshot.url
+  #   status = if url, do: :completed, else: socket.assigns.screenshot.status
 
-    {:noreply,
-     assign(socket, :screenshot, %{
-       drop_short_id: socket.assigns.screenshot.drop_short_id,
-       progress_value: 100,
-       status: status,
-       url: url
-     })}
-  end
+  #   {:noreply,
+  #    assign(socket, :screenshot, %{
+  #      drop_short_id: socket.assigns.screenshot.drop_short_id,
+  #      progress_value: 100,
+  #      status: status,
+  #      url: url
+  #    })}
+  # end
 
   @impl Phoenix.LiveView
   def handle_event("load-more", _params, socket) do

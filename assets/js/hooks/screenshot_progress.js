@@ -91,10 +91,11 @@ ScreenshotProgressHooks.ScreenshotProgress = {
 
           // Add a delay before the parent component shows the screenshot
           // This ensures the progress animation has time to complete
-          setTimeout(() => {
-            // Dispatch an event that the LiveView can listen for to trigger UI changes
-            this.pushEvent('progress_animation_complete', {})
-          }, 1000) // Wait 1 second for the animation to complete
+          //TODO: Trying to send the event to the LiveView to trigger UI changes but it's not working
+          // setTimeout(() => {
+          //   // Dispatch an event that the LiveView can listen for to trigger UI changes
+          //   this.pushEvent('progress_animation_complete', {})
+          // }, 1000) // Wait 1 second for the animation to complete
         } else if (progress) {
           // Update progress based on server value
           setProgress(progress)
