@@ -141,7 +141,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, drop} =
         Drops.create_drop(%Drop{}, user, %{
           title: "New Drop title",
-          body: "Drop body",
+          body: "Drop body with code block ```Code block```",
           screenshot: %{
             status: :completed,
             url: nil
@@ -188,10 +188,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
       DropsBroadcast.broadcast_drop_screenshot_progress(
         updated_drop,
         100,
-        :completed
+        :completed,
+        %{action: "new"}
       )
 
-      # Wait for the LiveView to process the broadcast
       Process.sleep(100)
 
       render(live)
@@ -240,10 +240,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
         completed_drop,
         100,
         :completed,
-        %{action: :edit}
+        %{action: "edit"}
       )
 
-      # Wait for the LiveView to process the broadcast
       Process.sleep(100)
 
       render(live)
@@ -404,7 +403,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
          } do
       conn = sign_in_user(conn, user)
 
-      # Start on the new drop page and verify we're in editor mode
       {:ok, live, html} = live(conn, ~p"/drops/new")
       assert html =~ "Write a new post"
 

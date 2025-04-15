@@ -38,10 +38,10 @@ defmodule ElixirDrops.BroadcastTest do
         short_id: "abc123"
       }
 
-      assert :ok == DropsBroadcast.broadcast_drop_screenshot_progress(drop, 10, :generating)
+      assert :ok == DropsBroadcast.broadcast_drop_screenshot_progress(drop, 10, :pending)
 
       assert_receive {DropsBroadcast, [:drop, :screenshot_generation_progress], ^drop, 10,
-                      :generating}
+                      :pending, %{action: "new"}}
     end
   end
 end

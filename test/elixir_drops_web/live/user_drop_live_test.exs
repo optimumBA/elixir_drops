@@ -38,7 +38,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         drop_fixture(%Drop{}, user_2, %{
           title: "Drop 2",
           body: "Body for drop 2",
-          screenshot_status: "published"
+          screenshot: %{status: :completed}
         })
 
       conn = sign_in_user(conn, user)
@@ -138,7 +138,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         queue: :seo_images
       )
 
-      assert created_drop.screenshot.status == "pending"
+      assert created_drop.screenshot.status == :pending
 
       assert html =~ "Generating Code Screenshots..."
 
@@ -429,7 +429,9 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     } do
       conn = sign_in_user(conn, user)
       old_body = drop.body
-      new_body = "#{old_body} with a change"
+
+      new_body =
+        "#{old_body} with a change ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n edited code block```"
 
       {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
 

@@ -84,13 +84,13 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
       ...>   },
       ...>   50,
       ...>   :pending,
-      ...>   %{action: :new}
+      ...>   %{action: "new"}
       ...> )
       :ok
 
   """
   @spec broadcast_drop_screenshot_progress(map(), progress(), status(), metadata()) :: :ok
-  def broadcast_drop_screenshot_progress(drop, progress, status, metadata \\ %{action: :new}) do
+  def broadcast_drop_screenshot_progress(drop, progress, status, metadata \\ %{action: "new"}) do
     Phoenix.PubSub.broadcast(
       ElixirDrops.PubSub,
       @topic,
