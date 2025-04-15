@@ -74,7 +74,7 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
 
   ## Examples
 
-      iex> broadcast_drop_screenshot_progress(
+      iex> broadcast_drop_screenshot_completion(
       ...>   %{
       ...>     id: 1,
       ...>     title: "New Drop",
@@ -89,12 +89,12 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
       :ok
 
   """
-  @spec broadcast_drop_screenshot_progress(map(), progress(), status(), metadata()) :: :ok
-  def broadcast_drop_screenshot_progress(drop, progress, status, metadata \\ %{action: "new"}) do
+  @spec broadcast_drop_screenshot_completion(map(), progress(), status(), metadata()) :: :ok
+  def broadcast_drop_screenshot_completion(drop, progress, status, metadata \\ %{action: "new"}) do
     Phoenix.PubSub.broadcast(
       ElixirDrops.PubSub,
       @topic,
-      {__MODULE__, [:drop, :screenshot_generation_progress], drop, progress, status, metadata}
+      {__MODULE__, [:drop, :screenshot_generation_completion], drop, progress, status, metadata}
     )
   end
 end

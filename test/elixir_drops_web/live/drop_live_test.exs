@@ -185,7 +185,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
           screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
         })
 
-      DropsBroadcast.broadcast_drop_screenshot_progress(
+      DropsBroadcast.broadcast_drop_screenshot_completion(
         updated_drop,
         100,
         :completed,
@@ -236,7 +236,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
           screenshot: %{status: :completed, url: "http://example.com/new-screenshot.png"}
         })
 
-      DropsBroadcast.broadcast_drop_screenshot_progress(
+      DropsBroadcast.broadcast_drop_screenshot_completion(
         completed_drop,
         100,
         :completed,

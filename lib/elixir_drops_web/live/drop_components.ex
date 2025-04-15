@@ -359,7 +359,7 @@ defmodule ElixirDropsWeb.DropComponents do
       <button id="close-screenshot-progress" class="bg-black" phx-click={hide_popup(@id)}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
       </button>
-      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
+      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[200px] md:min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
         <p class={[
           "w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2",
           @screenshot.status == :completed && "hidden"
@@ -382,37 +382,10 @@ defmodule ElixirDropsWeb.DropComponents do
             "flex h-[80%] bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2] my-auto"
         ]}>
           <div class={[
-            "mx-auto text-white rounded-lg flex flex-col items-center justify-center",
+            "mx-auto text-white rounded-lg flex flex-col items-center justify-center space-y-4",
             @screenshot.status == :completed && "hidden"
           ]}>
-            <div class="progress-container">
-              <svg class="progress-circle" viewBox="0 0 100 100">
-                <circle
-                  class="progress-background"
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  stroke="#dddddd"
-                  stroke-width="8"
-                  fill="none"
-                >
-                </circle>
-                <circle
-                  class="progress-bar"
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  id="progress-circle"
-                  stroke="#ffffff"
-                  stroke-width="8"
-                  stroke-dasharray="282.7"
-                  stroke-dashoffset="282.7"
-                  fill="none"
-                >
-                </circle>
-              </svg>
-              <div class="percentage" id="percentage">0%</div>
-            </div>
+            <.progress_loader />
             <p class="text-base md:text-lg lg:text-xl text-white mx-auto mt-4 mb-6">
               Generating Code Screenshots...
             </p>
@@ -491,6 +464,39 @@ defmodule ElixirDropsWeb.DropComponents do
         </svg>
       </div>
     </template>
+    """
+  end
+
+  defp progress_loader(assigns) do
+    ~H"""
+    <div class="relative w-20 h-20 md:w-24 md:h-24 flex items-center justify-center">
+      <svg class="h-20 w-20 md:h-24 md:w-24" viewBox="0 0 100 100">
+        <circle
+          class="progress-background"
+          cx="50"
+          cy="50"
+          r="45"
+          stroke="#dddddd"
+          stroke-width="8"
+          fill="none"
+        >
+        </circle>
+        <circle
+          class="progress-bar"
+          cx="50"
+          cy="50"
+          r="45"
+          id="progress-circle"
+          stroke="#ffffff"
+          stroke-width="8"
+          stroke-dasharray="282.7"
+          stroke-dashoffset="282.7"
+          fill="none"
+        >
+        </circle>
+      </svg>
+      <div class="percentage" id="percentage">0%</div>
+    </div>
     """
   end
 

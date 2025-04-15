@@ -132,7 +132,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
                screenshot: %{status: :completed, url: image_url}
              }) do
           {:ok, updated_drop} ->
-            broadcast_drop_screenshot_progress(updated_drop, 100, :completed, %{
+            broadcast_drop_screenshot_completion(updated_drop, 100, :completed, %{
               action: args["action"]
             })
 
@@ -148,22 +148,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp broadcast_drop_screenshot_progress(drop, progress, status, metadata) do
-    # screenshot_attrs =
-    #   if drop.screenshot do
-    #     %{
-    #       status: status,
-    #       url: drop.screenshot.url
-    #     }
-    #   else
-    #     %{
-    #       status: status,
-    #       url: nil
-    #     }
-    #   end
-
-    # {:ok, updated_drop} = Drops.update_drop_screenshot(drop, screenshot_attrs)
-
-    DropsBroadcast.broadcast_drop_screenshot_progress(drop, progress, status, metadata)
+  defp broadcast_drop_screenshot_completion(drop, progress, status, metadata) do
+    DropsBroadcast.broadcast_drop_screenshot_completion(drop, progress, status, metadata)
   end
 end

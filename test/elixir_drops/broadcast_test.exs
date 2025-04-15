@@ -26,7 +26,7 @@ defmodule ElixirDrops.BroadcastTest do
     end
   end
 
-  describe "broadcast_drop_screenshot_progress/2" do
+  describe "broadcast_drop_screenshot_completion/2" do
     test "broadcasts a message indicating that a drop screenshot is being generated" do
       DropsBroadcast.subscribe()
 
@@ -38,10 +38,10 @@ defmodule ElixirDrops.BroadcastTest do
         user_id: 1
       }
 
-      assert :ok == DropsBroadcast.broadcast_drop_screenshot_progress(drop, 10, :pending)
+      assert :ok == DropsBroadcast.broadcast_drop_screenshot_completion(drop, 100, :completed)
 
-      assert_receive {DropsBroadcast, [:drop, :screenshot_generation_progress], ^drop, 10,
-                      :pending, %{action: "new"}}
+      assert_receive {DropsBroadcast, [:drop, :screenshot_generation_completion], ^drop, 100,
+                      :completed, %{action: "new"}}
     end
   end
 end

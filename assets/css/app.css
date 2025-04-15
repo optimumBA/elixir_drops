@@ -293,20 +293,6 @@ blockquote *:last-child {
   @apply text-[1.1rem] font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
 }
 
-.progress-container {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.progress-circle {
-  width: 50%;
-  height: 50%;
-}
-
 .progress-background {
   fill: none;
   stroke: rgba(255, 255, 255, 0.2);

@@ -105,11 +105,10 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_progress], drop, progress, status,
+        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, progress, status,
          _metadata},
         socket
       ) do
-    # Convert status to string for JavaScript
     status_string = Atom.to_string(status)
     url = if drop.screenshot, do: drop.screenshot.url, else: nil
 
