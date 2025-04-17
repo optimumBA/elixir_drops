@@ -86,14 +86,7 @@ defmodule ElixirDrops.Drops do
   end
 
   defp apply_filter({:screenshot_status, status}, dynamic) do
-    dynamic([drop: drop], ^dynamic and drop.screenshot["status"] == ^status)
-  end
-
-  defp apply_filter({:completed_or_nil_screenshot, status}, dynamic) do
-    dynamic(
-      [drop: drop],
-      ^dynamic and (drop.screenshot["status"] == ^status or is_nil(drop.screenshot))
-    )
+    dynamic([drop: drop], ^dynamic and drop.screenshot["status"] in ^status)
   end
 
   defp apply_filter({:short_id, short_id}, dynamic) do

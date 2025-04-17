@@ -104,14 +104,18 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html =~ failed_drop.title
     end
 
-    test "shows a list of drops with screenshot nil", %{
+    test "shows a list of drops with screenshot status :skipped and :completed", %{
       conn: conn,
       drop: drop,
       user: user
     } do
+      completed_drop = drop_fixture(user)
+      {:ok, skipped_drop} = Drops.update_drop_screenshot(drop, %{screenshot: %{status: :skipped}})
+
       {:ok, _live, html} = live(conn, ~p"/")
 
-      assert html =~ drop.title
+      assert html =~ completed_drop.title
+      assert html =~ skipped_drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
     end
