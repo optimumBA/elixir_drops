@@ -10,7 +10,7 @@ defmodule ElixirDrops.Drops.Screenshot do
 
   @primary_key false
   embedded_schema do
-    field :status, Ecto.Enum, values: [:pending, :completed, :failed], default: :pending
+    field :status, Ecto.Enum, values: [:pending, :completed, :failed, :skipped], default: :pending
     field :url, :string
   end
 
