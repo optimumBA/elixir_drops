@@ -14,7 +14,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{screenshot_status: :completed})
+     |> assign(:drop_filters, %{completed_or_nil_screenshot: :completed})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
      |> assign(:page_title, "ElixirDrops")
@@ -36,15 +36,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info({DropsBroadcast, [:drop, :created], drop}, socket) do
-    needs_screenshot =
-      case WorkerHelpers.check_for_code_block(drop.body) do
-        {:ok, _code_block} -> true
-        {:error, _reason} -> false
-      end
-
-    has_completed_screenshot = drop.screenshot && drop.screenshot.status == :completed
-
-    if !needs_screenshot or has_completed_screenshot do
+    if WorkerHelpers.has_code_block?(drop.body) == false do
       {:noreply, assign(socket, :new_drops?, true)}
     else
       {:noreply, socket}

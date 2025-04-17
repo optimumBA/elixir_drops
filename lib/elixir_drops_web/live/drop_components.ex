@@ -338,9 +338,9 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :id, :string, required: true
-  attr :target, :any, required: true
   attr :progress_value, :integer, default: 0
   attr :screenshot, :map, required: true
+  attr :target, :any, required: true
 
   @spec generating_screenshots_popup(assigns()) :: rendered()
   def generating_screenshots_popup(assigns) do
@@ -394,7 +394,7 @@ defmodule ElixirDropsWeb.DropComponents do
             src={@screenshot.url && "#{@screenshot.url}?t=#{System.os_time(:second)}"}
             class={[
               "max-w-[80%] rounded mx-auto",
-              (@screenshot.status != :completed || @screenshot.url == nil) && "hidden"
+              (@screenshot.status != :completed || is_nil(@screenshot.url)) && "hidden"
             ]}
             alt="Generated code screenshot"
           />

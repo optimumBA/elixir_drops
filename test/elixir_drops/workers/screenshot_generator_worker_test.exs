@@ -80,7 +80,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
     test "does not create a screenshot when there is no code block and the job is not retried", %{
       user: user
     } do
-      drop = drop_fixture(user)
+      drop = drop_fixture(%Drop{}, user, %{title: "Drop title", body: "No code block"})
 
       {:cancel, "No code block found"} =
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})

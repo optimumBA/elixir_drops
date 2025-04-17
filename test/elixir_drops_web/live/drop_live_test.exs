@@ -74,26 +74,46 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert path == ~p"/drops/new"
     end
 
-    test "only shows a list of drops with screenshot status :completed", %{
+    test "shows a list of drops with screenshot status :completed", %{
       conn: conn,
       drop: drop,
       user: user
     } do
-      pending_drop = drop_fixture(drop, user, %{screenshot: %{status: :pending}})
-      failed_drop = drop_fixture(drop, user, %{screenshot: %{status: :failed}})
+      drop1 = drop_fixture(user)
+      drop2 = drop_fixture(user)
+
+      {:ok, pending_drop} =
+        Drops.update_drop_screenshot(drop1, %{screenshot: %{status: :pending}})
+
+      {:ok, failed_drop} = Drops.update_drop_screenshot(drop2, %{screenshot: %{status: :failed}})
+
+      {:ok, completed_drop} =
+        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :completed}})
 
       {:ok, _live, html} = live(conn, ~p"/")
 
       {:ok, _time} =
-        Timex.format(drop.inserted_at, "{relative}", :relative)
+        Timex.format(completed_drop.inserted_at, "{relative}", :relative)
+
+      assert html =~ completed_drop.title
+      assert html =~ user.github_username
+      assert html =~ user.avatar
+      assert html =~ ~s(datetime="#{completed_drop.inserted_at}Z")
+
+      refute html =~ pending_drop.title
+      refute html =~ failed_drop.title
+    end
+
+    test "shows a list of drops with screenshot nil", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      {:ok, _live, html} = live(conn, ~p"/")
 
       assert html =~ drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
-      assert html =~ ~s(datetime="#{drop.inserted_at}Z")
-
-      refute html =~ pending_drop.title
-      refute html =~ failed_drop.title
     end
 
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
@@ -140,7 +160,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, drop} =
         Drops.create_drop(%Drop{}, user, %{
-          body: "Drop body with code block ```Code block```",
+          body: "Drop body with code block",
           screenshot: %{
             status: :completed,
             url: "http://example.com/screenshot.png"
@@ -281,7 +301,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
   describe "/d/:short_id" do
     setup [:create_drops_setup]
 
-    test "user can view a drop", %{conn: conn, drop: drop, user: user} do
+    test "user can view a drop", %{conn: conn, user: user} do
+      drop = drop_fixture(%Drop{}, user, %{title: "Drop title", body: "Drop body text..."})
+
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       {:ok, _time} =

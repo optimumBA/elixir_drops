@@ -6,10 +6,10 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
   alias ElixirDrops.Drops.Drop
 
   @type drop :: Drop.t()
+  @type metadata :: map()
   @type progress :: integer()
   @type short_id_string :: String.t()
   @type status :: atom()
-  @type metadata :: map()
 
   @topic inspect(__MODULE__)
 

@@ -14,4 +14,14 @@ defmodule ElixirDrops.WorkerHelpersTest do
                WorkerHelpers.check_for_code_block("Hello, World!")
     end
   end
+
+  describe "has_code_block?/1" do
+    test "returns true when a code block is found" do
+      assert true == WorkerHelpers.has_code_block?("```elixir\nIO.puts(\"Hello, World!\")```")
+    end
+
+    test "returns false when no code block is found" do
+      assert false == WorkerHelpers.has_code_block?("Hello, world!")
+    end
+  end
 end

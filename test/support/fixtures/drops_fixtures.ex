@@ -26,7 +26,7 @@ defmodule ElixirDrops.DropsFixtures do
 
     drop_attrs =
       Enum.into(attrs, %{
-        body: "Drop body text...",
+        body: "Drop body text ```code block```...",
         screenshot: %{status: :completed, url: nil},
         title: drop_title
       })

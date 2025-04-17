@@ -64,19 +64,17 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp create_or_update_drop(socket, :new, drop_params) do
-    updated_params = add_or_retain_screenshot_status(:new, drop_params)
-
     case Drops.create_drop(
            socket.assigns.drop,
            socket.assigns.current_user,
-           updated_params
+           drop_params
          ) do
       {:ok, drop} ->
         updated_drop =
           Map.put(
             drop,
             :needs_screenshot,
-            has_code_block?(drop_params["body"])
+            WorkerHelpers.has_code_block?(drop_params["body"])
           )
 
         {:ok, updated_drop}
@@ -97,15 +95,25 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp maybe_enqueue_screenshot_generation(socket, %{needs_screenshot: true} = drop) do
+    drop_to_update = Map.delete(drop, :needs_screenshot)
+
     case socket.assigns do
       %{live_action: :edit} ->
         enqueue_seo_screenshot_creation(drop.id, socket.assigns.drop.body, :edit)
+
+        Drops.update_drop_screenshot(drop_to_update, %{screenshot: %{status: :pending, url: nil}})
+
         send(self(), :screenshot_generation_started)
+
         {:noreply, socket}
 
       %{live_action: :new} ->
         enqueue_seo_screenshot_creation(drop.id, nil, :new)
+
+        Drops.update_drop_screenshot(drop_to_update, %{screenshot: %{status: :pending, url: nil}})
+
         send(self(), :screenshot_generation_started)
+
         {:noreply, socket}
     end
   end
@@ -132,60 +140,28 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     end
   end
 
-  defp add_or_retain_screenshot_status(:new, drop_params) do
-    status =
-      if has_code_block?(drop_params["body"]),
-        do: :pending,
-        else: :completed
-
-    screenshot_data = %{
-      "screenshot" => %{
-        "status" => status,
-        "url" => nil
-      }
-    }
-
-    Map.merge(drop_params, screenshot_data)
-  end
-
   defp add_or_retain_screenshot_status(:edit, drop_params, old_drop) do
     new_body = drop_params["body"]
 
-    screenshot_data =
+    screenshot =
       cond do
-        !has_code_block?(new_body) ->
-          %{
-            "screenshot" => %{
-              "status" => :completed,
-              "url" => nil
-            }
-          }
+        !WorkerHelpers.has_code_block?(new_body) ->
+          nil
 
         WorkerHelpers.check_for_code_block(new_body) ==
             WorkerHelpers.check_for_code_block(old_drop.body) ->
           %{
-            "screenshot" => %{
-              "status" => :completed,
-              "url" => old_drop.screenshot.url
-            }
+            "status" => :completed,
+            "url" => old_drop.screenshot.url
           }
 
         true ->
           %{
-            "screenshot" => %{
-              "status" => :pending,
-              "url" => nil
-            }
+            "status" => :pending,
+            "url" => nil
           }
       end
 
-    Map.merge(drop_params, screenshot_data)
-  end
-
-  defp has_code_block?(body) do
-    case WorkerHelpers.check_for_code_block(body) do
-      {:ok, _code_block} -> true
-      {:error, _no_code_block} -> false
-    end
+    Map.put(drop_params, "screenshot", screenshot)
   end
 end

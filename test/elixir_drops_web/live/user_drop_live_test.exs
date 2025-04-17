@@ -468,9 +468,14 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         )
 
+      {:ok, updated_drop} =
+        Drops.update_drop_screenshot(drop, %{
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+        })
+
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+      {:ok, live, _html} = live(conn, ~p"/drops/#{updated_drop.short_id}/edit")
 
       live
       |> form("#drops-editor-form",
@@ -485,7 +490,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       refute_enqueued(
         worker: ScreenshotGeneratorWorker,
-        args: %{drop_id: drop.id},
+        args: %{drop_id: updated_drop.id},
         queue: :seo_images
       )
     end
@@ -501,9 +506,14 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
             "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n``` ```second code block```"
         })
 
+      {:ok, updated_drop} =
+        Drops.update_drop_screenshot(drop, %{
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+        })
+
       conn = sign_in_user(conn, user)
 
-      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+      {:ok, live, _html} = live(conn, ~p"/drops/#{updated_drop.short_id}/edit")
 
       live
       |> form("#drops-editor-form",
@@ -518,7 +528,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       refute_enqueued(
         worker: ScreenshotGeneratorWorker,
-        args: %{drop_id: drop.id},
+        args: %{drop_id: updated_drop.id},
         queue: :seo_images
       )
     end
@@ -579,9 +589,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "screenshot job uses correct old body value when updating drop", %{
       conn: conn,
-      drop: drop,
       user: user
     } do
+      drop = drop_fixture(%Drop{}, user, %{title: "Drop title", body: "No code block"})
+
       conn = sign_in_user(conn, user)
       old_body = drop.body
 
