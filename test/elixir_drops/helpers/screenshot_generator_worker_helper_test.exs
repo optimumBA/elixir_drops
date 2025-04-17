@@ -9,7 +9,7 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelperTest do
       assert ScreenshotGeneratorWorkerHelper.calc_height(body) == "0"
     end
 
-    test "caps the generated height at 2000 for long code blocks" do
+    test "caps the generated height at 843 for long code blocks" do
       long_code = Enum.map_join(1..100, "\n", fn i -> "IO.puts(#{i})" end)
 
       body = """
@@ -21,8 +21,8 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelperTest do
       assert ScreenshotGeneratorWorkerHelper.calc_height(body) == "843"
     end
 
-    test "for medium code blocks, returns a height that is between 0 and 2000" do
-      long_code = Enum.map_join(1..50, "\n", fn i -> "IO.puts(#{i})" end)
+    test "for medium code blocks, returns a height that is between 0 and 843" do
+      long_code = Enum.map_join(1..5, "\n", fn i -> "IO.puts(#{i})" end)
 
       body = """
       ```elixir
@@ -35,7 +35,7 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelperTest do
         |> ScreenshotGeneratorWorkerHelper.calc_height()
         |> String.to_integer()
 
-      assert height > 0 and height < 2000
+      assert height > 0 and height < 843
     end
   end
 end
