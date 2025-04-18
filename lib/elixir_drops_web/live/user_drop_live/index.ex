@@ -52,6 +52,12 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     DropsListHelper.load_more(socket)
   end
 
+  @impl Phoenix.LiveView
+  def handle_event("save", %{"drop" => _} = params, socket) do
+    send_update(FormComponent, id: "drops-form", action: :save, params: params)
+    {:noreply, socket}
+  end
+
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
     filters = %{
       short_id: short_id,

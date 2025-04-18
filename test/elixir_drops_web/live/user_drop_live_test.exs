@@ -477,22 +477,19 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       {:ok, live, _html} = live(conn, ~p"/drops/#{updated_drop.short_id}/edit")
 
-      live
-      |> form("#drops-editor-form",
-        drop: %{
-          title: "New Drop title",
-          body:
+      render_submit(live, :save, %{
+        "drop" => %{
+          "title" => "New Drop title",
+          "body" =>
             "Edited body but not code block ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```"
         }
-      )
-      |> render_submit()
-      |> follow_redirect(conn, ~p"/profile")
+      })
 
-      refute_enqueued(
-        worker: ScreenshotGeneratorWorker,
-        args: %{drop_id: updated_drop.id},
-        queue: :seo_images
-      )
+      {:ok, _view, _html} = live(conn, ~p"/profile")
+
+      drop_from_db = Drops.get_drop(%{drop_id: updated_drop.id})
+
+      assert drop_from_db.screenshot.status == :completed
     end
 
     test "a drop with more than one code block does not require screenshot regeneration when a code block other than the first is edited",
@@ -515,22 +512,25 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       {:ok, live, _html} = live(conn, ~p"/drops/#{updated_drop.short_id}/edit")
 
-      live
-      |> form("#drops-editor-form",
-        drop: %{
-          title: "New Drop title",
-          body:
+      render_submit(live, :save, %{
+        "drop" => %{
+          "title" => "New Drop title",
+          "body" =>
             "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n``` ```second code block edited```"
         }
-      )
-      |> render_submit()
-      |> follow_redirect(conn, ~p"/profile")
+      })
 
       refute_enqueued(
         worker: ScreenshotGeneratorWorker,
         args: %{drop_id: updated_drop.id},
         queue: :seo_images
       )
+
+      {:ok, _view, _html} = live(conn, ~p"/profile")
+
+      drop_from_db = Drops.get_drop(%{drop_id: updated_drop.id})
+
+      assert drop_from_db.screenshot.status == :completed
     end
 
     test "authorized user cannot update a drop with invalid data", %{

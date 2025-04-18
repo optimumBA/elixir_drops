@@ -3,7 +3,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
-  alias ElixirDrops.WorkerHelpers
+  alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
 
@@ -14,7 +14,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{completed_or_nil_screenshot: :completed})
+     |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
      |> assign(:page_title, "ElixirDrops")
@@ -36,7 +36,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info({DropsBroadcast, [:drop, :created], drop}, socket) do
-    if WorkerHelpers.has_code_block?(drop.body) == false do
+    if CodeBlockHelper.has_code_block?(drop.body) == false do
       {:noreply, assign(socket, :new_drops?, true)}
     else
       {:noreply, socket}

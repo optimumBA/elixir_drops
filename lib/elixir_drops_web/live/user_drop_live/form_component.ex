@@ -6,8 +6,8 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.WorkerHelpers
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
+  alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.Icons
 
@@ -49,14 +49,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
            updated_params
          ) do
       {:ok, drop} ->
-        updated_drop =
-          Map.put(
-            drop,
-            :needs_screenshot,
-            needs_screenshot?(:edit, drop_params["body"], socket.assigns.drop.body)
-          )
-
-        {:ok, updated_drop}
+        {:ok, drop}
 
       error ->
         error
@@ -70,22 +63,25 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
            drop_params
          ) do
       {:ok, drop} ->
-        updated_drop =
-          Map.put(
-            drop,
-            :needs_screenshot,
-            WorkerHelpers.has_code_block?(drop_params["body"])
-          )
+        needs_screenshot? = CodeBlockHelper.has_code_block?(drop_params["body"])
 
-        {:ok, updated_drop}
+        if needs_screenshot? do
+          {:ok, drop}
+        else
+          Drops.update_drop_screenshot(drop, %{screenshot: %{status: :skipped, url: nil}})
+        end
 
       error ->
         error
     end
   end
 
-  defp enqueue_seo_screenshot_creation(drop_id, old_body, action) do
-    %{"drop_id" => drop_id, "old_body" => old_body, "action" => action}
+  defp enqueue_seo_screenshot_creation(drop, old_body, action) do
+    Drops.update_drop_screenshot(drop, %{screenshot: %{status: :pending, url: nil}})
+
+    send(self(), :screenshot_generation_started)
+
+    %{"drop_id" => drop.id, "old_body" => old_body, "action" => action}
     |> ScreenshotGeneratorWorker.new()
     |> Oban.insert()
   end
@@ -94,70 +90,49 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     assign(socket, :form, to_form(changeset))
   end
 
-  defp maybe_enqueue_screenshot_generation(socket, %{needs_screenshot: true} = drop) do
-    drop_to_update = Map.delete(drop, :needs_screenshot)
+  defp maybe_enqueue_screenshot_generation(socket, drop) do
+    if drop.screenshot && drop.screenshot.status in [:skipped, :completed] do
+      socket = push_navigate(socket, to: ~p"/profile")
+      {:noreply, socket}
+    else
+      case socket.assigns do
+        %{live_action: :edit} ->
+          enqueue_seo_screenshot_creation(drop, socket.assigns.drop.body, :edit)
 
-    case socket.assigns do
-      %{live_action: :edit} ->
-        enqueue_seo_screenshot_creation(drop.id, socket.assigns.drop.body, :edit)
+          {:noreply, socket}
 
-        Drops.update_drop_screenshot(drop_to_update, %{screenshot: %{status: :pending, url: nil}})
+        %{live_action: :new} ->
+          enqueue_seo_screenshot_creation(drop, nil, :new)
 
-        send(self(), :screenshot_generation_started)
-
-        {:noreply, socket}
-
-      %{live_action: :new} ->
-        enqueue_seo_screenshot_creation(drop.id, nil, :new)
-
-        Drops.update_drop_screenshot(drop_to_update, %{screenshot: %{status: :pending, url: nil}})
-
-        send(self(), :screenshot_generation_started)
-
-        {:noreply, socket}
-    end
-  end
-
-  defp maybe_enqueue_screenshot_generation(socket, _drop) do
-    socket = push_navigate(socket, to: ~p"/profile")
-    {:noreply, socket}
-  end
-
-  defp needs_screenshot?(:edit, new_body, old_body) do
-    case {WorkerHelpers.check_for_code_block(new_body),
-          WorkerHelpers.check_for_code_block(old_body)} do
-      {{:ok, new_code_block}, {:ok, old_code_block}} ->
-        new_code_block != old_code_block
-
-      {{:ok, _new_code_block}, {:error, _}} ->
-        true
-
-      {{:error, _}, {:ok, _old_code_block}} ->
-        false
-
-      {{:error, _}, {:error, _}} ->
-        false
+          {:noreply, socket}
+      end
     end
   end
 
   defp add_or_retain_screenshot_status(:edit, drop_params, old_drop) do
-    new_body = drop_params["body"]
-
     screenshot =
-      cond do
-        !WorkerHelpers.has_code_block?(new_body) ->
-          nil
+      case CodeBlockHelper.compare_code_blocks(old_drop.body, drop_params["body"]) do
+        :ok ->
+          %{
+            "status" => :pending,
+            "url" => nil
+          }
 
-        WorkerHelpers.check_for_code_block(new_body) ==
-            WorkerHelpers.check_for_code_block(old_drop.body) ->
+        {:cancel, "No code block found"} ->
+          %{
+            "status" => :skipped,
+            "url" => nil
+          }
+
+        {:cancel, "Code block unchanged"} ->
           %{
             "status" => :completed,
             "url" => old_drop.screenshot.url
           }
 
-        true ->
+        {:cancel, _other_reason} ->
           %{
-            "status" => :pending,
+            "status" => :skipped,
             "url" => nil
           }
       end

@@ -8,52 +8,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
-  alias ElixirDrops.WorkerHelpers
   alias Wallaby.Browser
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    case args["action"] do
-      "edit" -> handle_edit(args)
-      _new -> handle_new(args)
-    end
-  end
-
-  defp handle_edit(args) do
-    case get_drop(args["drop_id"]) do
-      {:ok, drop} ->
-        case WorkerHelpers.check_for_code_block(drop.body) do
-          {:ok, new_code_block} ->
-            check_old_body_and_maybe_compare_code_blocks(drop, args, new_code_block)
-
-          {:error, _} ->
-            {:cancel, "No code block found in updated drop"}
-        end
-
-      error ->
-        error
-    end
-  end
-
-  defp check_old_body_and_maybe_compare_code_blocks(drop, args, new_code_block) do
-    case WorkerHelpers.check_for_code_block(args["old_body"]) do
-      {:ok, old_code_snippet} ->
-        case compare_code_blocks(old_code_snippet, new_code_block) do
-          :ok -> drop_screenshot(drop, args)
-          {:cancel, reason} -> {:cancel, reason}
-        end
-
-      {:error, _no_old_code_snippet} ->
-        drop_screenshot(drop, args)
-    end
-  end
-
-  defp handle_new(args) do
-    with {:ok, drop} <- get_drop(args["drop_id"]),
-         {:ok, _code_snippet} <- WorkerHelpers.check_for_code_block(drop.body) do
+    with {:ok, drop} <- get_drop(args["drop_id"]) do
       drop_screenshot(drop, args)
-    else
-      _error -> {:cancel, "No code block found"}
     end
   end
 
@@ -74,14 +34,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       drop ->
         {:ok, drop}
     end
-  end
-
-  defp compare_code_blocks(old_body, new_body) when old_body != new_body do
-    :ok
-  end
-
-  defp compare_code_blocks(_old_body, _new_body) do
-    {:cancel, "Code block unchanged"}
   end
 
   defp generate_screenshot(drop) do
