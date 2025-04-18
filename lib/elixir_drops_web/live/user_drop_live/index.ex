@@ -19,7 +19,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:screenshot, %{
        drop_short_id: "",
        progress_value: 0,
-       status: :idle,
+       status: :skipped,
        url: nil
      })
      |> assign(:end_of_timeline?, false)

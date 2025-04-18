@@ -4,8 +4,8 @@
   <section :if={@live_action in [:edit, :new]}>
     <.live_component
       current_user={@current_user}
-      id="drops-form"
       drop={@drop}
+      id="drops-form"
       live_action={@live_action}
       screenshot={@screenshot}
       module={FormComponent}

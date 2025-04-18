@@ -194,10 +194,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, drop} =
         Drops.create_drop(%Drop{}, user, %{
-          title: "New Drop title",
           body:
             "Drop body ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
-          screenshot: %{status: :pending}
+          screenshot: %{status: :pending},
+          title: "New Drop title"
         })
 
       refute has_element?(live, "#new-drops-indicator")
@@ -236,10 +236,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
          } do
       {:ok, drop} =
         Drops.create_drop(%Drop{}, user, %{
-          title: "Existing Drop title",
           body:
             "Drop body with code ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
-          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"},
+          title: "Existing Drop title"
         })
 
       Drops.subscribe()

@@ -351,7 +351,7 @@ defmodule ElixirDropsWeb.DropComponents do
         "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
         "top-[48%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
         "w-[90%] md:w-[80%] lg:max-w-[45em]",
-        @screenshot.status == :idle && "hidden"
+        @screenshot.status == :skipped && "hidden"
       ]}
       phx-click-away={hide_popup(@id)}
       phx-hook="ScreenshotProgress"

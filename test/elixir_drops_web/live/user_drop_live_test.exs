@@ -363,8 +363,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "a drop to add a code block (requires screenshot regeneration)", %{
       conn: conn,
-      user: user,
-      drop: drop
+      drop: drop,
+      user: user
     } do
       conn = sign_in_user(conn, user)
 

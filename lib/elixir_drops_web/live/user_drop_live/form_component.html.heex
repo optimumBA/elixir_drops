@@ -7,7 +7,7 @@
     id="drops-editor-overlay"
     class={[
       "drops-editor-overlay absolute inset-0 bg-black opacity-30 z-[9000]",
-      @screenshot.status == :idle && "hidden"
+      @screenshot.status == :skipped && "hidden"
     ]}
   >
   </div>
