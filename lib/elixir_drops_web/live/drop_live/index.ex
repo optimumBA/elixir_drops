@@ -43,6 +43,11 @@ defmodule ElixirDropsWeb.DropLive.Index do
     end
   end
 
+  @impl Phoenix.LiveView
+  def handle_info({DropsBroadcast, [:drop, :screenshot_generation_started], _drop}, socket) do
+    {:noreply, socket}
+  end
+
   def handle_info(
         {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, :completed,
          %{action: "edit"} = _metadata},

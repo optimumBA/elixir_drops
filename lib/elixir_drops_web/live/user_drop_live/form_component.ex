@@ -6,6 +6,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
@@ -57,14 +58,21 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp create_or_update_drop(socket, :new, drop_params) do
+    needs_screenshot? = CodeBlockHelper.has_code_block?(drop_params["body"])
+
+    drop_params =
+      if needs_screenshot? do
+        Map.put(drop_params, "screenshot", %{status: :pending, url: nil})
+      else
+        drop_params
+      end
+
     case Drops.create_drop(
            socket.assigns.drop,
            socket.assigns.current_user,
            drop_params
          ) do
       {:ok, drop} ->
-        needs_screenshot? = CodeBlockHelper.has_code_block?(drop_params["body"])
-
         if needs_screenshot? do
           {:ok, drop}
         else
@@ -77,9 +85,10 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp enqueue_seo_screenshot_creation(drop, old_body, action) do
-    Drops.update_drop_screenshot(drop, %{screenshot: %{status: :pending, url: nil}})
+    {:ok, updated_drop} =
+      Drops.update_drop_screenshot(drop, %{screenshot: %{status: :pending, url: nil}})
 
-    send(self(), :screenshot_generation_started)
+    broadcast_screenshot_generation_started(updated_drop)
 
     %{"drop_id" => drop.id, "old_body" => old_body, "action" => action}
     |> ScreenshotGeneratorWorker.new()
@@ -114,29 +123,33 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
       case CodeBlockHelper.compare_code_blocks(old_drop.body, drop_params["body"]) do
         :ok ->
           %{
-            "status" => :pending,
-            "url" => nil
+            status: :pending,
+            url: nil
           }
 
         {:cancel, "No code block found"} ->
           %{
-            "status" => :skipped,
-            "url" => nil
+            status: :skipped,
+            url: nil
           }
 
         {:cancel, "Code block unchanged"} ->
           %{
-            "status" => :completed,
-            "url" => old_drop.screenshot.url
+            status: :completed,
+            url: old_drop.screenshot.url
           }
 
         {:cancel, _other_reason} ->
           %{
-            "status" => :skipped,
-            "url" => nil
+            status: :skipped,
+            url: nil
           }
       end
 
     Map.put(drop_params, "screenshot", screenshot)
+  end
+
+  defp broadcast_screenshot_generation_started(drop) do
+    DropsBroadcast.broadcast_drop_screenshot_started(drop)
   end
 end

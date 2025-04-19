@@ -14,11 +14,11 @@ defmodule ElixirDrops.BroadcastTest do
       DropsBroadcast.subscribe()
 
       drop = %Drop{
-        id: 1,
-        title: "New Drop",
         body: "This is a new drop.",
-        user_id: 1,
-        short_id: "abc123"
+        id: 1,
+        short_id: "abc123",
+        title: "New Drop",
+        user_id: 1
       }
 
       assert :ok == DropsBroadcast.broadcast_drop_creation(drop)
@@ -26,12 +26,29 @@ defmodule ElixirDrops.BroadcastTest do
     end
   end
 
-  describe "broadcast_drop_screenshot_completion/2" do
+  describe "broadcast_drop_screenshot_started/1" do
     test "broadcasts a message indicating that a drop screenshot is being generated" do
       DropsBroadcast.subscribe()
 
       drop = %Drop{
-        body: "This is a new drop.",
+        body: "This is a new drop. ```elixir\nIO.puts(\"Hello, world!\")```",
+        id: 1,
+        short_id: "abc123",
+        title: "New Drop",
+        user_id: 1
+      }
+
+      assert :ok == DropsBroadcast.broadcast_drop_screenshot_started(drop)
+      assert_receive {DropsBroadcast, [:drop, :screenshot_generation_started], ^drop}
+    end
+  end
+
+  describe "broadcast_drop_screenshot_completion/2" do
+    test "broadcasts a message indicating that a drop screenshot has been generated" do
+      DropsBroadcast.subscribe()
+
+      drop = %Drop{
+        body: "This is a new drop. ```elixir\nIO.puts(\"Hello, world!\")```",
         id: 1,
         short_id: "abc123",
         title: "New Drop",

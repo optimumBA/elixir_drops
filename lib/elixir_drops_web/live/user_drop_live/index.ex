@@ -93,20 +93,23 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info({DropsBroadcast, [:drop, :created], _drop}, socket) do
-    {:noreply, socket}
+    {:noreply, DropsListHelper.assign_drops(socket)}
   end
 
   @impl Phoenix.LiveView
-  def handle_info(:screenshot_generation_started, socket) do
-    {:noreply,
-     socket
-     |> push_event("screenshot_generation_started", %{})
-     |> assign(:screenshot, %{
-       drop_short_id: socket.assigns.screenshot.drop_short_id,
-       progress_value: 0,
-       status: :pending,
-       url: nil
-     })}
+  def handle_info({DropsBroadcast, [:drop, :screenshot_generation_started], drop}, socket) do
+    socket =
+      socket
+      |> push_event("screenshot_generation_started", %{})
+      |> assign(:screenshot, %{
+        drop_short_id: drop.short_id,
+        progress_value: 0,
+        status: :pending,
+        url: nil
+      })
+      |> DropsListHelper.assign_drops()
+
+    {:noreply, socket}
   end
 
   def handle_info(
@@ -116,12 +119,16 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       ) do
     status_string = Atom.to_string(status)
 
-    {:noreply,
-     push_event(socket, "screenshot_progress_update", %{
-       drop_short_id: drop.short_id,
-       progress: progress,
-       status: status_string,
-       url: drop.screenshot.url
-     })}
+    socket =
+      socket
+      |> push_event("screenshot_progress_update", %{
+        drop_short_id: drop.short_id,
+        progress: progress,
+        status: status_string,
+        url: drop.screenshot.url
+      })
+      |> DropsListHelper.assign_drops()
+
+    {:noreply, socket}
   end
 end
