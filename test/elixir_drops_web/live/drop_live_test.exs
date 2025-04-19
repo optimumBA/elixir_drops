@@ -300,6 +300,36 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html_3 = render_hook(live, "load-more", %{})
       assert html_3 =~ first_drop.id
     end
+
+    test "screenshot generation started broadcast doesn't change page state", %{
+      conn: conn,
+      user: user
+    } do
+      Drops.subscribe()
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, drop} =
+        Drops.create_drop(%Drop{}, user, %{
+          body:
+            "Drop body with code block ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
+          screenshot: %{status: :pending},
+          title: "New Drop with Pending Screenshot"
+        })
+
+      refute has_element?(live, "#drop-#{drop.id}")
+      refute has_element?(live, "#new-drops-indicator")
+
+      DropsBroadcast.broadcast_drop_screenshot_started(drop)
+
+      Process.sleep(100)
+      render(live)
+
+      refute has_element?(live, "#new-drops-indicator")
+      refute has_element?(live, "#drop-#{drop.id}")
+    end
   end
 
   describe "/d/:short_id" do

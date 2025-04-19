@@ -8,6 +8,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
 
@@ -176,6 +177,60 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       refute html =~
                "<div class=\"absolute inset-0 bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center z-10\"><svg class=\"animate-spin h-8 w-8 text-white\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewbox=\"0 0 24 24\"><circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\"></circle><path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path></svg></div>"
+    end
+
+    test "updates UI when screenshot generation is completed", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+
+      live
+      |> form("#drops-editor-form",
+        drop: %{
+          title: "New Drop title",
+          body: "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```"
+        }
+      )
+      |> render_submit()
+
+      send(
+        live.pid,
+        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, 100, :completed, %{}}
+      )
+
+      assert render(live) =~ "100%"
+    end
+
+    test "handles progress animation complete event", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
+
+      live
+      |> form("#drops-editor-form",
+        drop: %{
+          title: "New Drop title",
+          body: "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```"
+        }
+      )
+      |> render_submit()
+
+      html =
+        render_hook(live, "progress_animation_complete", %{
+          "drop_short_id" => drop.short_id,
+          "url" => "http://example.com/new-screenshot.png"
+        })
+
+      assert html =~ "100%"
+      assert html =~ "http://example.com/new-screenshot.png"
     end
   end
 
