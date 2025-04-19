@@ -32,21 +32,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  # TODO: Check if this will be needed
-  # @impl Phoenix.LiveView
-  # def handle_event("progress_animation_complete", _params, socket) do
-  #   url = socket.assigns.screenshot.url
-  #   status = if url, do: :completed, else: socket.assigns.screenshot.status
-
-  #   {:noreply,
-  #    assign(socket, :screenshot, %{
-  #      drop_short_id: socket.assigns.screenshot.drop_short_id,
-  #      progress_value: 100,
-  #      status: status,
-  #      url: url
-  #    })}
-  # end
-
   @impl Phoenix.LiveView
   def handle_event("load-more", _params, socket) do
     DropsListHelper.load_more(socket)
@@ -56,6 +41,19 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def handle_event("save", %{"drop" => _} = params, socket) do
     send_update(FormComponent, id: "drops-form", action: :save, params: params)
     {:noreply, socket}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("progress_animation_complete", params, socket) do
+    {:noreply,
+     socket
+     |> assign(:screenshot, %{
+       drop_short_id: params["drop_short_id"],
+       progress_value: 100,
+       status: :completed,
+       url: params["url"]
+     })
+     |> DropsListHelper.assign_drops()}
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
@@ -117,21 +115,13 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         socket
       ) do
     status_string = Atom.to_string(status)
-    url = if drop.screenshot, do: drop.screenshot.url, else: nil
 
     {:noreply,
-     socket
-     |> push_event("screenshot_progress_update", %{
+     push_event(socket, "screenshot_progress_update", %{
+       drop_short_id: drop.short_id,
        progress: progress,
        status: status_string,
-       url: url
-     })
-     |> assign(:screenshot, %{
-       drop_short_id: drop.short_id,
-       progress_value: progress,
-       status: status,
-       url: url
-     })
-     |> DropsListHelper.assign_drops()}
+       url: drop.screenshot.url
+     })}
   end
 end

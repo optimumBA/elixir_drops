@@ -37,10 +37,10 @@ ScreenshotProgressHooks.ScreenshotProgress = {
       const updateInterval = setInterval(() => {
         const elapsedTime = Date.now() - startTime
 
-        let progressPercent = Math.min(99, (elapsedTime / totalTime) * 99)
+        let progressPercent = Math.min(60, (elapsedTime / totalTime) * 60)
 
-        if (randomCheck() && progressPercent < 99) {
-          progressPercent = 99
+        if (randomCheck() && progressPercent < 60) {
+          progressPercent = 60
           clearInterval(updateInterval)
         }
 
@@ -54,7 +54,7 @@ ScreenshotProgressHooks.ScreenshotProgress = {
 
     this.handleEvent(
       'screenshot_progress_update',
-      ({ progress, status, url }) => {
+      ({ drop_short_id, progress, status, url }) => {
         if (status === 'completed') {
           progressCircle.classList.add(
             'transition-all',
@@ -68,11 +68,14 @@ ScreenshotProgressHooks.ScreenshotProgress = {
           )
           setProgress(100)
 
-          //TODO: Trying to send the event to the LiveView to trigger UI changes but it's not working
-          // setTimeout(() => {
-          //   // Dispatch an event that the LiveView can listen for to trigger UI changes
-          //   this.pushEvent('progress_animation_complete', {})
-          // }, 1000) // Wait 1 second for the animation to complete
+          setTimeout(() => {
+            this.pushEvent('progress_animation_complete', {
+              progress,
+              drop_short_id,
+              status,
+              url,
+            })
+          }, 1000)
         } else if (progress) {
           setProgress(progress)
         }
