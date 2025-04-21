@@ -11,7 +11,7 @@ defmodule ElixirDrops.Application do
       children(
         always: ElixirDropsWeb.Telemetry,
         always: ElixirDropsWeb.Endpoint,
-        parent: ElixirDrops.Repo,
+        always: ElixirDrops.Repo,
         parent:
           {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
         parent: {Phoenix.PubSub, name: ElixirDrops.PubSub},
