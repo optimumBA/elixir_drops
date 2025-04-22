@@ -8,6 +8,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
+  alias ElixirDrops.ScreenshotGeneratorWorkerHelper
   alias Wallaby.Browser
 
   @impl Oban.Worker
@@ -37,6 +38,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp generate_screenshot(drop) do
+    height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
+
     {:ok, session} =
       Wallaby.start_session(
         capabilities: %{
@@ -44,7 +47,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
             args: [
               "--headless",
               "--no-sandbox",
-              "window-size=1280,800",
+              "window-size=1280,#{height}",
               "--fullscreen",
               "--disable-gpu",
               "--disable-dev-shm-usage"
