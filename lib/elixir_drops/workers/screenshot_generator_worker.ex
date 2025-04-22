@@ -7,9 +7,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.Drops
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
+  alias ElixirDrops.ScreenshotGeneratorWorkerHelper
   alias Wallaby.Browser
 
-  @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
+  @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
@@ -63,7 +64,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp check_for_code_block(body) do
-    case Regex.run(@markdown_regex, body, capture: :first) do
+    case Regex.run(@code_block_pattern, body, capture: :first) do
       nil -> {:error, "No code block found"}
       code_block -> {:ok, code_block}
     end
@@ -73,6 +74,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
 
   defp generate_screenshot(drop) do
+    height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
+
     {:ok, session} =
       Wallaby.start_session(
         capabilities: %{
@@ -80,7 +83,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
             args: [
               "--headless",
               "--no-sandbox",
-              "window-size=1280,800",
+              "window-size=1280,#{height}",
               "--fullscreen",
               "--disable-gpu",
               "--disable-dev-shm-usage"
