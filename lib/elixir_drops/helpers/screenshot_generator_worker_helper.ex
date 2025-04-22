@@ -5,34 +5,25 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelper do
 
   @line_height 19.2
   @logo_offset_height 600
-  @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
+  @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
   @max_height 843
 
-  @spec calc_height(String.t()) :: String.t()
+  @spec calc_height(String.t()) :: integer()
   def calc_height(body) do
-    case Regex.run(@markdown_regex, body, capture: :first) do
+    case Regex.run(@code_block_pattern, body, capture: :first) do
       nil ->
-        "0"
+        0
 
-      regex ->
+      code_block ->
         lines =
-          regex
+          code_block
           |> Enum.at(0)
           |> String.split("\n")
           |> length()
 
-        code_height = @line_height * lines + @logo_offset_height
+        code_height = trunc(@line_height * lines + @logo_offset_height)
 
-        code_height =
-          if code_height >= @max_height do
-            @max_height
-          else
-            code_height
-          end
-
-        code_height
-        |> trunc()
-        |> Integer.to_string()
+        min(code_height, @max_height)
     end
   end
 end

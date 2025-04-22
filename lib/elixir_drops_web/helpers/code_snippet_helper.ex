@@ -3,8 +3,8 @@ defmodule ElixirDropsWeb.CodeSnippetHelper do
   Helper functions for our code snippet controller
   """
 
-  @spec calc_lines(String.t()) :: integer()
-  def calc_lines(code_block) do
+  @spec count_lines(String.t()) :: integer()
+  def count_lines(code_block) do
     code_block
     |> String.split("\n")
     |> length()

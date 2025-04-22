@@ -10,7 +10,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.ScreenshotGeneratorWorkerHelper
   alias Wallaby.Browser
 
-  @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
+  @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
@@ -64,7 +64,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp check_for_code_block(body) do
-    case Regex.run(@markdown_regex, body, capture: :first) do
+    case Regex.run(@code_block_pattern, body, capture: :first) do
       nil -> {:error, "No code block found"}
       code_block -> {:ok, code_block}
     end

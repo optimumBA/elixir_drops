@@ -6,7 +6,7 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelperTest do
   describe "calc_height/1" do
     test "returns 0 when body has no markdown code block" do
       body = "fjdjdjd\n"
-      assert ScreenshotGeneratorWorkerHelper.calc_height(body) == "0"
+      assert ScreenshotGeneratorWorkerHelper.calc_height(body) == 0
     end
 
     test "caps the generated height at 843 for long code blocks" do
@@ -18,7 +18,7 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelperTest do
       ```
       """
 
-      assert ScreenshotGeneratorWorkerHelper.calc_height(body) == "843"
+      assert ScreenshotGeneratorWorkerHelper.calc_height(body) == 843
     end
 
     test "for medium code blocks, returns a height that is between 0 and 843" do
@@ -31,9 +31,7 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelperTest do
       """
 
       height =
-        body
-        |> ScreenshotGeneratorWorkerHelper.calc_height()
-        |> String.to_integer()
+        ScreenshotGeneratorWorkerHelper.calc_height(body)
 
       assert height > 0 and height < 843
     end

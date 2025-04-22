@@ -8,7 +8,7 @@ defmodule ElixirDropsWeb.CodeSnippetController do
   @type conn :: Plug.Conn.t()
   @type params :: map()
 
-  @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
+  @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
   @threshold 10
 
   @spec index(conn(), params()) :: conn()
@@ -36,8 +36,8 @@ defmodule ElixirDropsWeb.CodeSnippetController do
 
   defp handle_drop_retrieval(conn, id) do
     with %Drop{body: body} <- Drops.get_drop(%{drop_id: id}),
-         [code_block] <- Regex.run(@markdown_regex, body, capture: :first) do
-      lines = CodeSnippetHelper.calc_lines(code_block)
+         [code_block] <- Regex.run(@code_block_pattern, body, capture: :first) do
+      lines = CodeSnippetHelper.count_lines(code_block)
 
       small_window = lines < @threshold
 
