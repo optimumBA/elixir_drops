@@ -225,7 +225,7 @@ blockquote *:last-child {
   row-gap: 2em;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
   .drops-editor {
     --padding-inline: 1rem;
 

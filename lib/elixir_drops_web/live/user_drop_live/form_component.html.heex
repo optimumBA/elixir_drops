@@ -1,7 +1,7 @@
 <div
   id={@id}
   phx-hook="ScreenshotProgress"
-  class="drop-form min-h-[calc(100vh-12px)] bg-[#eae8fd]"
+  class="drop-form min-h-[calc(100vh-62px)] bg-[#eae8fd]"
 >
   <div
     id="drops-editor-overlay"
@@ -38,7 +38,7 @@
           field={f[:body]}
           placeholder="Start writing..."
           type="textarea"
-          input_field_class="drop-editor-input text-sm md:text-md placeholder:text-inherit placeholder:italic border-2 border-[#dedede] focus:border-[#7d6ff4] rounded-md min-h-[70vh] w-full"
+          input_field_class="drop-editor-input text-sm md:text-md placeholder:text-inherit placeholder:italic border-2 border-[#dedede] focus:border-[#7d6ff4] rounded-md h-[calc(100vh-408px)] min-h-[40vh] w-full"
           id="drop-editor-input"
           phx-debounce={400}
         />
@@ -67,7 +67,7 @@
             <%= input_value(f, :title) && DropComponents.to_html(input_value(f, :title)) %>
           </h2>
           <div
-            class="drop-preview text-[#4f4f4f] text-sm md:text-md pb-3 mb-pb-0 h-full w-full md:h-[70vh] overflow-y-scroll"
+            class="drop-preview text-[#4f4f4f] text-sm md:text-md pb-3 mb-pb-0 w-full h-[calc(100vh-408px)] min-h-[40vh] overflow-y-scroll"
             id="drop-preview"
           >
             <%= input_value(f, :body) && DropComponents.to_html(input_value(f, :body)) %>
