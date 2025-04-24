@@ -4,6 +4,9 @@ ScreenshotProgressHooks.ScreenshotProgress = {
   mounted() {
     const progressCircle = this.el.querySelector('#progress-circle')
     const percentageText = this.el.querySelector('#percentage')
+    let animationInterval = null
+    let animationStarted = false
+    let currentProgress = 0
 
     if (!progressCircle || !percentageText) {
       console.error('Could not find required elements for progress circle')
@@ -17,6 +20,7 @@ ScreenshotProgressHooks.ScreenshotProgress = {
     progressCircle.style.strokeDashoffset = circumference
 
     const setProgress = (percent) => {
+      currentProgress = percent
       const offset = circumference - (percent / 100) * circumference
       progressCircle.style.strokeDashoffset = offset
       percentageText.textContent = `${Math.round(percent)}%`
@@ -26,28 +30,21 @@ ScreenshotProgressHooks.ScreenshotProgress = {
 
     this.handleEvent('screenshot_generation_started', () => {
       setProgress(0)
+      animationStarted = true
 
       const totalTime = 5000
       const startTime = Date.now()
 
-      const randomCheck = () => {
-        return Math.random() < 0.01
-      }
-
-      const updateInterval = setInterval(() => {
+      animationInterval = setInterval(() => {
         const elapsedTime = Date.now() - startTime
 
         let progressPercent = Math.min(60, (elapsedTime / totalTime) * 60)
 
-        if (randomCheck() && progressPercent < 60) {
-          progressPercent = 60
-          clearInterval(updateInterval)
-        }
-
         setProgress(progressPercent)
 
         if (elapsedTime >= totalTime) {
-          clearInterval(updateInterval)
+          clearInterval(animationInterval)
+          animationInterval = null
         }
       }, 50)
     })
@@ -55,17 +52,20 @@ ScreenshotProgressHooks.ScreenshotProgress = {
     this.handleEvent(
       'screenshot_progress_update',
       ({ drop_short_id, progress, status, url }) => {
-        if (status === 'completed') {
-          progressCircle.classList.add(
-            'transition-all',
-            'duration-500',
-            'ease-out'
-          )
-          percentageText.classList.add(
-            'transition-all',
-            'duration-500',
-            'ease-out'
-          )
+        if (status === 'pending' && progress === 60) {
+          if (animationInterval) {
+            clearInterval(animationInterval)
+            animationInterval = null
+          }
+          if (currentProgress < 60) {
+            setProgress(60)
+          }
+        } else if (status === 'completed') {
+          if (animationInterval) {
+            clearInterval(animationInterval)
+            animationInterval = null
+          }
+
           setProgress(100)
 
           setTimeout(() => {
@@ -76,7 +76,7 @@ ScreenshotProgressHooks.ScreenshotProgress = {
               url,
             })
           }, 1000)
-        } else if (progress) {
+        } else {
           setProgress(progress)
         }
       }

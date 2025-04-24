@@ -20,6 +20,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp drop_screenshot(drop, args) do
     FLAME.call(ScreenshotGenerator, fn ->
+      broadcast_drop_screenshot_completion(drop, 60, :pending, %{
+        action: args["action"]
+      })
+
       with {:ok, screenshot} <- generate_screenshot(drop),
            {:ok, image} <- File.read(screenshot) do
         upload_screenshot(image, drop, args)
