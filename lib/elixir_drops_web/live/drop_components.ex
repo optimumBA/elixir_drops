@@ -65,6 +65,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   attr :drop, Drop, required: true
   attr :show_card_menu?, :boolean, default: false
+  attr :user_id, :string
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
@@ -105,6 +106,7 @@ defmodule ElixirDropsWeb.DropComponents do
               alt={@drop.user.github_username}
               class="rounded-full h-8 md:h-10 w-8 md:w-10 object-cover"
             />
+            <a href={~p"/d/#{@drop.short_id}"} class="hidden"></a>
             <p><%= @drop.user.github_username %></p>
             <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
               Created <.created_at drop={@drop} />
@@ -126,7 +128,7 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
       </div>
 
-      <.drop_card_menu id={@drop.id} short_id={@drop.short_id} />
+      <.drop_card_menu author?={@drop.user_id == @user_id} id={@drop.id} short_id={@drop.short_id} />
     </div>
     """
   end
@@ -441,6 +443,7 @@ defmodule ElixirDropsWeb.DropComponents do
       </.drop_card_action_default>
 
       <.link
+        :if={@author?}
         navigate={"/drops/#{@short_id}/edit"}
         class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
         id={"edit-drop-#{@id}"}

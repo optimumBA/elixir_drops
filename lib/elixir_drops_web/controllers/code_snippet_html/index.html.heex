@@ -1,18 +1,43 @@
 <%= if @type == "meta" do %>
-  <section class="h-[100vh] flex flex-col items-center justify-center gap-y-6 bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4">
-    <div class="seo-image">
-      <div class="seo-image__toolbar rounded-t-2xl bg-[#252525] flex justify-start items-center gap-x-3 py-5 px-8 mb-0">
-        <div class="rounded-full bg-[#fb5e55] h-3 w-3"></div>
-        <div class="rounded-full bg-[#ffde32] h-3 w-3"></div>
-        <div class="rounded-full bg-[#24c942] h-3 w-3"></div>
+  <section class="h-[100vh] flex flex-col items-center justify-center gap-y-6 bg-gradient-to-b from-[#4F42D2] via-[#6159be] to-[#8149D2] pb-4 pt-16">
+  <div class={[
+    "seo-image",
+    @small_window && "text-[1.5rem]",
+    !@small_window && "text-base"
+  ]}>
+    <div class="seo-image__toolbar rounded-t-2xl bg-[#252525] flex justify-start items-center gap-x-3 py-5 px-8 mb-0">
+      <div class={[
+        "rounded-full bg-[#fb5e55]",
+        @small_window && "h-3 w-3",
+        !@small_window && "h-3.5 w-3.5"
+      ]}>
       </div>
+
+      <div class={[
+        "rounded-full bg-[#ffde32]",
+        @small_window && "h-3 w-3",
+        !@small_window && "h-3.5 w-3.5"
+      ]}>
+      </div>
+
+      <div class={[
+        "rounded-full bg-[#24c942]",
+        @small_window && "h-3 w-3",
+        !@small_window && "h-3.5 w-3.5"
+      ]}>
+      </div>
+    </div>
+    <div class="max-h-[70vh]">
       <%= ElixirDropsWeb.DropComponents.to_html(@code_block) %>
     </div>
+  </div>
 
-    <div class="px-2 py-2 rounded-xl opacity-75 bg-white/70">
+  <div class="min-h-[20vh]">
+    <div class="bg-white/70 px-2 py-2 rounded-xl">
       <ElixirDropsWeb.Icons.elixir_drops_logo class="h-10" />
     </div>
-  </section>
+  </div>
+</section>
 <% else %>
   <section class="drop-image h-[100vh] bg-[#303030] w-[100%] grid justify-center pt-2 overflow-hidden">
     <%= ElixirDropsWeb.DropComponents.to_html(@code_block) %>

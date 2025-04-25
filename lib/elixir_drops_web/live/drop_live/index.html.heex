@@ -5,9 +5,10 @@
     <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
 
     <DropsListHelper.drops_list
+      current_user={@current_user}
       drops={@streams.drops}
-      end_of_timeline?={@end_of_timeline?}
       id="drops"
+      page={@page}
       show_user_drops?={false}
     />
 

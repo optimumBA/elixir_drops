@@ -9,7 +9,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
-  alias ElixirDrops.S3Helper.Client
 
   setup :verify_on_exit!
 
@@ -22,20 +21,17 @@ defmodule ElixirDropsWeb.DropLiveTest do
         }
       )
 
-    user = user_fixture()
+    user = user_fixture(%{github_id: 1_456_872})
+    user2 = user_fixture(%{github_id: 9_456_872})
     drop = drop_fixture(user)
 
-    %{conn: conn, drop: drop, user: user}
+    %{conn: conn, drop: drop, user: user, user2: user2}
   end
 
   describe "/" do
     setup [:create_drops_setup]
 
     test "shows github sign-in option for users not logged in", %{conn: conn} do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/")
 
       assert html =~ "Sign in with GitHub"
@@ -43,10 +39,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "shows the logged-in user's info", %{conn: conn, user: user} do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
       conn = sign_in_user(conn, user)
 
       assert _user_token = get_session(conn, :user_token)
@@ -58,10 +50,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "unauthorized users are prohibited from creating drops", %{conn: conn} do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
       {:ok, live, _html} = live(conn, ~p"/")
 
       live
@@ -72,10 +60,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "authorized users can navigate to the drop creation page", %{conn: conn, user: user} do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
       conn = sign_in_user(conn, user)
 
       {:ok, live, _html} = live(conn, ~p"/")
@@ -90,10 +74,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "show a list of drops", %{conn: conn, drop: drop, user: user} do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/")
 
       {:ok, _time} =
@@ -106,10 +86,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
       {:ok, live, _html} = live(conn, ~p"/")
 
       live
@@ -121,11 +97,29 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert path == ~p"/d/#{drop.short_id}"
     end
 
-    test "gets updated with new drops", %{conn: conn, user: user} do
-      expect(Client.Mock, :get_image, 4, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
+    test "unathorized users cannot edit drops", %{conn: conn} do
+      {:ok, _live, html} = live(conn, ~p"/")
 
+      refute html =~ "Edit drop"
+    end
+
+    test "only the author can edit a drop", %{
+      conn: conn,
+      user: user,
+      user2: user2
+    } do
+      conn = sign_in_user(conn, user)
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      assert html =~ "Edit drop"
+
+      conn2 = sign_in_user(conn, user2)
+      {:ok, _live, html2} = live(conn2, ~p"/")
+
+      refute html2 =~ "Edit drop"
+    end
+
+    test "gets updated with new drops", %{conn: conn, user: user} do
       {:ok, live, _html} = live(conn, ~p"/")
 
       refute has_element?(live, "#new-drops-indicator")
@@ -142,11 +136,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert has_element?(live, "#drop-#{drop.id}", drop.title)
     end
 
-    test "user can view older drops with infinite scroll", %{conn: conn, user: user} do
-      expect(Client.Mock, :get_image, 36, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
+    test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
       drops = create_multiple_drops(user, 25)
 
       list_midpoint =
@@ -163,83 +153,12 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ last_drop.id
       refute html =~ midpoint_drop.id
       refute html =~ first_drop.id
+      assert html_2 = render_hook(live, "load-more", %{})
 
-      assert html_2 = render_hook(live, "next-page", %{})
-      assert html_2 =~ midpoint_drop.id
       refute html_2 =~ first_drop.id
-
-      assert html_3 = render_hook(live, "next-page", %{})
-      assert html_3 =~ first_drop.id
-    end
-
-    test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
-      expect(Client.Mock, :get_image, 40, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
-      drops = create_multiple_drops(user, 25)
-
-      list_midpoint =
-        drops
-        |> length()
-        |> div(2)
-
-      first_drop = List.first(drops)
-      last_drop = List.last(drops)
-      midpoint_drop = Enum.at(drops, list_midpoint)
-
-      {:ok, live, html} = live(conn, ~p"/")
-      assert html =~ last_drop.id
-
-      assert html_2 = render_hook(live, "next-page", %{})
       assert html_2 =~ midpoint_drop.id
-
-      assert html_3 = render_hook(live, "prev-page", %{})
-      assert html_3 =~ last_drop.id
-      refute html_3 =~ first_drop.id
-    end
-
-    test "shows image when there is code in the markdown", %{conn: conn, user: user} do
-      # Mock the image retrieval
-      expect(Client.Mock, :get_image, 4, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image.png"}
-      end)
-
-      # Create a drop with code in the body
-      drop_with_code =
-        drop_fixture(%Drop{}, user, %{
-          title: "Drop with code",
-          body: "Drop body ```elixir conn = sign_in_user(conn, user) ```"
-        })
-
-      {:ok, _live, html} = live(conn, ~p"/")
-
-      assert html =~ drop_with_code.title
-      assert html =~ user.github_username
-      assert html =~ user.avatar
-      # Use Timex for relative time formatting
-      assert html =~ Timex.format!(drop_with_code.inserted_at, "{relative}", :relative)
-      assert html =~ ~r|<img[^>]+id="drop-image:#{drop_with_code.id}"[^>]*>|
-    end
-
-    test "does not show image when there is no code in the markdown", %{
-      conn: conn,
-      drop: drop,
-      user: user
-    } do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:error, nil}
-      end)
-
-      {:ok, _live, html} = live(conn, ~p"/")
-
-      assert html =~ drop.title
-      assert html =~ user.github_username
-      assert html =~ user.avatar
-      # Use Timex for relative time formatting
-      assert html =~ Timex.format!(drop.inserted_at, "{relative}", :relative)
-
-      refute html =~ ~r|<img[^>]+id="drop-image:#{drop.id}"[^>]*>|
+      assert html_3 = render_hook(live, "load-more", %{})
+      assert html_3 =~ first_drop.id
     end
   end
 
@@ -247,10 +166,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, drop: drop, user: user} do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:error, "Image not found"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       {:ok, _time} =
@@ -283,10 +198,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
           }
         )
 
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:ok, "http://image.com/drop-meta-image-#{user.id}-#{drop.id}.png"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
@@ -298,10 +209,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       conn: conn,
       drop: drop
     } do
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:error, "Image not found"}
-      end)
-
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
@@ -329,6 +236,21 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~
                "<meta property=\"og:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
+
+      Drops.update_drop_screenshot(drop, %{
+        screenshot: %{
+          status: :completed,
+          url: "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+        }
+      })
+
+      {:ok, _live, updated_html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert updated_html =~
+               "<meta property=\"og:image\" content=\"http://image.com/drop-meta-image-latest-#{drop.id}.png\"/>"
+
+      assert updated_html =~
+               "<meta name=\"twitter:image\" content=\"http://image.com/drop-meta-image-latest-#{drop.id}.png\"/>"
     end
 
     test "links are escaped and images are omitted from the description", %{
@@ -341,10 +263,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       }
 
       drop = drop_fixture(%Drop{}, user, drop_attributes)
-
-      expect(Client.Mock, :get_image, 2, fn _drop, _type ->
-        {:error, "Image not found"}
-      end)
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 

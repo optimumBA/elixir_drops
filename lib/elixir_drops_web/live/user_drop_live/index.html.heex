@@ -15,9 +15,10 @@
     <DropComponents.user_drops_header current_user={@current_user} />
 
     <DropsListHelper.drops_list
+      current_user={@current_user}
       drops={@streams.drops}
-      end_of_timeline?={@end_of_timeline?}
       id="user-drops"
+      page={@page}
       show_user_drops?={true}
     />
 

@@ -7,22 +7,13 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.Drops
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
+  alias ElixirDrops.ScreenshotGeneratorWorkerHelper
   alias Wallaby.Browser
 
-  @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
+  @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    args
-    |> maybe_create_screenshot()
-    |> maybe_retry_job()
-  end
-
-  defp maybe_retry_job({:ok, _image_url}), do: :ok
-  defp maybe_retry_job({:cancel, reason}), do: {:cancel, reason}
-  defp maybe_retry_job(error), do: error
-
-  defp maybe_create_screenshot(args) do
     case args["action"] do
       "edit" -> handle_edit(args)
       _new -> handle_new(args)
@@ -56,9 +47,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp drop_screenshot(drop) do
+  defp drop_screenshots(drop) do
     FLAME.call(ScreenshotGenerator, fn ->
-      with {:ok, screenshots} <- generate_screenshot(drop),
+      with {:ok, screenshots} <- generate_screenshots(drop),
            {:ok, meta_image} <- File.read(screenshots.meta),
            {:ok, internal_image} <- File.read(screenshots.internal) do
         upload_screenshots(%{meta: meta_image, internal: internal_image}, drop)
@@ -73,9 +64,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  @spec check_for_code_block(binary()) :: {:ok, String.t()} | {:error, String.t()}
-  def check_for_code_block(body) do
-    case Regex.run(@markdown_regex, body, capture: :first) do
+  defp check_for_code_block(body) do
+    case Regex.run(@code_block_pattern, body, capture: :first) do
       nil -> {:error, "No code block found"}
       [code_block] -> {:ok, code_block}
     end
@@ -84,7 +74,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp compare_code_blocks(old, new) when old != new, do: :ok
   defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
 
-  defp generate_screenshot(drop) do
+  defp generate_screenshots(drop) do
     with {:ok, meta_screenshot} <- generate_meta_screenshot(drop),
          {:ok, internal_screenshot} <- generate_internal_screenshot(drop) do
       {:ok, %{meta: meta_screenshot, internal: internal_screenshot}}
@@ -92,12 +82,34 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp generate_meta_screenshot(drop) do
-    with {:ok, session} <- start_wallaby_session(:meta),
-         url <- build_url_with_auth(drop, :meta),
-         {:ok, screenshot} <- take_screenshot(session, url) do
-      Wallaby.end_session(session)
-      {:ok, screenshot}
-    end
+    height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
+
+    {:ok, session} =
+      Wallaby.start_session(
+        capabilities: %{
+          chromeOptions: %{
+            args: [
+              "--headless",
+              "--no-sandbox",
+              "window-size=1280,#{height}",
+              "--fullscreen",
+              "--disable-gpu",
+              "--disable-dev-shm-usage"
+            ]
+          }
+        }
+      )
+
+    url = build_url_with_auth(drop)
+
+    %Wallaby.Session{screenshots: [screenshot]} =
+      session
+      |> Browser.visit(url)
+      |> Browser.take_screenshot()
+
+    Wallaby.end_session(session)
+
+    {:ok, screenshot}
   end
 
   defp generate_internal_screenshot(drop) do
@@ -185,29 +197,38 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     "#{scheme}//#{username}:#{password}@#{rest}"
   end
 
-  defp upload_screenshots(images, drop) do
-    timestamp = Timex.to_unix(drop.updated_at)
-    meta_image_name = image_name(:meta, drop.id, timestamp)
+  defp upload_screenshot(screenshots, drop) do
+    latest_meta_image_name = "drop-meta-image-latest-#{drop.id}.png"
+    latest_internal_image_name = "drop-internal-image-latest-#{drop.id}.png"
 
-    case Client.upload_image(images.meta, meta_image_name, "image/png") do
-      {:ok, meta_url} ->
-        internal_image_name = image_name(:internal, drop.id, timestamp)
+    case Client.upload_image(screenshots.meta, latest_meta_image_name, "image/png") do
+      {:ok, meta_image_url} ->
+        meta_screenshot_data = %{screenshot: %{status: :completed, url: meta_image_url}}
 
-        case Client.upload_image(images.internal, internal_image_name, "image/png") do
-          {:ok, internal_url} ->
-            {:ok, %{meta: meta_url, internal: internal_url}}
+        case Drops.update_drop_screenshot(drop, meta_screenshot_data) do
+          {:ok, _updated_drop} -> :ok
+          error -> error
+        end
+
+        case Client.upload_image(screenshots.internal, latest_internal_image_name, "image/png") do
+          {:ok, internal_image_url} ->
+            {:ok, %{meta: meta_image_url, internal: internal_image_url}}
+
+          # screenshot_data = %{screenshot: %{status: :completed, url: internal_image_url}}
+
+          # case Drops.update_drop_screenshot(drop, screenshot_data) do
+          #   {:ok, _updated_drop} -> :ok
+          #   error -> error
+          # end
 
           error ->
+            Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
             error
         end
 
       error ->
+        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
         error
     end
   end
-
-  defp image_name(:meta, drop_id, timestamp), do: "drop-meta-image-#{timestamp}-#{drop_id}.png"
-
-  defp image_name(_type, drop_id, timestamp),
-    do: "drop-internal-image-#{timestamp}-#{drop_id}.png"
 end

@@ -2,7 +2,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.S3Helper.Client
   alias ElixirDropsWeb.DropComponents
 
   @consecutive_whitespace_regex ~r/\s+/
@@ -46,9 +45,9 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   defp get_image_url(drop) do
-    case Client.get_image(drop, :meta) do
-      {:ok, url} -> url
-      _error -> nil
+    case drop.screenshot do
+      %{status: :completed, url: url} when is_binary(url) -> url
+      _screenshot -> nil
     end
   end
 
