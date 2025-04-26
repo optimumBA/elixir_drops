@@ -45,8 +45,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   defp get_image_url(drop) do
-    case drop.screenshot do
-      %{status: :completed, url: url} when is_binary(url) -> url
+    case drop.screenshot && drop.screenshot.meta do
+      %{"status" => "completed", "url" => url} when is_binary(url) -> url
       _screenshot -> nil
     end
   end

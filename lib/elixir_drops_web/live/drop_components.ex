@@ -5,8 +5,6 @@ defmodule ElixirDropsWeb.DropComponents do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.S3Helper.Client
-  alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDropsWeb.Icons
 
   @type assigns :: map()
@@ -69,24 +67,16 @@ defmodule ElixirDropsWeb.DropComponents do
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
-    image = get_image_url(assigns.drop)
-
-    is_code_present? =
-      case ScreenshotGeneratorWorker.check_for_code_block(assigns.drop.body) do
-        {:error, "No code block found"} -> false
-        {:ok, _code_block} -> true
-      end
-
-    assigns =
-      assigns
-      |> assign(:is_code_present?, is_code_present?)
-      |> assign(:image, image)
-
     ~H"""
     <div class="grid space-y-5 bg-white px-6 md:px-6 py-4 rounded-[16px] relative border border-[#CBCBCB] hover:bg-[#CBCBCB]">
-      <div :if={@is_code_present?} class="w-full">
-        <div :if={@image} class="bg-[#252525] h-[32px] rounded-t-2xl"></div>
-        <img src={@image} class="object-cover rounded-b-2xl" id={"drop-image:#{@drop.id}"} />
+      <div :if={@drop.screenshot} class="w-full">
+        <div :if={@drop.screenshot.internal["url"]} class="bg-[#252525] h-[32px] rounded-t-2xl"></div>
+        <img
+          :if={@drop.screenshot && @drop.screenshot.internal["url"]}
+          src={@drop.screenshot.internal["url"]}
+          class="object-cover rounded-b-2xl"
+          id={"drop-image:#{@drop.id}"}
+        />
       </div>
 
       <div class="grid space-y-5 text-[#252525]">
@@ -574,12 +564,5 @@ defmodule ElixirDropsWeb.DropComponents do
       ]
     )
     |> raw()
-  end
-
-  defp get_image_url(drop) do
-    case Client.get_image(drop, :internal) do
-      {:ok, url} -> url
-      _error -> nil
-    end
   end
 end
