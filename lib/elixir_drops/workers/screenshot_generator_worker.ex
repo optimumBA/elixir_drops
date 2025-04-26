@@ -28,7 +28,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
            check_for_code_block(drop.body),
          :ok <-
            compare_code_blocks(old_code_snippet, new_code_snippet) do
-      drop_screenshot(drop)
+      drop_screenshots(drop)
     else
       {:cancel, _reason} ->
         {:cancel, "Code block unchanged"}
@@ -41,9 +41,16 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp handle_new(args) do
     with {:ok, drop} <- get_drop(args["drop_id"]),
          {:ok, _code_snippet} <- check_for_code_block(drop.body) do
-      drop_screenshot(drop)
+      drop_screenshots(drop)
     else
       _error -> {:cancel, "No code block found"}
+    end
+  end
+
+  defp get_drop(id) do
+    case Drops.get_drop(%{drop_id: id}) do
+      nil -> {:error, "Drop not found"}
+      drop -> {:ok, drop}
     end
   end
 
@@ -55,13 +62,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         upload_screenshots(%{meta: meta_image, internal: internal_image}, drop)
       end
     end)
-  end
-
-  defp get_drop(id) do
-    case Drops.get_drop(%{drop_id: id}) do
-      nil -> {:error, "Drop not found"}
-      drop -> {:ok, drop}
-    end
   end
 
   defp check_for_code_block(body) do
@@ -100,7 +100,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         }
       )
 
-    url = build_url_with_auth(drop)
+    url = build_url_with_auth(drop, :meta)
 
     %Wallaby.Session{screenshots: [screenshot]} =
       session
@@ -113,7 +113,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp generate_internal_screenshot(drop) do
-    with {:ok, session} <- start_wallaby_session(:internal),
+    with {:ok, session} <- start_wallaby_session(),
          url <- build_url_with_auth(drop, :internal),
          resized_session <- resize_window(session, drop),
          {:ok, screenshot} <- take_screenshot(resized_session, url) do
@@ -122,7 +122,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp start_wallaby_session(type) do
+  defp start_wallaby_session do
     base_args = [
       "--headless",
       "--no-sandbox",
@@ -131,16 +131,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       "--disable-dev-shm-usage"
     ]
 
-    args =
-      case type do
-        :meta -> ["window-size=1280,800" | base_args]
-        :internal -> base_args
-      end
-
     Wallaby.start_session(
       capabilities: %{
         chromeOptions: %{
-          args: args
+          args: base_args
         }
       }
     )
@@ -197,37 +191,34 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     "#{scheme}//#{username}:#{password}@#{rest}"
   end
 
-  defp upload_screenshot(screenshots, drop) do
+  defp upload_screenshots(screenshots, drop) do
     latest_meta_image_name = "drop-meta-image-latest-#{drop.id}.png"
     latest_internal_image_name = "drop-internal-image-latest-#{drop.id}.png"
 
-    case Client.upload_image(screenshots.meta, latest_meta_image_name, "image/png") do
-      {:ok, meta_image_url} ->
-        meta_screenshot_data = %{screenshot: %{status: :completed, url: meta_image_url}}
+    with {:ok, meta_image_url} <-
+           Client.upload_image(screenshots.meta, latest_meta_image_name, "image/png"),
+         {:ok, internal_image_url} <-
+           Client.upload_image(screenshots.internal, latest_internal_image_name, "image/png") do
+      screenshot_data = %{
+        screenshot: %{
+          meta: %{status: :completed, url: meta_image_url},
+          internal: %{status: :completed, url: internal_image_url}
+        }
+      }
 
-        case Drops.update_drop_screenshot(drop, meta_screenshot_data) do
-          {:ok, _updated_drop} -> :ok
-          error -> error
-        end
-
-        case Client.upload_image(screenshots.internal, latest_internal_image_name, "image/png") do
-          {:ok, internal_image_url} ->
-            {:ok, %{meta: meta_image_url, internal: internal_image_url}}
-
-          # screenshot_data = %{screenshot: %{status: :completed, url: internal_image_url}}
-
-          # case Drops.update_drop_screenshot(drop, screenshot_data) do
-          #   {:ok, _updated_drop} -> :ok
-          #   error -> error
-          # end
-
-          error ->
-            Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
-            error
-        end
-
+      case Drops.update_drop_screenshot(drop, screenshot_data) do
+        {:ok, _updated_drop} -> :ok
+        error -> error
+      end
+    else
       error ->
-        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
+        Drops.update_drop_screenshot(drop, %{
+          screenshot: %{
+            meta: %{status: :failed, url: nil},
+            internal: %{status: :failed, url: nil}
+          }
+        })
+
         error
     end
   end

@@ -44,6 +44,7 @@ defmodule ElixirDropsWeb.CodeSnippetController do
 
       render(conn, :index,
         code_block: code_block,
+        type: type,
         layout: false,
         small_window: small_window
       )
