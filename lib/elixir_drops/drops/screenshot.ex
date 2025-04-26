@@ -10,14 +10,23 @@ defmodule ElixirDrops.Drops.Screenshot do
 
   @primary_key false
   embedded_schema do
-    field :status, Ecto.Enum, values: [:pending, :completed, :failed], default: :pending
-    field :url, :string
+    field :meta, :map,
+      default: %{
+        status: :skipped,
+        url: nil
+      }
+
+    field :internal, :map,
+      default: %{
+        status: :skipped,
+        url: nil
+      }
   end
 
   @spec changeset(t(), attrs()) :: Ecto.Changeset.t()
   def changeset(%__MODULE__{} = screenshot, attrs \\ %{}) do
     screenshot
-    |> cast(attrs, [:status, :url])
-    |> validate_required([:status])
+    |> cast(attrs, [:meta, :internal])
+    |> validate_required([:meta, :internal])
   end
 end
