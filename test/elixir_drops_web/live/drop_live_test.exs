@@ -166,7 +166,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, drop: drop, user: user} do
-      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, updated_drop} =
+        Drops.update_drop_screenshot(drop, %{
+          screenshot: %{
+            meta: %{status: :completed, url: "https://example.com/screenshot.png"},
+            internal: %{status: :completed, url: "https://example.com/screenshot.png"}
+          }
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{updated_drop.short_id}")
 
       {:ok, _time} =
         Timex.format(drop.inserted_at, "{relative}", :relative)
@@ -198,7 +206,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
           }
         )
 
-      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, updated_drop} =
+        Drops.update_drop_screenshot(drop, %{
+          screenshot: %{
+            meta: %{status: :completed, url: "https://example.com/screenshot.png"},
+            internal: %{status: :completed, url: "https://example.com/screenshot.png"}
+          }
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{updated_drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"
@@ -239,8 +255,14 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       Drops.update_drop_screenshot(drop, %{
         screenshot: %{
-          status: :completed,
-          url: "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+          meta: %{
+            status: :completed,
+            url: "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+          },
+          internal: %{
+            status: :completed,
+            url: "http://image.com/drop-internal-image-latest-#{drop.id}.png"
+          }
         }
       })
 
@@ -264,7 +286,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       drop = drop_fixture(%Drop{}, user, drop_attributes)
 
-      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, updated_drop} =
+        Drops.update_drop_screenshot(drop, %{
+          screenshot: %{
+            meta: %{status: :completed, url: "https://example.com/screenshot.png"},
+            internal: %{status: :completed, url: "https://example.com/screenshot.png"}
+          }
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{updated_drop.short_id}")
 
       assert html =~
                "<meta property=\"description\" content=\"In this drop we discussed stuff...\"/>"

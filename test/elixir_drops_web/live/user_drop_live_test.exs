@@ -21,7 +21,25 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   end
 
   describe "/profile" do
+    # TODO: Fix these tests along with the broken empty state
+    # test "empty state is shown when user has no drops", %{conn: conn, user: user} do
+    #   conn = sign_in_user(conn, user)
+
+    #   {:ok, _live, html} = live(conn, ~p"/profile")
+
+    #   assert html =~ "You haven&#39;t created any post yet."
+    # end
+
     setup [:create_drops_setup]
+
+    # test "empty state is not shown when user has drops", %{conn: conn, drop: drop, user: user} do
+    #   conn = sign_in_user(conn, user)
+
+    #   {:ok, _live, html} = live(conn, ~p"/profile")
+
+    #   assert html =~ drop.title
+    #   refute html =~ "You haven&#39;t created any post yet."
+    # end
 
     test "authorized users can view their their own drops", %{conn: conn, drop: drop, user: user} do
       user_2 =
@@ -166,6 +184,13 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
             title: "Drop with script"
           }
         )
+
+      Drops.update_drop_screenshot(drop, %{
+        screenshot: %{
+          meta: %{status: :completed, url: "https://example.com/screenshot.png"},
+          internal: %{status: :completed, url: "https://example.com/screenshot.png"}
+        }
+      })
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 

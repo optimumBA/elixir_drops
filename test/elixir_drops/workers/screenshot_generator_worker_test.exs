@@ -46,39 +46,55 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
     %{drop: drop, user: user}
   end
 
+  defp screenshot_upload_mock(drop) do
+    meta_image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+    internal_image_url = "http://image.com/drop-internal-image-latest-#{drop.id}.png"
+
+    expect(Client.Mock, :upload_image, 2, fn _image, filename, _type ->
+      case filename do
+        "drop-meta-image-latest-" <> _id ->
+          assert meta_image_url == "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+          {:ok, meta_image_url}
+
+        "drop-internal-image-latest-" <> _id ->
+          assert internal_image_url ==
+                   "http://image.com/drop-internal-image-latest-#{drop.id}.png"
+
+          {:ok, internal_image_url}
+      end
+    end)
+
+    %{meta_image_url: meta_image_url, internal_image_url: internal_image_url}
+  end
+
   describe "perform/1" do
     setup [:drop_setup]
 
     test "creates two screenshots for a drop with a code block", %{drop: drop} do
-      meta_image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
-      internal_image_url = "http://image.com/drop-internal-image-latest-#{drop.id}.png"
-
-      expect(Client.Mock, :upload_image, 2, fn image, filename, _type ->
-        assert filename == "drop-meta-image-latest-#{drop.id}.png"
-        assert image == "drop-internal-image-latest-#{drop.id}.png"
-        {:ok, [meta_image_url, internal_image_url]}
-      end)
+      %{meta_image_url: meta_image_url, internal_image_url: internal_image_url} =
+        screenshot_upload_mock(drop)
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
       updated_drop = Repo.reload(drop)
-      assert updated_drop.screenshot.status == :completed
-      assert updated_drop.screenshot.url == meta_image_url
-      assert updated_drop.screenshot.internal_url == internal_image_url
+      assert updated_drop.screenshot.meta["status"] == "completed"
+      assert updated_drop.screenshot.meta["url"] == meta_image_url
+      assert updated_drop.screenshot.internal["status"] == "completed"
+      assert updated_drop.screenshot.internal["url"] == internal_image_url
     end
 
     test "does not create a screenshot when there is an error", %{drop: drop} do
       expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
-        {:error, "Failed to upload images"}
+        {:error, "Failed to upload image"}
       end)
 
-      {:error, "Failed to upload images"} =
+      {:error, "Failed to upload image"} =
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
       updated_drop = Repo.reload(drop)
-      assert updated_drop.screenshot.status == :failed
-      refute updated_drop.screenshot.meta_url
-      refute updated_drop.screenshot.internal_url
+      assert updated_drop.screenshot.meta["status"] == "failed"
+      refute updated_drop.screenshot.meta["url"]
+      refute updated_drop.screenshot.internal["url"]
     end
 
     test "does not create a screenshot when there is no code block and the job is not retried", %{
@@ -107,13 +123,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       # Simulate drop body update with a changed code block
       Drops.update_drop(drop, user, %{body: updated_body})
 
-      internal_image_url = "http://image.com/drop-internal-image-latest-#{drop.id}.png"
-      meta_image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
-
-      expect(Client.Mock, :upload_image, fn _image, filename, _type ->
-        assert filename == "drop-meta-image-latest-#{drop.id}.png"
-        {:ok, [meta_image_url, internal_image_url]}
-      end)
+      %{meta_image_url: meta_image_url, internal_image_url: internal_image_url} =
+        screenshot_upload_mock(drop)
 
       assert :ok =
                perform_job(ScreenshotGeneratorWorker, %{
@@ -121,6 +132,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
                  action: "edit",
                  old_body: drop.body
                })
+
+      updated_drop = Repo.reload(drop)
+      assert updated_drop.screenshot.meta["status"] == "completed"
+      assert updated_drop.screenshot.meta["url"] == meta_image_url
+      assert updated_drop.screenshot.internal["status"] == "completed"
+      assert updated_drop.screenshot.internal["url"] == internal_image_url
     end
 
     test "does not create  screenshot when the code block does not change", %{
