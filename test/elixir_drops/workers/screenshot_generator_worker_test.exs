@@ -83,17 +83,71 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       assert updated_drop.screenshot.internal["url"] == internal_image_url
     end
 
-    test "does not create a screenshot when there is an error", %{drop: drop} do
-      expect(Client.Mock, :upload_image, fn _image, _filename, _type ->
-        {:error, "Failed to upload image"}
+    test "properly handles meta screenshot upload failure", %{drop: drop} do
+      expect(Client.Mock, :upload_image, 2, fn _image, filename, _type ->
+        case filename do
+          "drop-meta-image-latest-" <> _id ->
+            {:error, "Failed to upload meta image"}
+
+          "drop-internal-image-latest-" <> _id ->
+            {:ok, "http://image.com/drop-internal-image-latest-#{drop.id}.png"}
+        end
       end)
 
-      {:error, "Failed to upload image"} =
+      {:error, "Failed to upload meta screenshot"} =
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
       updated_drop = Repo.reload(drop)
       assert updated_drop.screenshot.meta["status"] == "failed"
       refute updated_drop.screenshot.meta["url"]
+      assert updated_drop.screenshot.internal["status"] == "completed"
+
+      assert updated_drop.screenshot.internal["url"] ==
+               "http://image.com/drop-internal-image-latest-#{drop.id}.png"
+    end
+
+    test "properly handles internal screenshot upload failure", %{drop: drop} do
+      expect(Client.Mock, :upload_image, 2, fn _image, filename, _type ->
+        case filename do
+          "drop-meta-image-latest-" <> _id ->
+            {:ok, "http://image.com/drop-meta-image-latest-#{drop.id}.png"}
+
+          "drop-internal-image-latest-" <> _id ->
+            {:error, "Failed to upload internal image"}
+        end
+      end)
+
+      {:error, "Failed to upload internal screenshot"} =
+        perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
+
+      updated_drop = Repo.reload(drop)
+      assert updated_drop.screenshot.meta["status"] == "completed"
+
+      assert updated_drop.screenshot.meta["url"] ==
+               "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+
+      assert updated_drop.screenshot.internal["status"] == "failed"
+      refute updated_drop.screenshot.internal["url"]
+    end
+
+    test "handles both screenshots failing", %{drop: drop} do
+      expect(Client.Mock, :upload_image, 2, fn _image, filename, _type ->
+        case filename do
+          "drop-meta-image-latest-" <> _id ->
+            {:error, "Failed to upload meta image"}
+
+          "drop-internal-image-latest-" <> _id ->
+            {:error, "Failed to upload internal image"}
+        end
+      end)
+
+      {:error, "Failed to upload both screenshots"} =
+        perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
+
+      updated_drop = Repo.reload(drop)
+      assert updated_drop.screenshot.meta["status"] == "failed"
+      refute updated_drop.screenshot.meta["url"]
+      assert updated_drop.screenshot.internal["status"] == "failed"
       refute updated_drop.screenshot.internal["url"]
     end
 

@@ -195,31 +195,50 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     latest_meta_image_name = "drop-meta-image-latest-#{drop.id}.png"
     latest_internal_image_name = "drop-internal-image-latest-#{drop.id}.png"
 
-    with {:ok, meta_image_url} <-
-           Client.upload_image(screenshots.meta, latest_meta_image_name, "image/png"),
-         {:ok, internal_image_url} <-
-           Client.upload_image(screenshots.internal, latest_internal_image_name, "image/png") do
-      screenshot_data = %{
-        screenshot: %{
-          meta: %{status: :completed, url: meta_image_url},
-          internal: %{status: :completed, url: internal_image_url}
-        }
-      }
+    {meta_result, updated_drop} =
+      upload_and_update_screenshot(:meta, screenshots.meta, latest_meta_image_name, drop)
 
-      case Drops.update_drop_screenshot(drop, screenshot_data) do
-        {:ok, _updated_drop} -> :ok
-        error -> error
-      end
-    else
-      error ->
-        Drops.update_drop_screenshot(drop, %{
-          screenshot: %{
-            meta: %{status: :failed, url: nil},
-            internal: %{status: :failed, url: nil}
-          }
-        })
+    {internal_result, _updated_drop} =
+      upload_and_update_screenshot(
+        :internal,
+        screenshots.internal,
+        latest_internal_image_name,
+        updated_drop
+      )
 
-        error
+    case {meta_result, internal_result} do
+      {:ok, :ok} ->
+        :ok
+
+      {:error, :ok} ->
+        {:error, "Failed to upload meta screenshot"}
+
+      {:ok, :error} ->
+        {:error, "Failed to upload internal screenshot"}
+
+      {:error, :error} ->
+        {:error, "Failed to upload both screenshots"}
+    end
+  end
+
+  defp upload_and_update_screenshot(image_type, image_data, filename, drop) do
+    case Client.upload_image(image_data, filename, "image/png") do
+      {:ok, image_url} ->
+        {:ok,
+         update_screenshot(drop, %{
+           screenshot: %{image_type => %{status: :completed, url: image_url}}
+         })}
+
+      _error ->
+        {:error,
+         update_screenshot(drop, %{screenshot: %{image_type => %{status: :failed, url: nil}}})}
+    end
+  end
+
+  defp update_screenshot(drop, screenshot_data) do
+    case Drops.update_drop_screenshot(drop, screenshot_data) do
+      {:ok, updated_drop} -> updated_drop
+      error -> error
     end
   end
 end
