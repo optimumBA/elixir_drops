@@ -75,32 +75,43 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
 
   defp generate_screenshots(drop) do
-    with {:ok, meta_screenshot} <- generate_meta_screenshot(drop),
-         {:ok, internal_screenshot} <- generate_internal_screenshot(drop) do
+    with {:ok, meta_screenshot} <- generate_screenshot(drop, :meta),
+         {:ok, internal_screenshot} <- generate_screenshot(drop, :internal) do
       {:ok, %{meta: meta_screenshot, internal: internal_screenshot}}
     end
   end
 
-  defp generate_meta_screenshot(drop) do
-    height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
+  defp generate_screenshot(drop, type) do
+    height =
+      case type do
+        :meta -> ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
+        :internal -> ScreenshotGeneratorWorkerHelper.calc_height_internal(drop.body)
+      end
+
+    window_args =
+      case type do
+        :meta -> ["window-size=1280,#{height}"]
+        :internal -> ["window-size=900,#{height}"]
+      end
+
+    base_args = [
+      "--headless",
+      "--no-sandbox",
+      "--fullscreen",
+      "--disable-gpu",
+      "--disable-dev-shm-usage"
+    ]
 
     {:ok, session} =
       Wallaby.start_session(
         capabilities: %{
           chromeOptions: %{
-            args: [
-              "--headless",
-              "--no-sandbox",
-              "window-size=1280,#{height}",
-              "--fullscreen",
-              "--disable-gpu",
-              "--disable-dev-shm-usage"
-            ]
+            args: window_args ++ base_args
           }
         }
       )
 
-    url = build_url_with_auth(drop, :meta)
+    url = build_url_with_auth(drop, type)
 
     %Wallaby.Session{screenshots: [screenshot]} =
       session
@@ -110,71 +121,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     Wallaby.end_session(session)
 
     {:ok, screenshot}
-  end
-
-  defp generate_internal_screenshot(drop) do
-    with {:ok, session} <- start_wallaby_session(),
-         url <- build_url_with_auth(drop, :internal),
-         resized_session <- resize_window(session, drop),
-         {:ok, screenshot} <- take_screenshot(resized_session, url) do
-      Wallaby.end_session(resized_session)
-      {:ok, screenshot}
-    end
-  end
-
-  defp start_wallaby_session do
-    base_args = [
-      "--headless",
-      "--no-sandbox",
-      "--disable-gpu",
-      "--fullscreen",
-      "--disable-dev-shm-usage"
-    ]
-
-    Wallaby.start_session(
-      capabilities: %{
-        chromeOptions: %{
-          args: base_args
-        }
-      }
-    )
-  end
-
-  defp take_screenshot(session, url) do
-    session = Browser.visit(session, url)
-    result = Browser.take_screenshot(session)
-
-    case result do
-      %Wallaby.Session{screenshots: [screenshot]} -> {:ok, screenshot}
-      _error -> {:error, "Failed to take screenshot"}
-    end
-  end
-
-  defp resize_window(session, drop) do
-    code_block_size = calculate_code_block_size(drop.body)
-    Browser.resize_window(session, 900, code_block_size)
-  end
-
-  defp calculate_code_block_size(body) do
-    case check_for_code_block(body) do
-      {:ok, code_block} ->
-        lines = length(String.split(code_block, ~r/\n/))
-        min_height = 120
-        line_height = 35
-        padding = 20
-        raw_size = line_height * lines + padding
-        max_height = 1100
-
-        size =
-          raw_size
-          |> max(min_height)
-          |> min(max_height)
-
-        round(size / 50) * 50
-
-      {:error, "No code block found"} ->
-        0
-    end
   end
 
   defp build_url_with_auth(drop, type) do
