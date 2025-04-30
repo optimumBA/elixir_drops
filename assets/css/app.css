@@ -296,13 +296,14 @@ blockquote *:last-child {
   @apply font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
 }
 
-/*new screenshot styling*/
 .drop-image pre {
   background: #303030 !important;
+  margin: 0;
+  padding: 30px;
 }
 
 .drop-image code {
-  @apply text-[1rem];
+  @apply text-[2rem];
   font-family: var(--font-lotion) !important;
 }
 
