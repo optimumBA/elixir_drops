@@ -48,14 +48,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply, socket}
   end
 
-  def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, :completed,
-         %{action: "edit"} = _metadata},
-        socket
-      ) do
-    {:noreply, socket}
-  end
-
   @impl Phoenix.LiveView
   def handle_info(
         {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, :completed,
@@ -63,5 +55,13 @@ defmodule ElixirDropsWeb.DropLive.Index do
         socket
       ) do
     {:noreply, assign(socket, :new_drops?, true)}
+  end
+
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, _status,
+         _metadata},
+        socket
+      ) do
+    {:noreply, socket}
   end
 end

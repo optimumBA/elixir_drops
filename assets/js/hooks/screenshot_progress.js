@@ -46,7 +46,7 @@ ScreenshotProgressHooks.ScreenshotProgress = {
           clearInterval(animationInterval)
           animationInterval = null
         }
-      }, 50)
+      }, 250)
     })
 
     this.handleEvent(

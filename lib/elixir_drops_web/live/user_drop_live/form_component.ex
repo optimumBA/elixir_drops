@@ -13,9 +13,23 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   alias ElixirDropsWeb.Icons
 
   @impl Phoenix.LiveComponent
+  def update(%{screenshot: %{progress_value: 0}} = assigns, socket) do
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> push_event("screenshot_generation_started", %{})}
+  end
 
-  def update(%{screenshot: _screenshot} = assigns, socket) do
-    {:ok, assign(socket, assigns)}
+  def update(%{screenshot: screenshot} = assigns, socket) do
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> push_event("screenshot_progress_update", %{
+       drop_short_id: screenshot.drop_short_id,
+       progress: screenshot.progress_value,
+       status: screenshot.status,
+       url: screenshot.url
+     })}
   end
 
   def update(assigns, socket) do

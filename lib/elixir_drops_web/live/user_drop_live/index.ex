@@ -94,15 +94,30 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         %{assigns: %{live_action: action}} = socket
       )
       when action in [:edit, :new] do
-    status_string = Atom.to_string(status)
+    screenshot = %{
+      drop_short_id: drop.short_id,
+      progress_value: progress,
+      status: status,
+      url: drop.screenshot.url
+    }
 
-    {:noreply,
-     push_event(socket, "screenshot_progress_update", %{
-       drop_short_id: drop.short_id,
-       progress: progress,
-       status: status_string,
-       url: drop.screenshot.url
-     })}
+    send_update(FormComponent,
+      id: "drops-form",
+      screenshot: screenshot
+    )
+
+    {:noreply, socket}
+  end
+
+  def handle_info({DropsBroadcast, [:drop, :screenshot_generation_started], _drop}, socket) do
+    {:noreply, DropsListHelper.assign_drops(socket)}
+  end
+
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, _status},
+        socket
+      ) do
+    {:noreply, DropsListHelper.assign_drops(socket)}
   end
 
   def handle_info(_message, socket) do
