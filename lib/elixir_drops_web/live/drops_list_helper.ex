@@ -46,7 +46,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
           :for={{dom_id, drop} <- @drops}
           id={dom_id}
           phx-click={JS.navigate(~p"/d/#{drop.short_id}")}
-          class="last:mb-6 cursor-pointer"
+          class="last:mb-6 cursor-pointer relative"
           role="link"
         >
           <DropComponents.drop_card
@@ -54,6 +54,13 @@ defmodule ElixirDropsWeb.DropsListHelper do
             show_card_menu?={@show_user_drops?}
             user_id={if @current_user, do: @current_user.id, else: nil}
           />
+
+          <div
+            :if={drop.screenshot && drop.screenshot.status == :pending}
+            class="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center z-10"
+          >
+            <DropComponents.loading_spinner id="loading-spinner" />
+          </div>
         </div>
       </div>
       <div id="infinite-scroll-marker" phx-hook="InfiniteScroll" data-page={@page}></div>

@@ -8,6 +8,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
 
   setup :verify_on_exit!
@@ -73,16 +74,50 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert path == ~p"/drops/new"
     end
 
-    test "show a list of drops", %{conn: conn, drop: drop, user: user} do
+    test "shows a list of drops with screenshot status :completed", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      drop1 = drop_fixture(user)
+      drop2 = drop_fixture(user)
+
+      {:ok, pending_drop} =
+        Drops.update_drop(drop1, user, %{screenshot: %{status: :pending}})
+
+      {:ok, failed_drop} = Drops.update_drop(drop2, user, %{screenshot: %{status: :failed}})
+
+      {:ok, completed_drop} =
+        Drops.update_drop(drop, user, %{screenshot: %{status: :completed}})
+
       {:ok, _live, html} = live(conn, ~p"/")
 
       {:ok, _time} =
-        Timex.format(drop.inserted_at, "{relative}", :relative)
+        Timex.format(completed_drop.inserted_at, "{relative}", :relative)
 
-      assert html =~ drop.title
+      assert html =~ completed_drop.title
       assert html =~ user.github_username
       assert html =~ user.avatar
-      assert html =~ ~s(datetime="#{drop.inserted_at}Z")
+      assert html =~ ~s(datetime="#{completed_drop.inserted_at}Z")
+
+      refute html =~ pending_drop.title
+      refute html =~ failed_drop.title
+    end
+
+    test "shows a list of drops with screenshot status :skipped and :completed", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      completed_drop = drop_fixture(user)
+      {:ok, skipped_drop} = Drops.update_drop(drop, user, %{screenshot: %{status: :skipped}})
+
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      assert html =~ completed_drop.title
+      assert html =~ skipped_drop.title
+      assert html =~ user.github_username
+      assert html =~ user.avatar
     end
 
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
@@ -119,13 +154,23 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html2 =~ "Edit drop"
     end
 
-    test "gets updated with new drops", %{conn: conn, user: user} do
+    test "user gets updated with new a drop not requiring screenshot generation", %{
+      conn: conn,
+      user: user
+    } do
       {:ok, live, _html} = live(conn, ~p"/")
 
       refute has_element?(live, "#new-drops-indicator")
 
       {:ok, drop} =
-        Drops.create_drop(%Drop{}, user, %{title: "New Drop title", body: "Drop body"})
+        Drops.create_drop(%Drop{}, user, %{
+          body: "Drop body with code block",
+          screenshot: %{
+            status: :completed,
+            url: "http://example.com/screenshot.png"
+          },
+          title: "New Drop title"
+        })
 
       assert has_element?(live, "#new-drops-indicator")
 
@@ -134,6 +179,101 @@ defmodule ElixirDropsWeb.DropLiveTest do
       |> render_click()
 
       assert has_element?(live, "#drop-#{drop.id}", drop.title)
+    end
+
+    test "user sees an indicator for new drop only when screenshot generation completes",
+         %{
+           conn: conn,
+           user: user
+         } do
+      Drops.subscribe()
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, drop} =
+        Drops.create_drop(%Drop{}, user, %{
+          body:
+            "Drop body ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
+          screenshot: %{status: :pending},
+          title: "New Drop title"
+        })
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      refute has_element?(live, "#drop-#{drop.id}")
+
+      {:ok, updated_drop} =
+        Drops.update_drop(drop, user, %{
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+        })
+
+      DropsBroadcast.broadcast_drop_screenshot_completion(
+        updated_drop,
+        100,
+        :completed,
+        %{action: "new"}
+      )
+
+      Process.sleep(100)
+
+      render(live)
+
+      assert has_element?(live, "#new-drops-indicator")
+
+      live
+      |> element("#new-drops-indicator")
+      |> render_click()
+
+      assert has_element?(live, "#drop-#{drop.id}")
+    end
+
+    test "user does not see an indicator when an existing drop's screenshot is regenerated",
+         %{
+           conn: conn,
+           user: user
+         } do
+      {:ok, drop} =
+        Drops.create_drop(%Drop{}, user, %{
+          body:
+            "Drop body with code ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"},
+          title: "Existing Drop title"
+        })
+
+      Drops.subscribe()
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert has_element?(live, "#drop-#{drop.id}")
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, updated_drop} =
+        Drops.update_drop(drop, user, %{
+          screenshot: %{status: :pending, url: nil}
+        })
+
+      {:ok, completed_drop} =
+        Drops.update_drop(updated_drop, user, %{
+          screenshot: %{status: :completed, url: "http://example.com/new-screenshot.png"}
+        })
+
+      DropsBroadcast.broadcast_drop_screenshot_completion(
+        completed_drop,
+        100,
+        :completed,
+        %{action: "edit"}
+      )
+
+      Process.sleep(100)
+
+      render(live)
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      assert has_element?(live, "#drop-#{drop.id}")
     end
 
     test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
@@ -160,12 +300,44 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html_3 = render_hook(live, "load-more", %{})
       assert html_3 =~ first_drop.id
     end
+
+    test "screenshot generation started broadcast doesn't change page state", %{
+      conn: conn,
+      user: user
+    } do
+      Drops.subscribe()
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      refute has_element?(live, "#new-drops-indicator")
+
+      {:ok, drop} =
+        Drops.create_drop(%Drop{}, user, %{
+          body:
+            "Drop body with code block ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```",
+          screenshot: %{status: :pending},
+          title: "New Drop with Pending Screenshot"
+        })
+
+      refute has_element?(live, "#drop-#{drop.id}")
+      refute has_element?(live, "#new-drops-indicator")
+
+      DropsBroadcast.broadcast_drop_screenshot_started(drop)
+
+      Process.sleep(100)
+      render(live)
+
+      refute has_element?(live, "#new-drops-indicator")
+      refute has_element?(live, "#drop-#{drop.id}")
+    end
   end
 
   describe "/d/:short_id" do
     setup [:create_drops_setup]
 
-    test "user can view a drop", %{conn: conn, drop: drop, user: user} do
+    test "user can view a drop", %{conn: conn, user: user} do
+      drop = drop_fixture(%Drop{}, user, %{title: "Drop title", body: "Drop body text..."})
+
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       {:ok, _time} =
@@ -207,7 +379,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
     test "rendered HTML includes SEO meta tags for drop", %{
       conn: conn,
-      drop: drop
+      drop: drop,
+      user: user
     } do
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
@@ -237,7 +410,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~
                "<meta property=\"og:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
 
-      Drops.update_drop_screenshot(drop, %{
+      Drops.update_drop(drop, user, %{
         screenshot: %{
           status: :completed,
           url: "http://image.com/drop-meta-image-latest-#{drop.id}.png"
@@ -287,7 +460,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
          } do
       conn = sign_in_user(conn, user)
 
-      # Start on the new drop page and verify we're in editor mode
       {:ok, live, html} = live(conn, ~p"/drops/new")
       assert html =~ "Write a new post"
 

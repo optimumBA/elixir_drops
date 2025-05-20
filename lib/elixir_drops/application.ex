@@ -12,9 +12,9 @@ defmodule ElixirDrops.Application do
         always: ElixirDropsWeb.Telemetry,
         always: ElixirDropsWeb.Endpoint,
         always: ElixirDrops.Repo,
+        always: {Phoenix.PubSub, name: ElixirDrops.PubSub},
         parent:
           {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
-        parent: {Phoenix.PubSub, name: ElixirDrops.PubSub},
         # Start the Finch HTTP client for sending emails
         parent: {Finch, name: ElixirDrops.Finch},
         # Start a worker by calling: ElixirDrops.Worker.start_link(arg)
@@ -23,7 +23,7 @@ defmodule ElixirDrops.Application do
         parent:
           {FLAME.Pool,
            name: ElixirDrops.ScreenshotGenerator,
-           idle_shutdown_after: 30_000,
+           idle_shutdown_after: 120_000,
            log: :info,
            max_concurrency: 1,
            max: 1,

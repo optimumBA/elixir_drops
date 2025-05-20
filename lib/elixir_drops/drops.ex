@@ -85,6 +85,10 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.inserted_at < ^drop.inserted_at)
   end
 
+  defp apply_filter({:screenshot_status, status}, dynamic) do
+    dynamic([drop: drop], ^dynamic and drop.screenshot["status"] in ^status)
+  end
+
   defp apply_filter({:short_id, short_id}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.short_id == ^short_id)
   end
@@ -210,27 +214,6 @@ defmodule ElixirDrops.Drops do
     |> Drop.changeset(attrs)
     |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.insert_or_update()
-  end
-
-  @doc """
-  Updates only the screenshot information of a drop.
-
-  ## Examples
-
-      iex> update_drop_screenshot(%Drop{}, %{
-      ...>   screenshot: %{status: :completed, url: "https://example.com/image.png"}
-      ...> })
-      {:ok, %Drop{}}
-
-      iex> update_drop_screenshot(%Drop{}, %{screenshot: %{status: :failed}})
-      {:ok, %Drop{}}
-
-  """
-  @spec update_drop_screenshot(drop(), attrs()) :: {:ok, drop()} | {:error, changeset()}
-  def update_drop_screenshot(%Drop{} = drop, attrs) do
-    drop
-    |> Drop.screenshot_changeset(attrs)
-    |> Repo.update()
   end
 
   @doc """

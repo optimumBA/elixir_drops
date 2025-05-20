@@ -5,75 +5,43 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   use ElixirDropsWeb, :verified_routes
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
   alias ElixirDrops.ScreenshotGeneratorWorkerHelper
   alias Wallaby.Browser
 
-  @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
-
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    case args["action"] do
-      "edit" -> handle_edit(args)
-      _new -> handle_new(args)
+    with {:ok, drop} <- get_drop(args["drop_id"]) do
+      drop_screenshot(drop, args)
     end
   end
 
-  defp handle_edit(args) do
-    with {:ok, drop} <- get_drop(args["drop_id"]),
-         {:ok, old_code_snippet} <-
-           check_for_code_block(args["old_body"]),
-         {:ok, new_code_snippet} <-
-           check_for_code_block(drop.body),
-         :ok <-
-           compare_code_blocks(old_code_snippet, new_code_snippet) do
-      drop_screenshot(drop)
-    else
-      {:cancel, _reason} ->
-        {:cancel, "Code block unchanged"}
-
-      _error ->
-        {:cancel, "No code block found"}
-    end
-  end
-
-  defp handle_new(args) do
-    with {:ok, drop} <- get_drop(args["drop_id"]),
-         {:ok, _code_snippet} <- check_for_code_block(drop.body) do
-      drop_screenshot(drop)
-    else
-      _error -> {:cancel, "No code block found"}
-    end
-  end
-
-  defp drop_screenshot(drop) do
+  defp drop_screenshot(drop, args) do
     FLAME.call(ScreenshotGenerator, fn ->
-      with {:ok, screenshot} <- generate_screenshot(drop),
+      broadcast_drop_screenshot_completion(drop, 60, :pending, %{
+        action: args["action"]
+      })
+
+      with {:ok, screenshot} <- generate_screenshot(drop, args["action"]),
            {:ok, image} <- File.read(screenshot) do
-        upload_screenshot(image, drop)
+        upload_screenshot(image, drop, args)
       end
     end)
   end
 
   defp get_drop(id) do
     case Drops.get_drop(%{drop_id: id}) do
-      nil -> {:error, "Drop not found"}
-      drop -> {:ok, drop}
+      nil ->
+        {:error, "Drop not found"}
+
+      drop ->
+        {:ok, drop}
     end
   end
 
-  defp check_for_code_block(body) do
-    case Regex.run(@code_block_pattern, body, capture: :first) do
-      nil -> {:error, "No code block found"}
-      code_block -> {:ok, code_block}
-    end
-  end
-
-  defp compare_code_blocks(old, new) when old != new, do: :ok
-  defp compare_code_blocks(_old, _new), do: {:cancel, "Code block unchanged"}
-
-  defp generate_screenshot(drop) do
+  defp generate_screenshot(drop, action) do
     height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
 
     {:ok, session} =
@@ -92,6 +60,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         }
       )
 
+    broadcast_drop_screenshot_completion(drop, 80, :pending, %{action: action})
+
     url = build_url_with_auth(drop)
 
     %Wallaby.Session{screenshots: [screenshot]} =
@@ -100,6 +70,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       |> Browser.take_screenshot()
 
     Wallaby.end_session(session)
+
+    broadcast_drop_screenshot_completion(drop, 90, :pending, %{action: action})
 
     {:ok, screenshot}
   end
@@ -114,21 +86,32 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     "#{scheme}//#{username}:#{password}@#{rest}"
   end
 
-  defp upload_screenshot(screenshot, drop) do
+  defp upload_screenshot(screenshot, drop, args) do
     latest_image_name = "drop-meta-image-latest-#{drop.id}.png"
 
     case Client.upload_image(screenshot, latest_image_name, "image/png") do
       {:ok, image_url} ->
-        screenshot_data = %{screenshot: %{status: :completed, url: image_url}}
+        case Drops.update_drop(drop, drop.user, %{
+               screenshot: %{status: :completed, url: image_url}
+             }) do
+          {:ok, updated_drop} ->
+            broadcast_drop_screenshot_completion(updated_drop, 100, :completed, %{
+              action: args["action"]
+            })
 
-        case Drops.update_drop_screenshot(drop, screenshot_data) do
-          {:ok, _updated_drop} -> :ok
-          error -> error
+            :ok
+
+          error ->
+            error
         end
 
       error ->
-        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
+        Drops.update_drop(drop, drop.user, %{screenshot: %{status: :failed}})
         error
     end
+  end
+
+  defp broadcast_drop_screenshot_completion(drop, progress, status, metadata) do
+    DropsBroadcast.broadcast_drop_screenshot_completion(drop, progress, status, metadata)
   end
 end

@@ -77,19 +77,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       refute updated_drop.screenshot.url
     end
 
-    test "does not create a screenshot when there is no code block and the job is not retried", %{
-      user: user
-    } do
-      drop = drop_fixture(user)
-
-      {:cancel, "No code block found"} =
-        perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
-    end
-
     test "does not create a screenshot for a non-existent drop" do
       drop_id = Ecto.UUID.generate()
 
-      {:cancel, "No code block found"} =
+      {:error, "Drop not found"} =
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop_id})
     end
 
@@ -100,7 +91,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       ```
       """
 
-      # Simulate drop body update with a changed code block
       Drops.update_drop(drop, user, %{body: updated_body})
 
       image_url = "http://image.com/drop-meta-image-latest-#{drop.id}.png"
@@ -111,39 +101,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       end)
 
       assert :ok =
-               perform_job(ScreenshotGeneratorWorker, %{
-                 drop_id: drop.id,
-                 action: "edit",
-                 old_body: drop.body
-               })
-    end
-
-    test "does not create  screenshot when the code block does not change", %{
-      drop: drop,
-      user: user
-    } do
-      updated_body = @drop_body <> "Small change."
-
-      Drops.update_drop(drop, user, %{body: updated_body})
-
-      assert {:cancel, "Code block unchanged"} =
-               perform_job(ScreenshotGeneratorWorker, %{
-                 drop_id: drop.id,
-                 action: "edit",
-                 old_body: drop.body
-               })
-    end
-
-    test "does not create screenshot when the title changes", %{
-      drop: drop,
-      user: user
-    } do
-      updated_title = "This is the new title"
-
-      # Simulate drop body update with a changed code block
-      Drops.update_drop(drop, user, %{title: updated_title})
-
-      assert {:cancel, "Code block unchanged"} =
                perform_job(ScreenshotGeneratorWorker, %{
                  drop_id: drop.id,
                  action: "edit",

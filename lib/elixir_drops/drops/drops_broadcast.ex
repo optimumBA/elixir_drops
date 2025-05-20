@@ -6,7 +6,10 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
   alias ElixirDrops.Drops.Drop
 
   @type drop :: Drop.t()
+  @type metadata :: map()
+  @type progress :: integer()
   @type short_id_string :: String.t()
+  @type status :: atom()
 
   @topic inspect(__MODULE__)
 
@@ -55,6 +58,73 @@ defmodule ElixirDrops.Drops.DropsBroadcast do
         [:drop, :created],
         drop
       }
+    )
+  end
+
+  @doc """
+  Broadcasts a message indicating that a drop's screenshot generation has started.
+
+  The message is broadcast on the `@topic` using Phoenix PubSub. Other processes that subscribe to this topic will receive the broadcast message.
+
+  ## Parameters
+
+    - `drop`: The drop data to be broadcast, typically a map or struct representing the drop.
+
+  ## Examples
+
+      iex> broadcast_drop_screenshot_started(%{
+      ...>   id: 1,
+      ...>   title: "New Drop",
+      ...>   body: "This is a new drop.",
+      ...>   user_id: 1,
+      ...>   short_id: "abc123"
+      ...> })
+      :ok
+
+  """
+  @spec broadcast_drop_screenshot_started(drop()) :: :ok
+  def broadcast_drop_screenshot_started(drop) do
+    Phoenix.PubSub.broadcast(
+      ElixirDrops.PubSub,
+      @topic,
+      {__MODULE__, [:drop, :screenshot_generation_started], drop}
+    )
+  end
+
+  @doc """
+  Broadcasts a message indicating the progress of a drop's screenshot generation.
+
+  The message is broadcast on the `@topic` using Phoenix PubSub. Other processes that subscribe to this topic will receive the broadcast message.
+
+  ## Parameters
+
+    - `drop`: The drop data to be broadcast, typically a map or struct representing the drop.
+    - `progress`: The progress of the screenshot generation, typically a number between 0 and 100.
+    - `status`: The status of the screenshot generation, typically a string.
+
+  ## Examples
+
+      iex> broadcast_drop_screenshot_completion(
+      ...>   %{
+      ...>     id: 1,
+      ...>     title: "New Drop",
+      ...>     body: "This is a new drop.",
+      ...>     user_id: 1,
+      ...>     short_id: "abc123"
+      ...>   },
+      ...>   50,
+      ...>   :pending,
+      ...>   %{action: "new"}
+      ...> )
+      :ok
+
+  """
+  @spec broadcast_drop_screenshot_completion(map(), progress(), status(), metadata()) :: :ok
+  def broadcast_drop_screenshot_completion(drop, progress, status, metadata \\ %{action: "new"}) do
+    Phoenix.PubSub.broadcast(
+      ElixirDrops.PubSub,
+      @topic,
+      {__MODULE__, [:drop, :screenshot_generation_completion], drop, progress, status, metadata}
     )
   end
 end

@@ -337,6 +337,89 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :id, :string, required: true
+  attr :progress_value, :integer, default: 0
+  attr :screenshot, :map, required: true
+  attr :target, :any, required: true
+
+  @spec generating_screenshots_popup(assigns()) :: rendered()
+  def generating_screenshots_popup(assigns) do
+    ~H"""
+    <div
+      :if={@screenshot.status != :skipped}
+      class="bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid top-[48%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[90%] md:w-[80%] lg:max-w-[45em]"
+      id={@id}
+      phx-click-away={hide_popup(@id)}
+      phx-hook="ScreenshotProgress"
+      phx-target={@target}
+    >
+      <button id="close-screenshot-progress" class="bg-black" phx-click={hide_popup(@id)}>
+        <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
+      </button>
+      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[200px] md:min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
+        <p
+          :if={@screenshot.status != :completed}
+          class="w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2 font-light"
+        >
+          Your drop is almost ready! You can close this modal—your post will continue processing in the background.
+        </p>
+        <p
+          :if={@screenshot.status == :completed}
+          class="text-gray-700 font-normal text-lg md:text-xl lg:text-2xl mx-auto"
+        >
+          Here's your screenshot!
+          <span class="text-sm md:text-base lg:text-lg block font-light">
+            You can now view and share your drop post
+          </span>
+        </p>
+
+        <div class={[
+          "pt-8 min-w-[80%] mx-auto",
+          @screenshot.status != :completed &&
+            "flex h-[80%] bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2] my-auto"
+        ]}>
+          <div
+            :if={@screenshot.status != :completed}
+            class="mx-auto text-white rounded-lg flex flex-col items-center justify-center space-y-4"
+          >
+            <.progress_loader />
+            <p class="text-base md:text-lg lg:text-xl text-white mx-auto mt-4 mb-6">
+              Generating Code Screenshots...
+            </p>
+          </div>
+          <img
+            :if={@screenshot.status == :completed}
+            src={@screenshot.url && "#{@screenshot.url}?t=#{System.os_time(:second)}"}
+            class="max-w-[80%] rounded-xl mx-auto"
+            alt="Generated code screenshot"
+          />
+
+          <div
+            :if={@screenshot.status == :completed}
+            class="text-xs md:text-sm flex justify-center gap-x-4 mt-4"
+          >
+            <.link
+              type="button"
+              class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
+              phx-click={hide_popup("generating-screenshots-popup")}
+              navigate={~p"/drops/#{@screenshot.drop_short_id}/edit"}
+            >
+              Edit post
+            </.link>
+            <.link
+              type="button"
+              class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
+              navigate={~p"/profile"}
+            >
+              View posts
+            </.link>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   @spec copy_prompt(assigns()) :: rendered()
   defp copy_prompt(assigns) do
     ~H"""
@@ -353,7 +436,7 @@ defmodule ElixirDropsWeb.DropComponents do
           <path
             fill-rule="evenodd"
             clip-rule="evenodd"
-            d="M13 0.25H8.944C7.106 0.25 5.65 0.25 4.511 0.403C3.339 0.561 2.39 0.893 1.641 1.641C0.893 2.39 0.561 3.339 0.403 4.511C0.25 5.651 0.25 7.106 0.25 8.944V15C0.250024 15.8934 0.568936 16.7575 1.14934 17.4367C1.72974 18.1159 2.53351 18.5657 3.416 18.705C3.553 19.469 3.818 20.121 4.348 20.652C4.95 21.254 5.708 21.512 6.608 21.634C7.475 21.75 8.578 21.75 9.945 21.75H13.055C14.422 21.75 15.525 21.75 16.392 21.634C17.292 21.512 18.05 21.254 18.652 20.652C19.254 20.05 19.512 19.292 19.634 18.392C19.75 17.525 19.75 16.422 19.75 15.055V9.945C19.75 8.578 19.75 7.475 19.634 6.608C19.512 5.708 19.254 4.95 18.652 4.348C18.121 3.818 17.469 3.553 16.705 3.416C16.5657 2.53351 16.1159 1.72974 15.4367 1.14934C14.7575 0.568936 13.8934 0.250024 13 0.25ZM15.13 3.271C14.9779 2.827 14.6909 2.44166 14.3089 2.16893C13.927 1.89619 13.4693 1.74971 13 1.75H9C7.093 1.75 5.739 1.752 4.71 1.89C3.705 2.025 3.125 2.279 2.702 2.702C2.279 3.125 2.025 3.705 1.89 4.711C1.752 5.739 1.75 7.093 1.75 9V15C1.74971 15.4693 1.89619 15.927 2.16892 16.3089C2.44166 16.6908 2.827 16.9779 3.271 17.13C3.25 16.52 3.25 15.83 3.25 15.055V9.945C3.25 8.578 3.25 7.475 3.367 6.608C3.487 5.708 3.747 4.95 4.348 4.348C4.95 3.746 5.708 3.488 6.608 3.367C7.475 3.25 8.578 3.25 9.945 3.25H13.055C13.83 3.25 14.52 3.25 15.13 3.271ZM5.408 5.41C5.685 5.133 6.073 4.953 6.808 4.854C7.562 4.753 8.564 4.751 9.999 4.751H12.999C14.434 4.751 15.435 4.753 16.191 4.854C16.925 4.953 17.313 5.134 17.59 5.41C17.867 5.687 18.047 6.075 18.146 6.81C18.247 7.564 18.249 8.566 18.249 10.001V15.001C18.249 16.436 18.247 17.437 18.146 18.193C18.047 18.927 17.866 19.315 17.59 19.592C17.313 19.869 16.925 20.049 16.19 20.148C15.435 20.249 14.434 20.251 12.999 20.251H9.999C8.564 20.251 7.562 20.249 6.807 20.148C6.073 20.049 5.685 19.868 5.408 19.592C5.131 19.315 4.951 18.927 4.852 18.192C4.751 17.437 4.749 16.436 4.749 15.001V10.001C4.749 8.566 4.751 7.564 4.852 6.809C4.951 6.075 5.132 5.687 5.408 5.41Z"
+            d="M13 0.25H8.944C7.106 0.25 5.65 0.25 4.511 0.403C3.339 0.561 2.39 0.893 1.641 1.641C0.893 2.39 0.561 3.339 0.403 4.511C0.25 5.651 0.25 7.106 0.25 8.944V15C0.250024 15.8934 0.568936 16.7575 1.14934 17.4367C1.72974 18.1159 2.53351 18.5657 3.416 18.705C3.553 19.469 3.818 20.121 4.348 20.652C4.95 21.254 5.708 21.512 6.608 21.634C7.475 21.75 8.578 21.75 9.945 21.75H13.055C14.422 21.75 15.525 21.75 16.392 21.634C17.292 21.512 18.05 21.254 18.652 20.652C19.254 20.05 19.512 19.292 19.634 18.392C19.75 17.525 19.75 16.422 19.75 15.055V9.945C19.75 8.578 19.75 7.475 19.634 6.608C19.512 5.708 19.254 4.95 18.652 4.348C18.121 3.818 17.469 3.553 16.705 3.416C16.5657 2.53351 16.1159 1.72974 15.4367 1.14934C14.7575 0.568936 13.8934 0.250024 13 0.25ZM15.13 3.271C14.9779 2.827 14.6909 2.44166 14.3089 2.16893C13.927 1.89619 13.4693 1.74971 13 1.75H9C7.093 1.75 5.739 1.752 4.71 1.89C3.705 2.025 3.125 2.279 2.702 2.702C2.279 3.125 2.025 3.705 1.89 4.711C1.752 5.739 1.75 7.093 1.75 9V15C1.75 15.4693 1.89619 15.927 2.16892 16.3089C2.44166 16.6908 2.827 16.9779 3.271 17.13C3.25 16.52 3.25 15.83 3.25 15.055V9.945C3.25 8.578 3.25 7.475 3.367 6.608C3.487 5.708 3.747 4.95 4.348 4.348C4.95 3.746 5.708 3.488 6.608 3.367C7.475 3.25 8.578 3.25 9.945 3.25H13.055C13.83 3.25 14.52 3.25 15.13 3.271ZM5.408 5.41C5.685 5.133 6.073 4.953 6.808 4.854C7.562 4.753 8.564 4.751 9.999 4.751H12.999C14.434 4.751 15.435 4.753 16.191 4.854C16.925 4.953 17.313 5.134 17.59 5.41C17.867 5.687 18.047 6.075 18.146 6.81C18.247 7.564 18.249 8.566 18.249 10.001V15.001C18.249 16.436 18.247 17.437 18.146 18.193C18.047 18.927 17.866 19.315 17.59 19.592C17.313 19.869 16.925 20.049 16.19 20.148C15.435 20.249 14.434 20.251 12.999 20.251H9.999C8.564 20.251 7.562 20.249 6.807 20.148C6.073 20.049 5.685 19.868 5.408 19.592C5.131 19.315 4.951 18.927 4.852 18.192C4.751 17.437 4.749 16.436 4.749 15.001V10.001C4.749 8.566 4.751 7.564 4.852 6.809C4.951 6.075 5.132 5.687 5.408 5.41Z"
             fill="#EAE8FD"
           />
         </svg>
@@ -376,6 +459,39 @@ defmodule ElixirDropsWeb.DropComponents do
         </svg>
       </div>
     </template>
+    """
+  end
+
+  defp progress_loader(assigns) do
+    ~H"""
+    <div class="relative w-20 h-20 md:w-24 md:h-24 flex items-center justify-center">
+      <svg class="h-20 w-20 md:h-24 md:w-24" viewBox="0 0 100 100">
+        <circle
+          class="progress-background"
+          cx="50"
+          cy="50"
+          r="45"
+          stroke="#dddddd"
+          stroke-width="8"
+          fill="none"
+        >
+        </circle>
+        <circle
+          class="progress-bar"
+          cx="50"
+          cy="50"
+          r="45"
+          id="progress-circle"
+          stroke="#ffffff"
+          stroke-width="8"
+          stroke-dasharray="282.7"
+          stroke-dashoffset="282.7"
+          fill="none"
+        >
+        </circle>
+      </svg>
+      <div class="percentage" id="percentage">0%</div>
+    </div>
     """
   end
 
@@ -507,6 +623,7 @@ defmodule ElixirDropsWeb.DropComponents do
     |> JS.add_class("hidden", to: "##{pop_up_message_id}")
     |> JS.remove_class("show-pop-up", to: ".drops-container")
     |> JS.remove_class("show-pop-up", to: ".drop-form")
+    |> JS.add_class("hidden", to: ".drops-editor-overlay")
   end
 
   @spec to_html(binary()) :: Phoenix.HTML.safe()
@@ -535,5 +652,26 @@ defmodule ElixirDropsWeb.DropComponents do
       ]
     )
     |> raw()
+  end
+
+  @spec loading_spinner(map()) :: Phoenix.LiveView.Rendered.t()
+  def loading_spinner(assigns) do
+    ~H"""
+    <svg
+      class="animate-spin h-8 w-8 text-white"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+      </circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      >
+      </path>
+    </svg>
+    """
   end
 end
