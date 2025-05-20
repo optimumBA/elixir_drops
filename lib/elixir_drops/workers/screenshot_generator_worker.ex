@@ -24,7 +24,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         action: args["action"]
       })
 
-      with {:ok, screenshot} <- generate_screenshot(drop),
+      with {:ok, screenshot} <- generate_screenshot(drop, args["action"]),
            {:ok, image} <- File.read(screenshot) do
         upload_screenshot(image, drop, args)
       end
@@ -41,7 +41,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
     end
   end
 
-  defp generate_screenshot(drop) do
+  defp generate_screenshot(drop, action) do
     height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
 
     {:ok, session} =
@@ -60,6 +60,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         }
       )
 
+    broadcast_drop_screenshot_completion(drop, 80, :pending, %{action: action})
+
     url = build_url_with_auth(drop)
 
     %Wallaby.Session{screenshots: [screenshot]} =
@@ -68,6 +70,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
       |> Browser.take_screenshot()
 
     Wallaby.end_session(session)
+
+    broadcast_drop_screenshot_completion(drop, 90, :pending, %{action: action})
 
     {:ok, screenshot}
   end
