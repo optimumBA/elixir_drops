@@ -32,9 +32,22 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   def handle_event("save", %{"drop" => drop_params}, socket) do
-    case create_or_update_drop(socket, socket.assigns.live_action, drop_params) do
-      {:ok, drop} ->
-        maybe_enqueue_screenshot_generation(socket, drop)
+    screenshot = get_screenshot(socket.assigns.live_action, drop_params, socket.assigns.drop)
+    updated_params = Map.put(drop_params, "screenshot", screenshot)
+
+    case create_or_update_drop(socket, socket.assigns.live_action, updated_params) do
+      {:ok, %{screenshot: %{status: :pending}} = drop} ->
+        enqueue_seo_screenshot_creation(
+          drop,
+          socket.assigns.drop.body,
+          socket.assigns.live_action
+        )
+
+        changeset = Drops.change_drop(socket.assigns.drop)
+        {:noreply, assign_form(socket, changeset)}
+
+      {:ok, _drop} ->
+        {:noreply, push_navigate(socket, to: ~p"/profile")}
 
       {:error, changeset} ->
         {:noreply, assign_form(socket, changeset)}
@@ -42,114 +55,72 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp create_or_update_drop(socket, :edit, drop_params) do
-    updated_params = add_or_retain_screenshot_status(:edit, drop_params, socket.assigns.drop)
-
-    case Drops.update_drop(
-           socket.assigns.drop,
-           socket.assigns.current_user,
-           updated_params
-         ) do
-      {:ok, drop} ->
-        {:ok, drop}
-
-      error ->
-        error
-    end
+    Drops.update_drop(
+      socket.assigns.drop,
+      socket.assigns.current_user,
+      drop_params
+    )
   end
 
   defp create_or_update_drop(socket, :new, drop_params) do
-    needs_screenshot? = CodeBlockHelper.has_code_block?(drop_params["body"])
-
-    drop_params =
-      if needs_screenshot? do
-        Map.put(drop_params, "screenshot", %{status: :pending, url: nil})
-      else
-        drop_params
-      end
-
-    case Drops.create_drop(
-           socket.assigns.drop,
-           socket.assigns.current_user,
-           drop_params
-         ) do
-      {:ok, drop} ->
-        if needs_screenshot? do
-          {:ok, drop}
-        else
-          Drops.update_drop_screenshot(drop, %{screenshot: %{status: :skipped, url: nil}})
-        end
-
-      error ->
-        error
-    end
-  end
-
-  defp enqueue_seo_screenshot_creation(drop, old_body, action) do
-    {:ok, updated_drop} =
-      Drops.update_drop_screenshot(drop, %{screenshot: %{status: :pending, url: nil}})
-
-    broadcast_screenshot_generation_started(updated_drop)
-
-    %{"drop_id" => drop.id, "old_body" => old_body, "action" => action}
-    |> ScreenshotGeneratorWorker.new()
-    |> Oban.insert()
+    Drops.create_drop(
+      socket.assigns.drop,
+      socket.assigns.current_user,
+      drop_params
+    )
   end
 
   defp assign_form(socket, changeset) do
     assign(socket, :form, to_form(changeset))
   end
 
-  defp maybe_enqueue_screenshot_generation(socket, drop) do
-    if drop.screenshot && drop.screenshot.status in [:skipped, :completed] do
-      socket = push_navigate(socket, to: ~p"/profile")
-      {:noreply, socket}
-    else
-      case socket.assigns do
-        %{live_action: :edit} ->
-          enqueue_seo_screenshot_creation(drop, socket.assigns.drop.body, :edit)
+  defp get_screenshot(:edit, drop_params, drop) do
+    case CodeBlockHelper.compare_code_blocks(drop.body, drop_params["body"]) do
+      :ok ->
+        %{
+          status: :pending,
+          url: nil
+        }
 
-          {:noreply, socket}
+      {:cancel, "No code block found"} ->
+        %{
+          status: :skipped,
+          url: nil
+        }
 
-        %{live_action: :new} ->
-          enqueue_seo_screenshot_creation(drop, nil, :new)
+      {:cancel, "Code block unchanged"} ->
+        %{
+          status: :completed,
+          url: drop.screenshot.url
+        }
 
-          {:noreply, socket}
-      end
+      {:cancel, _other_reason} ->
+        %{
+          status: :skipped,
+          url: nil
+        }
     end
   end
 
-  defp add_or_retain_screenshot_status(:edit, drop_params, old_drop) do
-    screenshot =
-      case CodeBlockHelper.compare_code_blocks(old_drop.body, drop_params["body"]) do
-        :ok ->
-          %{
-            status: :pending,
-            url: nil
-          }
-
-        {:cancel, "No code block found"} ->
-          %{
-            status: :skipped,
-            url: nil
-          }
-
-        {:cancel, "Code block unchanged"} ->
-          %{
-            status: :completed,
-            url: old_drop.screenshot.url
-          }
-
-        {:cancel, _other_reason} ->
-          %{
-            status: :skipped,
-            url: nil
-          }
-      end
-
-    Map.put(drop_params, "screenshot", screenshot)
+  defp get_screenshot(:new, drop_params, _old_drop) do
+    if CodeBlockHelper.has_code_block?(drop_params["body"]) do
+      %{
+        status: :pending,
+        url: nil
+      }
+    else
+      %{
+        status: :skipped,
+        url: nil
+      }
+    end
   end
 
-  defp broadcast_screenshot_generation_started(drop) do
+  defp enqueue_seo_screenshot_creation(drop, old_body, action) do
     DropsBroadcast.broadcast_drop_screenshot_started(drop)
+
+    %{"drop_id" => drop.id, "old_body" => old_body, "action" => action}
+    |> ScreenshotGeneratorWorker.new()
+    |> Oban.insert()
   end
 end

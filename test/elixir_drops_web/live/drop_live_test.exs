@@ -83,12 +83,12 @@ defmodule ElixirDropsWeb.DropLiveTest do
       drop2 = drop_fixture(user)
 
       {:ok, pending_drop} =
-        Drops.update_drop_screenshot(drop1, %{screenshot: %{status: :pending}})
+        Drops.update_drop(drop1, user, %{screenshot: %{status: :pending}})
 
-      {:ok, failed_drop} = Drops.update_drop_screenshot(drop2, %{screenshot: %{status: :failed}})
+      {:ok, failed_drop} = Drops.update_drop(drop2, user, %{screenshot: %{status: :failed}})
 
       {:ok, completed_drop} =
-        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :completed}})
+        Drops.update_drop(drop, user, %{screenshot: %{status: :completed}})
 
       {:ok, _live, html} = live(conn, ~p"/")
 
@@ -110,7 +110,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       user: user
     } do
       completed_drop = drop_fixture(user)
-      {:ok, skipped_drop} = Drops.update_drop_screenshot(drop, %{screenshot: %{status: :skipped}})
+      {:ok, skipped_drop} = Drops.update_drop(drop, user, %{screenshot: %{status: :skipped}})
 
       {:ok, _live, html} = live(conn, ~p"/")
 
@@ -205,7 +205,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute has_element?(live, "#drop-#{drop.id}")
 
       {:ok, updated_drop} =
-        Drops.update_drop_screenshot(drop, %{
+        Drops.update_drop(drop, user, %{
           screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
         })
 
@@ -251,12 +251,12 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute has_element?(live, "#new-drops-indicator")
 
       {:ok, updated_drop} =
-        Drops.update_drop_screenshot(drop, %{
+        Drops.update_drop(drop, user, %{
           screenshot: %{status: :pending, url: nil}
         })
 
       {:ok, completed_drop} =
-        Drops.update_drop_screenshot(updated_drop, %{
+        Drops.update_drop(updated_drop, user, %{
           screenshot: %{status: :completed, url: "http://example.com/new-screenshot.png"}
         })
 
@@ -379,7 +379,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
     test "rendered HTML includes SEO meta tags for drop", %{
       conn: conn,
-      drop: drop
+      drop: drop,
+      user: user
     } do
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
@@ -409,7 +410,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~
                "<meta property=\"og:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
 
-      Drops.update_drop_screenshot(drop, %{
+      Drops.update_drop(drop, user, %{
         screenshot: %{
           status: :completed,
           url: "http://image.com/drop-meta-image-latest-#{drop.id}.png"

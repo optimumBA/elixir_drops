@@ -87,7 +87,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     case Client.upload_image(screenshot, latest_image_name, "image/png") do
       {:ok, image_url} ->
-        case Drops.update_drop_screenshot(drop, %{
+        case Drops.update_drop(drop, drop.user, %{
                screenshot: %{status: :completed, url: image_url}
              }) do
           {:ok, updated_drop} ->
@@ -102,7 +102,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         end
 
       error ->
-        Drops.update_drop_screenshot(drop, %{screenshot: %{status: :failed}})
+        Drops.update_drop(drop, drop.user, %{screenshot: %{status: :failed}})
         error
     end
   end
