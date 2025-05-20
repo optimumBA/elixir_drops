@@ -23,7 +23,7 @@ defmodule ElixirDrops.Application do
         parent:
           {FLAME.Pool,
            name: ElixirDrops.ScreenshotGenerator,
-           idle_shutdown_after: 30_000,
+           idle_shutdown_after: 120_000,
            log: :info,
            max_concurrency: 1,
            max: 1,
