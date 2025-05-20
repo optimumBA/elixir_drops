@@ -346,75 +346,72 @@ defmodule ElixirDropsWeb.DropComponents do
   def generating_screenshots_popup(assigns) do
     ~H"""
     <div
+      :if={@screenshot.status != :skipped}
+      class="bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid top-[48%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[90%] md:w-[80%] lg:max-w-[45em]"
       id={@id}
-      class={[
-        "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid top-[48%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[90%] md:w-[80%] lg:max-w-[45em]",
-        @screenshot.status == :skipped && "hidden"
-      ]}
       phx-click-away={hide_popup(@id)}
       phx-hook="ScreenshotProgress"
+      phx-target={@target}
     >
       <button id="close-screenshot-progress" class="bg-black" phx-click={hide_popup(@id)}>
         <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
       </button>
       <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[200px] md:min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
-        <p class={[
-          "w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2",
-          @screenshot.status == :completed && "hidden"
-        ]}>
-          Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background.
+        <p
+          :if={@screenshot.status != :completed}
+          class="w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2 font-light"
+        >
+          Your drop is almost ready! You can close this modal—your post will continue processing in the background.
         </p>
-        <p class={[
-          "text-gray-700 font-normal text-lg md:text-xl lg:text-2xl mx-auto",
-          @screenshot.status != :completed && "hidden"
-        ]}>
+        <p
+          :if={@screenshot.status == :completed}
+          class="text-gray-700 font-normal text-lg md:text-xl lg:text-2xl mx-auto"
+        >
           Here's your screenshot!
-          <span class="text-sm md:text-base lg:text-lg block">
-            You can now view and share your drop post.
+          <span class="text-sm md:text-base lg:text-lg block font-light">
+            You can now view and share your drop post
           </span>
         </p>
 
         <div class={[
-          "py-8 min-w-[80%] mx-auto",
+          "pt-8 min-w-[80%] mx-auto",
           @screenshot.status != :completed &&
             "flex h-[80%] bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2] my-auto"
         ]}>
-          <div class={[
-            "mx-auto text-white rounded-lg flex flex-col items-center justify-center space-y-4",
-            @screenshot.status == :completed && "hidden"
-          ]}>
+          <div
+            :if={@screenshot.status != :completed}
+            class="mx-auto text-white rounded-lg flex flex-col items-center justify-center space-y-4"
+          >
             <.progress_loader />
             <p class="text-base md:text-lg lg:text-xl text-white mx-auto mt-4 mb-6">
               Generating Code Screenshots...
             </p>
           </div>
           <img
+            :if={@screenshot.status == :completed}
             src={@screenshot.url && "#{@screenshot.url}?t=#{System.os_time(:second)}"}
-            class={[
-              "max-w-[80%] rounded mx-auto",
-              (@screenshot.status != :completed || is_nil(@screenshot.url)) && "hidden"
-            ]}
+            class="max-w-[80%] rounded-xl mx-auto"
             alt="Generated code screenshot"
           />
 
-          <div class={[
-            "text-xs md:text-sm flex justify-center gap-x-4 mt-4",
-            @screenshot.status != :completed && "hidden"
-          ]}>
+          <div
+            :if={@screenshot.status == :completed}
+            class="text-xs md:text-sm flex justify-center gap-x-4 mt-4"
+          >
             <.link
               type="button"
               class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
               phx-click={hide_popup("generating-screenshots-popup")}
               navigate={~p"/drops/#{@screenshot.drop_short_id}/edit"}
             >
-              Edit Drop Post
+              Edit post
             </.link>
             <.link
               type="button"
               class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
               navigate={~p"/profile"}
             >
-              View Drop Posts
+              View posts
             </.link>
           </div>
         </div>

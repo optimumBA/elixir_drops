@@ -16,12 +16,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
-     |> assign(:screenshot, %{
-       drop_short_id: "",
-       progress_value: 0,
-       status: :skipped,
-       url: nil
-     })
      |> assign(:end_of_timeline?, false)
      |> assign(:page, 1)
      |> DropsListHelper.assign_drops()}
@@ -35,25 +29,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   @impl Phoenix.LiveView
   def handle_event("load-more", _params, socket) do
     DropsListHelper.load_more(socket)
-  end
-
-  @impl Phoenix.LiveView
-  def handle_event("save", %{"drop" => _} = params, socket) do
-    send_update(FormComponent, id: "drops-form", action: :save, params: params)
-    {:noreply, socket}
-  end
-
-  @impl Phoenix.LiveView
-  def handle_event("progress_animation_complete", params, socket) do
-    {:noreply,
-     socket
-     |> assign(:screenshot, %{
-       drop_short_id: params["drop_short_id"],
-       progress_value: 100,
-       status: :completed,
-       url: params["url"]
-     })
-     |> DropsListHelper.assign_drops()}
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
@@ -96,39 +71,41 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply, DropsListHelper.assign_drops(socket)}
   end
 
-  @impl Phoenix.LiveView
-  def handle_info({DropsBroadcast, [:drop, :screenshot_generation_started], drop}, socket) do
-    socket =
-      socket
-      |> push_event("screenshot_generation_started", %{})
-      |> assign(:screenshot, %{
-        drop_short_id: drop.short_id,
-        progress_value: 0,
-        status: :pending,
-        url: nil
-      })
-      |> DropsListHelper.assign_drops()
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_started], drop},
+        %{assigns: %{live_action: action}} = socket
+      )
+      when action in [:edit, :new] do
+    screenshot = %{
+      drop_short_id: drop.short_id,
+      progress_value: 0,
+      status: :pending,
+      url: nil
+    }
 
-    {:noreply, socket}
+    send_update(FormComponent, id: "drops-form", screenshot: screenshot)
+
+    {:noreply, push_event(socket, "screenshot_generation_started", %{})}
   end
 
   def handle_info(
         {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, progress, status,
          _metadata},
-        socket
-      ) do
+        %{assigns: %{live_action: action}} = socket
+      )
+      when action in [:edit, :new] do
     status_string = Atom.to_string(status)
 
-    socket =
-      socket
-      |> push_event("screenshot_progress_update", %{
-        drop_short_id: drop.short_id,
-        progress: progress,
-        status: status_string,
-        url: drop.screenshot.url
-      })
-      |> DropsListHelper.assign_drops()
+    {:noreply,
+     push_event(socket, "screenshot_progress_update", %{
+       drop_short_id: drop.short_id,
+       progress: progress,
+       status: status_string,
+       url: drop.screenshot.url
+     })}
+  end
 
+  def handle_info(_message, socket) do
     {:noreply, socket}
   end
 end

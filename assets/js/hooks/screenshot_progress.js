@@ -69,10 +69,8 @@ ScreenshotProgressHooks.ScreenshotProgress = {
           setProgress(100)
 
           setTimeout(() => {
-            this.pushEvent('progress_animation_complete', {
-              progress,
+            this.pushEventTo(this.el, 'progress_animation_complete', {
               drop_short_id,
-              status,
               url,
             })
           }, 1000)

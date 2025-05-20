@@ -1,22 +1,16 @@
-<div
-  id={@id}
-  phx-hook="ScreenshotProgress"
-  class="drop-form min-h-[calc(100vh-62px)] bg-[#eae8fd]"
->
+<div class="drop-form min-h-[calc(100vh-62px)] bg-[#eae8fd]" id={@id}>
   <div
+    :if={@screenshot.status != :skipped}
     id="drops-editor-overlay"
-    class={[
-      "drops-editor-overlay absolute inset-0 bg-black opacity-30 z-[9000]",
-      @screenshot.status == :skipped && "hidden"
-    ]}
+    class="drops-editor-overlay absolute inset-0 bg-black opacity-30 z-[9000]"
   >
   </div>
   <.form
     :let={f}
     for={@form}
-    phx-target={@myself}
     phx-change="validate"
     phx-submit="save"
+    phx-target={@myself}
     id="drops-editor-form"
     class="drops-editor h-full w-full pt-12"
   >

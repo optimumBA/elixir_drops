@@ -13,15 +13,39 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   alias ElixirDropsWeb.Icons
 
   @impl Phoenix.LiveComponent
+
+  def update(%{screenshot: _screenshot} = assigns, socket) do
+    {:ok, assign(socket, assigns)}
+  end
+
   def update(assigns, socket) do
-    socket = assign(socket, assigns)
+    changeset = Drops.change_drop(assigns.drop)
 
-    changeset = Drops.change_drop(socket.assigns.drop)
-
-    {:ok, assign_form(socket, changeset)}
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign_new(:screenshot, fn ->
+       %{
+         drop_short_id: "",
+         progress_value: 0,
+         status: :skipped,
+         url: nil
+       }
+     end)
+     |> assign_form(changeset)}
   end
 
   @impl Phoenix.LiveComponent
+  def handle_event("progress_animation_complete", params, socket) do
+    {:noreply,
+     assign(socket, :screenshot, %{
+       drop_short_id: params["drop_short_id"],
+       progress_value: 100,
+       status: :completed,
+       url: params["url"]
+     })}
+  end
+
   def handle_event("validate", %{"drop" => drop_params}, socket) do
     changeset =
       socket.assigns.drop
@@ -43,7 +67,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
           socket.assigns.live_action
         )
 
-        changeset = Drops.change_drop(socket.assigns.drop)
+        changeset = Drops.change_drop(drop)
         {:noreply, assign_form(socket, changeset)}
 
       {:ok, _drop} ->
