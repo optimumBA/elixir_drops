@@ -32,7 +32,7 @@ ScreenshotProgressHooks.ScreenshotProgress = {
       setProgress(0)
       animationStarted = true
 
-      const totalTime = 5000
+      const totalTime = 30000
       const startTime = Date.now()
 
       animationInterval = setInterval(() => {
