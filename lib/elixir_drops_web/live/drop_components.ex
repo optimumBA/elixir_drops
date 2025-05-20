@@ -348,9 +348,7 @@ defmodule ElixirDropsWeb.DropComponents do
     <div
       id={@id}
       class={[
-        "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
-        "top-[48%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
-        "w-[90%] md:w-[80%] lg:max-w-[45em]",
+        "bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid top-[48%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[90%] md:w-[80%] lg:max-w-[45em]",
         @screenshot.status == :skipped && "hidden"
       ]}
       phx-click-away={hide_popup(@id)}
@@ -364,7 +362,7 @@ defmodule ElixirDropsWeb.DropComponents do
           "w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2",
           @screenshot.status == :completed && "hidden"
         ]}>
-          Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background
+          Your Drop Post is almost ready! You can close this modal—your post will continue processing in the background.
         </p>
         <p class={[
           "text-gray-700 font-normal text-lg md:text-xl lg:text-2xl mx-auto",
