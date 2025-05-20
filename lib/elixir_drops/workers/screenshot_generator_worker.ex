@@ -95,6 +95,13 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
                screenshot: %{status: :completed, url: image_url}
              }) do
           {:ok, updated_drop} ->
+            broadcast_drop_screenshot_completion(updated_drop, 95, :pending, %{
+              action: args["action"]
+            })
+
+            # Hack to ensure the image is ready to be served from Tigris
+            :timer.sleep(1500)
+
             broadcast_drop_screenshot_completion(updated_drop, 100, :completed, %{
               action: args["action"]
             })

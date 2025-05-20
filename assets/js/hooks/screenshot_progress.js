@@ -38,7 +38,7 @@ ScreenshotProgressHooks.ScreenshotProgress = {
       animationInterval = setInterval(() => {
         const elapsedTime = Date.now() - startTime
 
-        let progressPercent = Math.min(60, (elapsedTime / totalTime) * 60)
+        let progressPercent = Math.min(60, (elapsedTime / totalTime) * 100)
 
         setProgress(progressPercent)
 
