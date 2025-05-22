@@ -408,7 +408,7 @@ defmodule ElixirDropsWeb.DropComponents do
           </div>
           <img
             :if={@screenshot.status == :completed}
-            src={@screenshot.url}
+            src={"#{@screenshot.url}?t=#{System.os_time(:millisecond)}"}
             class="max-w-[80%] rounded-xl mx-auto"
             alt="Generated code screenshot"
           />
