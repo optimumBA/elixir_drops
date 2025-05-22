@@ -331,3 +331,30 @@ blockquote *:last-child {
   display: grid;
   width: 100%;
 }
+
+.progress-background {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 8;
+}
+
+.progress-bar {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.7s ease-out;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+
+.percentage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  transition: all 0.7s ease-out;
+}

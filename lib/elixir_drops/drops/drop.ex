@@ -29,15 +29,8 @@ defmodule ElixirDrops.Drops.Drop do
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
     |> cast(attrs, [:body, :short_id, :title, :user_id])
+    |> cast_embed(:screenshot)
     |> validate_required([:body, :short_id, :title])
     |> unique_constraint(:short_id)
-  end
-
-  @spec screenshot_changeset(t(), attrs()) :: Ecto.Changeset.t()
-  def screenshot_changeset(%__MODULE__{} = drop, attrs \\ %{}) do
-    drop
-    |> cast(attrs, [])
-    |> cast_embed(:screenshot)
-    |> validate_required([:screenshot])
   end
 end

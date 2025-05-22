@@ -3,12 +3,15 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
+    if connected?(socket), do: Drops.subscribe()
+
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
@@ -61,5 +64,63 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         |> assign(:drop, drop)
         |> assign(:page_title, "Edit Drop")
     end
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info({DropsBroadcast, [:drop, :created], _drop}, socket) do
+    {:noreply, DropsListHelper.assign_drops(socket)}
+  end
+
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_started], drop},
+        %{assigns: %{live_action: action}} = socket
+      )
+      when action in [:edit, :new] do
+    screenshot = %{
+      drop_short_id: drop.short_id,
+      progress_value: 0,
+      status: :pending,
+      url: nil
+    }
+
+    send_update(FormComponent, id: "drops-form", screenshot: screenshot)
+
+    {:noreply, push_event(socket, "screenshot_generation_started", %{})}
+  end
+
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, progress, status,
+         _metadata},
+        %{assigns: %{live_action: action}} = socket
+      )
+      when action in [:edit, :new] do
+    screenshot = %{
+      drop_short_id: drop.short_id,
+      progress_value: progress,
+      status: status,
+      url: "#{drop.screenshot.internal_url}?t=#{System.os_time(:millisecond)}"
+    }
+
+    send_update(FormComponent,
+      id: "drops-form",
+      screenshot: screenshot
+    )
+
+    {:noreply, socket}
+  end
+
+  def handle_info({DropsBroadcast, [:drop, :screenshot_generation_started], _drop}, socket) do
+    {:noreply, DropsListHelper.assign_drops(socket)}
+  end
+
+  def handle_info(
+        {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, _status},
+        socket
+      ) do
+    {:noreply, DropsListHelper.assign_drops(socket)}
+  end
+
+  def handle_info(_message, socket) do
+    {:noreply, socket}
   end
 end
