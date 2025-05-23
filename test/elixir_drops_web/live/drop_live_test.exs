@@ -336,7 +336,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
     setup [:create_drops_setup]
 
     test "user can view a drop", %{conn: conn, user: user} do
-      drop = drop_fixture(%Drop{}, user, %{title: "Drop title", body: "Drop body text..."})
+      drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Drop title",
+          body: "Drop body text...",
+          screenshot: %{
+            meta: %{status: :completed, url: "https://example.com/screenshot.png"},
+            internal: %{status: :completed, url: "https://example.com/screenshot.png"}
+          }
+        })
 
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
 
@@ -370,7 +378,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
           }
         )
 
-      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, updated_drop} =
+        Drops.update_drop(drop, user, %{
+          screenshot: %{
+            meta: %{status: :completed, url: "https://example.com/screenshot.png"},
+            internal: %{status: :completed, url: "https://example.com/screenshot.png"}
+          }
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{updated_drop.short_id}")
 
       refute html =~ ~r|<div>"Some malicious code"</div>|
       assert html =~ "Drop with script"
@@ -412,8 +428,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       Drops.update_drop(drop, user, %{
         screenshot: %{
-          status: :completed,
-          url: "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+          internal_url: "http://image.com/drop-internal-image-latest-#{drop.id}.png",
+          meta_url: "http://image.com/drop-meta-image-latest-#{drop.id}.png",
+          status: :completed
         }
       })
 
@@ -437,7 +454,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       drop = drop_fixture(%Drop{}, user, drop_attributes)
 
-      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, updated_drop} =
+        Drops.update_drop(drop, user, %{
+          screenshot: %{
+            meta: %{status: :completed, url: "https://example.com/screenshot.png"},
+            internal: %{status: :completed, url: "https://example.com/screenshot.png"}
+          }
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{updated_drop.short_id}")
 
       assert html =~
                "<meta property=\"description\" content=\"In this drop we discussed stuff...\"/>"

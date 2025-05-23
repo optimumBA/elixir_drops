@@ -1,16 +1,13 @@
-<section
-  class="drops-container relative h-full w-full"
-  id="drops-container"
-  phx-hook="DropsContainer"
->
+<section class="relative h-full w-full" id="drops-container" phx-hook="DropsContainer">
   <DropComponents.navbar current_user={@current_user} live_action={@live_action} />
 
-  <section class="content-grid text-[#252525] relative">
+  <section class="text-[#252525] relative">
     <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
 
     <DropsListHelper.drops_list
       current_user={@current_user}
       drops={@streams.drops}
+      drops_empty?={@drops_empty?}
       id="drops"
       page={@page}
       show_user_drops?={false}

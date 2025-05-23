@@ -27,7 +27,11 @@ defmodule ElixirDrops.DropsFixtures do
     drop_attrs =
       Enum.into(attrs, %{
         body: "Drop body text ```code block```...",
-        screenshot: %{status: :completed, url: nil},
+        screenshot: %{
+          internal_url: nil,
+          meta_url: nil,
+          status: :completed
+        },
         title: drop_title
       })
 
@@ -58,7 +62,7 @@ defmodule ElixirDrops.DropsFixtures do
       %Drop{}
       |> drop_fixture(user, %{
         body: "Body for drop #{drop}",
-        screenshot: %{status: :completed, url: nil},
+        screenshot: %{internal_url: nil, meta_url: nil, status: :completed},
         title: "Drop title #{drop}"
       })
       |> update_drop_inserted_at(offset_time)

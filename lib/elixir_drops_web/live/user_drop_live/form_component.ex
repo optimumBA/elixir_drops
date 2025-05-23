@@ -116,26 +116,30 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     case CodeBlockHelper.compare_code_blocks(drop.body, drop_params["body"]) do
       :ok ->
         %{
-          status: :pending,
-          url: nil
+          internal_url: nil,
+          meta_url: nil,
+          status: :pending
         }
 
       {:cancel, "No code block found"} ->
         %{
-          status: :skipped,
-          url: nil
+          internal_url: nil,
+          meta_url: nil,
+          status: :skipped
         }
 
       {:cancel, "Code block unchanged"} ->
         %{
-          status: :completed,
-          url: drop.screenshot.url
+          internal_url: drop.screenshot.internal_url,
+          meta_url: drop.screenshot.meta_url,
+          status: :completed
         }
 
       {:cancel, _other_reason} ->
         %{
-          status: :skipped,
-          url: nil
+          internal_url: nil,
+          meta_url: nil,
+          status: :skipped
         }
     end
   end
@@ -143,13 +147,15 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   defp get_screenshot(:new, drop_params, _old_drop) do
     if CodeBlockHelper.has_code_block?(drop_params["body"]) do
       %{
-        status: :pending,
-        url: nil
+        internal_url: nil,
+        meta_url: nil,
+        status: :pending
       }
     else
       %{
-        status: :skipped,
-        url: nil
+        internal_url: nil,
+        meta_url: nil,
+        status: :skipped
       }
     end
   end

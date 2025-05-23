@@ -19,8 +19,8 @@ module.exports = {
         purple_seconday: '#eae8fd',
       },
       fontFamily: {
-        roboto: ['Roboto', 'sans-serif'],
         jetBrains: ['JetBrains Mono', 'monospace'],
+        roboto: ['Roboto', 'sans-serif'],
       },
     },
   },

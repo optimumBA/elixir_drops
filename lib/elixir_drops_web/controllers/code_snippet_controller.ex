@@ -9,13 +9,17 @@ defmodule ElixirDropsWeb.CodeSnippetController do
   @type params :: map()
 
   @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
-  @threshold 10
+  @thresholds %{
+    "internal" => 15,
+    "meta" => 10
+  }
 
   @spec index(conn(), params()) :: conn()
-  def index(conn, %{"id" => id}) do
+  def index(conn, %{"id" => id} = params) do
     case authenticate(conn) do
       :ok ->
-        handle_drop_retrieval(conn, id)
+        type = Map.get(params, "type", "internal")
+        handle_drop_retrieval(conn, id, type)
 
       :error ->
         request_auth(conn)
@@ -34,17 +38,17 @@ defmodule ElixirDropsWeb.CodeSnippetController do
     end
   end
 
-  defp handle_drop_retrieval(conn, id) do
+  defp handle_drop_retrieval(conn, id, type) do
     with %Drop{body: body} <- Drops.get_drop(%{drop_id: id}),
          [code_block] <- Regex.run(@code_block_pattern, body, capture: :first) do
       lines = CodeSnippetHelper.count_lines(code_block)
-
-      small_window = lines < @threshold
+      small_window = lines < @thresholds[type]
 
       render(conn, :index,
         code_block: code_block,
         layout: false,
-        small_window: small_window
+        small_window: small_window,
+        type: type
       )
     else
       _error ->

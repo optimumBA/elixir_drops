@@ -13,37 +13,50 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
-    with {:ok, drop} <- get_drop(args["drop_id"]) do
-      drop_screenshot(drop, args)
+    case Drops.get_drop(%{drop_id: args["drop_id"]}) do
+      %Drops.Drop{} = drop ->
+        drop_screenshots(drop, args)
+
+      nil ->
+        {:error, "Drop not found"}
     end
   end
 
-  defp drop_screenshot(drop, args) do
+  defp drop_screenshots(drop, args) do
     FLAME.call(ScreenshotGenerator, fn ->
-      broadcast_drop_screenshot_completion(drop, 60, :pending, %{
-        action: args["action"]
-      })
+      broadcast_drop_screenshot_completion(drop, 50, :pending, %{action: args["action"]})
 
-      with {:ok, screenshot} <- generate_screenshot(drop, args["action"]),
-           {:ok, image} <- File.read(screenshot) do
-        upload_screenshot(image, drop, args)
+      with {:ok, screenshots} <- generate_screenshots(drop, args["action"]),
+           {:ok, meta_image} <- File.read(screenshots.meta),
+           {:ok, internal_image} <- File.read(screenshots.internal),
+           :ok <-
+             upload_screenshots(
+               %{meta: meta_image, internal: internal_image},
+               drop,
+               args["action"]
+             ) do
+        :ok
+      else
+        {:error, error} ->
+          Drops.update_drop(drop, drop.user, %{
+            screenshot: %{status: :failed, meta_url: nil, internal_url: nil}
+          })
+
+          {:error, error}
       end
     end)
   end
 
-  defp get_drop(id) do
-    case Drops.get_drop(%{drop_id: id}) do
-      nil ->
-        {:error, "Drop not found"}
+  defp generate_screenshots(drop, action) do
+    height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
 
-      drop ->
-        {:ok, drop}
+    with {:ok, meta_screenshot} <- generate_screenshot(drop, :meta, action, height),
+         {:ok, internal_screenshot} <- generate_screenshot(drop, :internal, action, height) do
+      {:ok, %{meta: meta_screenshot, internal: internal_screenshot}}
     end
   end
 
-  defp generate_screenshot(drop, action) do
-    height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
-
+  defp generate_screenshot(drop, type, action, height) do
     {:ok, session} =
       Wallaby.start_session(
         capabilities: %{
@@ -60,9 +73,11 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
         }
       )
 
-    broadcast_drop_screenshot_completion(drop, 80, :pending, %{action: action})
+    broadcast_drop_screenshot_completion(drop, if(type == :meta, do: 60, else: 70), :pending, %{
+      action: action
+    })
 
-    url = build_url_with_auth(drop)
+    url = build_url_with_auth(drop, type)
 
     %Wallaby.Session{screenshots: [screenshot]} =
       session
@@ -71,50 +86,69 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     Wallaby.end_session(session)
 
-    broadcast_drop_screenshot_completion(drop, 90, :pending, %{action: action})
+    broadcast_drop_screenshot_completion(drop, if(type == :meta, do: 65, else: 75), :pending, %{
+      action: action
+    })
 
     {:ok, screenshot}
   end
 
-  defp build_url_with_auth(drop) do
+  defp build_url_with_auth(drop, type) do
     [username: username, password: password] = Application.get_env(:elixir_drops, :wallaby_auth)
 
-    url = url(~p"/d/#{drop.id}/code_snippet")
+    url =
+      case type do
+        :meta -> url(~p"/d/#{drop.id}/code_snippet?type=meta")
+        :internal -> url(~p"/d/#{drop.id}/code_snippet")
+      end
 
     [scheme, rest] = String.split(url, "//", parts: 2)
 
     "#{scheme}//#{username}:#{password}@#{rest}"
   end
 
-  defp upload_screenshot(screenshot, drop, args) do
-    latest_image_name = "drop-meta-image-latest-#{drop.id}.png"
+  defp upload_screenshots(screenshots, drop, action) do
+    latest_meta_image_name = "drop-meta-image-latest-#{drop.id}.png"
+    latest_internal_image_name = "drop-internal-image-latest-#{drop.id}.png"
 
-    case Client.upload_image(screenshot, latest_image_name, "image/png") do
-      {:ok, image_url} ->
-        case Drops.update_drop(drop, drop.user, %{
-               screenshot: %{status: :completed, url: image_url}
-             }) do
-          {:ok, updated_drop} ->
-            broadcast_drop_screenshot_completion(updated_drop, 95, :pending, %{
-              action: args["action"]
-            })
+    broadcast_drop_screenshot_completion(drop, 80, :pending, %{action: action})
 
-            # Hack to ensure the image is ready to be served from Tigris
-            :timer.sleep(1500)
+    {meta_result, meta_url} =
+      Client.upload_image(screenshots.meta, latest_meta_image_name, "image/png")
 
-            broadcast_drop_screenshot_completion(updated_drop, 100, :completed, %{
-              action: args["action"]
-            })
+    broadcast_drop_screenshot_completion(drop, 85, :pending, %{action: action})
 
-            :ok
+    {internal_result, internal_url} =
+      Client.upload_image(screenshots.internal, latest_internal_image_name, "image/png")
 
-          error ->
-            error
-        end
+    broadcast_drop_screenshot_completion(drop, 90, :pending, %{action: action})
 
-      error ->
-        Drops.update_drop(drop, drop.user, %{screenshot: %{status: :failed}})
-        error
+    case {meta_result, internal_result} do
+      {:ok, :ok} ->
+        {:ok, updated_drop} =
+          Drops.update_drop(drop, drop.user, %{
+            screenshot: %{
+              status: :completed,
+              meta_url: meta_url,
+              internal_url: internal_url
+            }
+          })
+
+        # Hack to ensure the image is ready to be served from Tigris
+        :timer.sleep(1500)
+
+        broadcast_drop_screenshot_completion(updated_drop, 100, :completed, %{action: action})
+
+        :ok
+
+      {:error, :ok} ->
+        {:error, "Failed to upload meta screenshot"}
+
+      {:ok, :error} ->
+        {:error, "Failed to upload internal screenshot"}
+
+      {:error, :error} ->
+        {:error, "Failed to upload both screenshots"}
     end
   end
 

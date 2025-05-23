@@ -48,6 +48,27 @@ defmodule ElixirDropsWeb.CodeSnippetControllerTest do
         |> get(~p"/d/#{drop.id}/code_snippet")
         |> response(200)
 
+      assert response =~ ~r/<section class="drop-image internal[^>]+/
+      assert response =~ ~r/<span[^>]+>module[^>]+/
+      assert response =~ ~r/<span[^>]+>compile[^>]+/
+      assert response =~ ~r/<span[^>]+>add[^>]+/
+      refute response =~ ~r/<span[^>]+>defmodule[^>]+/
+      refute response =~ ~r/<span[^>]+>hello[^>]+/
+      refute response =~ "The end"
+    end
+
+    test "renders first code block of a drop for meta", %{conn: conn, drop: drop} do
+      auth = Application.get_env(:elixir_drops, :wallaby_auth)
+
+      header_content = "Basic " <> Base.encode64("#{auth[:username]}:#{auth[:password]}")
+
+      response =
+        conn
+        |> put_req_header("authorization", header_content)
+        |> get(~p"/d/#{drop.id}/code_snippet?type=meta")
+        |> response(200)
+
+      assert response =~ ~r/<section class="drop-image meta[^>]+/
       assert response =~ ~r/<span[^>]+>module[^>]+/
       assert response =~ ~r/<span[^>]+>compile[^>]+/
       assert response =~ ~r/<span[^>]+>add[^>]+/

@@ -44,12 +44,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
     assign(socket, :seo_attributes, attributes)
   end
 
-  defp get_image_url(drop) do
-    case drop.screenshot do
-      %{status: :completed, url: url} when is_binary(url) -> url
-      _screenshot -> nil
-    end
-  end
+  defp get_image_url(%{screenshot: %{status: :completed, meta_url: url}}) when is_binary(url),
+    do: url
+
+  defp get_image_url(_drop), do: nil
 
   defp seo_description(title) do
     description =

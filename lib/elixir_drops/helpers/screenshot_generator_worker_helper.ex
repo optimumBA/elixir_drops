@@ -14,10 +14,9 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelper do
       nil ->
         0
 
-      code_block ->
+      [code_block] ->
         lines =
           code_block
-          |> Enum.at(0)
           |> String.split("\n")
           |> length()
 

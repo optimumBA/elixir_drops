@@ -22,8 +22,10 @@ defmodule ElixirDropsWeb.DropsListHelper do
         id={@id}
         phx-update="stream"
         phx-page-loading
+        phx-hook={!@drops_empty? && "Masonry"}
         class={[
-          "grid gap-y-2 md:gap-y-5 py-8"
+          @drops_empty? && "grid gap-y-2 md:gap-y-5 py-8",
+          !@drops_empty? && "px-6 md:px-8 lg:px-12 py-8"
         ]}
       >
         <div
@@ -76,6 +78,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
     socket
     |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: 10)
+    |> assign(:drops_empty?, Enum.empty?(drops))
     |> assign(:last_drop, last_drop)
   end
 

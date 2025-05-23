@@ -98,7 +98,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       drop_short_id: drop.short_id,
       progress_value: progress,
       status: status,
-      url: "#{drop.screenshot.url}?t=#{System.os_time(:millisecond)}"
+      url: drop.screenshot.internal_url
     }
 
     send_update(FormComponent,

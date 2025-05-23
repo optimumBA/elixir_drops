@@ -13,7 +13,7 @@ defmodule ElixirDropsWeb.DropComponents do
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
-    <header class="header content-grid py-2 w-full relative z-30">
+    <header class="header px-10 py-2 w-full relative z-30">
       <nav class="breakout flex items-center justify-between nav-primary">
         <div>
           <.link href={~p"/"}>
@@ -67,9 +67,30 @@ defmodule ElixirDropsWeb.DropComponents do
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
+    assigns = assign(assigns, :text, get_text(assigns.drop.body))
+
     ~H"""
-    <div class="drop-card bg-[#f6f6f6] px-6 md:px-4 py-6 md:py-8 rounded-lg shadow-md shadow-[#bebbc2] relative">
-      <div>
+    <div class="grid space-y-5 bg-white px-6 md:px-6 py-4 rounded-[16px] relative border border-[#CBCBCB] hover:bg-[#CBCBCB]">
+      <div :if={@drop.screenshot} class="w-full">
+        <div :if={@drop.screenshot.internal_url} class="bg-[#252525] h-[32px] rounded-t-2xl"></div>
+        <img
+          :if={@drop.screenshot && @drop.screenshot.internal_url}
+          src={@drop.screenshot.internal_url}
+          class="object-cover rounded-b-2xl"
+          id={"drop-image:#{@drop.id}"}
+        />
+      </div>
+
+      <div class="grid space-y-2 text-[#252525]">
+        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
+        <div class="text-sm leading-relaxed break-words overflow-hidden">
+          <%= if String.length(@text) > 100 do %>
+            <%= String.slice(@text, 0, 100) <> "..." %>
+          <% else %>
+            <%= @text %>
+          <% end %>
+        </div>
+
         <div class="flex justify-between">
           <div class="flex gap-1 md:gap-2 items-center">
             <img
@@ -97,8 +118,6 @@ defmodule ElixirDropsWeb.DropComponents do
             <.drop_card_action_default id={@drop.id} short_id={@drop.short_id} />
           <% end %>
         </div>
-
-        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
       </div>
 
       <.drop_card_menu author?={@drop.user_id == @user_id} id={@drop.id} short_id={@drop.short_id} />
@@ -168,19 +187,21 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       :if={@condition}
-      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4c3ddb] via-[#6159be] to-[#818494] py-4 full-width welcome-message"
+      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-4 pb-6 full-width welcome-message px-12"
       id="welcome-message"
       phx-hook="WelcomeMessage"
     >
-      <button class="ml-auto breakout" phx-click={hide_welcome_message()}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5" />
-      </button>
+      <div class="w-full flex justify-end items-center">
+        <button class="ml-auto breakout" phx-click={hide_welcome_message()}>
+          <.icon name="hero-x-mark-solid" class="h-8 w-8 border" />
+        </button>
+      </div>
 
-      <h2 class="breakout font-[500] text-[1.15rem] tracking-wide mb-3 md:ml-3">
+      <h2 class="breakout font-[500] text-[20px] tracking-wide mb-3 md:ml-3">
         Welcome to ElixirDrops!
       </h2>
 
-      <p class="breakout md:ml-3">
+      <p class="breakout md:ml-3 text-[16px] tracking-wide leading-[24px]">
         Hello there and welcome to the ultimate hub for the Elixir community!
         Whether you're a seasoned developer or just starting your journey, ElixirDrops is the perfect place to discover, share, and discuss the best tips and tricks for mastering Elixir.
         Sign in to explore, learn and become a contributor on this platform.
@@ -195,7 +216,7 @@ defmodule ElixirDropsWeb.DropComponents do
   def user_drops_header(assigns) do
     ~H"""
     <div class="full-width" phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}>
-      <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 full-width">
+      <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 md:pl-6">
         <div class="flex flex-col md:flex-row items-center gap-x-3 breakout md:pl-6">
           <div>
             <img
@@ -210,7 +231,7 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
       </div>
 
-      <nav class="full-width bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
+      <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary grid justify-center md:justify-start">
         <ul class="flex" id="secondary-nav-links">
           <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center">
             <.link href={~p"/profile"}>
@@ -389,7 +410,7 @@ defmodule ElixirDropsWeb.DropComponents do
           </div>
           <img
             :if={@screenshot.status == :completed}
-            src={@screenshot.url}
+            src={"#{@screenshot.url}?t=#{System.os_time(:millisecond)}"}
             class="max-w-[80%] rounded-xl mx-auto"
             alt="Generated code screenshot"
           />
@@ -420,7 +441,6 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  @spec copy_prompt(assigns()) :: rendered()
   defp copy_prompt(assigns) do
     ~H"""
     <template id="copy-prompt-template">
@@ -673,5 +693,13 @@ defmodule ElixirDropsWeb.DropComponents do
       </path>
     </svg>
     """
+  end
+
+  defp get_text(markdown) do
+    remove_code_blocks(markdown)
+  end
+
+  defp remove_code_blocks(markdown) do
+    Regex.replace(~r/```[^`]*```/s, markdown, "")
   end
 end
