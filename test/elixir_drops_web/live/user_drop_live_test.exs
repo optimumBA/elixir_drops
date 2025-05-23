@@ -264,6 +264,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
+      Process.sleep(50)
+
       html = render(live)
 
       assert html =~ "Generating Code Screenshots..."
