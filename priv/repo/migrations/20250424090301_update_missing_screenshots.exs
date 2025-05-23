@@ -1,8 +1,8 @@
-defmodule ElixirDrops.Repo.Migrations.UpdateDropNilScreenshotColumns do
+defmodule ElixirDrops.Repo.Migrations.UpdateMissingScreenshots do
   use Ecto.Migration
 
   def up do
-    execute ~S"""
+    execute """
     UPDATE drops SET screenshot = '{"status": "skipped", "url": null}' WHERE screenshot IS NULL
     """
   end

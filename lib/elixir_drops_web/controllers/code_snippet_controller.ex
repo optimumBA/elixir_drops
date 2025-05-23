@@ -15,7 +15,7 @@ defmodule ElixirDropsWeb.CodeSnippetController do
   def index(conn, %{"id" => id} = params) do
     case authenticate(conn) do
       :ok ->
-        type = Map.get(params, "type")
+        type = Map.get(params, "type", "internal")
         handle_drop_retrieval(conn, id, type)
 
       :error ->
@@ -44,9 +44,9 @@ defmodule ElixirDropsWeb.CodeSnippetController do
 
       render(conn, :index,
         code_block: code_block,
-        type: type,
         layout: false,
-        small_window: small_window
+        small_window: small_window,
+        type: type
       )
     else
       _error ->

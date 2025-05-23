@@ -23,10 +23,10 @@ defmodule ElixirDropsWeb.DropsListHelper do
         phx-update="stream"
         phx-page-loading
         class={[
-          "masonry px-4 md:px-0 py-8 md:px-12"
+          @drops_empty? && "grid gap-y-2 md:gap-y-5 py-8",
+          !@drops_empty? && "masonry px-4 md:px-0 py-8 md:px-12"
         ]}
       >
-        <%!-- TODO: Masonry class breaks empty state, need to fix this
         <div
           :if={@show_user_drops?}
           id="drops-empty"
@@ -42,7 +42,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
               <span> Create Post</span>
             </.link>
           </div>
-        </div> --%>
+        </div>
         <div
           :for={{dom_id, drop} <- @drops}
           id={dom_id}
@@ -77,6 +77,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
     socket
     |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: 10)
+    |> assign(:drops_empty?, Enum.empty?(drops))
     |> assign(:last_drop, last_drop)
   end
 

@@ -67,6 +67,8 @@ defmodule ElixirDropsWeb.DropComponents do
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
+    assigns = assign(assigns, :text, get_text(assigns.drop.body))
+
     ~H"""
     <div class="grid space-y-5 bg-white px-6 md:px-6 py-4 rounded-[16px] relative border border-[#CBCBCB] hover:bg-[#CBCBCB]">
       <div :if={@drop.screenshot} class="w-full">
@@ -82,10 +84,10 @@ defmodule ElixirDropsWeb.DropComponents do
       <div class="grid space-y-5 text-[#252525]">
         <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
         <div>
-          <%= if String.length(get_text(@drop.body)) > 100 do %>
-            <%= String.slice(get_text(@drop.body), 0, 100) <> "..." %>
+          <%= if String.length(@text) > 100 do %>
+            <%= String.slice(@text, 0, 100) <> "..." %>
           <% else %>
-            <%= get_text(@drop.body) %>
+            <%= @text %>
           <% end %>
         </div>
 
@@ -439,7 +441,6 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  @spec copy_prompt(assigns()) :: rendered()
   defp copy_prompt(assigns) do
     ~H"""
     <template id="copy-prompt-template">
@@ -645,16 +646,6 @@ defmodule ElixirDropsWeb.DropComponents do
     |> JS.add_class("hidden", to: ".drops-editor-overlay")
   end
 
-  @spec get_text(String.t()) :: String.t()
-  def get_text(markdown) do
-    remove_code_blocks(markdown)
-  end
-
-  @spec remove_code_blocks(String.t()) :: String.t()
-  defp remove_code_blocks(markdown) do
-    Regex.replace(~r/```[^`]*```/s, markdown, "")
-  end
-
   @spec to_html(binary()) :: Phoenix.HTML.safe()
   def to_html(markdown) do
     markdown
@@ -702,5 +693,13 @@ defmodule ElixirDropsWeb.DropComponents do
       </path>
     </svg>
     """
+  end
+
+  defp get_text(markdown) do
+    remove_code_blocks(markdown)
+  end
+
+  defp remove_code_blocks(markdown) do
+    Regex.replace(~r/```[^`]*```/s, markdown, "")
   end
 end

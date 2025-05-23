@@ -207,6 +207,10 @@ blockquote *:last-child {
   @apply h-5 w-5 mt-2;
 }
 
+.user-drops .drops-empty:not(:only-child) {
+  @apply hidden;
+}
+
 /* user drops list */
 .user-drops:has(.drops-empty:only-child) > .user-drops-mobile-btn {
   @apply hidden;
