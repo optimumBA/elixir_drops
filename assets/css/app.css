@@ -323,29 +323,15 @@ blockquote *:last-child {
   @apply text-[1.5rem];
 }
 
-.masonry {
-  --gutter: 1.5rem;
-  column-gap: var(--gutter);
-  column-count: 1;
-}
-
-@media (min-width: 768px) {
-  .masonry {
-    column-count: 2;
-  }
-}
-
-@media (min-width: 1024px) {
-  .masonry {
-    column-count: 3;
-  }
-}
-
-.masonry > div {
-  break-inside: avoid;
-  margin-bottom: var(--gutter);
-  display: grid;
+/* JavaScript Masonry Layout Support */
+.masonry-container {
+  position: relative;
   width: 100%;
+}
+
+.masonry-item {
+  transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .progress-background {

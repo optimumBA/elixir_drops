@@ -22,9 +22,10 @@ defmodule ElixirDropsWeb.DropsListHelper do
         id={@id}
         phx-update="stream"
         phx-page-loading
+        phx-hook={!@drops_empty? && "Masonry"}
         class={[
           @drops_empty? && "grid gap-y-2 md:gap-y-5 py-8",
-          !@drops_empty? && "masonry px-4 md:px-0 py-8 md:px-12"
+          !@drops_empty? && "px-6 md:px-8 lg:px-12 py-8"
         ]}
       >
         <div

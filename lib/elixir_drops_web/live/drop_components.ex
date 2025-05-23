@@ -81,9 +81,9 @@ defmodule ElixirDropsWeb.DropComponents do
         />
       </div>
 
-      <div class="grid space-y-5 text-[#252525]">
+      <div class="grid space-y-2 text-[#252525]">
         <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
-        <div>
+        <div class="text-sm leading-relaxed break-words overflow-hidden">
           <%= if String.length(@text) > 100 do %>
             <%= String.slice(@text, 0, 100) <> "..." %>
           <% else %>
