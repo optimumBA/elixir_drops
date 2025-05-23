@@ -3,7 +3,7 @@
 @import 'tailwindcss/utilities';
 
 /* This file is for your main application CSS */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@1,400&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
 /* Reusable classes for composition */
 .content-grid {
@@ -293,11 +293,8 @@ blockquote *:last-child {
   @apply rounded-b-2xl min-w-[65%] max-w-[70%] overflow-hidden;
 }
 
-.seo-image pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  @apply font-jetBrains px-8 py-4 overflow-hidden max-h-[85vh];
+.drop-image pre {
+  @apply px-8 py-4 overflow-hidden;
 }
 
 .drop-image pre {
@@ -307,8 +304,23 @@ blockquote *:last-child {
 }
 
 .drop-image code {
+  @apply font-jetBrains;
+}
+
+.drop-image.internal code {
+  @apply text-[1.5rem];
+}
+
+.drop-image.internal.small-window code {
   @apply text-[2rem];
-  font-family: var(--font-lotion) !important;
+}
+
+.drop-image.meta code {
+  @apply text-base;
+}
+
+.drop-image.meta.small-window code {
+  @apply text-[1.5rem];
 }
 
 .masonry {

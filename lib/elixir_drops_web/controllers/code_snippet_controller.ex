@@ -9,7 +9,10 @@ defmodule ElixirDropsWeb.CodeSnippetController do
   @type params :: map()
 
   @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
-  @threshold 10
+  @thresholds %{
+    "internal" => 15,
+    "meta" => 10
+  }
 
   @spec index(conn(), params()) :: conn()
   def index(conn, %{"id" => id} = params) do
@@ -39,8 +42,7 @@ defmodule ElixirDropsWeb.CodeSnippetController do
     with %Drop{body: body} <- Drops.get_drop(%{drop_id: id}),
          [code_block] <- Regex.run(@code_block_pattern, body, capture: :first) do
       lines = CodeSnippetHelper.count_lines(code_block)
-
-      small_window = lines < @threshold
+      small_window = lines < @thresholds[type]
 
       render(conn, :index,
         code_block: code_block,

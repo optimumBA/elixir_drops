@@ -48,38 +48,27 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp generate_screenshots(drop, action) do
-    with {:ok, meta_screenshot} <- generate_screenshot(drop, :meta, action),
-         {:ok, internal_screenshot} <- generate_screenshot(drop, :internal, action) do
+    height = ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
+
+    with {:ok, meta_screenshot} <- generate_screenshot(drop, :meta, action, height),
+         {:ok, internal_screenshot} <- generate_screenshot(drop, :internal, action, height) do
       {:ok, %{meta: meta_screenshot, internal: internal_screenshot}}
     end
   end
 
-  defp generate_screenshot(drop, type, action) do
-    height =
-      case type do
-        :meta -> ScreenshotGeneratorWorkerHelper.calc_height(drop.body)
-        :internal -> ScreenshotGeneratorWorkerHelper.calc_height_internal(drop.body)
-      end
-
-    window_args =
-      case type do
-        :meta -> ["window-size=1280,#{height}"]
-        :internal -> ["window-size=900,#{height}"]
-      end
-
-    base_args = [
-      "--headless",
-      "--no-sandbox",
-      "--fullscreen",
-      "--disable-gpu",
-      "--disable-dev-shm-usage"
-    ]
-
+  defp generate_screenshot(drop, type, action, height) do
     {:ok, session} =
       Wallaby.start_session(
         capabilities: %{
           chromeOptions: %{
-            args: window_args ++ base_args
+            args: [
+              "--headless",
+              "--no-sandbox",
+              "window-size=1280,#{height}",
+              "--fullscreen",
+              "--disable-gpu",
+              "--disable-dev-shm-usage"
+            ]
           }
         }
       )
