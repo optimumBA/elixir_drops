@@ -8,5 +8,8 @@ defmodule ElixirDrops.Repo.Migrations.SkipExistingScreenshots do
   end
 
   def down do
+    execute """
+    UPDATE drops SET screenshot = '{"status": "skipped", "url": null}'
+    """
   end
 end
