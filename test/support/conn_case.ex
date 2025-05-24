@@ -33,9 +33,9 @@ defmodule ElixirDropsWeb.ConnCase do
       use Oban.Testing, repo: ElixirDrops.Repo
 
       # Import conveniences for testing with connections
-      import Plug.Conn
-      import Phoenix.ConnTest
       import ElixirDropsWeb.ConnCase
+      import Phoenix.ConnTest
+      import Plug.Conn
     end
   end
 

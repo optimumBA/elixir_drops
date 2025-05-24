@@ -49,6 +49,8 @@ erl_crash.dump
 /node_modules/
 /priv/plts/
 /screenshots/
+/package.json
+/package-lock.json
 .credo.exs
 .DS_Store
 .env
@@ -65,6 +67,4 @@ erl_crash.dump
 coveralls.json
 fly.toml
 fly.prod.toml
-package.json
-package-lock.json
 README.md

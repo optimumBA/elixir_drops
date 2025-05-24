@@ -6,6 +6,7 @@
   - install mise using either `curl https://mise.run | sh` or `brew install mise`
   - make sure to activate it
   - run `mise install`
+- install Tidewave MCP Proxy (https://elixirdrops.net/d/UAo4BtYi)
 - start PostgreSQL server
 - set environment variables in `.env` (see: [.env.sample](.env.sample))
 - run `mix setup`

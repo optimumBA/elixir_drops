@@ -5,8 +5,8 @@ defmodule ElixirDrops.Drops.Screenshot do
 
   import Ecto.Changeset
 
-  @type t :: %__MODULE__{}
   @type attrs :: map()
+  @type t :: %__MODULE__{}
 
   @primary_key false
   embedded_schema do

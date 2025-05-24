@@ -12,9 +12,9 @@ defmodule ElixirDrops.Accounts do
 
   @type changeset :: Ecto.Changeset.t()
   @type github_id :: Integer
+  @type token :: binary()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
-  @type token :: binary()
 
   @doc """
   Gets a single user.

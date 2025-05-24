@@ -3,8 +3,8 @@ defmodule ElixirDropsWeb.UserAuth do
 
   use ElixirDropsWeb, :verified_routes
 
-  import Plug.Conn
   import Phoenix.Controller
+  import Plug.Conn
 
   alias ElixirDrops.Accounts
   alias ElixirDrops.Accounts.User

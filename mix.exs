@@ -66,6 +66,7 @@ defmodule ElixirDrops.MixProject do
     [
       {:autumn, "~> 0.2"},
       {:flame, "~> 0.5.1"},
+      {:igniter, "~> 0.5.52"},
       {:mdex, "~> 0.1"},
       {:mox, "~> 1.1", only: :test},
       {:oban, "~> 2.18"},
@@ -87,7 +88,9 @@ defmodule ElixirDrops.MixProject do
       {:faker, "~> 0.18", only: :test},
       {:github_workflows_generator, "~> 0.1", only: :dev, runtime: false},
       {:mix_audit, "~> 2.1", only: :test, runtime: false},
-      {:sobelow, "~> 0.13", only: :test, runtime: false}
+      {:optimum_credo, "~> 0.1", only: :test, runtime: false},
+      {:sobelow, "~> 0.13", only: :test, runtime: false},
+      {:tidewave, "~> 0.1", only: :dev}
     ]
   end
 
@@ -141,11 +144,7 @@ defmodule ElixirDrops.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": [
-        "tailwind.install --if-missing",
-        "esbuild.install --if-missing",
-        "cmd --cd assets npm install"
-      ],
+      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["tailwind elixir_drops", "esbuild elixir_drops"],
       "assets.deploy": [
         "tailwind elixir_drops --minify",

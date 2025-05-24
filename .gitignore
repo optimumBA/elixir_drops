@@ -39,7 +39,7 @@ npm-debug.log
 /node_modules/
 /priv/plts/
 /screenshots/
+/package.json
+/package-lock.json
 .DS_Store
 .env
-package.json
-package-lock.json

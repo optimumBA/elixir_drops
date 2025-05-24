@@ -1,8 +1,8 @@
 defmodule ElixirDropsWeb.LiveHelpers do
   @moduledoc false
 
-  import Phoenix.LiveView
   import Phoenix.Component
+  import Phoenix.LiveView
 
   @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t()) :: {:cont, map}
 
