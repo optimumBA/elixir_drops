@@ -1,9 +1,16 @@
-defmodule SitemapGenerator do
+defmodule ElixirDrops.Sitemap do
+  @moduledoc """
+  Handles sitemap generation for ElixirDrops.
+  """
+
   use ElixirDropsWeb, :verified_routes
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
 
+  @doc """
+  Generates a sitemap for all drops and saves it to the static directory.
+  """
   def generate do
     drops = Drops.list_drops(%{}, 10_000)
 
@@ -19,15 +26,13 @@ defmodule SitemapGenerator do
     </urlset>
     """
 
-    priv_dir =
-      :elixir_drops
-      |> :code.priv_dir()
-      |> to_string()
+    sitemap_dir = Path.join([:code.priv_dir(:elixir_drops), "static", "sitemap"])
+    File.mkdir_p!(sitemap_dir)
 
-    sitemap_path = Path.join([priv_dir, "static", "sitemap.xml"])
+    sitemap_path = Path.join([sitemap_dir, "sitemap.xml"])
     File.write!(sitemap_path, sitemap_content)
 
-    IO.puts("Sitemap generated at #{sitemap_path} with #{length(drops)} drops.")
+    {:ok, sitemap_path}
   end
 
   defp drops_elements(drops) do
@@ -59,6 +64,3 @@ defmodule SitemapGenerator do
     |> String.replace("'", "&apos;")
   end
 end
-
-{:ok, _} = Application.ensure_all_started(:elixir_drops)
-SitemapGenerator.generate()

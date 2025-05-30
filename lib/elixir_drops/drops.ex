@@ -10,6 +10,7 @@ defmodule ElixirDrops.Drops do
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.Repo
+  alias ElixirDrops.Workers.SitemapGeneratorWorker
 
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
@@ -180,6 +181,10 @@ defmodule ElixirDrops.Drops do
         drop = Repo.preload(drop, [:user])
 
         :ok = broadcast_drop_creation(drop)
+
+        %{"drop_id" => drop.id}
+        |> SitemapGeneratorWorker.new()
+        |> Oban.insert()
 
         {:ok, drop}
 
