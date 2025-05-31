@@ -10,29 +10,42 @@ defmodule ElixirDrops.Sitemap do
 
   @doc """
   Generates a sitemap for all drops and saves it to the static directory.
+  Returns {:ok, path} on success or {:error, reason} on failure.
   """
+  @spec generate() :: {:ok, String.t()} | {:error, String.t()}
   def generate do
-    drops = Drops.list_drops(%{}, 10_000)
+    try do
+      drops = Drops.list_drops(%{}, 10_000)
 
-    sitemap_content = """
-    <?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url>
-      <loc>#{escape_xml(url(~p"/"))}</loc>
-      <changefreq>daily</changefreq>
-      <priority>1.0</priority>
-    </url>
-    #{drops_elements(drops)}
-    </urlset>
-    """
+      sitemap_content = """
+      <?xml version="1.0" encoding="UTF-8"?>
+      <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <url>
+        <loc>#{escape_xml(url(~p"/"))}</loc>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+      </url>
+      #{drops_elements(drops)}
+      </urlset>
+      """
 
-    sitemap_dir = Path.join([:code.priv_dir(:elixir_drops), "static", "sitemap"])
-    File.mkdir_p!(sitemap_dir)
+      sitemap_dir = Path.join([:code.priv_dir(:elixir_drops), "static", "sitemap"])
+      File.mkdir_p!(sitemap_dir)
 
-    sitemap_path = Path.join([sitemap_dir, "sitemap.xml"])
-    File.write!(sitemap_path, sitemap_content)
+      sitemap_path = Path.join([sitemap_dir, "sitemap.xml"])
+      File.write!(sitemap_path, sitemap_content)
 
-    {:ok, sitemap_path}
+      {:ok, sitemap_path}
+    rescue
+      e in File.Error ->
+        {:error, "Failed to write sitemap file: #{inspect(e)}"}
+
+      e in ArgumentError ->
+        {:error, "Invalid argument: #{inspect(e)}"}
+
+      e ->
+        {:error, "Unexpected error: #{inspect(e)}"}
+    end
   end
 
   defp drops_elements(drops) do

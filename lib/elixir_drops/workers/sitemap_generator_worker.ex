@@ -2,7 +2,7 @@
 defmodule ElixirDrops.Workers.SitemapGeneratorWorker do
   @moduledoc false
 
-  use Oban.Worker, queue: :seo, max_attempts: 3
+  use Oban.Worker, queue: :seo_sitemap, max_attempts: 3
 
   alias ElixirDrops.Sitemap
 
