@@ -94,16 +94,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         %{assigns: %{live_action: action}} = socket
       )
       when action in [:edit, :new] do
-    screenshot = %{
-      drop_short_id: drop.short_id,
-      progress_value: progress,
-      status: status,
-      url: drop.screenshot.internal_url
-    }
-
     send_update(FormComponent,
       id: "drops-form",
-      screenshot: screenshot
+      drop: drop,
+      progress: progress,
+      status: status
     )
 
     {:noreply, socket}

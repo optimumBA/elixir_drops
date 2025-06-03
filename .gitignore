@@ -43,4 +43,4 @@ npm-debug.log
 /package-lock.json
 .DS_Store
 .env
-/priv/static/sitemap/
+/priv/static/sitemap.xml
