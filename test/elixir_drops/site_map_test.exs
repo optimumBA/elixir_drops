@@ -29,7 +29,7 @@ defmodule ElixirDrops.SitemapTest do
       assert content =~ ~s(<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">)
 
       assert content =~ ~s(<url>)
-      assert content =~ ~s(<loc>http://localhost:4000/</loc>)
+      assert content =~ ~s(<loc>http://localhost:4002/</loc>)
       assert content =~ ~s(<changefreq>daily</changefreq>)
       assert content =~ ~s(<priority>1.0</priority>)
 
