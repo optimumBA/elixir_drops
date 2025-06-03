@@ -26,9 +26,6 @@ defmodule ElixirDrops.Sitemap do
         {drop, true} ->
           update_sitemap_with_drop(drop, sitemap_path)
       end
-    else
-      {:error, reason} ->
-        {:error, "Failed to create sitemap directory: #{inspect(reason)}"}
     end
   end
 

@@ -10,11 +10,11 @@ defmodule ElixirDrops.Workers.SitemapGeneratorWorker do
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
     case Drops.get_drop(%{drop_id: args["drop_id"]}) do
+      %Drops.Drop{} = drop ->
+        Sitemap.generate(drop)
+
       nil ->
         {:error, "Drop not found"}
-
-      drop ->
-        Sitemap.generate(drop)
     end
   end
 end
