@@ -13,9 +13,9 @@ defmodule ElixirDropsWeb.Router do
     plug :fetch_current_user
   end
 
-  # pipeline :api do
-  #   plug :accepts, ["json"]
-  # end
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
 
   scope "/", ElixirDropsWeb do
     pipe_through [:browser, :require_authenticated_user]
@@ -53,6 +53,13 @@ defmodule ElixirDropsWeb.Router do
 
     get "/:provider", GithubAuthController, :request
     get "/:provider/callback", GithubAuthController, :callback
+  end
+
+  # MCP API endpoints
+  scope "/mcp", ElixirDropsWeb do
+    pipe_through :api
+
+    get "/search", MCPController, :search
   end
 
   # Other scopes may use custom stacks.

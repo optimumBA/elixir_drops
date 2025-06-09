@@ -233,4 +233,52 @@ defmodule ElixirDrops.Drops do
   defp broadcast_drop_creation(drop) do
     DropsBroadcast.broadcast_drop_creation(drop)
   end
+
+  @doc """
+  Searches through drops based on a query string, supporting pagination.
+  Searches in both title and description fields.
+
+  ## Examples
+
+      iex> search_drops("phoenix websocket", %{page: 1, per_page: 10})
+      %{
+        results: [%Drop{}, ...],
+        total: 5,
+        page: 1,
+        per_page: 10
+      }
+
+  """
+  @spec search_drops(String.t(), map()) :: %{
+          results: [drop()],
+          total: integer(),
+          page: integer(),
+          per_page: integer()
+        }
+  def search_drops(query, %{page: page, per_page: per_page}) do
+    search_term = "%#{query}%"
+    offset = (page - 1) * per_page
+
+    base_query =
+      from d in Drop,
+        where: ilike(d.title, ^search_term) or ilike(d.body, ^search_term)
+
+    total_query = from d in base_query, select: count(d.id)
+    total = Repo.one(total_query)
+
+    results =
+      base_query
+      |> order_by([d], {:desc, d.inserted_at})
+      |> limit(^per_page)
+      |> offset(^offset)
+      |> preload([:user])
+      |> Repo.all()
+
+    %{
+      results: results,
+      total: total,
+      page: page,
+      per_page: per_page
+    }
+  end
 end
