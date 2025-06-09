@@ -8,13 +8,17 @@ defmodule ElixirDrops.StructuredDataTest do
   alias ElixirDrops.StructuredData
 
   describe "generate_drop_json_ld/1" do
-    test "generates valid JSON-LD for a drop" do
+    setup do
       user = user_fixture()
       drop = drop_fixture(user)
 
       json_ld = StructuredData.generate_drop_json_ld(drop)
       decoded = Jason.decode!(json_ld)
 
+      %{drop: drop, decoded: decoded}
+    end
+
+    test "generates valid JSON-LD for a drop", %{drop: drop, decoded: decoded} do
       assert decoded["@context"] == "https://schema.org"
       assert decoded["@type"] == "Elixir Drop"
       assert decoded["headline"] == drop.title
@@ -42,27 +46,18 @@ defmodule ElixirDrops.StructuredDataTest do
       assert is_binary(decoded["keywords"])
     end
 
-    test "generates JSON-LD that passes Google's Rich Results Test requirements" do
-      user = user_fixture()
-      drop = drop_fixture(user)
-
-      json_ld = StructuredData.generate_drop_json_ld(drop)
-      decoded = Jason.decode!(json_ld)
-
-      assert decoded["@context"] == "https://schema.org"
-      assert decoded["@type"] == "Elixir Drop"
+    test "generates JSON-LD that passes Google's Rich Results Test requirements", %{
+      decoded: decoded
+    } do
       assert is_binary(decoded["headline"])
       assert is_binary(decoded["articleBody"])
       assert is_binary(decoded["url"])
 
-      assert decoded["author"]["@type"] == "Person"
       assert is_binary(decoded["author"]["name"])
       assert is_binary(decoded["author"]["url"])
       assert is_binary(decoded["author"]["image"])
 
-      assert decoded["publisher"]["@type"] == "Organization"
       assert is_binary(decoded["publisher"]["name"])
-      assert decoded["publisher"]["logo"]["@type"] == "ImageObject"
       assert is_binary(decoded["publisher"]["logo"]["url"])
 
       assert is_binary(decoded["datePublished"])
@@ -75,27 +70,23 @@ defmodule ElixirDrops.StructuredDataTest do
       assert String.starts_with?(decoded["publisher"]["logo"]["url"], "https://")
     end
 
-    test "handles drops with special characters in title and body" do
-      user = user_fixture()
-
-      drop =
-        drop_fixture(%Drop{}, user, %{
+    test "handles special characters", %{drop: drop} do
+      drop_with_special_chars =
+        drop_fixture(%Drop{}, drop.user, %{
           title: "Special & Characters <in> Title",
           body: "Body with & special <characters> and \"quotes\""
         })
 
-      json_ld = StructuredData.generate_drop_json_ld(drop)
+      json_ld = StructuredData.generate_drop_json_ld(drop_with_special_chars)
       decoded = Jason.decode!(json_ld)
 
       assert decoded["headline"] == "Special & Characters <in> Title"
       assert decoded["articleBody"] == "Body with & special <characters> and \"quotes\""
     end
 
-    test "handles drops with code blocks in body" do
-      user = user_fixture()
-
-      drop =
-        drop_fixture(%Drop{}, user, %{
+    test "handles drops with code blocks in body", %{drop: drop} do
+      drop_with_code_blocks =
+        drop_fixture(%Drop{}, drop.user, %{
           body: """
           Here's some code:
           ```elixir
@@ -108,18 +99,15 @@ defmodule ElixirDrops.StructuredDataTest do
           """
         })
 
-      json_ld = StructuredData.generate_drop_json_ld(drop)
+      json_ld = StructuredData.generate_drop_json_ld(drop_with_code_blocks)
       decoded = Jason.decode!(json_ld)
 
       assert String.contains?(decoded["articleBody"], "```elixir")
       assert String.contains?(decoded["articleBody"], "defmodule MyModule do")
-      assert String.contains?(decoded["keywords"], "MyModule")
+      refute String.contains?(decoded["keywords"], "MyModule")
     end
 
-    test "handles drops with screenshots" do
-      user = user_fixture()
-      drop = drop_fixture(user)
-
+    test "handles drops with screenshots", %{drop: drop} do
       drop_with_screenshot = %{
         drop
         | screenshot: %{
@@ -138,6 +126,39 @@ defmodule ElixirDrops.StructuredDataTest do
       assert image["url"] == "https://example.com/meta.png"
       assert image["width"] == "1200"
       assert image["height"] == "630"
+    end
+
+    test "extracts keywords from descriptive content", %{drop: drop} do
+      drop_with_content =
+        drop_fixture(%Drop{}, drop.user, %{
+          body: """
+          This is a great example of using Phoenix LiveView for building interactive updates in your applications.
+          ```elixir
+          defmodule MyModule do
+            def hello do
+              :world
+            end
+          end
+          ```
+          We can see how LiveView makes it easy to build interactive applications.
+          """
+        })
+
+      json_ld = StructuredData.generate_drop_json_ld(drop_with_content)
+      decoded = Jason.decode!(json_ld)
+
+      keywords = decoded["keywords"]
+
+      assert String.contains?(keywords, "Phoenix")
+      assert String.contains?(keywords, "LiveView")
+      assert String.contains?(keywords, "interactive")
+      assert String.contains?(keywords, "building")
+      refute String.contains?(keywords, "MyModule")
+      refute String.contains?(keywords, "for")
+      refute String.contains?(keywords, "this")
+      refute String.contains?(keywords, "how")
+      refute String.contains?(keywords, "what")
+      refute String.contains?(keywords, "will")
     end
   end
 end
