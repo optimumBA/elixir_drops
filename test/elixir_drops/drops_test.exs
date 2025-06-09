@@ -266,4 +266,75 @@ defmodule ElixirDrops.DropsTest do
       assert :ok == Drops.subscribe()
     end
   end
+
+  describe "search_drops/2" do
+    test "returns paginated search results" do
+      user = user_fixture()
+
+      drop_fixture(%Drop{}, user, %{
+        title: "Phoenix WebSocket Guide",
+        body: "Learn how to implement WebSocket in Phoenix"
+      })
+
+      drop_fixture(%Drop{}, user, %{
+        title: "Elixir Basics",
+        body: "Introduction to Elixir programming"
+      })
+
+      drop_fixture(%Drop{}, user, %{
+        title: "Advanced Phoenix",
+        body: "WebSocket implementation details"
+      })
+
+      result = Drops.search_drops("websocket", %{page: 1, per_page: 10})
+
+      assert length(result.results) == 2
+      assert result.total == 2
+      assert result.page == 1
+      assert result.per_page == 10
+    end
+
+    test "handles pagination correctly" do
+      user = user_fixture()
+
+      Enum.map(1..15, fn i ->
+        drop_fixture(%Drop{}, user, %{
+          title: "Drop #{i}",
+          body: "Description for drop #{i}"
+        })
+      end)
+
+      result = Drops.search_drops("drop", %{page: 2, per_page: 5})
+
+      assert length(result.results) == 5
+      assert result.total == 15
+      assert result.page == 2
+      assert result.per_page == 5
+    end
+
+    test "returns empty results for non-existent search term" do
+      result = Drops.search_drops("nonexistent", %{page: 1, per_page: 10})
+
+      assert result.results == []
+      assert result.total == 0
+      assert result.page == 1
+      assert result.per_page == 10
+    end
+
+    test "searches in both title and description" do
+      user = user_fixture()
+
+      drop_fixture(%Drop{}, user, %{
+        title: "Phoenix Guide",
+        body: "WebSocket implementation"
+      })
+
+      drop_fixture(%Drop{}, user, %{title: "WebSocket Tutorial", body: "Phoenix basics"})
+
+      result = Drops.search_drops("websocket", %{page: 1, per_page: 10})
+
+      assert length(result.results) == 2
+      assert result.total == 2
+    end
+  end
 end
