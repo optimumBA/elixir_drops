@@ -4,6 +4,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
+  alias ElixirDrops.Workers.SitemapGeneratorWorker
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
@@ -94,12 +95,19 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
         %{assigns: %{live_action: action}} = socket
       )
       when action in [:edit, :new] do
+    screenshot = %{
+      drop_short_id: drop.short_id,
+      progress_value: progress,
+      status: status,
+      url: drop.screenshot.internal_url
+    }
+
     send_update(FormComponent,
       id: "drops-form",
-      drop: drop,
-      progress: progress,
-      status: status
+      screenshot: screenshot
     )
+
+    enqueue_sitemap_generation(drop)
 
     {:noreply, socket}
   end
@@ -117,5 +125,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   def handle_info(_message, socket) do
     {:noreply, socket}
+  end
+
+  defp enqueue_sitemap_generation(drop) do
+    %{"drop_id" => drop.id}
+    |> SitemapGeneratorWorker.new()
+    |> Oban.insert()
   end
 end

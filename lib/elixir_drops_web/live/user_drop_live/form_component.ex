@@ -21,16 +21,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
      |> push_event("screenshot_generation_started", %{})}
   end
 
-  def update(%{drop: drop, progress: progress, status: status} = assigns, socket) do
-    screenshot = %{
-      drop_short_id: drop.short_id,
-      progress_value: progress,
-      status: status,
-      url: drop.screenshot.internal_url
-    }
-
-    enqueue_sitemap_generation(drop)
-
+  def update(%{screenshot: screenshot} = assigns, socket) do
     {:ok,
      socket
      |> assign(assigns)
