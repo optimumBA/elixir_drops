@@ -5,7 +5,7 @@ defmodule ElixirDrops.StructuredData do
 
   alias ElixirDrops.Drops.Drop
 
-  @stop_words ~w(
+  @skipped_words ~w(
     about above after again against aren't because been before being below between both can't cannot could couldn't didn't does doesn't doing don't down during each from further hadn't hasn't have haven't having how how's i i'd i'll i'm i've if in into is isn't it it's its itself let's more most mustn't my myself once only or other ought ours ourselves over own same shan't she she'd she'll she's should shouldn't so some such than that that's the their theirs them themselves then there there's these they they'd they'll they're they've this those through under until very wasn't we'll we're we've were weren't what what's when when's where where's which while who's whom why's with won't would wouldn't you'd you'll you're you've your yours yourself yourselves
   )
 
@@ -62,7 +62,7 @@ defmodule ElixirDrops.StructuredData do
     |> Enum.filter(fn word ->
       word =~ ~r/^[a-zA-Z][a-zA-Z0-9]*$/ and
         String.length(word) > 3 and
-        String.downcase(word) not in @stop_words
+        String.downcase(word) not in @skipped_words
     end)
     |> Enum.uniq()
     |> Enum.join(", ")
