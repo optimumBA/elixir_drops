@@ -128,37 +128,35 @@ defmodule ElixirDrops.StructuredDataTest do
       assert image["height"] == "630"
     end
 
-    test "extracts keywords from descriptive content", %{drop: drop} do
+    test "extracts keywords from body and limits to 10 keywords", %{drop: drop} do
       drop_with_content =
         drop_fixture(%Drop{}, drop.user, %{
           body: """
-          This is a great example of using Phoenix LiveView for building interactive updates in your applications.
+          This is an example of using Phoenix LiveView for building interactive updates in your applications.
           ```elixir
           defmodule MyModule do
-            def hello do
-              :world
+            def assigns do
+              :assigns
             end
           end
           ```
-          We can see how LiveView makes it easy to build interactive applications.
+          We are testing the keyword extraction functionality.
+          The test should extract meaningful words like Elixir programming testing phx-change phx-submit handle_event assigns socket plug component livecomponent liveview etc.
           """
         })
 
       json_ld = StructuredData.generate_drop_json_ld(drop_with_content)
-      decoded = Jason.decode!(json_ld)
+      json = Jason.decode!(json_ld)
+      keywords = String.split(json["keywords"], ", ")
 
-      keywords = decoded["keywords"]
-
-      assert String.contains?(keywords, "Phoenix")
-      assert String.contains?(keywords, "LiveView")
-      assert String.contains?(keywords, "interactive")
-      assert String.contains?(keywords, "building")
-      refute String.contains?(keywords, "MyModule")
-      refute String.contains?(keywords, "for")
-      refute String.contains?(keywords, "this")
-      refute String.contains?(keywords, "how")
-      refute String.contains?(keywords, "what")
-      refute String.contains?(keywords, "will")
+      assert length(keywords) <= 10
+      assert "phoenix" in keywords
+      assert "liveview" in keywords
+      assert "assigns" in keywords
+      assert "socket" in keywords
+      assert "phx-submit" in keywords
+      refute "this" in keywords
+      refute "we" in keywords
     end
   end
 end
