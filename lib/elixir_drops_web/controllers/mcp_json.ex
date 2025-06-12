@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.MCPJSON do
+defmodule ElixirDropsWeb.McpJson do
   @moduledoc false
   alias ElixirDrops.Drops.Drop
 

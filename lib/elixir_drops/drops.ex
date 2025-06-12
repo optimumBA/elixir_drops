@@ -249,12 +249,7 @@ defmodule ElixirDrops.Drops do
       }
 
   """
-  @spec search_drops(String.t(), map()) :: %{
-          results: [drop()],
-          total: integer(),
-          page: integer(),
-          per_page: integer()
-        }
+  @spec search_drops(String.t(), map()) :: map()
   def search_drops(query, %{page: page, per_page: per_page}) do
     search_term = "%#{query}%"
     offset = (page - 1) * per_page

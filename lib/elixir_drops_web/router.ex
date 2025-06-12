@@ -59,7 +59,7 @@ defmodule ElixirDropsWeb.Router do
   scope "/mcp", ElixirDropsWeb do
     pipe_through :api
 
-    get "/search", MCPController, :search
+    get "/search", McpController, :search
   end
 
   # Other scopes may use custom stacks.

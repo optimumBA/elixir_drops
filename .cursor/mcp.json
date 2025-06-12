@@ -4,5 +4,9 @@
       "command": "mcp-proxy",
       "args": ["http://localhost:4000/tidewave/mcp"]
     }
+  },
+  "elixirDrops": {
+    "command": "elixir-drops-mcp",
+    "args": ["https://elixirdrops-pr-37.fly.dev/mcp/search"]
   }
 }
