@@ -9,6 +9,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
+  alias ElixirDrops.Workers.SitemapGeneratorWorker
 
   setup :set_mox_global
   setup :verify_on_exit!
@@ -47,7 +48,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       %{drop: drop, user: user}
     end
 
-    test "creates two screenshots for a drop with a code block", %{drop: drop} do
+    test "creates two screenshots for a drop with a code block and enqueues a sitemap job", %{
+      drop: drop
+    } do
       %{meta_image_url: meta_image_url, internal_image_url: internal_image_url} =
         screenshot_upload_mock(drop)
 
@@ -57,6 +60,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       assert updated_drop.screenshot.status == :completed
       assert updated_drop.screenshot.meta_url == meta_image_url
       assert updated_drop.screenshot.internal_url == internal_image_url
+
+      assert_enqueued(
+        worker: SitemapGeneratorWorker,
+        args: %{"drop_id" => updated_drop.id},
+        queue: "seo_sitemap"
+      )
     end
 
     test "properly handles meta screenshot upload failure", %{drop: drop} do
@@ -126,7 +135,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop_id})
     end
 
-    test "creates a screenshot when the code block changes", %{drop: drop, user: user} do
+    test "creates a screenshot when the code block changes and enqueues a sitemap job", %{
+      drop: drop,
+      user: user
+    } do
       updated_body = ~S"""
       ```elixir
       IO.write("Hello World!")
@@ -149,6 +161,12 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       assert updated_drop.screenshot.status == :completed
       assert updated_drop.screenshot.meta_url == meta_image_url
       assert updated_drop.screenshot.internal_url == internal_image_url
+
+      assert_enqueued(
+        worker: SitemapGeneratorWorker,
+        args: %{"drop_id" => updated_drop.id},
+        queue: "seo_sitemap"
+      )
     end
   end
 
