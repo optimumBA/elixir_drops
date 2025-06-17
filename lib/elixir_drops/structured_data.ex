@@ -12,9 +12,12 @@ defmodule ElixirDrops.StructuredData do
   @doc """
   Generates JSON-LD structured data for a drop.
   """
-
   @spec generate_drop_json_ld(Drop.t()) :: String.t()
   def generate_drop_json_ld(%Drop{} = drop) do
+    image_url = drop.screenshot.meta_url || "https://elixirdrops.net/images/seo_default_image.png"
+    user_avatar = drop.user.avatar || "https://elixirdrops.net/images/seo_default_image.png"
+    user_name = drop.user.name || "Anonymous"
+
     Jason.encode!(%{
       "@context" => "https://schema.org",
       "@type" => "Elixir Drop",
@@ -22,16 +25,16 @@ defmodule ElixirDrops.StructuredData do
       "image" => [
         %{
           "@type" => "ImageObject",
-          "url" => drop.screenshot.meta_url,
+          "url" => image_url,
           "width" => "1200",
           "height" => "630"
         }
       ],
       "author" => %{
         "@type" => "Person",
-        "name" => drop.user.name,
+        "name" => user_name,
         "url" => "https://github.com/#{drop.user.github_username}",
-        "image" => drop.user.avatar
+        "image" => user_avatar
       },
       "publisher" => %{
         "@type" => "Organization",
