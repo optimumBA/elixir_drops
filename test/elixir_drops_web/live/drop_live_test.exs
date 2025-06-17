@@ -511,7 +511,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert decoded["mainEntityOfPage"]["@id"] == "https://elixirdrops.net/d/#{drop.short_id}"
       assert is_binary(decoded["description"])
       assert String.length(decoded["description"]) <= 160
-      assert is_binary(decoded["keywords"])
+      assert is_list(decoded["keywords"])
     end
 
     test "structured data includes screenshot when available", %{

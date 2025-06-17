@@ -5,12 +5,9 @@ defmodule ElixirDrops.StructuredData do
 
   alias ElixirDrops.Drops.Drop
 
-  @priority_keywords ~w(
-  elixir erlang liveview phoenix ash mount handle_event handle_info handle_params socket assigns push_event push_navigate push_patch component slot phx-click phx-change phx-submit phx-blur phx-focus phx-keydown phx-window plug router endpoint controller action ecto schema changeset repo migration query preload test assert refute describe setup context
-  pattern matching operator functional programming immutability recursion tail_recursion
-  genserver supervisor otp application behaviour module defstruct defimpl defprotocol rescue catch spawn send receive process pid task agent enum stream map filter reduce flatmap zip
-  error tuple atom string binary bitstring list struct keyword_list charlist conn params session flash cookies headers render redirect assign pubsub broadcast subscribe telemetry logging config env compile mix hex deps umbrella release jason poison httpoison finch req gettext i18n locale csrf_token form_for form_with validates_required live_redirect live_patch connected disconnected temporary_assigns update handle_assign_new macro quote unquote ast metaprogramming doc spec typespec dialyzer credo websocket transport channel topic guardian auth token jwt session_storefloki hound wallaby integration_test broadway flow genstage rate_limiting cluster libcluster distributed nodes cowboy ranch plug_cowboy nimble_parsec nimble_csv timex
-)
+  @skipped_words ~w(
+    about above after again against aren't because been before being below between both can't cannot could couldn't didn't does doesn't doing don't down during each from further hadn't hasn't have haven't having how's into isn't it's its itself let's more most mustn't myself once only other ought ours ourselves over same shan't she'd she'll she's should shouldn't some such than that that's the their theirs them themselves then there there's these they they'd they'll they're they've this those through under until very wasn't we'll we're we've were weren't what what's when when's where where's which while who's whom why's with won't would wouldn't you'd you'll you're you've your yours yourself yourselves
+  )
 
   @doc """
   Generates JSON-LD structured data for a drop.
@@ -57,16 +54,16 @@ defmodule ElixirDrops.StructuredData do
     })
   end
 
-  defp extract_keywords(body) do
-    content_without_code = Regex.replace(~r/```elixir\n[\s\S]*?```/, body, "")
+  defp extract_keywords(text) do
+    text_without_code = Regex.replace(~r/```[\s\S]*?```/, text, " ")
 
-    content_without_code
-    |> String.downcase()
+    text_without_code
     |> String.split(~r/\s+/)
     |> Enum.filter(fn word ->
-      word in Enum.map(@priority_keywords, &String.downcase/1)
+      String.length(word) > 3 and
+        String.downcase(word) not in @skipped_words
     end)
-    |> Enum.take(10)
-    |> Enum.join(", ")
+    |> Enum.uniq()
+    |> Enum.take(30)
   end
 end

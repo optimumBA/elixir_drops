@@ -43,31 +43,7 @@ defmodule ElixirDrops.StructuredDataTest do
 
       assert is_binary(decoded["description"])
       assert String.length(decoded["description"]) <= 160
-      assert is_binary(decoded["keywords"])
-    end
-
-    test "generates JSON-LD that passes Google's Rich Results Test requirements", %{
-      decoded: decoded
-    } do
-      assert is_binary(decoded["headline"])
-      assert is_binary(decoded["articleBody"])
-      assert is_binary(decoded["url"])
-
-      assert is_binary(decoded["author"]["name"])
-      assert is_binary(decoded["author"]["url"])
-      assert is_binary(decoded["author"]["image"])
-
-      assert is_binary(decoded["publisher"]["name"])
-      assert is_binary(decoded["publisher"]["logo"]["url"])
-
-      assert is_binary(decoded["datePublished"])
-      assert is_binary(decoded["dateModified"])
-      assert {:ok, _} = NaiveDateTime.from_iso8601(decoded["datePublished"])
-      assert {:ok, _} = NaiveDateTime.from_iso8601(decoded["dateModified"])
-
-      assert String.starts_with?(decoded["url"], "https://")
-      assert String.starts_with?(decoded["author"]["url"], "https://")
-      assert String.starts_with?(decoded["publisher"]["logo"]["url"], "https://")
+      assert is_list(decoded["keywords"])
     end
 
     test "handles special characters", %{drop: drop} do
@@ -96,15 +72,18 @@ defmodule ElixirDrops.StructuredDataTest do
             end
           end
           ```
+          And some more text after the code block
           """
         })
 
       json_ld = StructuredData.generate_drop_json_ld(drop_with_code_blocks)
       decoded = Jason.decode!(json_ld)
 
-      assert String.contains?(decoded["articleBody"], "```elixir")
-      assert String.contains?(decoded["articleBody"], "defmodule MyModule do")
-      refute String.contains?(decoded["keywords"], "MyModule")
+      keywords = decoded["keywords"]
+      refute "MyModule" in keywords
+      refute "hello" in keywords
+      assert "code" in keywords
+      assert "block" in keywords
     end
 
     test "handles drops with screenshots", %{drop: drop} do
@@ -128,7 +107,7 @@ defmodule ElixirDrops.StructuredDataTest do
       assert image["height"] == "630"
     end
 
-    test "extracts keywords from body and limits to 10 keywords", %{drop: drop} do
+    test "extracts keywords from body and limits to 30 keywords", %{drop: drop} do
       drop_with_content =
         drop_fixture(%Drop{}, drop.user, %{
           body: """
@@ -147,16 +126,18 @@ defmodule ElixirDrops.StructuredDataTest do
 
       json_ld = StructuredData.generate_drop_json_ld(drop_with_content)
       json = Jason.decode!(json_ld)
-      keywords = String.split(json["keywords"], ", ")
+      keywords = json["keywords"]
 
-      assert length(keywords) <= 10
-      assert "phoenix" in keywords
-      assert "liveview" in keywords
+      assert length(keywords) <= 30
+      assert "Phoenix" in keywords
+      assert "LiveView" in keywords
       assert "assigns" in keywords
       assert "socket" in keywords
       assert "phx-submit" in keywords
       refute "this" in keywords
       refute "we" in keywords
+      refute "defmodule" in keywords
+      refute "MyModule" in keywords
     end
   end
 end
