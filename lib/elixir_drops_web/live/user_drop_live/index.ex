@@ -4,7 +4,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
-  alias ElixirDrops.Workers.SitemapGeneratorWorker
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
@@ -107,8 +106,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       screenshot: screenshot
     )
 
-    enqueue_sitemap_generation(drop)
-
     {:noreply, socket}
   end
 
@@ -125,11 +122,5 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   def handle_info(_message, socket) do
     {:noreply, socket}
-  end
-
-  defp enqueue_sitemap_generation(drop) do
-    %{"drop_id" => drop.id}
-    |> SitemapGeneratorWorker.new()
-    |> Oban.insert()
   end
 end

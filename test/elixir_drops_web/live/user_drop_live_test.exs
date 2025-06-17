@@ -446,14 +446,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         :completed,
         %{action: "new"}
       )
-
-      Process.sleep(50)
-
-      assert_enqueued(
-        worker: SitemapGeneratorWorker,
-        args: %{"drop_id" => updated_drop.id},
-        queue: "seo_sitemap"
-      )
     end
   end
 
@@ -536,14 +528,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         100,
         :completed,
         %{action: "new"}
-      )
-
-      Process.sleep(50)
-
-      assert_enqueued(
-        worker: SitemapGeneratorWorker,
-        args: %{"drop_id" => updated_drop.id},
-        queue: :seo_sitemap
       )
     end
 
