@@ -9,6 +9,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
   alias ElixirDrops.ScreenshotGeneratorWorkerHelper
+  alias ElixirDrops.Workers.SitemapGeneratorWorker
   alias Wallaby.Browser
 
   @impl Oban.Worker
@@ -139,6 +140,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
         broadcast_drop_screenshot_completion(updated_drop, 100, :completed, %{action: action})
 
+        enqueue_sitemap_generation(updated_drop)
+
         :ok
 
       {:error, :ok} ->
@@ -154,5 +157,11 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp broadcast_drop_screenshot_completion(drop, progress, status, metadata) do
     DropsBroadcast.broadcast_drop_screenshot_completion(drop, progress, status, metadata)
+  end
+
+  defp enqueue_sitemap_generation(drop) do
+    %{"drop_id" => drop.id}
+    |> SitemapGeneratorWorker.new()
+    |> Oban.insert()
   end
 end

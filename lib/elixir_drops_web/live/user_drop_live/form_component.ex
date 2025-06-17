@@ -8,6 +8,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
+  alias ElixirDrops.Workers.SitemapGeneratorWorker
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.Icons
@@ -84,7 +85,8 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
         changeset = Drops.change_drop(drop)
         {:noreply, assign_form(socket, changeset)}
 
-      {:ok, _drop} ->
+      {:ok, drop} ->
+        enqueue_sitemap_generation(drop)
         {:noreply, push_navigate(socket, to: ~p"/profile")}
 
       {:error, changeset} ->
@@ -165,6 +167,12 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
 
     %{"drop_id" => drop.id, "old_body" => old_body, "action" => action}
     |> ScreenshotGeneratorWorker.new()
+    |> Oban.insert()
+  end
+
+  defp enqueue_sitemap_generation(drop) do
+    %{"drop_id" => drop.id}
+    |> SitemapGeneratorWorker.new()
     |> Oban.insert()
   end
 end

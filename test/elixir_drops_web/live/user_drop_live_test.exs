@@ -11,6 +11,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
+  alias ElixirDrops.Workers.SitemapGeneratorWorker
 
   setup :verify_on_exit!
 
@@ -362,6 +363,90 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ "Drop with script"
       assert html =~ "Some JS"
     end
+
+    test "sitemap generation is enqueued immediately for drops without code blocks", %{
+      conn: conn,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
+
+      live
+      |> form("#drops-editor-form",
+        drop: %{
+          title: "New Drop Without Code",
+          body: "This is a regular drop without code blocks"
+        }
+      )
+      |> render_submit()
+
+      drops = Drops.list_drops(%{user_id: user.id})
+      created_drop = List.last(drops)
+      assert created_drop.screenshot.status == :skipped
+
+      assert_enqueued(
+        worker: SitemapGeneratorWorker,
+        args: %{"drop_id" => created_drop.id},
+        queue: :seo_sitemap
+      )
+    end
+
+    test "sitemap generation is enqueued after screenshot completion for drops with code blocks",
+         %{
+           conn: conn,
+           user: user
+         } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/drops/new")
+
+      live
+      |> form("#drops-editor-form",
+        drop: %{
+          title: "New Drop With Code",
+          body: "```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n```"
+        }
+      )
+      |> render_submit()
+
+      drops = Drops.list_drops(%{user_id: user.id})
+      created_drop = List.last(drops)
+      assert created_drop.screenshot.status == :pending
+
+      assert_enqueued(
+        worker: ScreenshotGeneratorWorker,
+        args: %{"drop_id" => created_drop.id},
+        queue: :seo_images
+      )
+
+      refute_enqueued(
+        worker: SitemapGeneratorWorker,
+        args: %{"drop_id" => created_drop.id},
+        queue: :seo_sitemap
+      )
+
+      drop =
+        %{user_id: user.id}
+        |> Drops.list_drops()
+        |> List.last()
+
+      {:ok, updated_drop} =
+        Drops.update_drop(drop, user, %{
+          screenshot: %{
+            status: :completed,
+            meta_url: "http://example.com/screenshot.png",
+            internal_url: "http://example.com/screenshot.png"
+          }
+        })
+
+      DropsBroadcast.broadcast_drop_screenshot_completion(
+        updated_drop,
+        100,
+        :completed,
+        %{action: "new"}
+      )
+    end
   end
 
   describe "/drops/:short_id/edit" do
@@ -390,6 +475,12 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         worker: ScreenshotGeneratorWorker,
         args: %{drop_id: drop.id},
         queue: :seo_images
+      )
+
+      assert_enqueued(
+        worker: SitemapGeneratorWorker,
+        args: %{"drop_id" => drop.id},
+        queue: :seo_sitemap
       )
 
       refute has_element?(updated_live, "#loading-spinner")
@@ -422,6 +513,21 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         worker: ScreenshotGeneratorWorker,
         args: %{drop_id: drop.id},
         queue: :seo_images
+      )
+
+      refute_enqueued(
+        worker: SitemapGeneratorWorker,
+        args: %{"drop_id" => drop.id},
+        queue: :seo_sitemap
+      )
+
+      updated_drop = Drops.get_drop(%{drop_id: drop.id})
+
+      DropsBroadcast.broadcast_drop_screenshot_completion(
+        updated_drop,
+        100,
+        :completed,
+        %{action: "new"}
       )
     end
 
