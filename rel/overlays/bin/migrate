@@ -2,4 +2,4 @@
 set -eu
 
 cd -P -- "$(dirname -- "$0")"
-exec ./elixir_drops eval ElixirDrops.Release.migrate
+exec ./elixir_drops eval 'ElixirDrops.Release.migrate && ElixirDrops.Release.generate_sitemap'

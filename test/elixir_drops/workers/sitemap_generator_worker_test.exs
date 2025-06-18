@@ -6,6 +6,14 @@ defmodule ElixirDrops.Workers.SitemapGeneratorWorkerTest do
 
   alias ElixirDrops.Workers.SitemapGeneratorWorker
 
+  setup do
+    on_exit(fn ->
+      [:code.priv_dir(:elixir_drops), "static", "sitemap.xml"]
+      |> Path.join()
+      |> File.rm()
+    end)
+  end
+
   describe "perform/1" do
     test "generates sitemap file successfully" do
       user = user_fixture()
@@ -38,6 +46,21 @@ defmodule ElixirDrops.Workers.SitemapGeneratorWorkerTest do
     test "handles invalid drop_id format" do
       assert {:error, "Drop not found"} =
                perform_job(SitemapGeneratorWorker, %{"drop_id" => Ecto.UUID.generate()})
+    end
+
+    test "generates full sitemap when no drop_id provided" do
+      user = user_fixture()
+      _drop = drop_fixture(user)
+
+      assert {:ok, path} = perform_job(SitemapGeneratorWorker, %{})
+      assert File.exists?(path)
+      assert String.ends_with?(path, "sitemap.xml")
+    end
+
+    test "generates empty sitemap when no drops exist and no drop_id provided" do
+      assert {:ok, path} = perform_job(SitemapGeneratorWorker, %{})
+      assert File.exists?(path)
+      assert String.ends_with?(path, "sitemap.xml")
     end
   end
 end

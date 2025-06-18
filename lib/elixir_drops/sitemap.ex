@@ -29,6 +29,19 @@ defmodule ElixirDrops.Sitemap do
     end
   end
 
+  @doc """
+  Generates a full sitemap with all drops.
+  Returns {:ok, path} on success or {:error, reason} on failure.
+  """
+  @spec generate_full() :: {:ok, String.t()} | {:error, String.t()}
+  def generate_full do
+    with sitemap_dir <- Path.join([:code.priv_dir(:elixir_drops), "static"]),
+         :ok <- File.mkdir_p(sitemap_dir),
+         sitemap_path <- Path.join([sitemap_dir, "sitemap.xml"]) do
+      generate_full_sitemap(sitemap_path)
+    end
+  end
+
   defp generate_full_sitemap(sitemap_path) do
     drops = Drops.list_drops(%{}, 10_000)
     sitemap_content = generate_sitemap_content(drops)
@@ -71,7 +84,7 @@ defmodule ElixirDrops.Sitemap do
     Enum.map_join(drops, "\n", &drop_element/1)
   end
 
-  defp drop_element(%Drop{short_id: short_id, updated_at: updated_at, title: title}) do
+  defp drop_element(%Drop{short_id: short_id, updated_at: updated_at}) do
     last_modified =
       updated_at
       |> NaiveDateTime.to_date()
@@ -83,7 +96,6 @@ defmodule ElixirDrops.Sitemap do
       <lastmod>#{last_modified}</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
-      <title>#{escape_xml(title)}</title>
     </url>
     """
   end
