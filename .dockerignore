@@ -45,6 +45,7 @@ erl_crash.dump
 /priv/static/cache_manifest.json
 
 # Optimum development/test artifacts
+/.cursor/
 /.github/
 /node_modules/
 /priv/plts/
