@@ -493,7 +493,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert {:ok, decoded} = Jason.decode(json_ld)
       assert decoded["@context"] == "https://schema.org"
-      assert decoded["@type"] == "Elixir Drop"
+      assert decoded["@type"] == "Article"
       assert decoded["headline"] == drop.title
       assert decoded["articleBody"] == drop.body
       assert decoded["url"] == "https://elixirdrops.net/d/#{drop.short_id}"
