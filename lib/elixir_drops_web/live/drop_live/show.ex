@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.StructuredData
   alias ElixirDropsWeb.DropComponents
 
   @consecutive_whitespace_regex ~r/\s+/

@@ -473,6 +473,77 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~
                "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff...\"/>"
     end
+
+    test "rendered HTML includes structured data for drop", %{
+      conn: conn,
+      drop: drop
+    } do
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert html =~ ~s(<script type="application/ld+json">)
+      assert html =~ ~s(</script>)
+
+      json_ld =
+        html
+        |> String.split(~s(<script type="application/ld+json">))
+        |> Enum.at(1)
+        |> String.split(~s(</script>))
+        |> Enum.at(0)
+        |> String.trim()
+
+      assert {:ok, decoded} = Jason.decode(json_ld)
+      assert decoded["@context"] == "https://schema.org"
+      assert decoded["@type"] == "Article"
+      assert decoded["headline"] == drop.title
+      assert decoded["articleBody"] == drop.body
+      assert decoded["url"] == "https://elixirdrops.net/d/#{drop.short_id}"
+      assert decoded["author"]["@type"] == "Person"
+      assert decoded["author"]["name"] == drop.user.name
+      assert decoded["author"]["url"] == "https://github.com/#{drop.user.github_username}"
+      assert decoded["author"]["image"] == drop.user.avatar
+      assert decoded["publisher"]["@type"] == "Organization"
+      assert decoded["publisher"]["name"] == "ElixirDrops"
+      assert decoded["publisher"]["logo"]["@type"] == "ImageObject"
+      assert decoded["publisher"]["logo"]["url"] == "https://elixirdrops.net/images/logo.png"
+      assert decoded["datePublished"] == NaiveDateTime.to_iso8601(drop.inserted_at)
+      assert decoded["dateModified"] == NaiveDateTime.to_iso8601(drop.updated_at)
+      assert decoded["mainEntityOfPage"]["@type"] == "WebPage"
+      assert decoded["mainEntityOfPage"]["@id"] == "https://elixirdrops.net/d/#{drop.short_id}"
+      assert is_binary(decoded["description"])
+      assert String.length(decoded["description"]) <= 160
+      assert is_list(decoded["keywords"])
+    end
+
+    test "structured data includes screenshot when available", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      {:ok, updated_drop} =
+        Drops.update_drop(drop, user, %{
+          screenshot: %{
+            internal_url: "http://image.com/drop-internal-image-latest-#{drop.id}.png",
+            meta_url: "http://image.com/drop-meta-image-latest-#{drop.id}.png",
+            status: :completed
+          }
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{updated_drop.short_id}")
+
+      json_ld =
+        html
+        |> String.split(~s(<script type="application/ld+json">))
+        |> Enum.at(1)
+        |> String.split(~s(</script>))
+        |> Enum.at(0)
+        |> String.trim()
+
+      assert {:ok, decoded} = Jason.decode(json_ld)
+      assert length(decoded["image"]) == 1
+      image = List.first(decoded["image"])
+      assert image["@type"] == "ImageObject"
+      assert image["url"] == "http://image.com/drop-meta-image-latest-#{drop.id}.png"
+    end
   end
 
   describe "close editor button" do
