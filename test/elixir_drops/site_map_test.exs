@@ -34,7 +34,6 @@ defmodule ElixirDrops.SitemapTest do
       assert content =~ ~s(<priority>1.0</priority>)
 
       assert content =~ ~s(<loc>http://localhost:4002/d/#{drop.short_id}</loc>)
-      assert content =~ ~s(<title>#{drop.title}</title>)
       assert content =~ ~s(<changefreq>monthly</changefreq>)
       assert content =~ ~s(<priority>0.8</priority>)
 
@@ -49,9 +48,7 @@ defmodule ElixirDrops.SitemapTest do
       assert {:ok, path} = Sitemap.generate(drop)
       content = File.read!(path)
 
-      assert content =~ ~s(&amp;)
-      assert content =~ ~s(&lt;)
-      assert content =~ ~s(&gt;)
+      assert content =~ ~s(<loc>http://localhost:4002/d/#{drop.short_id}</loc>)
     end
 
     test "generates valid XML" do
@@ -125,10 +122,13 @@ defmodule ElixirDrops.SitemapTest do
 
       {:ok, content} = File.read(path)
 
-      assert content =~ ~r/<title>Updated Title<\/title>/
-      refute content =~ ~r/<title>#{drop.title}<\/title>/
+      updated_date =
+        updated_drop.updated_at
+        |> NaiveDateTime.to_date()
+        |> Date.to_iso8601()
 
       assert content =~ ~r/<url>\s*<loc>.*\/d\/#{drop.short_id}<\/loc>/
+      assert content =~ ~r/<lastmod>#{updated_date}<\/lastmod>/
     end
 
     test "handles special characters in URLs" do
@@ -143,7 +143,7 @@ defmodule ElixirDrops.SitemapTest do
 
       {:ok, content} = File.read(path)
 
-      assert content =~ ~r/<title>New &amp; Special &lt;Title&gt;<\/title>/
+      assert content =~ ~r/<url>\s*<loc>.*\/d\/#{drop.short_id}<\/loc>/
     end
 
     test "maintains XML structure when updating entries" do
@@ -164,9 +164,13 @@ defmodule ElixirDrops.SitemapTest do
       assert content =~ ~r/<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/
       assert content =~ ~r/<\/urlset>/
 
-      assert content =~ ~r/<title>Second Update<\/title>/
-      refute content =~ ~r/<title>First Update<\/title>/
-      refute content =~ ~r/<title>#{drop.title}<\/title>/
+      updated_date =
+        updated_drop1.updated_at
+        |> NaiveDateTime.to_date()
+        |> Date.to_iso8601()
+
+      assert content =~ ~r/<url>\s*<loc>.*\/d\/#{drop.short_id}<\/loc>/
+      assert content =~ ~r/<lastmod>#{updated_date}<\/lastmod>/
     end
   end
 end

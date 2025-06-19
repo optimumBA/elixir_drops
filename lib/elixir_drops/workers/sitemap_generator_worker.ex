@@ -8,13 +8,17 @@ defmodule ElixirDrops.Workers.SitemapGeneratorWorker do
   alias ElixirDrops.Sitemap
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: args}) do
-    case Drops.get_drop(%{drop_id: args["drop_id"]}) do
+  def perform(%Oban.Job{args: %{"drop_id" => drop_id}}) do
+    case Drops.get_drop(%{drop_id: drop_id}) do
       %Drops.Drop{} = drop ->
         Sitemap.generate(drop)
 
       nil ->
         {:error, "Drop not found"}
     end
+  end
+
+  def perform(%Oban.Job{args: %{}}) do
+    Sitemap.generate_full()
   end
 end

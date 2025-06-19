@@ -4,6 +4,8 @@ defmodule ElixirDrops.Release do
   installed.
   """
 
+  alias ElixirDrops.Workers.SitemapGeneratorWorker
+
   @type response :: {:ok, fun(), any()}
 
   @app :elixir_drops
@@ -51,6 +53,20 @@ defmodule ElixirDrops.Release do
           end
         end)
     end
+  end
+
+  @doc """
+  Enqueues sitemap generation job.
+  This ensures the sitemap is available after deployment on ephemeral filesystems.
+  """
+  @spec generate_sitemap() :: :ok | {:error, String.t()}
+  def generate_sitemap do
+    load_app()
+    Application.ensure_all_started(@app)
+
+    %{}
+    |> SitemapGeneratorWorker.new(schedule_in: 60)
+    |> Oban.insert()
   end
 
   defp repos do

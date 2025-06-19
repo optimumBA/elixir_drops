@@ -24,19 +24,30 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp drop_screenshots(drop, args) do
+    case execute_screenshot_generation(drop, args) do
+      {:ok, updated_drop} ->
+        enqueue_sitemap_generation(updated_drop)
+        :ok
+
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  defp execute_screenshot_generation(drop, args) do
     FLAME.call(ScreenshotGenerator, fn ->
       broadcast_drop_screenshot_completion(drop, 50, :pending, %{action: args["action"]})
 
       with {:ok, screenshots} <- generate_screenshots(drop, args["action"]),
            {:ok, meta_image} <- File.read(screenshots.meta),
            {:ok, internal_image} <- File.read(screenshots.internal),
-           :ok <-
+           {:ok, updated_drop} <-
              upload_screenshots(
                %{meta: meta_image, internal: internal_image},
                drop,
                args["action"]
              ) do
-        :ok
+        {:ok, updated_drop}
       else
         {:error, error} ->
           Drops.update_drop(drop, drop.user, %{
@@ -140,9 +151,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
         broadcast_drop_screenshot_completion(updated_drop, 100, :completed, %{action: action})
 
-        enqueue_sitemap_generation(updated_drop)
-
-        :ok
+        {:ok, updated_drop}
 
       {:error, :ok} ->
         {:error, "Failed to upload meta screenshot"}
