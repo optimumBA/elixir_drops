@@ -404,12 +404,12 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ "<meta name=\"twitter:description\" content=\"#{drop.title}...\"/>"
 
       assert html =~
-               "<meta name=\"twitter:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
+               "<meta name=\"twitter:image\" content=\"#{url(~p"/images/seo_default_image.png")}\"/>"
 
       assert html =~ "<meta name=\"twitter:site\" content=\"@optimumBA\"/>"
 
       assert html =~
-               "<meta name=\"twitter:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
+               "<meta name=\"twitter:url\" content=\"#{url(~p"/d/#{drop.short_id}")}\"/>"
 
       assert html =~
                "<meta property=\"description\" content=\"#{drop.title}...\"/>"
@@ -418,21 +418,22 @@ defmodule ElixirDropsWeb.DropLiveTest do
                "<meta property=\"og:description\" content=\"#{drop.title}...\"/>"
 
       assert html =~
-               "<meta property=\"og:image\" content=\"http://localhost:4002/images/seo_default_image.png\"/>"
+               "<meta property=\"og:image\" content=\"#{url(~p"/images/seo_default_image.png")}\"/>"
 
       assert html =~ "<meta property=\"og:title\" content=\"Elixir Drops\"/>"
       assert html =~ "<meta property=\"og:type\" content=\"article\"/>"
 
       assert html =~
-               "<meta property=\"og:url\" content=\"http://localhost:4002/d/#{drop.short_id}\"/>"
+               "<meta property=\"og:url\" content=\"#{url(~p"/d/#{drop.short_id}")}\"/>"
 
-      Drops.update_drop(drop, user, %{
-        screenshot: %{
-          internal_url: "http://image.com/drop-internal-image-latest-#{drop.id}.png",
-          meta_url: "http://image.com/drop-meta-image-latest-#{drop.id}.png",
-          status: :completed
-        }
-      })
+      {:ok, _updated_drop} =
+        Drops.update_drop(drop, user, %{
+          screenshot: %{
+            internal_url: "http://image.com/drop-internal-image-latest-#{drop.id}.png",
+            meta_url: "http://image.com/drop-meta-image-latest-#{drop.id}.png",
+            status: :completed
+          }
+        })
 
       {:ok, _live, updated_html} = live(conn, ~p"/d/#{drop.short_id}")
 
@@ -449,7 +450,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
     } do
       drop_attributes = %{
         description: "Drop body",
-        title: "[In this drop](http://localhost:4002/good_drop) we discussed stuff"
+        title: "[In this drop](/good_drop) we discussed stuff"
       }
 
       drop = drop_fixture(%Drop{}, user, drop_attributes)

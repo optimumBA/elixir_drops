@@ -36,13 +36,13 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponentsTest do
                "<meta name=\"twitter:description\" content=\"Share Elixir tips and tricks with the community...\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
-               "<meta name=\"twitter:image\" content=\"http://localhost:4002/images/seo_default_image.png\">"
+               "<meta name=\"twitter:image\" content=\"#{url(~p"/images/seo_default_image.png")}\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
                "<meta name=\"twitter:site\" content=\"@optimumBA\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
-               "<meta name=\"twitter:url\" content=\"http://localhost:4002/\">"
+               "<meta name=\"twitter:url\" content=\"#{url(~p"/")}\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
                "<meta property=\"description\" content=\"Share Elixir tips and tricks with the community...\">"
@@ -51,7 +51,7 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponentsTest do
                "<meta property=\"og:description\" content=\"Share Elixir tips and tricks with the community...\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
-               "<meta property=\"og:image\" content=\"http://localhost:4002/images/seo_default_image.png\">"
+               "<meta property=\"og:image\" content=\"#{url(~p"/images/seo_default_image.png")}\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
                "<meta property=\"og:title\" content=\"Elixir Drops\">"
@@ -60,7 +60,7 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponentsTest do
                "<meta property=\"og:type\" content=\"website\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
-               "<meta property=\"og:url\" content=\"http://localhost:4002/\">"
+               "<meta property=\"og:url\" content=\"#{url(~p"/")}\">"
     end
   end
 end

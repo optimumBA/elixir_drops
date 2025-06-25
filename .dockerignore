@@ -69,3 +69,10 @@ coveralls.json
 fly.toml
 fly.prod.toml
 README.md
+
+# Optimum Codegen
+/.vscode/
+/codegen/
+/CLAUDE.md
+.mcp.json
+*.code-workspace

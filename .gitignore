@@ -45,3 +45,10 @@ npm-debug.log
 .env
 
 /priv/static/sitemap.xml
+
+# Optimum Codegen
+/.vscode/
+/codegen/
+/CLAUDE.md
+.mcp.json
+*.code-workspace

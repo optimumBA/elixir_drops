@@ -1,5 +1,6 @@
 defmodule ElixirDrops.SitemapTest do
   use ElixirDrops.DataCase, async: true
+  use ElixirDropsWeb, :verified_routes
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
@@ -29,11 +30,11 @@ defmodule ElixirDrops.SitemapTest do
       assert content =~ ~s(<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">)
 
       assert content =~ ~s(<url>)
-      assert content =~ ~s(<loc>http://localhost:4002/</loc>)
+      assert content =~ ~s(<loc>#{url(~p"/")}</loc>)
       assert content =~ ~s(<changefreq>daily</changefreq>)
       assert content =~ ~s(<priority>1.0</priority>)
 
-      assert content =~ ~s(<loc>http://localhost:4002/d/#{drop.short_id}</loc>)
+      assert content =~ ~s(<loc>#{url(~p"/d/#{drop.short_id}")}</loc>)
       assert content =~ ~s(<changefreq>monthly</changefreq>)
       assert content =~ ~s(<priority>0.8</priority>)
 
@@ -48,7 +49,7 @@ defmodule ElixirDrops.SitemapTest do
       assert {:ok, path} = Sitemap.generate(drop)
       content = File.read!(path)
 
-      assert content =~ ~s(<loc>http://localhost:4002/d/#{drop.short_id}</loc>)
+      assert content =~ ~s(<loc>#{url(~p"/d/#{drop.short_id}")}</loc>)
     end
 
     test "generates valid XML" do
