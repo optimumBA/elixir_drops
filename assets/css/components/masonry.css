@@ -1,0 +1,231 @@
+.masonry-container {
+  max-width: 2200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.masonry-grid {
+  position: relative;
+}
+
+.grid-sizer {
+  width: calc(33.333% - 16px);
+  height: 0;
+  visibility: hidden;
+  position: absolute;
+  top: 0;
+}
+
+.masonry-item {
+  width: calc(33.333% - 16px);
+}
+
+@media (min-width: 1401px) and (max-width: 1800px) {
+  .grid-sizer,
+  .masonry-item {
+    width: calc(25% - 18px);
+  }
+}
+
+@media (min-width: 1801px) {
+  .grid-sizer,
+  .masonry-item {
+    width: calc(20% - 19.2px);
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-sizer,
+  .masonry-item {
+    width: calc(50% - 12px);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-sizer,
+  .masonry-item {
+    width: 100%;
+  }
+}
+
+.drop-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  cursor: pointer;
+  margin-bottom: 32px;
+  width: 100%;
+  box-sizing: border-box;
+  opacity: 0;
+  -webkit-animation: fadeInUp 0.4s ease forwards;
+  -moz-animation: fadeInUp 0.4s ease forwards;
+  animation: fadeInUp 0.4s ease forwards;
+  -webkit-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+  position: relative;
+  -webkit-transition: all 0.4s ease;
+  -moz-transition: all 0.4s ease;
+  -o-transition: all 0.4s ease;
+  transition: all 0.4s ease;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+}
+
+@-webkit-keyframes fadeInUp {
+  from {
+    opacity: 0;
+    -webkit-transform: translateY(20px);
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    -webkit-transform: translateY(20px);
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
+  }
+}
+
+.drop-card.animation-complete {
+  -webkit-animation: none;
+  -moz-animation: none;
+  animation: none;
+  opacity: 1;
+}
+
+.drop-card.animation-complete:hover,
+.drop-card:hover {
+  -webkit-transform: translateY(-8px);
+  -moz-transform: translateY(-8px);
+  -o-transform: translateY(-8px);
+  transform: translateY(-8px);
+  -webkit-box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  -moz-box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+.screenshot-wrapper {
+  width: 100%;
+  background: #252525;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+
+.screenshot-header {
+  height: 32px;
+  background: #252525;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 6px;
+}
+
+.window-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.window-dot:nth-child(1) {
+  background: #ff5f57;
+}
+.window-dot:nth-child(2) {
+  background: #ffbd2e;
+}
+.window-dot:nth-child(3) {
+  background: #28ca42;
+}
+
+.screenshot-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #1e1e1e;
+}
+
+.drop-content {
+  padding: 1.5rem;
+}
+
+.drop-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #252525;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.drop-body {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.drop-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4a4a4a;
+}
+
+.user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.masonry-loading-indicator {
+  margin-top: 32px;
+  margin-bottom: 32px;
+  background: #3b82f6;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  display: flex;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+  gap: 8px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

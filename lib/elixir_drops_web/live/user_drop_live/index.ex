@@ -18,6 +18,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:end_of_timeline?, false)
      |> assign(:page, 1)
+     |> assign(:viewport_width, nil)
+     |> assign(:viewport_height, nil)
+     |> assign(:batch_size, 15)
+     |> assign(:initial_load, true)
+     |> assign(:loading_more, false)
      |> DropsListHelper.assign_drops()}
   end
 
@@ -27,8 +32,28 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
+  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket) do
+    batch_size = ElixirDropsWeb.DropsBatchCalculator.calculate_batch_size(width, height)
+
+    {:noreply,
+     socket
+     |> assign(:viewport_width, width)
+     |> assign(:viewport_height, height)
+     |> assign(:batch_size, batch_size)}
+  end
+
+  def handle_event("load-more", %{"layout_complete" => true}, socket) do
+    socket = assign(socket, :loading_more, true)
+    DropsListHelper.load_more(socket, socket.assigns.batch_size)
+  end
+
   def handle_event("load-more", _params, socket) do
-    DropsListHelper.load_more(socket)
+    socket = assign(socket, :loading_more, true)
+    DropsListHelper.load_more(socket, socket.assigns.batch_size)
+  end
+
+  def handle_event("load-more-complete", _params, socket) do
+    {:noreply, assign(socket, :loading_more, false)}
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
@@ -68,7 +93,10 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def handle_info({DropsBroadcast, [:drop, :created], _drop}, socket) do
-    {:noreply, DropsListHelper.assign_drops(socket)}
+    {:noreply,
+     socket
+     |> assign(:page, 1)
+     |> DropsListHelper.assign_drops()}
   end
 
   def handle_info(
@@ -114,10 +142,15 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, _status},
+        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, _progress, status,
+         _metadata},
         socket
       ) do
-    {:noreply, DropsListHelper.assign_drops(socket)}
+    if status == :completed do
+      {:noreply, stream_insert(socket, :drops, drop)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_info(_message, socket) do

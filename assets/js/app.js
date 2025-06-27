@@ -52,7 +52,7 @@ let showOrHideWelcomeMessage = () => {
   return localStorage.getItem('show-welcome-message')
 }
 
-params = {
+let params = {
   _csrf_token: csrfToken,
   show_welcome_message: showOrHideWelcomeMessage(),
 }

@@ -15,10 +15,13 @@
     <DropComponents.user_drops_header current_user={@current_user} />
 
     <DropsListHelper.drops_list
+      batch_size={@batch_size}
       current_user={@current_user}
       drops={@streams.drops}
       drops_empty?={@drops_empty?}
+      end_of_timeline?={@end_of_timeline?}
       id="user-drops"
+      loading_more={@loading_more}
       page={@page}
       show_user_drops?={true}
     />

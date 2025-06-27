@@ -1,35 +1,78 @@
 let InfiniteScrollHooks = {}
 
 InfiniteScrollHooks.InfiniteScroll = {
-  page() {
-    return this.el.dataset.page
+  mounted() {
+    this.pending = false
+    this.observer = null
+    this.masonryEl = document.querySelector('[phx-hook="Masonry"]')
+
+    if (this.masonryEl) {
+      this.masonryEl._masonryHook = this.masonryEl.__liveViewHooks__?.Masonry
+    }
+
+    this.connectObserver()
+
+    this.handleEvent('load-more-complete', () => {
+      this.pending = false
+
+      setTimeout(() => {
+        this.connectObserver()
+      }, 500)
+    })
   },
-  loadMore(entries) {
-    const target = entries[0]
-    if (target.isIntersecting && this.pending == this.page()) {
-      this.pending = this.page() + 1
-      this.pushEvent('load-more', {})
+
+  updated() {
+    if (!this.pending) {
+      this.connectObserver()
     }
   },
-  mounted() {
-    this.pending = this.page()
+
+  destroyed() {
+    this.disconnectObserver()
+  },
+
+  connectObserver() {
+    if (this.pending) return
+
+    this.disconnectObserver()
 
     this.observer = new IntersectionObserver(
-      (entries) => this.loadMore(entries),
+      (entries) => {
+        const [entry] = entries
+
+        if (entry.isIntersecting && !this.pending) {
+          this.loadMore()
+        }
+      },
       {
-        root: null, // window by default
-        rootMargin: '400px',
-        // As long as 10% of the root element is visible on the screen....Fire!!
+        rootMargin: '150px',
         threshold: 0.1,
       }
     )
+
     this.observer.observe(this.el)
   },
-  destroyed() {
-    this.observer.unobserve(this.el)
+
+  disconnectObserver() {
+    if (this.observer) {
+      this.observer.disconnect()
+      this.observer = null
+    }
   },
-  updated() {
-    this.pending = this.page()
+
+  async loadMore() {
+    if (this.pending) return
+
+    if (this.el.dataset.endOfTimeline === 'true') return
+
+    this.pending = true
+    this.disconnectObserver()
+
+    if (this.masonryEl && this.masonryEl._masonryHook?.waitForLayoutComplete) {
+      await this.masonryEl._masonryHook.waitForLayoutComplete()
+    }
+
+    this.pushEvent('load-more', { layout_complete: true })
   },
 }
 

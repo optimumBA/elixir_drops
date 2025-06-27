@@ -4,21 +4,26 @@
   <section class="text-[#252525] relative">
     <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
 
-    <DropsListHelper.drops_list
-      current_user={@current_user}
-      drops={@streams.drops}
-      drops_empty?={@drops_empty?}
-      id="drops"
-      page={@page}
-      show_user_drops?={false}
-    />
+    <div class="mt-12">
+      <DropsListHelper.drops_list
+        batch_size={@batch_size}
+        current_user={@current_user}
+        drops={@streams.drops}
+        drops_empty?={@drops_empty?}
+        end_of_timeline?={@end_of_timeline?}
+        id="drops"
+        loading_more={@loading_more}
+        page={@page}
+        show_user_drops?={false}
+      />
+    </div>
 
     <button
       :if={@new_drops?}
       class={[
-        "text-white text-sm flex items-center justify-center gap-x-1 bg-[#9666d9] hover:opacity-80 rounded-xl mx-auto",
-        " mt-2 w-[30%] sm:w-[20%] md:w-[15%] px-1 py-1",
-        "fixed left-[50%] translate-x-[-50%] z-[1000000]"
+        "text-white text-sm flex items-center justify-center gap-x-1 bg-[#9666d9] hover:opacity-80 rounded-xl",
+        "px-4 py-2",
+        "fixed top-20 left-1/2 -translate-x-1/2 z-50 shadow-lg"
       ]}
       id="new-drops-indicator"
       phx-click={JS.push("refresh-drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")}

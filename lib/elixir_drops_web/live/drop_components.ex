@@ -67,41 +67,37 @@ defmodule ElixirDropsWeb.DropComponents do
 
   @spec drop_card(assigns()) :: rendered()
   def drop_card(assigns) do
-    assigns = assign(assigns, :text, get_text(assigns.drop.body))
+    assigns = assign(assigns, :text, get_preview_text(assigns.drop.body))
 
     ~H"""
-    <div class="grid space-y-5 bg-white px-6 md:px-6 py-4 rounded-[16px] relative border border-[#CBCBCB] hover:bg-[#CBCBCB]">
-      <div :if={@drop.screenshot} class="w-full">
-        <div :if={@drop.screenshot.internal_url} class="bg-[#252525] h-[32px] rounded-t-2xl"></div>
+    <div class="drop-card">
+      <div :if={@drop.screenshot} class="screenshot-wrapper">
+        <div :if={@drop.screenshot.internal_url} class="screenshot-header">
+          <div class="window-dot"></div>
+          <div class="window-dot"></div>
+          <div class="window-dot"></div>
+        </div>
         <img
           :if={@drop.screenshot && @drop.screenshot.internal_url}
           src={@drop.screenshot.internal_url}
-          class="object-cover rounded-b-2xl"
+          class="screenshot-image"
           id={"drop-image:#{@drop.id}"}
         />
       </div>
 
-      <div class="grid space-y-2 text-[#252525]">
-        <h3 class="text-md md:text-lg font-[500] mt-2"><%= @drop.title %></h3>
-        <div class="text-sm leading-relaxed break-words overflow-hidden">
-          <%= if String.length(@text) > 100 do %>
-            <%= String.slice(@text, 0, 100) <> "..." %>
-          <% else %>
-            <%= @text %>
-          <% end %>
+      <div class="drop-content">
+        <h3 class="drop-title"><%= @drop.title %></h3>
+        <div class="drop-body">
+          <%= @text %>
         </div>
 
         <div class="flex justify-between">
-          <div class="flex gap-1 md:gap-2 items-center">
-            <img
-              src={@drop.user.avatar}
-              alt={@drop.user.github_username}
-              class="rounded-full h-8 md:h-10 w-8 md:w-10 object-cover"
-            />
+          <div class="drop-meta">
+            <img src={@drop.user.avatar} alt={@drop.user.github_username} class="user-avatar" />
             <a href={~p"/d/#{@drop.short_id}"} class="hidden"></a>
             <p><%= @drop.user.github_username %></p>
-            <p class="text-[#868686] text-[0.65rem] md:text-xs before:content-['•'] before:block] before:mr-[0.02rem] md:before:mr-[0.05rem]">
-              Created <.created_at drop={@drop} />
+            <p class="text-[#868686] text-xs before:content-['•'] before:mr-1">
+              <.created_at drop={@drop} />
             </p>
           </div>
 
@@ -115,7 +111,7 @@ defmodule ElixirDropsWeb.DropComponents do
               <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
             </button>
           <% else %>
-            <.drop_card_action_default id={@drop.id} short_id={@drop.short_id} />
+            <.drop_card_action_default id={"#{@drop.id}-main"} short_id={@drop.short_id} />
           <% end %>
         </div>
       </div>
@@ -152,7 +148,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <div>
           <p class="mb-1"><%= @drop.user.github_username %></p>
           <p class="text-[#696969] text-xs">
-            Created <.created_at drop={@drop} />
+            <.created_at drop={@drop} />
           </p>
         </div>
       </div>
@@ -539,11 +535,11 @@ defmodule ElixirDropsWeb.DropComponents do
   defp drop_card_menu(assigns) do
     ~H"""
     <div
-      class="drop-card-menu text-sm md:text-base hidden absolute right-6 top-[3rem] md:top-[3.8rem] py-6 pl-6 pr-12 rounded-md bg-white shadow-xl shadow-[#aaa4af] z-[100000]"
+      class="drop-card-menu text-sm md:text-base hidden absolute right-6 top-[8rem] md:top-[9rem] py-6 pl-6 pr-12 rounded-md bg-white shadow-xl shadow-[#aaa4af] z-[100000]"
       id={"drop-card-menu-#{@id}"}
       phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
     >
-      <.drop_card_action_default id={@id} short_id={@short_id}>
+      <.drop_card_action_default id={"#{@id}-menu"} short_id={@short_id}>
         <:inner_text>
           Copy link
         </:inner_text>
@@ -695,11 +691,62 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp get_text(markdown) do
-    remove_code_blocks(markdown)
+  defp get_preview_text(markdown) do
+    code_block_pos =
+      case Regex.run(~r/```/, markdown, return: :index) do
+        [{start_pos, _}] -> start_pos
+        _no_match -> nil
+      end
+
+    if code_block_pos && code_block_pos <= 150 do
+      markdown
+      |> String.slice(0, code_block_pos)
+      |> String.trim()
+      |> strip_markdown()
+      |> maybe_add_ellipsis()
+    else
+      markdown
+      |> strip_markdown()
+      |> truncate_text(150)
+    end
   end
 
-  defp remove_code_blocks(markdown) do
-    Regex.replace(~r/```[^`]*```/s, markdown, "")
+  defp truncate_text(text, max_length) do
+    if String.length(text) > max_length do
+      String.slice(text, 0, max_length) <> "..."
+    else
+      text
+    end
+  end
+
+  defp maybe_add_ellipsis(text) do
+    if text == "" do
+      text
+    else
+      text <> "..."
+    end
+  end
+
+  defp strip_markdown(text) do
+    text
+    # Remove links but keep the text
+    |> String.replace(~r/\[([^\]]+)\]\([^)]+\)/, "\\1")
+    # Remove bold emphasis markers (** or __)
+    |> String.replace(~r/(\*\*|__)(.*?)\1/, "\\2")
+    # Remove italic emphasis markers (* or _) but only when they wrap words
+    # This preserves underscores in snake_case names
+    |> String.replace(~r/(?<!\w)\*([^\*]+)\*(?!\w)/, "\\1")
+    |> String.replace(~r/(?<!\w)_([^_]+)_(?!\w)/, "\\1")
+    # Remove headers
+    |> String.replace(~r/^#+\s+/m, "")
+    # Remove blockquotes
+    |> String.replace(~r/^>\s+/m, "")
+    # Remove horizontal rules
+    |> String.replace(~r/^---+$/m, "")
+    # Remove inline code
+    |> String.replace(~r/`([^`]+)`/, "\\1")
+    # Clean up extra whitespace
+    |> String.replace(~r/\n{3,}/, "\n\n")
+    |> String.trim()
   end
 end

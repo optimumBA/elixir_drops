@@ -65,30 +65,32 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
 
     test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
-      drops = create_multiple_drops(user, 25)
-
-      list_midpoint =
-        drops
-        |> length()
-        |> div(2)
-
-      first_drop = List.first(drops)
-      last_drop = List.last(drops)
-      midpoint_drop = Enum.at(drops, list_midpoint)
+      _drops = create_multiple_drops(user, 35)
 
       conn = sign_in_user(conn, user)
       {:ok, live, html} = live(conn, ~p"/profile")
-      assert html =~ last_drop.id
-      refute html =~ midpoint_drop.id
-      refute html =~ first_drop.id
 
+      # First page should have newest drops
+      # Newest
+      assert html =~ "Drop title 35"
+      # 10th drop
+      assert html =~ "Drop title 26"
+      # Should not have oldest
+      refute html =~ "Drop title 1"
+
+      # Load more should show Drop title 20 but still not Drop title 5
       assert html_2 = render_hook(live, "load-more", %{})
-      refute html_2 =~ first_drop.id
-      assert html_2 =~ midpoint_drop.id
-      assert html_2 =~ last_drop.id
+      assert html_2 =~ "Drop title 20"
+      # Should have the 30th drop (oldest on second page)
+      assert html_2 =~ "Drop title 6"
+      # Should NOT have the 31st drop
+      refute html_2 =~ "Drop title 5"
 
+      # Another load-more should show Drop title 5 and Drop title 1 (oldest)
       assert html_3 = render_hook(live, "load-more", %{})
-      assert html_3 =~ first_drop.id
+      assert html_3 =~ "Drop title 5"
+      # Should now have the oldest drop
+      assert html_3 =~ "Drop title 1"
     end
 
     test "drop which has a pending screenshot status has a loader", %{conn: conn, user: user} do

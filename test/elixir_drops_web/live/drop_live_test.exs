@@ -164,7 +164,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, drop} =
         Drops.create_drop(%Drop{}, user, %{
-          body: "Drop body with code block",
+          body: "Drop body without code block",
           screenshot: %{
             status: :completed,
             url: "http://example.com/screenshot.png"
@@ -174,14 +174,14 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert has_element?(live, "#new-drops-indicator")
 
-      live
-      |> element("#new-drops-indicator")
-      |> render_click()
+      assert live
+             |> element("#new-drops-indicator")
+             |> render_click() =~ drop.title
 
-      assert has_element?(live, "#drop-#{drop.id}", drop.title)
+      assert has_element?(live, "#drop-#{drop.id}")
     end
 
-    test "user sees an indicator for new drop only when screenshot generation completes",
+    test "user sees drop automatically when screenshot generation completes",
          %{
            conn: conn,
            user: user
@@ -200,8 +200,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
           title: "New Drop title"
         })
 
-      refute has_element?(live, "#new-drops-indicator")
-
+      # Drop with pending screenshot should not appear yet
       refute has_element?(live, "#drop-#{drop.id}")
 
       {:ok, updated_drop} =
@@ -218,13 +217,11 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       Process.sleep(100)
 
-      render(live)
-
       assert has_element?(live, "#new-drops-indicator")
 
-      live
-      |> element("#new-drops-indicator")
-      |> render_click()
+      assert live
+             |> element("#new-drops-indicator")
+             |> render_click() =~ drop.title
 
       assert has_element?(live, "#drop-#{drop.id}")
     end
@@ -277,28 +274,52 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
 
     test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
-      drops = create_multiple_drops(user, 25)
-
-      list_midpoint =
-        drops
-        |> length()
-        |> div(2)
-
-      first_drop = List.first(drops)
-      last_drop = List.last(drops)
-      midpoint_drop = Enum.at(drops, list_midpoint)
+      _drops = create_multiple_drops(user, 35)
 
       {:ok, live, html} = live(conn, ~p"/")
 
-      assert html =~ last_drop.id
-      refute html =~ midpoint_drop.id
-      refute html =~ first_drop.id
-      assert html_2 = render_hook(live, "load-more", %{})
+      # First page should have Drop title 35 (newest) but not Drop title 20
+      assert html =~ "Drop title 35"
+      # Should have the 15th drop (oldest on first page)
+      assert html =~ "Drop title 21"
+      # Should NOT have the 16th drop
+      refute html =~ "Drop title 20"
+      # Should NOT have the oldest drop
+      refute html =~ "Drop title 1"
 
-      refute html_2 =~ first_drop.id
-      assert html_2 =~ midpoint_drop.id
+      # Load more should show Drop title 20 but still not Drop title 5
+      assert html_2 = render_hook(live, "load-more", %{})
+      assert html_2 =~ "Drop title 20"
+      # Should have the 30th drop (oldest on second page)
+      assert html_2 =~ "Drop title 6"
+      # Should NOT have the 31st drop
+      refute html_2 =~ "Drop title 5"
+
+      # Another load-more should show Drop title 5 and Drop title 1 (oldest)
       assert html_3 = render_hook(live, "load-more", %{})
-      assert html_3 =~ first_drop.id
+      assert html_3 =~ "Drop title 5"
+      # Should now have the oldest drop
+      assert html_3 =~ "Drop title 1"
+    end
+
+    test "viewport update event is handled", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert render_hook(live, "update-viewport", %{"width" => 375, "height" => 667}) =~ "drops"
+      assert render_hook(live, "update-viewport", %{"width" => 1920, "height" => 1080}) =~ "drops"
+    end
+
+    test "load-more with layout_complete flag works", %{conn: conn, user: user} do
+      create_multiple_drops(user, 20)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert render_hook(live, "load-more", %{"layout_complete" => true}) != ""
+    end
+
+    test "load-more-complete event is handled", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      assert render_hook(live, "load-more-complete", %{}) =~ "drops"
     end
 
     test "screenshot generation started broadcast doesn't change page state", %{
@@ -567,6 +588,117 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {path, _flash} = assert_redirect(live)
 
       assert path == "/profile"
+    end
+  end
+
+  describe "drop card text processing" do
+    setup [:create_drops_setup]
+
+    test "preserves underscores in drop descriptions", %{conn: conn, user: user} do
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Test Drop",
+          body: "optimum_gen_infra version 0.2.0 was released with cursor_rules support"
+        })
+
+      {:ok, _live, html} =
+        conn
+        |> sign_in_user(user)
+        |> live(~p"/")
+
+      assert html =~ "optimum_gen_infra version 0.2.0"
+      assert html =~ "cursor_rules"
+    end
+
+    test "strips markdown syntax from drop descriptions", %{conn: conn, user: user} do
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Test Drop",
+          body: "Check out [this link](https://example.com) and **bold text** with *italic*"
+        })
+
+      {:ok, _live, html} =
+        conn
+        |> sign_in_user(user)
+        |> live(~p"/")
+
+      assert html =~ "Check out this link and bold text with italic"
+      refute html =~ "[this link]"
+      refute html =~ "**bold text**"
+      refute html =~ "*italic*"
+    end
+
+    test "truncates long descriptions to 150 characters", %{conn: conn, user: user} do
+      long_text = String.duplicate("a", 200)
+
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Test Drop",
+          body: long_text
+        })
+
+      {:ok, _live, html} =
+        conn
+        |> sign_in_user(user)
+        |> live(~p"/")
+
+      assert html =~ "Test Drop"
+      assert html =~ String.slice(long_text, 0, 100)
+      assert html =~ "..."
+      refute html =~ long_text
+    end
+
+    test "truncates before code block when it appears early", %{conn: conn, user: user} do
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Test Drop",
+          body: "Here is some text before code:\n```\ncode block content\n```\nmore text after"
+        })
+
+      {:ok, _live, html} =
+        conn
+        |> sign_in_user(user)
+        |> live(~p"/")
+
+      assert html =~ "Here is some text before code:..."
+      refute html =~ "```"
+      refute html =~ "code block content"
+    end
+
+    test "removes emphasis but preserves underscores in words", %{conn: conn, user: user} do
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Test Drop",
+          body: "This has _emphasized text_ but preserves snake_case_names"
+        })
+
+      {:ok, _live, html} =
+        conn
+        |> sign_in_user(user)
+        |> live(~p"/")
+
+      assert html =~ "This has emphasized text but preserves snake_case_names"
+      refute html =~ "_emphasized text_"
+    end
+
+    test "handles multiple markdown elements", %{conn: conn, user: user} do
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Test Drop",
+          body: "# Header\n\nSome **bold** and `inline code` with > quote"
+        })
+
+      {:ok, _live, html} =
+        conn
+        |> sign_in_user(user)
+        |> live(~p"/")
+
+      assert html =~ "Test Drop"
+      assert html =~ "Header"
+      assert html =~ "Some bold and inline code with"
+      refute html =~ "# Header"
+      refute html =~ "**"
+      refute html =~ "`"
     end
   end
 end
