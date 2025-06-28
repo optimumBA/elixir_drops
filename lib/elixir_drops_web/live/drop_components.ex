@@ -154,7 +154,7 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <div
-        class="leading-[1.6] grid w-full py-3 drop-body"
+        class="leading-[1.6] grid w-full py-3 drop-full-content"
         id="drop-body"
         phx-hook="DropBodyContainer"
       >
