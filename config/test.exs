@@ -16,7 +16,7 @@ config :elixir_drops, ElixirDrops.Repo,
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :elixir_drops, ElixirDropsWeb.Endpoint,
-  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT_TEST") || "4100")],
+  http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT_TEST") || "4100")],
   secret_key_base: "VwmzCly3NO1QYT8AFbHvceC6eRjzjJK+d7B//nUvmfNaP3xfGE3QSn+gc2rK4rUe",
   server: false
 
