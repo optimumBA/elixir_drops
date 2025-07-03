@@ -101,9 +101,8 @@ RUN apt-get update -y && \
     apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# Install AWS CLI for sanitized database restore functionality
 RUN apt-get update -y && \
-    apt-get install -y python3 python3-pip && \
+    apt-get install -y postgresql-client python3 python3-pip && \
     pip3 install awscli && \
     apt-get clean && rm -f /var/lib/apt/lists/*_*
 
