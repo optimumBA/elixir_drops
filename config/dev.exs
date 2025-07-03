@@ -5,7 +5,7 @@ config :elixir_drops, ElixirDrops.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "elixir_drops_dev",
+  database: "elixir_drops_dev#{System.get_env("MIX_DEV_PARTITION")}",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
