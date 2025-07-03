@@ -73,13 +73,11 @@ echo "✓ Indexes and constraints created"
 
 # Phase 4: Final optimization
 echo "Phase 4: Final optimization..."
-psql "$DATABASE" -c "
--- Update table statistics
-ANALYZE;
+psql "$DATABASE" -c "ANALYZE;"
 
--- Vacuum to clean up
-VACUUM ANALYZE;
-"
+# Run VACUUM separately (can't run in transaction block)
+echo "Running VACUUM..."
+psql "$DATABASE" -c "VACUUM;"
 
 echo "✓ Database optimization complete"
 
