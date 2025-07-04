@@ -12,6 +12,11 @@ defmodule ElixirDropsWeb.DropComponents do
 
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
+    assigns =
+      assigns
+      |> Map.put_new(:search_query, "")
+      |> Map.put_new(:searching, false)
+
     ~H"""
     <header class="header px-10 py-2 w-full relative z-30">
       <nav class="breakout flex items-center justify-between nav-primary">
@@ -19,6 +24,10 @@ defmodule ElixirDropsWeb.DropComponents do
           <.link href={~p"/"}>
             <Icons.elixir_drops_logo class="w-32 md:w-48" />
           </.link>
+        </div>
+
+        <div class="flex-1 max-w-md mx-4">
+          <.search_box search_query={@search_query} searching={@searching} />
         </div>
 
         <div>
@@ -58,6 +67,36 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
       </nav>
     </header>
+    """
+  end
+
+  defp search_box(assigns) do
+    ~H"""
+    <form phx-change="search" phx-submit="search">
+      <div class="relative">
+        <input
+          type="text"
+          name="query"
+          value={@search_query}
+          placeholder="Search drops..."
+          class="w-full px-4 py-2 pl-10 pr-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue_primary"
+          phx-debounce="300"
+        />
+
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+          <.icon name="hero-magnifying-glass" class="w-5 h-5 text-gray-400" />
+        </div>
+
+        <button
+          :if={@searching}
+          class="absolute inset-y-0 right-0 flex items-center pr-3"
+          phx-click="clear_search"
+          type="button"
+        >
+          <.icon name="hero-x-mark" class="w-5 h-5 text-gray-400 hover:text-gray-600" />
+        </button>
+      </div>
+    </form>
     """
   end
 

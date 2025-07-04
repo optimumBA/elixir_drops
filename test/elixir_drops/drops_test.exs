@@ -7,6 +7,7 @@ defmodule ElixirDrops.DropsTest do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
+  alias ElixirDrops.Repo
 
   @invalid_attrs %{title: nil, body: nil}
   @valid_attrs %{title: "some title", body: "some body"}
@@ -16,6 +17,13 @@ defmodule ElixirDrops.DropsTest do
     drop = drop_fixture(user)
 
     %{drop: drop, user: user}
+  end
+
+  # Helper to update search vectors in test environment since triggers don't fire properly
+  defp update_search_vectors do
+    Repo.query!(
+      "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+    )
   end
 
   describe "list_drops/2" do
@@ -264,6 +272,158 @@ defmodule ElixirDrops.DropsTest do
   describe "subscribe/0" do
     test "returns :ok and subscribes caller to the drops topic" do
       assert :ok == Drops.subscribe()
+    end
+  end
+
+  describe "search functionality" do
+    test "searches drops by title" do
+      user = user_fixture()
+
+      drop1 =
+        drop_fixture(%Drop{}, user, %{title: "Phoenix LiveView Tutorial", body: "Some content"})
+
+      _drop2 =
+        drop_fixture(%Drop{}, user, %{title: "Elixir GenServer Guide", body: "Other content"})
+
+      update_search_vectors()
+
+      results = Drops.list_drops(%{search: "Phoenix"})
+      assert length(results) == 1
+      assert hd(results).id == drop1.id
+      assert Ecto.assoc_loaded?(hd(results).user)
+    end
+
+    test "searches drops by body content" do
+      user = user_fixture()
+
+      _drop1 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Tutorial 1",
+          body: "defmodule MyApp.PageLive do\n  use Phoenix.LiveView\nend"
+        })
+
+      _drop2 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Tutorial 2",
+          body: "defmodule MyApp.Worker do\n  use GenServer\nend"
+        })
+
+      update_search_vectors()
+
+      # Test search by title
+      title_filters = %{search: "Tutorial", screenshot_status: [:completed, :skipped]}
+      title_results = Drops.list_drops(title_filters)
+      assert length(title_results) == 2
+
+      # Test search by body content using a term that definitely exists
+      body_filters = %{search: "defmodule", screenshot_status: [:completed, :skipped]}
+      body_results = Drops.list_drops(body_filters)
+      assert length(body_results) == 2
+      assert Ecto.assoc_loaded?(hd(body_results).user)
+    end
+
+    test "searches drops by both title and body" do
+      user = user_fixture()
+      drop1 = drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "LiveView content"})
+      drop2 = drop_fixture(%Drop{}, user, %{title: "LiveView Guide", body: "Elixir content"})
+      _drop3 = drop_fixture(%Drop{}, user, %{title: "GenServer Guide", body: "GenServer content"})
+
+      update_search_vectors()
+
+      results = Drops.list_drops(%{search: "LiveView"})
+      result_ids = Enum.map(results, & &1.id)
+      assert length(results) == 2
+      assert drop1.id in result_ids
+      assert drop2.id in result_ids
+    end
+
+    test "handles quoted phrases in search" do
+      user = user_fixture()
+      drop1 = drop_fixture(%Drop{}, user, %{title: "Phoenix LiveView Tutorial", body: "Content"})
+      _drop2 = drop_fixture(%Drop{}, user, %{title: "Phoenix Framework Guide", body: "Content"})
+
+      update_search_vectors()
+
+      results = Drops.list_drops(%{search: "\"Phoenix LiveView\""})
+      assert length(results) == 1
+      assert hd(results).id == drop1.id
+    end
+
+    test "returns empty list for no matches" do
+      user = user_fixture()
+      _drop = drop_fixture(%Drop{}, user, %{title: "Elixir Tutorial", body: "Elixir content"})
+
+      update_search_vectors()
+
+      results = Drops.list_drops(%{search: "Python"})
+      assert results == []
+    end
+
+    test "orders results by relevance (title matches ranked higher)" do
+      user = user_fixture()
+      _drop1 = drop_fixture(%Drop{}, user, %{title: "Phoenix Guide", body: "Some content"})
+
+      drop2 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Phoenix LiveView Tutorial",
+          body: "Phoenix is great for LiveView apps"
+        })
+
+      update_search_vectors()
+
+      results = Drops.list_drops(%{search: "Phoenix"})
+      assert length(results) == 2
+      # drop2 should rank higher due to more matches and title weight
+      assert hd(results).id == drop2.id
+    end
+
+    test "search is case insensitive" do
+      user = user_fixture()
+      drop = drop_fixture(%Drop{}, user, %{title: "Phoenix LiveView", body: "Content"})
+
+      update_search_vectors()
+
+      results = Drops.list_drops(%{search: "phoenix liveview"})
+      assert length(results) == 1
+      assert hd(results).id == drop.id
+    end
+
+    test "ignores empty search terms" do
+      user = user_fixture()
+      drop = drop_fixture(%Drop{}, user, %{title: "Test", body: "Content"})
+
+      # Empty string should not filter (returns all drops)
+      results = Drops.list_drops(%{search: ""})
+      assert length(results) == 1
+      assert hd(results).id == drop.id
+
+      # No search filter should return all drops
+      no_search_results = Drops.list_drops(%{})
+      assert length(no_search_results) == 1
+      assert hd(no_search_results).id == drop.id
+    end
+
+    test "can combine search with other filters" do
+      user1 = user_fixture()
+
+      user2 =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "github_username2",
+          name: "some_name2"
+        })
+
+      drop1 = drop_fixture(%Drop{}, user1, %{title: "Phoenix Tutorial", body: "Content"})
+      _drop2 = drop_fixture(%Drop{}, user1, %{title: "Elixir Guide", body: "Content"})
+      _drop3 = drop_fixture(%Drop{}, user2, %{title: "Phoenix Guide", body: "Content"})
+
+      update_search_vectors()
+
+      results = Drops.list_drops(%{search: "Phoenix", user_id: user1.id})
+      assert length(results) == 1
+      assert hd(results).id == drop1.id
     end
   end
 end

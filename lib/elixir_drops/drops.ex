@@ -57,7 +57,7 @@ defmodule ElixirDrops.Drops do
 
     drop_query()
     |> where(^filter_query.(filters))
-    |> order_by([d], {:desc, d.inserted_at})
+    |> apply_search_ordering(filters)
     |> limit(^limit)
     |> preload([:user])
     |> Repo.all()
@@ -97,7 +97,32 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
 
+  defp apply_filter({:search, search_term}, dynamic)
+       when is_binary(search_term) and search_term != "" do
+    dynamic(
+      [drop: drop],
+      ^dynamic and
+        fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^search_term)
+    )
+  end
+
   defp apply_filter(_other, dynamic), do: dynamic
+
+  defp apply_search_ordering(query, %{search: search_term})
+       when is_binary(search_term) and search_term != "" do
+    order_by(query, [drop: drop],
+      desc:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_term
+        )
+    )
+  end
+
+  defp apply_search_ordering(query, _filters) do
+    order_by(query, [drop: drop], desc: drop.inserted_at)
+  end
 
   @doc """
   Gets a single drop given filters.

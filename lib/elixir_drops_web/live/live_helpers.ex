@@ -5,7 +5,6 @@ defmodule ElixirDropsWeb.LiveHelpers do
   import Phoenix.LiveView
 
   @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t()) :: {:cont, map}
-
   def on_mount(:maybe_show_welcome_message, _params, _session, socket) do
     show_welcome_message? =
       cond do

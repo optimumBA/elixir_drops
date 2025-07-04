@@ -10,6 +10,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
+  alias ElixirDrops.Repo
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDrops.Workers.SitemapGeneratorWorker
 
@@ -227,6 +228,220 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       assert html =~ "100%"
       assert html =~ "http://example.com/new-screenshot.png"
+    end
+  end
+
+  describe "/profile search functionality" do
+    setup [:create_drops_setup]
+
+    test "search form is present in navbar on user drops page", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, _live, html} = live(conn, ~p"/profile")
+
+      assert html =~ ~s(placeholder="Search drops...")
+      assert html =~ ~s(phx-change="search")
+      assert html =~ ~s(name="query")
+    end
+
+    test "displays results when searching on user drops page", %{conn: conn, user: user} do
+      # Create test drops for this user
+      _drop1 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Phoenix LiveView Tutorial",
+          body: "Learn LiveView",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot1.png"}
+        })
+
+      _drop2 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Elixir GenServer Guide",
+          body: "Learn GenServer",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot2.png"}
+        })
+
+      # Create drops for another user that should NOT appear
+      other_user =
+        user_fixture(%{
+          email: "other@mail.com",
+          github_id: 99_999,
+          github_username: "otheruser"
+        })
+
+      _other_drop =
+        drop_fixture(%Drop{}, other_user, %{
+          title: "Phoenix Channels Tutorial",
+          body: "Learn Channels",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot3.png"}
+        })
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      html =
+        live
+        |> form("form", %{query: "Phoenix"})
+        |> render_change()
+
+      # Should show user's Phoenix drop
+      assert html =~ "Phoenix LiveView Tutorial"
+      # Should NOT show user's non-matching drop
+      refute html =~ "Elixir GenServer Guide"
+      # Should NOT show other user's matching drop
+      refute html =~ "Phoenix Channels Tutorial"
+    end
+
+    test "search shows no results message when no matches found on user page", %{
+      conn: conn,
+      user: user
+    } do
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Elixir Tutorial",
+          body: "Learn Elixir",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+        })
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      html =
+        live
+        |> form("form", %{query: "Python"})
+        |> render_change()
+
+      # The search empty component is rendered
+      assert html =~ "id=\"search-empty\""
+      assert html =~ ~s(value="Python")
+      assert html =~ "No drops found"
+      assert html =~ "No drops match your search for"
+    end
+
+    test "clear search button works on user drops page", %{conn: conn, user: user} do
+      _drop1 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Phoenix Tutorial",
+          body: "Learn Phoenix",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot1.png"}
+        })
+
+      _drop2 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Elixir Guide",
+          body: "Learn Elixir",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot2.png"}
+        })
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      html =
+        live
+        |> form("form", %{query: "Phoenix"})
+        |> render_change()
+
+      assert html =~ "Phoenix Tutorial"
+      refute html =~ "Elixir Guide"
+
+      cleared_html =
+        live
+        |> element("button[phx-click='clear_search']")
+        |> render_click()
+
+      assert cleared_html =~ "Phoenix Tutorial"
+      assert cleared_html =~ "Elixir Guide"
+    end
+
+    test "search maintains state during new drop broadcasts on user page", %{
+      conn: conn,
+      user: user
+    } do
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Phoenix Tutorial",
+          body: "Learn Phoenix",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+        })
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      Drops.subscribe()
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      live
+      |> form("form", %{query: "Phoenix"})
+      |> render_change()
+
+      # Create new drop for the same user
+      {:ok, _new_drop} =
+        Drops.create_drop(%Drop{}, user, %{
+          body: "Different content without code block",
+          screenshot: %{status: :completed},
+          title: "New Drop"
+        })
+
+      Process.sleep(100)
+
+      # Should still show search results
+      assert render(live) =~ "Phoenix Tutorial"
+      # New drop should not appear since it doesn't match search
+      refute render(live) =~ "New Drop"
+    end
+
+    test "search input shows clear button when searching on user page", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile")
+
+      # Initially no clear button
+      refute html =~ ~s(phx-click="clear_search")
+
+      assert live
+             |> form("form", %{query: "test"})
+             |> render_change() =~ ~s(phx-click="clear_search")
+    end
+
+    test "search is case insensitive on user drops page", %{conn: conn, user: user} do
+      _drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Phoenix LiveView",
+          body: "Content",
+          screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
+        })
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      assert live
+             |> form("form", %{query: "phoenix liveview"})
+             |> render_change() =~ "Phoenix LiveView"
+
+      assert live
+             |> form("form", %{query: "PHOENIX LIVEVIEW"})
+             |> render_change() =~ "Phoenix LiveView"
     end
   end
 

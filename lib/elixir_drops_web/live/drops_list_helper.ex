@@ -20,6 +20,8 @@ defmodule ElixirDropsWeb.DropsListHelper do
       assigns
       |> Map.put_new(:loading_more, false)
       |> Map.put_new(:batch_size, 10)
+      |> Map.put_new(:search_query, "")
+      |> Map.put_new(:searching, false)
 
     ~H"""
     <div class="mt-12">
@@ -48,6 +50,21 @@ defmodule ElixirDropsWeb.DropsListHelper do
                 <span><.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" /></span>
                 <span> Create Post</span>
               </.link>
+            </div>
+          </div>
+
+          <div
+            :if={@searching && @drops_empty?}
+            id="search-empty"
+            class="drops-empty only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+          >
+            <div class="flex flex-col items-center justify-center">
+              <.icon name="hero-magnifying-glass" class="w-16 h-16 text-gray-400 mb-4" />
+              <p class="text-xl font-semibold text-gray-700 mb-2">No drops found</p>
+              <p class="text-gray-500 mb-4">No drops match your search for "<%= @search_query %>"</p>
+              <button phx-click="clear_search" class="text-blue-600 hover:text-blue-800 font-medium">
+                Clear search
+              </button>
             </div>
           </div>
           <div

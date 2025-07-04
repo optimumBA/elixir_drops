@@ -8,23 +8,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
-  @impl Phoenix.LiveView
-  def mount(_params, _session, socket) do
-    if connected?(socket), do: Drops.subscribe()
-
-    {:ok,
-     socket
-     |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
-     |> assign(:end_of_timeline?, false)
-     |> assign(:page, 1)
-     |> assign(:viewport_width, nil)
-     |> assign(:viewport_height, nil)
-     |> assign(:batch_size, 15)
-     |> assign(:initial_load, true)
-     |> assign(:loading_more, false)
-     |> DropsListHelper.assign_drops()}
-  end
+  on_mount {ElixirDropsWeb.DropsMountHook, :default}
+  on_mount {ElixirDropsWeb.DropsMountHook, :user_drops}
 
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
