@@ -9,6 +9,22 @@
     <DropComponents.drop drop={@drop} />
   </section>
 
+  <%= if @drop do %>
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ElixirDropsWeb.CommentComponents.comment_section
+        streams={@streams}
+        comment_count={@comment_count || @drop.comment_count || 0}
+        current_user={@current_user}
+        drop_id={@drop.id}
+        has_more_comments={@has_more_comments || false}
+        replying_to={@replying_to}
+        editing_comment={@editing_comment}
+        comment_changeset={@comment_changeset}
+        current_url={~p"/d/#{@drop.short_id}"}
+      />
+    </section>
+  <% end %>
+
   <DropComponents.copied_link_popup_message />
 </section>
 

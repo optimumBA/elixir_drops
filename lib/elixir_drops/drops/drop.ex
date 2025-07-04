@@ -19,6 +19,7 @@ defmodule ElixirDrops.Drops.Drop do
     embeds_one :screenshot, Screenshot, on_replace: :update
     field :short_id, :string
     field :title, :string
+    field :comment_count, :integer, virtual: true
 
     belongs_to :user, User
 

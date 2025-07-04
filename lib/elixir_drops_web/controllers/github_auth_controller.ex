@@ -13,6 +13,7 @@ defmodule ElixirDropsWeb.GithubAuthController do
 
   use ElixirDropsWeb, :controller
 
+  plug :store_return_to when action in [:request]
   plug Ueberauth
 
   import Plug.Conn
@@ -80,5 +81,12 @@ defmodule ElixirDropsWeb.GithubAuthController do
     |> Map.values()
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" ")
+  end
+
+  defp store_return_to(conn, _opts) do
+    case conn.params["return_to"] do
+      nil -> conn
+      return_to -> put_session(conn, :user_return_to, return_to)
+    end
   end
 end

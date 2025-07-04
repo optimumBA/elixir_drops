@@ -18,14 +18,16 @@ defmodule ElixirDrops.AccountsFixtures do
   """
   @spec user_fixture(map()) :: User.t()
   def user_fixture(attrs \\ %{}) do
+    unique_id = System.unique_integer([:positive])
+
     {:ok, user} =
       attrs
       |> Enum.into(%{
-        avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+        avatar: "https://avatars.githubusercontent.com/u/#{unique_id}?v=4",
         email: unique_user_email(),
-        github_id: 1_456_872,
-        github_username: "github_username",
-        name: "some_name"
+        github_id: unique_id,
+        github_username: "github_user_#{unique_id}",
+        name: "User #{unique_id}"
       })
       |> Accounts.register_user()
 

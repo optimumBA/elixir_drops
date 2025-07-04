@@ -6,6 +6,7 @@ defmodule ElixirDrops.Drops do
   import Ecto.Query, warn: false
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
@@ -60,6 +61,15 @@ defmodule ElixirDrops.Drops do
     |> order_by([d], {:desc, d.inserted_at})
     |> limit(^limit)
     |> preload([:user])
+    |> select_merge([d], %{
+      comment_count:
+        subquery(
+          from(c in Comment,
+            where: c.drop_id == parent_as(:drop).id and is_nil(c.deleted_at),
+            select: count(c.id)
+          )
+        )
+    })
     |> Repo.all()
   end
 
@@ -118,6 +128,15 @@ defmodule ElixirDrops.Drops do
     drop_query()
     |> where(^filter_query.(filters))
     |> preload([:user])
+    |> select_merge([d], %{
+      comment_count:
+        subquery(
+          from(c in Comment,
+            where: c.drop_id == parent_as(:drop).id and is_nil(c.deleted_at),
+            select: count(c.id)
+          )
+        )
+    })
     |> Repo.one()
   end
 
@@ -137,9 +156,20 @@ defmodule ElixirDrops.Drops do
   """
   @spec get_drop_by_short_id(short_id()) :: drop() | nil
   def get_drop_by_short_id(short_id) do
-    Drop
+    query = from(d in Drop, as: :drop)
+
+    query
     |> where([d], d.short_id == ^short_id)
     |> preload([:user])
+    |> select_merge([d], %{
+      comment_count:
+        subquery(
+          from(c in Comment,
+            where: c.drop_id == parent_as(:drop).id and is_nil(c.deleted_at),
+            select: count(c.id)
+          )
+        )
+    })
     |> Repo.one()
   end
 
