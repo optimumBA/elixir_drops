@@ -23,14 +23,14 @@ defmodule ElixirDrops.Comments do
   @spec list_drop_comments(String.t(), keyword()) :: [Comment.t()]
   def list_drop_comments(drop_id, opts \\ []) do
     limit = Keyword.get(opts, :limit, 10)
-    older_than = Keyword.get(opts, :older_than)
+    offset = Keyword.get(opts, :offset, 0)
 
     Comment
     |> where([c], c.drop_id == ^drop_id)
     |> where([c], is_nil(c.parent_id))
-    |> maybe_filter_older_than(older_than)
-    |> order_by([c], desc: c.inserted_at)
+    |> order_by([c], desc: c.inserted_at, desc: c.id)
     |> limit(^limit)
+    |> offset(^offset)
     |> preload([:user, replies: [:user]])
     |> Repo.all()
   end
@@ -42,15 +42,6 @@ defmodule ElixirDrops.Comments do
   def get_comment!(id) do
     comment = Repo.get!(Comment, id)
     Repo.preload(comment, [:user, :drop])
-  end
-
-  @doc """
-  Gets a single comment with replies.
-  """
-  @spec get_comment_with_replies!(String.t()) :: Comment.t()
-  def get_comment_with_replies!(id) do
-    comment = Repo.get!(Comment, id)
-    Repo.preload(comment, [:user, :drop, replies: [:user]])
   end
 
   @doc """
@@ -121,14 +112,8 @@ defmodule ElixirDrops.Comments do
     user_id == current_user_id
   end
 
-  defp maybe_filter_older_than(query, nil), do: query
-
-  defp maybe_filter_older_than(query, older_than) do
-    where(query, [c], c.inserted_at < ^older_than)
-  end
-
   defp broadcast_comment_event({:ok, comment} = result, event) do
-    comment = Repo.preload(comment, [:user, :drop])
+    comment = Repo.preload(comment, [:user, :drop, replies: :user])
     CommentsBroadcast.broadcast_comment_event(comment, event)
     result
   end

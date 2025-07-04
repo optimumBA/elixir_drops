@@ -29,8 +29,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> assign_drop(drop)
 
     final_socket =
-      if drop && connected?(updated_socket) do
-        Comments.subscribe_to_drop_comments(drop.id)
+      if drop do
+        # Subscribe only when connected
+        if connected?(updated_socket) do
+          Comments.subscribe_to_drop_comments(drop.id)
+        end
+
+        # Always load comments, even for dead renders
         assign_comments(updated_socket, drop)
       else
         updated_socket
@@ -49,16 +54,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Map.put("user_id", current_user.id)
 
     case Comments.create_comment(comment_params) do
-      {:ok, comment} ->
+      {:ok, _comment} ->
         changeset = Comments.change_comment(%Comments.Comment{})
-        # Preload user association
-        comment = ElixirDrops.Repo.preload(comment, [:user, replies: [:user]])
-
-        socket =
-          socket
-          |> stream_insert(:comments, comment, at: 0)
-          |> assign(:comment_changeset, changeset)
-          |> update(:comment_count, &(&1 + 1))
+        # Don't insert directly - let PubSub broadcast handle it for all clients
+        socket = assign(socket, :comment_changeset, changeset)
 
         {:noreply, socket}
 
@@ -170,8 +169,14 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
         {:noreply, socket}
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to update comment")}
+      {:error, changeset} ->
+        # Assign the error changeset for the specific comment being edited
+        socket =
+          socket
+          |> assign(:comment_changeset, changeset)
+          |> put_flash(:error, "Failed to update comment")
+
+        {:noreply, socket}
     end
   end
 
@@ -195,26 +200,28 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   def handle_event("load_more_comments", _params, socket) do
-    %{drop: drop, last_comment_timestamp: last_timestamp} = socket.assigns
+    %{drop: drop} = socket.assigns
 
-    new_comments = Comments.list_drop_comments(drop.id, older_than: last_timestamp)
-
-    # Update the last timestamp if we got comments
-    new_last_timestamp =
-      case List.last(new_comments) do
-        nil -> last_timestamp
-        comment -> comment.inserted_at
+    # Count comments currently displayed to use as offset
+    # Since we can't directly count stream items, we'll track this separately
+    current_count =
+      case socket.assigns[:loaded_comments_count] do
+        # Initial load shows 10
+        nil -> 10
+        count -> count
       end
+
+    new_comments = Comments.list_drop_comments(drop.id, offset: current_count)
 
     socket =
       socket
       |> then(fn s ->
         Enum.reduce(new_comments, s, fn comment, acc ->
-          stream_insert(acc, :comments, comment)
+          stream_insert(acc, :comments, comment, at: -1)
         end)
       end)
       |> assign(:has_more_comments, length(new_comments) >= 10)
-      |> assign(:last_comment_timestamp, new_last_timestamp)
+      |> assign(:loaded_comments_count, current_count + length(new_comments))
 
     {:noreply, socket}
   end
@@ -234,9 +241,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
       socket
       |> stream(:comments, comments, reset: true)
       |> assign(:comment_count, comment_count)
+      |> assign(:has_more_comments, length(comments) >= 10)
+      |> assign(:loaded_comments_count, length(comments))
 
     {:noreply, socket}
   end
+
+  def handle_info({Drops.DropsBroadcast, _event, _drop}, socket), do: {:noreply, socket}
 
   defp assign_drop(socket, nil) do
     socket
@@ -253,31 +264,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> assign(:has_more_comments, false)
     |> assign(:replying_to, nil)
     |> assign(:editing_comment, nil)
-    |> assign(:last_comment_timestamp, nil)
     |> assign_seo_attributes()
-    |> assign_initial_comments(drop)
-  end
-
-  defp assign_initial_comments(socket, drop) do
-    # Load comments for initial render
-    assign_comments(socket, drop)
   end
 
   defp assign_comments(socket, drop) do
     comments = Comments.list_drop_comments(drop.id)
     comment_count = Comments.count_drop_comments(drop.id)
 
-    last_timestamp =
-      case List.last(comments) do
-        nil -> nil
-        comment -> comment.inserted_at
-      end
-
     socket
     |> stream(:comments, comments, reset: true)
     |> assign(:comment_count, comment_count)
     |> assign(:has_more_comments, length(comments) >= 10)
-    |> assign(:last_comment_timestamp, last_timestamp)
+    |> assign(:loaded_comments_count, length(comments))
   end
 
   defp reload_comments_preserving_ui_state(socket) do

@@ -48,6 +48,7 @@ defmodule ElixirDropsWeb.CommentComponents do
               replying_to={@replying_to}
               editing_comment={@editing_comment}
               drop_id={@drop_id}
+              comment_changeset={@comment_changeset}
             />
           </div>
         <% end %>
@@ -73,9 +74,9 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :replying_to, :string, default: nil
   attr :editing_comment, :string, default: nil
   attr :drop_id, :string, required: true
+  attr :comment_changeset, :any, default: nil
 
-  @spec comment(map()) :: Phoenix.LiveView.Rendered.t()
-  def comment(assigns) do
+  defp comment(assigns) do
     ~H"""
     <div
       class={"comment #{if @level > 0, do: "ml-8 border-l-2 border-gray-200 pl-4"}"}
@@ -97,7 +98,9 @@ defmodule ElixirDropsWeb.CommentComponents do
               <span class="font-medium text-gray-900"><%= @comment.user.name %></span>
               <span class="text-gray-400">•</span>
               <time class="text-gray-500">
-                <%= format_relative_time(@comment.inserted_at) %>
+                <relative-time datetime={"#{@comment.inserted_at}Z"}>
+                  <%= Timex.format!(@comment.inserted_at, "{relative}", :relative) %>
+                </relative-time>
               </time>
               <%= if @comment.edited_at do %>
                 <span class="text-gray-400">•</span>
@@ -106,7 +109,7 @@ defmodule ElixirDropsWeb.CommentComponents do
             </div>
 
             <%= if @editing_comment == @comment.id do %>
-              <.edit_comment_form comment={@comment} />
+              <.edit_comment_form comment={@comment} changeset={@comment_changeset} />
             <% else %>
               <div class="comment-body prose prose-sm max-w-none mb-3">
                 <%= raw(@comment.body_html) %>
@@ -152,31 +155,27 @@ defmodule ElixirDropsWeb.CommentComponents do
             <.reply_form comment_id={@comment.id} />
           </div>
         <% end %>
+      <% end %>
 
-        <%= if is_list(@comment.replies) && length(@comment.replies) > 0 do %>
-          <div class="mt-4 space-y-4">
-            <%= for reply <- @comment.replies do %>
-              <.comment
-                comment={reply}
-                current_user={@current_user}
-                level={1}
-                replying_to={@replying_to}
-                editing_comment={@editing_comment}
-                drop_id={@drop_id}
-              />
-            <% end %>
-          </div>
-        <% end %>
+      <%= if is_list(@comment.replies) && @comment.replies != [] do %>
+        <div class="mt-4 space-y-4">
+          <.comment
+            :for={reply <- @comment.replies}
+            comment={reply}
+            current_user={@current_user}
+            level={1}
+            replying_to={@replying_to}
+            editing_comment={@editing_comment}
+            drop_id={@drop_id}
+            comment_changeset={@comment_changeset}
+          />
+        </div>
       <% end %>
     </div>
     """
   end
 
-  attr :drop_id, :string, required: true
-  attr :changeset, :any, required: true
-
-  @spec comment_form(map()) :: Phoenix.LiveView.Rendered.t()
-  def comment_form(assigns) do
+  defp comment_form(assigns) do
     ~H"""
     <div class="comment-form mb-6">
       <.form
@@ -223,10 +222,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 
-  attr :comment_id, :string, required: true
-
-  @spec reply_form(map()) :: Phoenix.LiveView.Rendered.t()
-  def reply_form(assigns) do
+  defp reply_form(assigns) do
     ~H"""
     <div class="reply-form">
       <.form
@@ -267,10 +263,18 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 
-  attr :comment, :map, required: true
+  defp edit_comment_form(assigns) do
+    # Use the changeset if provided and it's for this comment, otherwise use the comment data
+    changeset =
+      if assigns[:changeset] &&
+           Ecto.Changeset.get_field(assigns.changeset, :id) == assigns.comment.id do
+        assigns.changeset
+      else
+        nil
+      end
 
-  @spec edit_comment_form(map()) :: Phoenix.LiveView.Rendered.t()
-  def edit_comment_form(assigns) do
+    assigns = assign(assigns, :changeset, changeset)
+
     ~H"""
     <div class="edit-comment-form">
       <.form
@@ -290,6 +294,13 @@ defmodule ElixirDropsWeb.CommentComponents do
             maxlength="1000"
             required
           ><%= @comment.body %></textarea>
+          <%= if @changeset && @changeset.action do %>
+            <div class="mt-2">
+              <%= for {_field, {msg, _opts}} <- @changeset.errors do %>
+                <p class="text-sm text-red-600"><%= msg %></p>
+              <% end %>
+            </div>
+          <% end %>
         </div>
         <div class="flex justify-start gap-2">
           <button
@@ -309,32 +320,5 @@ defmodule ElixirDropsWeb.CommentComponents do
       </.form>
     </div>
     """
-  end
-
-  defp format_relative_time(datetime) do
-    now = DateTime.utc_now()
-    datetime_utc = DateTime.from_naive!(datetime, "Etc/UTC")
-    diff = DateTime.diff(now, datetime_utc, :second)
-
-    cond do
-      diff < 60 ->
-        "just now"
-
-      diff < 3600 ->
-        minutes = div(diff, 60)
-        "#{minutes}m ago"
-
-      diff < 86_400 ->
-        hours = div(diff, 3600)
-        "#{hours}h ago"
-
-      diff < 2_592_000 ->
-        days = div(diff, 86_400)
-        "#{days}d ago"
-
-      true ->
-        months = div(diff, 2_592_000)
-        "#{months}mo ago"
-    end
   end
 end
