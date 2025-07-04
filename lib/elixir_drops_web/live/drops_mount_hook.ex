@@ -8,7 +8,8 @@ defmodule ElixirDropsWeb.DropsMountHook do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
-  alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.DropsLive
+  alias ElixirDropsWeb.UserDropLive
 
   @type name :: atom()
   @type params :: map()
@@ -31,38 +32,28 @@ defmodule ElixirDropsWeb.DropsMountHook do
       |> assign(:searching, false)
       |> assign(:viewport_height, nil)
       |> assign(:viewport_width, nil)
-      |> attach_hook(:search_handler, :handle_event, &handle_search_events/3)
-
-    {:cont, socket}
-  end
-
-  def on_mount(:homepage, _params, _session, socket) do
-    socket =
-      socket
-      |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
-      |> assign(:new_drops?, false)
-      |> assign(:page_title, "ElixirDrops")
-      |> DropsListHelper.assign_drops()
-
-    {:cont, socket}
-  end
-
-  def on_mount(:user_drops, _params, _session, socket) do
-    socket =
-      socket
-      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
-      |> DropsListHelper.assign_drops()
+      |> attach_hook(:search_event_handler, :handle_event, &handle_search_events/3)
+      |> attach_hook(:search_params_handler, :handle_params, &handle_search_params/3)
 
     {:cont, socket}
   end
 
   defp handle_search_events("search", %{"query" => query}, socket) do
-    socket =
-      socket
-      |> handle_search(query)
-      |> reset_timeline_state()
+    params =
+      if query != "" do
+        %{q: query}
+      else
+        %{}
+      end
 
-    {:halt, socket}
+    path =
+      case socket.view do
+        DropsLive.Index -> ~p"/?#{params}"
+        UserDropLive.Index -> ~p"/profile?#{params}"
+        _other_view -> ~p"/?#{params}"
+      end
+
+    {:halt, push_patch(socket, to: path)}
   end
 
   defp handle_search_events("clear_search", _params, socket),
@@ -70,26 +61,30 @@ defmodule ElixirDropsWeb.DropsMountHook do
 
   defp handle_search_events(_event, _params, socket), do: {:cont, socket}
 
-  defp handle_search(socket, query) do
-    trimmed_query = String.trim(query)
+  defp handle_search_params(params, _url, socket) do
+    search_query =
+      params
+      |> Map.get("q", "")
+      |> String.trim()
 
+    {:cont, handle_search_from_params(socket, search_query)}
+  end
+
+  defp handle_search_from_params(%{assigns: %{search_query: search_query}} = socket, query)
+       when search_query != query do
     filters =
       socket.assigns.drop_filters
-      |> Map.put(:search, trimmed_query)
+      |> Map.put(:search, query)
       |> Map.delete(:older_than)
 
     socket
     |> assign(:drop_filters, filters)
-    |> assign(:search_query, trimmed_query)
-    |> assign(:searching, trimmed_query != "")
-    |> Phoenix.LiveView.stream(:drops, [], reset: true)
-    |> DropsListHelper.assign_drops()
-  end
-
-  defp reset_timeline_state(socket) do
-    socket
     |> assign(:end_of_timeline?, false)
     |> assign(:new_drops?, false)
     |> assign(:page, 1)
+    |> assign(:search_query, query)
+    |> assign(:searching, query != "")
   end
+
+  defp handle_search_from_params(socket, _query), do: socket
 end

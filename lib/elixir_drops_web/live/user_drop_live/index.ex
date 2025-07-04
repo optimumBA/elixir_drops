@@ -9,7 +9,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
   on_mount {ElixirDropsWeb.DropsMountHook, :default}
-  on_mount {ElixirDropsWeb.DropsMountHook, :user_drops}
+
+  @impl Phoenix.LiveView
+  def mount(_params, _session, socket) do
+    {:ok, assign(socket, :drop_filters, %{user_id: socket.assigns.current_user.id})}
+  end
 
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
@@ -60,6 +64,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     socket
     |> assign(:drop, nil)
     |> assign(:page_title, "ElixirDrops | #{socket.assigns.current_user.github_username}")
+    |> DropsListHelper.assign_drops()
   end
 
   defp assign_user_drop(socket, filters) do

@@ -443,6 +443,69 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
              |> form("form", %{query: "PHOENIX LIVEVIEW"})
              |> render_change() =~ "Phoenix LiveView"
     end
+
+    test "navigating to URL with search query performs search on user page", %{
+      conn: conn,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      _drop1 = drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "Learn Phoenix"})
+      _drop2 = drop_fixture(%Drop{}, user, %{title: "Elixir Guide", body: "Learn Elixir"})
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      {:ok, _live, html} = live(conn, ~p"/profile?q=Phoenix")
+
+      # Should show search results for "Phoenix"
+      assert html =~ "Phoenix Tutorial"
+      refute html =~ "Elixir Guide"
+
+      # Should have search box filled with query
+      assert html =~ ~s(value="Phoenix")
+
+      # Should show clear button
+      assert html =~ ~s(phx-click="clear_search")
+    end
+
+    test "search updates URL with query parameter on user page", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      _drop = drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "Content"})
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      live
+      |> form("form", %{query: "Phoenix"})
+      |> render_change()
+
+      # URL should be updated to include query parameter
+      assert_patch(live, ~p"/profile?q=Phoenix")
+    end
+
+    test "clearing search removes query parameter from URL on user page", %{
+      conn: conn,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+
+      {:ok, live, _html} = live(conn, ~p"/profile?q=test")
+
+      # Click the X button in the search input specifically
+      live
+      |> element("button[phx-click=clear_search][type=button]")
+      |> render_click()
+
+      # URL should be updated to remove query parameter
+      assert_patch(live, ~p"/profile")
+    end
   end
 
   describe "/drop/new" do

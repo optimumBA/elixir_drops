@@ -844,5 +844,74 @@ defmodule ElixirDropsWeb.DropLiveTest do
              |> form("form", %{query: "phoenix liveview"})
              |> render_change() =~ "Phoenix LiveView"
     end
+
+    test "navigating to URL with search query performs search", %{conn: conn, user: user} do
+      _drop1 = drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "Learn Phoenix"})
+      _drop2 = drop_fixture(%Drop{}, user, %{title: "Elixir Guide", body: "Learn Elixir"})
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      {:ok, _live, html} = live(conn, ~p"/?q=Phoenix")
+
+      # Should show search results for "Phoenix"
+      assert html =~ "Phoenix Tutorial"
+      refute html =~ "Elixir Guide"
+
+      # Should have search box filled with query
+      assert html =~ ~s(value="Phoenix")
+
+      # Should show clear button
+      assert html =~ ~s(phx-click="clear_search")
+    end
+
+    test "navigating to URL with empty search query shows all drops", %{conn: conn, user: user} do
+      _drop1 = drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "Learn Phoenix"})
+      _drop2 = drop_fixture(%Drop{}, user, %{title: "Elixir Guide", body: "Learn Elixir"})
+
+      {:ok, _live, html} = live(conn, ~p"/?q=")
+
+      # Should show all drops
+      assert html =~ "Phoenix Tutorial"
+      assert html =~ "Elixir Guide"
+
+      # Search box should be empty
+      assert html =~ ~s(value="")
+
+      # Should not show clear button
+      refute html =~ ~s(phx-click="clear_search")
+    end
+
+    test "search updates URL with query parameter", %{conn: conn, user: user} do
+      _drop = drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "Content"})
+
+      # Update search vectors for test data
+      Repo.query!(
+        "UPDATE drops SET search_vector = setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(body, '')), 'B')"
+      )
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      live
+      |> form("form", %{query: "Phoenix"})
+      |> render_change()
+
+      # URL should be updated to include query parameter
+      assert_patch(live, ~p"/?q=Phoenix")
+    end
+
+    test "clearing search removes query parameter from URL", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/?q=test")
+
+      # Click the X button in the search input specifically
+      live
+      |> element("button[phx-click=clear_search][type=button]")
+      |> render_click()
+
+      # URL should be updated to remove query parameter
+      assert_patch(live, ~p"/")
+    end
   end
 end
