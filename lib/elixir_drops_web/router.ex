@@ -74,6 +74,7 @@ defmodule ElixirDropsWeb.Router do
 
       live_dashboard "/dashboard", metrics: ElixirDropsWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+      get "/auth/:user_id", ElixirDropsWeb.DevAuthController, :enable
     end
   end
 

@@ -55,16 +55,45 @@ defmodule ElixirDrops.Drops do
   def list_drops(filters \\ %{}, limit \\ 10) do
     filter_query = apply_filters()
 
-    drop_query()
-    |> where(^filter_query.(filters))
-    |> order_by([d], {:desc, d.inserted_at})
-    |> limit(^limit)
-    |> preload([:user])
+    query =
+      drop_query()
+      |> where(^filter_query.(filters))
+      |> limit(^limit)
+      |> preload([:user])
+
+    query
+    |> apply_search_ordering(filters[:search])
     |> Repo.all()
   end
 
   defp drop_query do
     from drop in Drop, as: :drop
+  end
+
+  defp apply_search_ordering(query, search_query)
+       when is_binary(search_query) and search_query != "" do
+    query
+    |> select_merge([drop: drop], %{
+      relevance_rank:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
+    })
+    |> order_by(
+      [drop: drop],
+      {:desc,
+       fragment(
+         "ts_rank(?, websearch_to_tsquery('english', ?))",
+         drop.search_vector,
+         ^search_query
+       )}
+    )
+  end
+
+  defp apply_search_ordering(query, _no_search) do
+    order_by(query, [d], {:desc, d.inserted_at})
   end
 
   defp apply_filters do
@@ -96,6 +125,17 @@ defmodule ElixirDrops.Drops do
   defp apply_filter({:user_id, user_id}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
+
+  defp apply_filter({:search, query}, dynamic) when is_binary(query) and query != "" do
+    # Use PostgreSQL websearch_to_tsquery for better search experience
+    # websearch_to_tsquery handles phrases, AND/OR operators naturally
+    dynamic(
+      [drop: drop],
+      ^dynamic and fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^query)
+    )
+  end
+
+  defp apply_filter({:search, _}, dynamic), do: dynamic
 
   defp apply_filter(_other, dynamic), do: dynamic
 

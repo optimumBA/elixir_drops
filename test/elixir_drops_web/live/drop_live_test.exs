@@ -3,6 +3,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
+  import ElixirDrops.SearchFixtures
   import Mox
   import Phoenix.LiveViewTest
 
@@ -699,6 +700,448 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html =~ "# Header"
       refute html =~ "**"
       refute html =~ "`"
+    end
+
+    test "search submit should not crash LiveView", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # This should not crash the LiveView - using direct event instead of form
+      result = render_hook(live, "search_submit", %{"query" => "phoenix"})
+
+      # Should return HTML and not crash
+      assert result =~ "ElixirDrops"
+    end
+
+    test "search suggestions should work for unauthenticated users", %{conn: conn} do
+      import ElixirDrops.SearchFixtures
+
+      # Create some popular searches
+      popular_search_fixture(%{query: "phoenix tutorial", search_count: 100})
+      popular_search_fixture(%{query: "phoenix deployment", search_count: 80})
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Trigger load_suggestions event with "phoe" prefix - should show popular suggestions
+      result1 = render_hook(live, "load_suggestions", %{"query" => "phoe"})
+      assert result1 =~ "ElixirDrops"
+
+      # Should handle short queries (less than 2 characters) without crashing
+      result2 = render_hook(live, "load_suggestions", %{"query" => "p"})
+      assert result2 =~ "ElixirDrops"
+
+      # Should handle empty query without crashing
+      result3 = render_hook(live, "load_suggestions", %{"query" => ""})
+      assert result3 =~ "ElixirDrops"
+    end
+
+    test "search suggestions should work for authenticated users", %{conn: conn, user: user} do
+      import ElixirDrops.SearchFixtures
+
+      # Create some search history for the user
+      search_history_fixture(%{user_id: user.id, query: "phoenix liveview"})
+      search_history_fixture(%{user_id: user.id, query: "phoenix websocket"})
+
+      # Create some popular searches
+      popular_search_fixture(%{query: "phoenix tutorial", search_count: 100})
+      popular_search_fixture(%{query: "phoenix deployment", search_count: 80})
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Trigger load_suggestions event with "phoe" prefix - should not crash
+      result1 = render_hook(live, "load_suggestions", %{"query" => "phoe"})
+
+      # Should return HTML and not crash
+      assert result1 =~ "ElixirDrops"
+
+      # Should handle short queries (less than 2 characters) without crashing
+      result2 = render_hook(live, "load_suggestions", %{"query" => "p"})
+      assert result2 =~ "ElixirDrops"
+
+      # Should handle empty query without crashing
+      result3 = render_hook(live, "load_suggestions", %{"query" => ""})
+      assert result3 =~ "ElixirDrops"
+    end
+
+    test "search results should return matching drops", %{conn: conn, user: user} do
+      # Create drops with specific content for search testing
+      phoenix_drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Phoenix LiveView Tutorial",
+          body: "Learn how to build real-time applications with Phoenix LiveView"
+        })
+
+      elixir_drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Elixir Pattern Matching",
+          body: "Understanding pattern matching in Elixir programming language"
+        })
+
+      rust_drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Rust Memory Safety",
+          body: "Exploring memory safety features in Rust programming"
+        })
+
+      # Update drops to have completed screenshot status so they appear in search
+      {:ok, _} = Drops.update_drop(phoenix_drop, user, %{screenshot: %{status: :completed}})
+      {:ok, _} = Drops.update_drop(elixir_drop, user, %{screenshot: %{status: :completed}})
+      {:ok, _} = Drops.update_drop(rust_drop, user, %{screenshot: %{status: :completed}})
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Search for "phoenix" should return the phoenix drop but not others
+      submit_result = render_hook(live, "search_submit", %{"query" => "phoenix"})
+      assert submit_result =~ "ElixirDrops"
+
+      # Navigate to search results page
+      {:ok, _live, phoenix_html} = live(conn, ~p"/?q=phoenix")
+
+      # Should find the phoenix drop
+      assert phoenix_html =~ "Phoenix LiveView Tutorial"
+      assert phoenix_html =~ "Learn how to build real-time applications"
+
+      # Should not find unrelated drops
+      refute phoenix_html =~ "Rust Memory Safety"
+
+      # Search for "elixir" should return the elixir drop
+      {:ok, _live, elixir_html} = live(conn, ~p"/?q=elixir")
+
+      # Should find the elixir drop
+      assert elixir_html =~ "Elixir Pattern Matching"
+      assert elixir_html =~ "Understanding pattern matching"
+
+      # Should not find unrelated drops
+      refute elixir_html =~ "Rust Memory Safety"
+
+      # Search for non-existent term should return no results
+      {:ok, _live, javascript_html} = live(conn, ~p"/?q=javascript")
+
+      # Should not find any of our test drops
+      refute javascript_html =~ "Phoenix LiveView Tutorial"
+      refute javascript_html =~ "Elixir Pattern Matching"
+      refute javascript_html =~ "Rust Memory Safety"
+    end
+
+    test "close_search_overlay event hides search suggestions", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      render_hook(live, "close_search_overlay", %{})
+
+      html = render(live)
+      refute html =~ "search-suggestions"
+    end
+
+    test "delete_search_history removes history item for authenticated users", %{
+      conn: conn,
+      user: user
+    } do
+      # Create search history
+      history = search_history_fixture(%{user_id: user.id, query: "phoenix test"})
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      render_hook(live, "delete_search_history", %{"id" => history.id})
+
+      # Verify the history was deleted
+      assert_raise Ecto.NoResultsError, fn ->
+        ElixirDrops.Search.get_search_history!(history.id)
+      end
+    end
+
+    test "load_suggestions with nil query shows no suggestions", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      result = render_hook(live, "load_suggestions", %{"query" => nil})
+      refute result =~ "search-suggestions"
+    end
+
+    test "load_suggestions with empty query shows no suggestions", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      result = render_hook(live, "load_suggestions", %{"query" => ""})
+      refute result =~ "search-suggestions"
+    end
+
+    test "load_suggestions with single character shows no suggestions", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      result = render_hook(live, "load_suggestions", %{"query" => "a"})
+      refute result =~ "search-suggestions"
+    end
+
+    test "load_suggestions with non-binary query shows no suggestions", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Send a non-binary value for query
+      result = render_hook(live, "load_suggestions", %{"query" => 123})
+      refute result =~ "search-suggestions"
+    end
+
+    test "search with non-existent query shows no results message", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      render_hook(live, "search_submit", %{"query" => "nonexistentquery123"})
+
+      {:ok, _search_view, search_html} = live(conn, ~p"/?q=nonexistentquery123")
+      assert search_html =~ "Sorry we couldn&#39;t find any results for this search."
+    end
+
+    test "load_navbar_suggestions with non-binary query clears suggestions", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # First load some suggestions
+      render_hook(live, "load_navbar_suggestions", %{"query" => "elixir"})
+
+      # Then send non-binary query
+      result = render_hook(live, "load_navbar_suggestions", %{"query" => nil})
+      refute result =~ "search-suggestions"
+    end
+
+    test "screenshot generation completion with non-new action is ignored", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      drop = drop_fixture(%Drop{}, user, %{title: "Test Drop"})
+
+      # Send screenshot completion with action other than "new"
+      send(
+        live.pid,
+        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, 100, :completed,
+         %{action: "update"}}
+      )
+
+      # View should not change or show new drops indicator
+      refute render(live) =~ "new-drops-indicator"
+    end
+
+    test "navbar search always navigates to homepage", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Submit navbar search
+      live
+      |> form("#desktop-search-input form", %{
+        "query" => "test"
+      })
+      |> render_submit()
+
+      # Check that URL was updated (this triggers a handle_params call)
+      assert_patch(live, ~p"/?q=test")
+    end
+
+    test "navbar search suggestions work independently from main search", %{
+      conn: conn,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Test navbar suggestions
+      navbar_html = render_hook(live, "load_navbar_suggestions", %{"query" => "eli"})
+      # Check if navbar dropdown is shown (it would have the hidden class removed)
+      assert navbar_html =~ "navbar-search-dropdown"
+
+      # Test regular suggestions
+      regular_html = render_hook(live, "load_suggestions", %{"query" => "pho"})
+      # Both can have suggestions shown independently
+      assert regular_html =~ "search-dropdown" or regular_html =~ "navbar-search-dropdown"
+    end
+
+    test "delete navbar search history updates suggestions", %{conn: conn, user: user} do
+      # Create search history
+      {:ok, history} =
+        ElixirDrops.Search.create_search_history(%{query: "navbar delete", user_id: user.id})
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Focus navbar search to show suggestions
+      render_hook(live, "focus_navbar_search", %{})
+      initial_html = render(live)
+      assert initial_html =~ "navbar delete"
+
+      # Delete the history item
+      render_hook(live, "delete_navbar_search_history", %{"id" => history.id})
+
+      # Re-focus to get updated suggestions
+      render_hook(live, "focus_navbar_search", %{})
+      updated_html = render(live)
+
+      # Should no longer show the deleted item
+      refute updated_html =~ "navbar delete"
+    end
+
+    test "empty navbar search stays on current page", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Submit empty navbar search
+      live
+      |> form("#desktop-search-input form", %{"query" => ""})
+      |> render_submit()
+
+      # Should stay on homepage without query (same URL, no patch)
+      # When search is empty, it navigates to "/" which is the same page
+      assert_patch(live, ~p"/")
+    end
+
+    test "mobile search overlay behavior", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      # Mobile search overlay should exist but be hidden
+      assert html =~ "search-overlay"
+      assert html =~ "hidden fixed"
+      assert html =~ "z-50"
+    end
+
+    test "search suggestions render with correct icons", %{conn: conn, user: user} do
+      # Create history and popular searches
+      {:ok, _} =
+        ElixirDrops.Search.create_search_history(%{query: "history item", user_id: user.id})
+
+      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("popular item")
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Focus to show initial suggestions
+      render_hook(live, "focus_search_input", %{})
+      html = render(live)
+
+      # History items should have clock icon
+      assert html =~ "hero-clock"
+      assert html =~ "history item"
+
+      # Popular items should have magnifying glass icon
+      assert html =~ "hero-magnifying-glass"
+    end
+
+    test "suggestions update as user types", %{conn: conn, user: user} do
+      # Create various search items - need results_count for history
+      {:ok, _} =
+        ElixirDrops.Search.create_search_history(%{
+          query: "elixir",
+          user_id: user.id,
+          results_count: 10
+        })
+
+      {:ok, _} =
+        ElixirDrops.Search.create_search_history(%{
+          query: "ecto",
+          user_id: user.id,
+          results_count: 5
+        })
+
+      {:ok, _} =
+        ElixirDrops.Search.create_search_history(%{
+          query: "phoenix",
+          user_id: user.id,
+          results_count: 8
+        })
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Type "el" - should show elixir (need at least 2 chars)
+      render_hook(live, "load_suggestions", %{"query" => "el"})
+      html = render(live)
+
+      # Check that elixir is shown in suggestions
+      assert html =~ "elixir"
+
+      # Type "ph" - should show phoenix
+      render_hook(live, "load_suggestions", %{"query" => "ph"})
+      updated_html = render(live)
+
+      assert updated_html =~ "phoenix"
+    end
+
+    test "search history is tracked for authenticated users", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Perform a search
+      render_hook(live, "search_submit", %{"query" => "tracked search"})
+
+      # Verify history was created
+      histories = ElixirDrops.Search.get_user_search_history(user.id)
+      queries = Enum.map(histories, & &1.query)
+      assert "tracked search" in queries
+    end
+
+    test "unauthenticated users see only popular searches", %{conn: conn} do
+      # Create popular searches
+      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("popular one")
+      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("popular two")
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Focus should show popular searches
+      render_hook(live, "focus_search_input", %{})
+      html = render(live)
+
+      # Should only show popular searches, no history
+      assert html =~ "popular one"
+      assert html =~ "popular two"
+      # No clock icons for history
+      refute html =~ "hero-clock"
+    end
+
+    test "clear_search event clears search state and redirects to home", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/?q=phoenix")
+
+      # Verify we're on search page with query
+      assert render(live) =~ "phoenix"
+
+      # Clear search - should redirect and clear state
+      render_hook(live, "clear_search", %{})
+
+      # Should redirect to home page
+      assert_patch(live, ~p"/")
+
+      # Search state should be cleared
+      refute render_hook(live, "clear_search", %{}) =~ "phoenix"
+    end
+
+    test "blur_search_input event hides suggestions", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # First load some suggestions
+      render_hook(live, "load_suggestions", %{"query" => "elixir"})
+
+      # Blur search input - should hide suggestions
+      blur_html = render_hook(live, "blur_search_input", %{})
+      refute blur_html =~ ~s[id="mobile-search-dropdown"]
+      refute blur_html =~ ~s[id="navbar-search-dropdown"]
+    end
+
+    test "blur_navbar_search event hides navbar suggestions", %{conn: conn} do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # First load navbar suggestions
+      render_hook(live, "load_navbar_suggestions", %{"query" => "phoenix"})
+
+      # Blur navbar search - should hide suggestions
+      blur_html = render_hook(live, "blur_navbar_search", %{})
+      refute blur_html =~ ~s[id="navbar-search-dropdown"]
+    end
+
+    test "navbar suggestions with query less than 2 characters shows no suggestions", %{
+      conn: conn
+    } do
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Test with single character query
+      single_char_html = render_hook(live, "load_navbar_suggestions", %{"query" => "a"})
+      refute single_char_html =~ ~s[id="navbar-search-dropdown"]
+
+      # Test with empty query
+      empty_query_html = render_hook(live, "load_navbar_suggestions", %{"query" => ""})
+      refute empty_query_html =~ ~s[id="navbar-search-dropdown"]
     end
   end
 end

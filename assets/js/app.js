@@ -27,7 +27,9 @@ import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
 import InfiniteScrollHooks from './hooks/infinite_scroll'
 import MasonryHooks from './hooks/masonry'
+import MobileSearchOverlayHooks from './hooks/mobile_search_overlay'
 import ScreenshotProgressHooks from './hooks/screenshot_progress'
+import SearchSuggestionsHooks from './hooks/search_suggestions'
 import WelcomeMessageHooks from './hooks/welcome_message'
 
 let Hooks = {
@@ -36,7 +38,9 @@ let Hooks = {
   ...DropsContainerHooks,
   ...InfiniteScrollHooks,
   ...MasonryHooks,
+  ...MobileSearchOverlayHooks,
   ...ScreenshotProgressHooks,
+  ...SearchSuggestionsHooks,
   ...WelcomeMessageHooks,
 }
 

@@ -10,6 +10,13 @@ defmodule ElixirDropsWeb.DropComponents do
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
 
+  attr :current_user, User
+  attr :live_action, :atom, required: true
+  attr :search_query, :string, default: ""
+  attr :show_suggestions, :boolean, default: false
+  attr :search_suggestions, :list, default: []
+  attr :show_user_drops?, :boolean, default: false
+
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
@@ -20,12 +27,28 @@ defmodule ElixirDropsWeb.DropComponents do
             <Icons.elixir_drops_logo class="w-32 md:w-48" />
           </.link>
         </div>
-
+        <!-- Desktop Search -->
+        <div class="hidden lg:flex flex-1 max-w-md mx-8">
+          <.search_input_desktop
+            search_query={@search_query}
+            show_suggestions={@show_suggestions}
+            search_suggestions={@search_suggestions}
+            current_user={@current_user}
+          />
+        </div>
         <div>
-          <%= if @current_user do %>
-            <div class="flex items-center gap-x-4">
-              <.create_post_button current_user={@current_user} live_action={@live_action} />
+          <div class="flex items-center gap-x-4">
+            <!-- Mobile/Tablet Search Icon -->
+            <button
+              class="lg:hidden p-2 text-[#4F4F4F] hover:text-[#5947F1]"
+              phx-click={JS.toggle(to: "#search-overlay")}
+            >
+              <.icon name="hero-magnifying-glass" class="h-5 w-5" />
+            </button>
+            <!-- Create Post Button - Always visible -->
+            <.create_post_button current_user={@current_user} live_action={@live_action} />
 
+            <%= if @current_user do %>
               <div
                 class="flex items-center gap-x-3 cursor-pointer"
                 phx-click={JS.toggle_class("hidden", to: "#slide-menu")}
@@ -41,11 +64,7 @@ defmodule ElixirDropsWeb.DropComponents do
                 </button>
                 <.slide_menu current_user={@current_user} />
               </div>
-            </div>
-          <% else %>
-            <div class="flex items-center gap-x-4">
-              <.create_post_button current_user={@current_user} live_action={@live_action} />
-
+            <% else %>
               <.link
                 href={~p"/auth/github"}
                 class="font-semibold text-[#eae8fd] text-xs md:text-sm bg-blue_primary hover:opacity-80 px-2 md:px-5 py-2 rounded-lg flex items-center gap-x-2"
@@ -53,8 +72,8 @@ defmodule ElixirDropsWeb.DropComponents do
                 <span><Icons.github_icon /></span>
                 <span> Sign in with GitHub</span>
               </.link>
-            </div>
-          <% end %>
+            <% end %>
+          </div>
         </div>
       </nav>
     </header>
@@ -207,6 +226,11 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :current_user, User, required: true
+  attr :search_query, :string, default: ""
+  attr :show_suggestions, :boolean, default: false
+  attr :search_suggestions, :list, default: []
+  attr :show_profile_suggestions, :boolean, default: false
+  attr :profile_search_suggestions, :list, default: []
 
   @spec user_drops_header(assigns()) :: rendered()
   def user_drops_header(assigns) do
@@ -227,14 +251,88 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
       </div>
 
-      <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary grid justify-center md:justify-start">
-        <ul class="flex" id="secondary-nav-links">
-          <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center">
-            <.link href={~p"/profile"}>
-              My posts
-            </.link>
-          </li>
-        </ul>
+      <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
+        <div class="flex items-center px-4 md:px-0">
+          <ul class="flex items-center" id="secondary-nav-links">
+            <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center mr-8">
+              <.link href={~p"/profile"}>
+                My posts
+              </.link>
+            </li>
+            <!-- User Profile Search Input -->
+            <li class="min-h-full py-4 border-b-2 border-b-transparent hover:border-b-gray-300 flex items-center">
+              <div id="profile-search-input" class="relative" phx-hook="SearchSuggestions">
+                <form
+                  phx-submit={JS.push("search_submit") |> JS.hide(to: "#profile-search-dropdown")}
+                  class="relative flex items-center"
+                >
+                  <.icon name="hero-magnifying-glass" class="absolute left-3 h-4 w-4 text-gray-500" />
+                  <input
+                    type="text"
+                    name="query"
+                    value={@search_query}
+                    placeholder="Search drops"
+                    phx-change="load_suggestions"
+                    class={[
+                      "pl-10 pr-4 py-2 bg-transparent border-0",
+                      "focus:outline-none focus:ring-0 placeholder-gray-500 text-sm",
+                      "min-w-[200px]"
+                    ]}
+                  />
+                </form>
+                <!-- Search Suggestions Dropdown -->
+                <div
+                  :if={@show_profile_suggestions and length(@profile_search_suggestions) > 0}
+                  id="profile-search-dropdown"
+                  class={[
+                    "absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50",
+                    "max-h-80 overflow-y-auto min-w-[200px]"
+                  ]}
+                >
+                  <div class="py-2">
+                    <div
+                      :for={suggestion <- @profile_search_suggestions}
+                      class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
+                      tabindex="0"
+                      phx-click={
+                        JS.push("search_submit", value: %{query: suggestion.query})
+                        |> JS.hide(to: "#profile-search-dropdown")
+                      }
+                    >
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <.icon
+                            :if={suggestion.type == :history}
+                            name="hero-clock"
+                            class="h-4 w-4 text-gray-400"
+                          />
+                          <.icon
+                            :if={suggestion.type == :popular}
+                            name="hero-magnifying-glass"
+                            class="h-4 w-4 text-gray-400"
+                          />
+                          <span class="text-sm text-gray-900"><%= suggestion.query %></span>
+                        </div>
+                        <button
+                          :if={suggestion.type == :history}
+                          type="button"
+                          tabindex="0"
+                          phx-click={
+                            JS.push("delete_search_history", value: %{id: suggestion.id})
+                            |> JS.show(to: "#profile-search-dropdown")
+                          }
+                          class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <.icon name="hero-trash" class="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
       </nav>
     </div>
     """
@@ -748,5 +846,295 @@ defmodule ElixirDropsWeb.DropComponents do
     # Clean up extra whitespace
     |> String.replace(~r/\n{3,}/, "\n\n")
     |> String.trim()
+  end
+
+  attr :search_query, :string, required: true
+  attr :show_suggestions, :boolean, required: true
+  attr :search_suggestions, :list, required: true
+  attr :current_user, User
+
+  @spec search_input_desktop(assigns()) :: rendered()
+  def search_input_desktop(assigns) do
+    ~H"""
+    <div id="desktop-search-input" class="relative w-full" phx-hook="SearchSuggestions">
+      <form
+        phx-submit={JS.push("navbar_search_submit") |> JS.hide(to: "#navbar-search-dropdown")}
+        class="relative"
+      >
+        <input
+          type="text"
+          name="query"
+          value={@search_query}
+          placeholder="Search drops"
+          phx-change="load_navbar_suggestions"
+          class={[
+            "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
+            "border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
+            "placeholder-gray-500 text-sm"
+          ]}
+        />
+        <.icon
+          name="hero-magnifying-glass"
+          class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+        />
+        <button
+          :if={@search_query != ""}
+          type="button"
+          phx-click="clear_search"
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+        >
+          <.icon name="hero-x-mark" class="h-4 w-4 text-gray-400 hover:text-gray-600" />
+        </button>
+      </form>
+      <!-- Search Suggestions Dropdown -->
+      <div
+        :if={@show_suggestions and length(@search_suggestions) > 0}
+        id="navbar-search-dropdown"
+        class={[
+          "absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50",
+          "max-h-80 overflow-y-auto"
+        ]}
+      >
+        <div class="py-2">
+          <div
+            :for={suggestion <- @search_suggestions}
+            class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
+            tabindex="0"
+            phx-click={
+              JS.push("navbar_search_submit", value: %{query: suggestion.query})
+              |> JS.hide(to: "#navbar-search-dropdown")
+            }
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <.icon
+                  :if={suggestion.type == :history}
+                  name="hero-clock"
+                  class="h-4 w-4 text-gray-400"
+                />
+                <.icon
+                  :if={suggestion.type == :popular}
+                  name="hero-magnifying-glass"
+                  class="h-4 w-4 text-gray-400"
+                />
+                <span class="text-sm text-gray-800"><%= suggestion.query %></span>
+              </div>
+              <button
+                :if={suggestion.type == :history}
+                type="button"
+                tabindex="0"
+                class="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
+                phx-click={
+                  JS.push("delete_navbar_search_history", value: %{id: suggestion.id})
+                  |> JS.show(to: "#navbar-search-dropdown")
+                }
+              >
+                <.icon name="hero-trash" class="h-3 w-3 text-gray-500" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  attr :search_query, :string, required: true
+  attr :show_suggestions, :boolean, required: true
+  attr :search_suggestions, :list, required: true
+  attr :current_user, User
+
+  @spec search_overlay_mobile(assigns()) :: rendered()
+  def search_overlay_mobile(assigns) do
+    ~H"""
+    <div
+      id="search-overlay"
+      class="hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-lg"
+      phx-hook="MobileSearchOverlay"
+    >
+      <!-- Search bar matching Figma design -->
+      <div id="mobile-search-wrapper" class="relative">
+        <div
+          id="mobile-search-input"
+          class="flex items-center gap-4 px-4 py-3 bg-white"
+          phx-hook="SearchSuggestions"
+        >
+          <button
+            class="p-1 text-gray-600 hover:text-gray-900"
+            phx-click={JS.hide(to: "#search-overlay")}
+          >
+            <.icon name="hero-arrow-left" class="h-6 w-6" />
+          </button>
+
+          <form
+            phx-submit={JS.push("search_submit") |> JS.hide(to: "#search-overlay")}
+            class="flex-1 relative"
+          >
+            <input
+              type="text"
+              name="query"
+              value={@search_query}
+              placeholder="Search drops"
+              phx-change="load_suggestions"
+              phx-focus="focus_search_input"
+              phx-blur="blur_search_input"
+              class={[
+                "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
+                "border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
+                "placeholder-gray-500 text-base"
+              ]}
+              autofocus
+            />
+            <.icon
+              name="hero-magnifying-glass"
+              class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+            />
+            <button
+              :if={@search_query != ""}
+              type="button"
+              phx-click="clear_search"
+              class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+            >
+              <.icon name="hero-x-mark" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+            </button>
+          </form>
+        </div>
+        <!-- Search Suggestions -->
+        <div
+          :if={@show_suggestions and length(@search_suggestions) > 0}
+          id="mobile-search-dropdown"
+          class="absolute top-full left-0 right-0 bg-white border-t border-gray-200 max-h-80 overflow-y-auto"
+        >
+          <div
+            :for={suggestion <- @search_suggestions}
+            class="px-4 py-3 hover:bg-gray-50 cursor-pointer group"
+            tabindex="0"
+            phx-click="search_submit"
+            phx-value-query={suggestion.query}
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <.icon
+                  :if={suggestion.type == :history}
+                  name="hero-clock"
+                  class="h-5 w-5 text-gray-400"
+                />
+                <.icon
+                  :if={suggestion.type == :popular}
+                  name="hero-magnifying-glass"
+                  class="h-5 w-5 text-gray-400"
+                />
+                <span class="text-base text-gray-800"><%= suggestion.query %></span>
+              </div>
+              <button
+                :if={suggestion.type == :history}
+                type="button"
+                tabindex="0"
+                class="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 rounded"
+                phx-click="delete_search_history"
+                phx-value-id={suggestion.id}
+                phx-stop-propagation="true"
+              >
+                <.icon name="hero-trash" class="h-4 w-4 text-gray-500" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  attr :search_query, :string, required: true
+  attr :suggested_searches, :list, default: []
+
+  @spec no_results(assigns()) :: rendered()
+  def no_results(assigns) do
+    ~H"""
+    <!-- No search results - matches Figma design exactly -->
+    <div class="flex flex-col items-center justify-center min-h-[60vh] px-4 py-8">
+      <div class="w-full max-w-[772px] flex flex-col items-center gap-8">
+        <!-- Main Illustration - Drop Card with Magnifying Glass -->
+        <div class="relative w-[392px] h-[345px] rounded-[16px]">
+          <!-- Drop Card Component -->
+          <div class="absolute left-1/2 top-[49px] transform -translate-x-1/2 w-[258px] bg-white rounded-[9px] shadow-[0px_3px_14px_0px_rgba(19,0,33,0.12)] p-[15px] flex flex-col gap-[19px]">
+            <!-- Drop Card Background with gradient and code elements -->
+            <div class="relative w-[233px] h-[150px] rounded-[13px] bg-gradient-to-b from-[#eae8fd80] from-[40%] to-[#bfb8fa66] to-[116%] overflow-hidden">
+              <!-- Background decorative elements -->
+              <img
+                src={~p"/images/no-results-group1.svg"}
+                alt=""
+                class="absolute bottom-[65%] left-[0%] right-[71%] top-[-18%]"
+              />
+              <img
+                src={~p"/images/no-results-group2.svg"}
+                alt=""
+                class="absolute bottom-[-9%] left-[0%] right-[75%] top-[62%]"
+              />
+              <img
+                src={~p"/images/no-results-group3.svg"}
+                alt=""
+                class="absolute bottom-[-25%] left-[17%] right-[-8%] top-[-46%]"
+              />
+            </div>
+            <!-- Code Block Representation -->
+            <div class="bg-white rounded-[5px] shadow-[0px_1.78px_7.12px_0px_rgba(0,0,0,0.12)] p-[9px] flex flex-col gap-[5px]">
+              <div class="bg-[#eae8fd] h-[4px] w-[212px]"></div>
+              <div class="bg-[#eae8fd] h-[4px] w-[133px]"></div>
+              <div class="bg-[#eae8fd] h-[4px] w-[122px]"></div>
+              <div class="bg-[#eae8fd] h-[4px] w-[103px]"></div>
+            </div>
+          </div>
+          <!-- Magnifying Glass Illustration -->
+          <img
+            src={~p"/images/no-results-magnifier.svg"}
+            alt=""
+            class="absolute bottom-[4%] left-[-7%] w-[131px] h-[81px] transform rotate-[340deg]"
+          />
+        </div>
+        <!-- Text Content -->
+        <div class="w-full flex flex-col items-center gap-8">
+          <!-- Main Message -->
+          <div class="w-full min-w-full text-center">
+            <p class="font-normal text-[28px] leading-[40px] text-[#797979] tracking-[0.07px] mb-0">
+              Sorry we couldn't find any results for this search.
+            </p>
+            <p class="font-normal text-[28px] leading-[40px] text-[#797979] tracking-[0.07px]">
+              Try searching any of these.
+            </p>
+          </div>
+          <!-- Suggested Search Links -->
+          <div
+            :if={length(@suggested_searches) > 0}
+            class="flex flex-col gap-[33px] items-center justify-center w-full"
+          >
+            <!-- First row of suggestions -->
+            <div class="flex flex-row gap-6 items-center justify-center w-full font-normal text-[20px] leading-[24px]">
+              <.link
+                :for={suggestion <- Enum.take(@suggested_searches, 3)}
+                href={~p"/?q=#{suggestion}"}
+                class="text-[#5947f1] hover:underline whitespace-nowrap"
+              >
+                <%= String.capitalize(suggestion) %>
+              </.link>
+            </div>
+            <!-- Second row of suggestions -->
+            <div
+              :if={length(@suggested_searches) > 3}
+              class="flex flex-row gap-6 items-center justify-center font-normal text-[20px] leading-[24px]"
+            >
+              <.link
+                :for={suggestion <- Enum.drop(@suggested_searches, 3) |> Enum.take(2)}
+                href={~p"/?q=#{suggestion}"}
+                class="text-[#5947f1] hover:underline whitespace-nowrap"
+              >
+                <%= String.capitalize(suggestion) %>
+              </.link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
   end
 end

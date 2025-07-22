@@ -21,6 +21,7 @@ defmodule ElixirDrops.MixProject do
         coveralls: :test,
         "coveralls.detail": :test,
         "coveralls.html": :test,
+        "coveralls.json": :test,
         credo: :test,
         dialyzer: :test,
         sobelow: :test

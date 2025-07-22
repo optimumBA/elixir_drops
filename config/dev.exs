@@ -65,6 +65,9 @@ config :elixir_drops, ElixirDropsWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :elixir_drops, dev_routes: true
 
+# Enable dev auth bypass for testing purposes
+config :elixir_drops, dev_auth_bypass: true
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 
