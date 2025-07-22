@@ -92,7 +92,7 @@ defmodule ElixirDrops.Release do
     repo_underscore =
       repo
       |> Module.split()
-      |> Enum.at(-2)
+      |> Enum.at(-1)
       |> Macro.underscore()
 
     priv_dir =
