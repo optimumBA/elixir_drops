@@ -1,6 +1,8 @@
 defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
+  on_mount {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
+
   alias ElixirDrops.Drops
   alias ElixirDrops.StructuredData
   alias ElixirDropsWeb.DropComponents
@@ -85,5 +87,17 @@ defmodule ElixirDropsWeb.DropLive.Show do
     @images_regex
     |> Regex.replace(markdown, "")
     |> String.replace(@consecutive_whitespace_regex, " ")
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("navbar_search_submit", %{"query" => query}, socket) do
+    trimmed_query = String.trim(query)
+
+    # Navigate to homepage with search query
+    if trimmed_query != "" do
+      {:noreply, push_navigate(socket, to: ~p"/?q=#{trimmed_query}")}
+    else
+      {:noreply, push_navigate(socket, to: ~p"/")}
+    end
   end
 end

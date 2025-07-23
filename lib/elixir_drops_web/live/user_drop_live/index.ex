@@ -1,6 +1,8 @@
 defmodule ElixirDropsWeb.UserDropLive.Index do
   use ElixirDropsWeb, :live_view
 
+  on_mount {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
+
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
@@ -161,13 +163,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:show_profile_suggestions, show_suggestions)}
   end
 
-  # Navbar search event handlers
+  # Handle navbar search submit - navigate to homepage with search
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
-    trimmed_query =
-      query
-      |> to_string()
-      |> String.trim()
-
+    trimmed_query = String.trim(query)
     # Track search history and popular searches
     SearchHelper.track_search(query, socket, %{})
 
@@ -177,46 +175,12 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       |> assign(:show_suggestions, false)
       |> assign(:search_suggestions, [])
 
-    # Navigate to homepage with search query for global search
+    # Navigate to homepage with search query
     if trimmed_query != "" do
       {:noreply, push_navigate(socket, to: ~p"/?q=#{trimmed_query}")}
     else
       {:noreply, push_navigate(socket, to: ~p"/")}
     end
-  end
-
-  def handle_event("load_navbar_suggestions", %{"query" => query}, socket)
-      when is_binary(query) do
-    user_id = socket.assigns.current_user.id
-    suggestions = ElixirDrops.Search.get_search_suggestions(user_id, query)
-
-    {:noreply,
-     socket
-     |> assign(:navbar_search_query, query)
-     |> assign(:search_suggestions, suggestions)
-     |> assign(:show_suggestions, length(suggestions) > 0)}
-  end
-
-  def handle_event("load_navbar_suggestions", _params, socket) do
-    {:noreply, assign(socket, :show_suggestions, false)}
-  end
-
-  def handle_event("focus_navbar_search", _params, socket) do
-    user_id = socket.assigns.current_user.id
-    {suggestions, show_suggestions} = SearchHelper.get_focus_search_suggestions(user_id)
-
-    {:noreply,
-     socket
-     |> assign(:search_suggestions, suggestions)
-     |> assign(:show_suggestions, show_suggestions)}
-  end
-
-  def handle_event("delete_navbar_search_history", %{"id" => id}, socket) do
-    SearchHelper.handle_delete_search_history(id, socket, :search_suggestions)
-  end
-
-  def handle_event("blur_navbar_search", _params, socket) do
-    {:noreply, assign(socket, :show_suggestions, false)}
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do

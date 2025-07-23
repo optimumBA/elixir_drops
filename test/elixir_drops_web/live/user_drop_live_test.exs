@@ -817,16 +817,14 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/profile")
 
-      result = render_hook(live, "load_suggestions", %{"query" => "a"})
-      refute result =~ "search-suggestions"
+      refute render_hook(live, "load_suggestions", %{"query" => "a"}) =~ "search-suggestions"
     end
 
     test "load_suggestions with non-binary query shows no suggestions", %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/profile")
 
-      result = render_hook(live, "load_suggestions", %{"query" => 123})
-      refute result =~ "search-suggestions"
+      refute render_hook(live, "load_suggestions", %{"query" => 123}) =~ "search-suggestions"
     end
 
     test "load_navbar_suggestions with non-binary query shows no suggestions", %{
@@ -836,8 +834,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/profile")
 
-      result = render_hook(live, "load_navbar_suggestions", %{"query" => nil})
-      refute result =~ "search-suggestions"
+      refute render_hook(live, "load_navbar_suggestions", %{"query" => nil}) =~
+               "search-suggestions"
     end
   end
 
@@ -1053,10 +1051,9 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       {:ok, live, _html} = live(conn, ~p"/profile")
 
       # Load suggestions for navbar - this should populate navbar dropdown
-      navbar_html = render_hook(live, "load_navbar_suggestions", %{"query" => "test"})
-
       # Navbar dropdown should exist (though it might be hidden)
-      assert navbar_html =~ "navbar-search-dropdown"
+      assert render_hook(live, "load_navbar_suggestions", %{"query" => "test"}) =~
+               "navbar-search-dropdown"
 
       # Load suggestions for profile search - should populate profile dropdown
       profile_html = render_hook(live, "load_suggestions", %{"query" => "test"})
@@ -1092,8 +1089,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       render_hook(live, "load_suggestions", %{"query" => "elixir"})
 
       # Blur search input - should hide suggestions
-      blur_html = render_hook(live, "blur_search_input", %{})
-      refute blur_html =~ ~s[id="profile-search-dropdown"]
+      refute render_hook(live, "blur_search_input", %{}) =~ ~s[id="profile-search-dropdown"]
     end
 
     test "blur_navbar_search event hides navbar suggestions on profile", %{conn: conn, user: user} do
@@ -1104,8 +1100,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       render_hook(live, "load_navbar_suggestions", %{"query" => "phoenix"})
 
       # Blur navbar search - should hide suggestions
-      blur_html = render_hook(live, "blur_navbar_search", %{})
-      refute blur_html =~ ~s[id="navbar-search-dropdown"]
+      refute render_hook(live, "blur_navbar_search", %{}) =~ ~s[id="navbar-search-dropdown"]
     end
 
     test "navbar search with empty query navigates to home", %{conn: conn, user: user} do

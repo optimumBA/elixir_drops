@@ -1,6 +1,8 @@
 defmodule ElixirDropsWeb.DropLive.Index do
   use ElixirDropsWeb, :live_view
 
+  on_mount {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
+
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Search
@@ -13,9 +15,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
     if connected?(socket), do: Drops.subscribe()
-
-    # Initialize search-related assigns
-    user_id = if socket.assigns.current_user, do: socket.assigns.current_user.id, else: nil
 
     {:ok,
      socket
@@ -32,8 +31,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:loading_more, false)
      |> assign(:search_query, "")
      |> assign(:searching, false)
-     |> assign(:drops_empty?, true)
-     |> SearchHelper.initialize_search_assigns(user_id)}
+     |> assign(:drops_empty?, true)}
   end
 
   @impl Phoenix.LiveView
@@ -188,7 +186,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply, assign(socket, :show_suggestions, false)}
   end
 
-  # Navbar search event handlers
+  # Override navbar search submit to use push_patch instead of push_navigate for homepage
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
     # Track search history and popular searches
@@ -201,45 +199,12 @@ defmodule ElixirDropsWeb.DropLive.Index do
       |> assign(:show_suggestions, false)
       |> assign(:search_suggestions, [])
 
-    # If we're already on the homepage, use push_patch, otherwise push_navigate
-    # This is the navbar search which always searches globally
+    # Since we're already on the homepage, use push_patch for better UX
     if trimmed_query != "" do
       {:noreply, push_patch(socket, to: ~p"/?q=#{trimmed_query}")}
     else
       {:noreply, push_patch(socket, to: ~p"/")}
     end
-  end
-
-  def handle_event("load_navbar_suggestions", %{"query" => query}, socket)
-      when is_binary(query) do
-    trimmed_query = String.trim(query)
-    suggestions = get_navbar_suggestions(trimmed_query, socket.assigns.current_user)
-    show_suggestions = String.length(trimmed_query) >= 2 && length(suggestions) > 0
-
-    {:noreply,
-     socket
-     |> assign(:navbar_search_query, query)
-     |> assign(:search_suggestions, suggestions)
-     |> assign(:show_suggestions, show_suggestions)}
-  end
-
-  def handle_event("load_navbar_suggestions", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:navbar_search_query, "")
-     |> assign(:show_suggestions, false)}
-  end
-
-  def handle_event("focus_navbar_search", _params, socket) do
-    SearchHelper.handle_focus_search_input(socket, :search_suggestions)
-  end
-
-  def handle_event("delete_navbar_search_history", %{"id" => id}, socket) do
-    SearchHelper.handle_delete_search_history(id, socket, :search_suggestions)
-  end
-
-  def handle_event("blur_navbar_search", _params, socket) do
-    {:noreply, assign(socket, :show_suggestions, false)}
   end
 
   @impl Phoenix.LiveView
@@ -271,15 +236,5 @@ defmodule ElixirDropsWeb.DropLive.Index do
         socket
       ) do
     {:noreply, socket}
-  end
-
-  defp get_navbar_suggestions(query, _user) when byte_size(query) < 2, do: []
-
-  defp get_navbar_suggestions(query, %{id: user_id}) do
-    Search.get_search_suggestions(user_id, query)
-  end
-
-  defp get_navbar_suggestions(query, nil) do
-    Search.get_popular_search_suggestions(query, 5)
   end
 end
