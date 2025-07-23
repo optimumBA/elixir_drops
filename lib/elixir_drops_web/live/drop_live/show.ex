@@ -26,17 +26,28 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   defp assign_drop(socket, drop) do
+    title =
+      drop.title
+      |> Phoenix.HTML.html_escape()
+      |> Phoenix.HTML.safe_to_string()
+
     socket
     |> assign(:drop, drop)
-    |> assign(:page_title, drop.title)
+    |> assign(:page_title, title)
     |> assign_seo_attributes()
   end
 
   defp assign_seo_attributes(socket) do
     %{drop: drop} = socket.assigns
 
+    description =
+      drop.title
+      |> Phoenix.HTML.html_escape()
+      |> Phoenix.HTML.safe_to_string()
+      |> seo_description()
+
     attributes = %{
-      description: seo_description(drop.title),
+      description: description,
       image_url: get_image_url(drop),
       type: "article",
       url: url(~p"/d/#{drop.short_id}")

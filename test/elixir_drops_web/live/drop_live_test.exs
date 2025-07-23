@@ -567,6 +567,50 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert image["@type"] == "ImageObject"
       assert image["url"] == "http://image.com/drop-meta-image-latest-#{drop.id}.png"
     end
+
+    test "prevents XSS attacks in JSON-LD structured data", %{conn: conn, user: user} do
+      # Test various XSS attack vectors
+      malicious_content = """
+      This is malicious content </script><script>alert('XSS');</script><script type="application/ld+json">
+      More content with <SCRIPT>alert('XSS2')</SCRIPT>
+      And javascript:alert('XSS3')
+      And vbscript:alert('XSS4')
+      And data:text/html,<script>alert('XSS5')</script>
+      """
+
+      malicious_drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "XSS Test </script><script>alert('XSS_TITLE')</script>",
+          body: malicious_content
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{malicious_drop.short_id}")
+
+      # Ensure the malicious scripts are properly escaped
+      refute html =~ ~r/<script>alert\('XSS.*?'\);<\/script>/
+      refute html =~ ~r/javascript:alert\('XSS.*?'\)/
+      refute html =~ ~r/vbscript:alert\('XSS.*?'\)/
+      refute html =~ ~r/data:text\/html,<script>/
+
+      # Ensure the JSON-LD is valid and doesn't contain unescaped content
+      json_ld =
+        html
+        |> String.split(~s(<script type="application/ld+json">))
+        |> Enum.at(1)
+        |> String.split(~s(</script>))
+        |> Enum.at(0)
+        |> String.trim()
+
+      # The JSON should parse correctly despite the malicious content
+      assert {:ok, decoded} = Jason.decode(json_ld)
+      assert decoded["@type"] == "Article"
+
+      # Verify dangerous content was escaped
+      assert String.contains?(decoded["articleBody"], "<\\/script>")
+      assert String.contains?(decoded["headline"], "<\\/script>")
+      refute String.contains?(decoded["articleBody"], "</script>")
+      refute String.contains?(decoded["headline"], "</script>")
+    end
   end
 
   describe "close editor button" do
