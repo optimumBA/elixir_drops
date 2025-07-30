@@ -11,6 +11,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
+  alias ElixirDrops.Repo
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDrops.Workers.SitemapGeneratorWorker
 
@@ -277,8 +278,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~
                " Your drop is almost ready! You can close this modal—your post will continue processing in the background"
 
-      drops = Drops.list_drops(%{user_id: user.id})
-      created_drop = List.last(drops)
+      created_drop = Repo.get_by!(Drop, user_id: user.id, title: "New Drop title")
       assert created_drop.screenshot.status == :pending
 
       assert_enqueued(
@@ -384,8 +384,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
-      drops = Drops.list_drops(%{user_id: user.id})
-      created_drop = List.last(drops)
+      created_drop = Repo.get_by!(Drop, user_id: user.id, title: "New Drop Without Code")
       assert created_drop.screenshot.status == :skipped
 
       assert_enqueued(
@@ -413,8 +412,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
-      drops = Drops.list_drops(%{user_id: user.id})
-      created_drop = List.last(drops)
+      created_drop = Repo.get_by!(Drop, user_id: user.id, title: "New Drop With Code")
+
       assert created_drop.screenshot.status == :pending
 
       assert_enqueued(
@@ -429,13 +428,11 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         queue: :seo_sitemap
       )
 
-      drop =
-        %{user_id: user.id}
-        |> Drops.list_drops()
-        |> List.last()
+      # Now test the completion flow using the same drop instance with preloaded user
+      drop_for_update = Repo.preload(created_drop, :user)
 
       {:ok, updated_drop} =
-        Drops.update_drop(drop, user, %{
+        Drops.update_drop(drop_for_update, user, %{
           screenshot: %{
             status: :completed,
             meta_url: "http://example.com/screenshot.png",
