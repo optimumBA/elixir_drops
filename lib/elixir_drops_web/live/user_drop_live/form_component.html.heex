@@ -58,13 +58,13 @@
         </p>
         <div :if={input_value(f, :title) || input_value(f, :body)}>
           <h2 class="font-semibold text-sm md:text-base lg:text-lg text-[#252525] border-b-2 border-b-[#cfcfcf] tracking-wide pt-8 pb-4 mb-8">
-            <%= input_value(f, :title) && DropComponents.to_html(input_value(f, :title)) %>
+            {input_value(f, :title) && DropComponents.to_html(input_value(f, :title))}
           </h2>
           <div
             class="drop-preview text-[#4f4f4f] text-sm md:text-md pb-3 mb-pb-0 w-full h-[calc(100vh-408px)] min-h-[40vh] overflow-y-scroll"
             id="drop-preview"
           >
-            <%= input_value(f, :body) && DropComponents.to_html(input_value(f, :body)) %>
+            {input_value(f, :body) && DropComponents.to_html(input_value(f, :body))}
           </div>
         </div>
       </div>

@@ -103,7 +103,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
         <div :if={@loading_more && !assigns[:end_of_timeline?]} class="masonry-loading-indicator">
           <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin">
           </div>
-          <span>Loading <%= @batch_size %> more...</span>
+          <span>Loading {@batch_size} more...</span>
         </div>
       </div>
     </div>

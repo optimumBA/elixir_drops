@@ -77,7 +77,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
   def custom_input(%{type: "textarea"} = assigns) do
     ~H"""
     <div>
-      <.custom_label for={@id} class={@label_class}><%= @label %></.custom_label>
+      <.custom_label for={@id} class={@label_class}>{@label}</.custom_label>
       <textarea
         id={@id}
         name={@name}
@@ -87,7 +87,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         ]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
-      <.custom_error :for={msg <- @errors}><%= msg %></.custom_error>
+      <.custom_error :for={msg <- @errors}>{msg}</.custom_error>
     </div>
     """
   end
@@ -95,7 +95,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
   def custom_input(assigns) do
     ~H"""
     <div>
-      <.custom_label for={@id}><%= @label %></.custom_label>
+      <.custom_label for={@id}>{@label}</.custom_label>
       <input
         type={@type}
         name={@name}
@@ -107,7 +107,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         ]}
         {@rest}
       />
-      <.custom_error :for={msg <- @errors}><%= msg %></.custom_error>
+      <.custom_error :for={msg <- @errors}>{msg}</.custom_error>
     </div>
     """
   end
@@ -130,7 +130,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         @class
       ]}
     >
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </label>
     """
   end
@@ -144,7 +144,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
   def custom_error(assigns) do
     ~H"""
     <p class="mt-1 flex gap-3 text-sm leading-6 text-rose-600">
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </p>
     """
   end

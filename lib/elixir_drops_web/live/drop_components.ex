@@ -58,7 +58,7 @@ defmodule ElixirDropsWeb.DropComponents do
                   alt={@current_user.github_username}
                   class="w-10 h-10 rounded-full"
                 />
-                <p class="hidden md:block"><%= @current_user.github_username %></p>
+                <p class="hidden md:block">{@current_user.github_username}</p>
                 <button class="hidden md:block">
                   <.icon name="hero-chevron-down" class="text-[#4F4F4F]" />
                 </button>
@@ -105,16 +105,16 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <div class="drop-content">
-        <h3 class="drop-title"><%= @drop.title %></h3>
+        <h3 class="drop-title">{@drop.title}</h3>
         <div class="drop-body">
-          <%= @text %>
+          {@text}
         </div>
 
         <div class="flex justify-between">
           <div class="drop-meta">
             <img src={@drop.user.avatar} alt={@drop.user.github_username} class="user-avatar" />
             <a href={~p"/d/#{@drop.short_id}"} class="hidden"></a>
-            <p><%= @drop.user.github_username %></p>
+            <p>{@drop.user.github_username}</p>
             <p class="text-[#868686] text-xs before:content-['•'] before:mr-1">
               <.created_at drop={@drop} />
             </p>
@@ -143,7 +143,7 @@ defmodule ElixirDropsWeb.DropComponents do
   defp created_at(assigns) do
     ~H"""
     <relative-time datetime={"#{assigns.drop.inserted_at}Z"}>
-      <%= Timex.format!(assigns.drop.inserted_at, "{relative}", :relative) %>
+      {Timex.format!(assigns.drop.inserted_at, "{relative}", :relative)}
     </relative-time>
     """
   end
@@ -157,7 +157,7 @@ defmodule ElixirDropsWeb.DropComponents do
       class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <h1 class="font-[500] text-2xl md:text-4xl"><%= @drop.title %></h1>
+      <h1 class="font-[500] text-2xl md:text-4xl">{@drop.title}</h1>
       <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
         <img
           src={@drop.user.avatar}
@@ -165,7 +165,7 @@ defmodule ElixirDropsWeb.DropComponents do
           class="rounded-full h-12 w-12 object-cover"
         />
         <div>
-          <p class="mb-1"><%= @drop.user.github_username %></p>
+          <p class="mb-1">{@drop.user.github_username}</p>
           <p class="text-[#696969] text-xs">
             <.created_at drop={@drop} />
           </p>
@@ -177,7 +177,7 @@ defmodule ElixirDropsWeb.DropComponents do
         id="drop-body"
         phx-hook="DropBodyContainer"
       >
-        <%= to_html(@drop.body) %>
+        {to_html(@drop.body)}
       </div>
 
       <p
@@ -246,7 +246,7 @@ defmodule ElixirDropsWeb.DropComponents do
             />
           </div>
           <p>
-            <%= @current_user.github_username %>
+            {@current_user.github_username}
           </p>
         </div>
       </div>
@@ -311,7 +311,7 @@ defmodule ElixirDropsWeb.DropComponents do
                             name="hero-magnifying-glass"
                             class="h-4 w-4 text-gray-400"
                           />
-                          <span class="text-sm text-gray-900"><%= suggestion.query %></span>
+                          <span class="text-sm text-gray-900">{suggestion.query}</span>
                         </div>
                         <button
                           :if={suggestion.type == :history}
@@ -669,7 +669,7 @@ defmodule ElixirDropsWeb.DropComponents do
           class="w-16 h-16 rounded-full"
         />
       </div>
-      <p class="text-[1.2rem] mx-auto mt-1 cursor-default"><%= @current_user.github_username %></p>
+      <p class="text-[1.2rem] mx-auto mt-1 cursor-default">{@current_user.github_username}</p>
 
       <ul class="mt-10 grid gap-y-6">
         <li class="px-5">
@@ -711,7 +711,7 @@ defmodule ElixirDropsWeb.DropComponents do
       ]}
     >
       <.icon name="hero-link-solid" class="h-4 w-4 md:h-6 md:w-6" />
-      <%= render_slot(@inner_text) %>
+      {render_slot(@inner_text)}
     </div>
     """
   end
@@ -917,7 +917,7 @@ defmodule ElixirDropsWeb.DropComponents do
                   name="hero-magnifying-glass"
                   class="h-4 w-4 text-gray-400"
                 />
-                <span class="text-sm text-gray-800"><%= suggestion.query %></span>
+                <span class="text-sm text-gray-800">{suggestion.query}</span>
               </div>
               <button
                 :if={suggestion.type == :history}
@@ -1024,7 +1024,7 @@ defmodule ElixirDropsWeb.DropComponents do
                   name="hero-magnifying-glass"
                   class="h-5 w-5 text-gray-400"
                 />
-                <span class="text-base text-gray-800"><%= suggestion.query %></span>
+                <span class="text-base text-gray-800">{suggestion.query}</span>
               </div>
               <button
                 :if={suggestion.type == :history}
@@ -1115,7 +1115,7 @@ defmodule ElixirDropsWeb.DropComponents do
                 href={~p"/?q=#{suggestion}"}
                 class="text-[#5947f1] hover:underline whitespace-nowrap"
               >
-                <%= String.capitalize(suggestion) %>
+                {String.capitalize(suggestion)}
               </.link>
             </div>
             <!-- Second row of suggestions -->
@@ -1128,7 +1128,7 @@ defmodule ElixirDropsWeb.DropComponents do
                 href={~p"/?q=#{suggestion}"}
                 class="text-[#5947f1] hover:underline whitespace-nowrap"
               >
-                <%= String.capitalize(suggestion) %>
+                {String.capitalize(suggestion)}
               </.link>
             </div>
           </div>
