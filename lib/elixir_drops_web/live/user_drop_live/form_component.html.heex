@@ -23,6 +23,7 @@
       <div class="px-4">
         <.custom_input
           field={f[:title]}
+          label="Title"
           placeholder="Please provide a Drop summary for the title"
           input_field_class="drop-title-input text-sm md:text-md placeholder:text-inherit border-t-0 border-x-0 border-b-2 border-b-[#cfcfcf] focus:border-b-[#7d6ff4] pt-8 pb-4 w-full mb-8"
           phx-debounce="blur"
@@ -30,6 +31,7 @@
 
         <.custom_input
           field={f[:body]}
+          label="Body"
           placeholder="Start writing..."
           type="textarea"
           input_field_class="drop-editor-input text-sm md:text-md placeholder:text-inherit placeholder:italic border-2 border-[#dedede] focus:border-[#7d6ff4] rounded-md h-[calc(100vh-408px)] min-h-[40vh] w-full"

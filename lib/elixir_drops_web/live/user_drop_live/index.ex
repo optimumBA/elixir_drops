@@ -209,6 +209,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       nil ->
         socket
         |> assign(:drop, nil)
+        |> put_flash(:error, "You can only edit your own drops")
         |> push_navigate(to: ~p"/")
 
       %Drop{} = drop ->

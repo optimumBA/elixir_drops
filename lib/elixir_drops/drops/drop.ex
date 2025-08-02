@@ -35,6 +35,7 @@ defmodule ElixirDrops.Drops.Drop do
     |> cast(attrs, [:body, :short_id, :title, :user_id])
     |> cast_embed(:screenshot)
     |> validate_required([:body, :short_id, :title])
+    |> validate_length(:title, max: 255)
     |> unique_constraint(:short_id)
   end
 end

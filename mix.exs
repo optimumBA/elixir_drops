@@ -24,7 +24,8 @@ defmodule ElixirDrops.MixProject do
         "coveralls.json": :test,
         credo: :test,
         dialyzer: :test,
-        sobelow: :test
+        sobelow: :test,
+        "test.features": :test
       ],
       test_coverage: [tool: ExCoveralls],
 
@@ -71,6 +72,8 @@ defmodule ElixirDrops.MixProject do
       {:mdex, "~> 0.1"},
       {:mox, "~> 1.1", only: :test},
       {:oban, "~> 2.18"},
+      {:phoenix_test, "~> 0.4", only: :test, runtime: false},
+      {:phoenix_test_playwright, "~> 0.1", only: :test, runtime: false},
       {:timex, "~> 3.7"},
       {:ueberauth_github, "~> 0.8.3"},
       {:wallaby, github: "almirsarajcic/wallaby", branch: "releases"}
@@ -105,7 +108,7 @@ defmodule ElixirDrops.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
       {:phoenix_live_view, "~> 1.0.0-rc.1", override: true},
-      {:floki, ">= 0.30.0", only: :test},
+      {:floki, "~> 0.36.0", only: :test, override: true},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
@@ -166,6 +169,10 @@ defmodule ElixirDrops.MixProject do
         "credo --strict",
         "dialyzer",
         "test --cover --warnings-as-errors"
+      ],
+      "test.features": [
+        "assets.deploy",
+        "cmd --app elixir_drops FEATURE_TESTS=true mix test --only feature --color"
       ],
       prettier: ["cmd npx prettier -w ."]
     ]

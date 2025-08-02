@@ -380,6 +380,32 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert html =~ ~s(datetime="#{drop.inserted_at}Z")
     end
 
+    test "edit button only visible to drop owner", %{conn: conn, user: user} do
+      drop =
+        drop_fixture(%Drop{}, user, %{
+          title: "Owner's Drop",
+          body: "Only owner can edit this"
+        })
+
+      # Test with drop owner
+      conn_owner = sign_in_user(conn, user)
+      {:ok, _live, owner_html} = live(conn_owner, ~p"/d/#{drop.short_id}")
+      assert owner_html =~ "Edit"
+      assert owner_html =~ ~s(href="/drops/#{drop.short_id}/edit")
+
+      # Test with different user
+      other_user = user_fixture(%{github_id: 99_999, github_username: "other_user"})
+      conn_other = sign_in_user(conn, other_user)
+      {:ok, _live, other_html} = live(conn_other, ~p"/d/#{drop.short_id}")
+      refute other_html =~ "Edit"
+      refute other_html =~ ~s(href="/drops/#{drop.short_id}/edit")
+
+      # Test with unauthenticated user
+      {:ok, _live, unauth_html} = live(conn, ~p"/d/#{drop.short_id}")
+      refute unauth_html =~ "Edit"
+      refute unauth_html =~ ~s(href="/drops/#{drop.short_id}/edit")
+    end
+
     test "user redirected to home page when drop does not exist", %{conn: conn} do
       short_id = ShortIdGenerator.generate()
       path = "/"

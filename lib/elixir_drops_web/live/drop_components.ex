@@ -148,6 +148,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :current_user, User, default: nil
   attr :drop, Drop, required: true
 
   @spec drop(assigns()) :: rendered()
@@ -181,7 +182,7 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <p
-        id="copy-link-#{@id}"
+        id="copy-link-#{@drop.id}"
         data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
         phx-hook="CopyToClipboard"
         class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
@@ -189,6 +190,15 @@ defmodule ElixirDropsWeb.DropComponents do
         <span><.icon name="hero-link" class="h-4 w-4 stroke-2" /></span>
         <span>Copy link</span>
       </p>
+
+      <.link
+        :if={@current_user && @current_user.id == @drop.user_id}
+        navigate={~p"/drops/#{@drop.short_id}/edit"}
+        class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] flex items-center justify-center gap-x-2 py-2"
+      >
+        <.icon name="hero-pencil" class="h-4 w-4 stroke-2" />
+        <span>Edit</span>
+      </.link>
 
       <.copy_prompt />
     </div>
@@ -267,7 +277,9 @@ defmodule ElixirDropsWeb.DropComponents do
                   class="relative flex items-center"
                 >
                   <.icon name="hero-magnifying-glass" class="absolute left-3 h-4 w-4 text-gray-500" />
+                  <label for="profile-search-query" class="sr-only">Search your drops</label>
                   <input
+                    id="profile-search-query"
                     type="text"
                     name="query"
                     value={@search_query}
@@ -861,7 +873,9 @@ defmodule ElixirDropsWeb.DropComponents do
         phx-submit={JS.push("navbar_search_submit") |> JS.hide(to: "#navbar-search-dropdown")}
         class="relative"
       >
+        <label for="desktop-search-query" class="sr-only">Search drops</label>
         <input
+          id="desktop-search-query"
           type="text"
           name="query"
           value={@search_query}
