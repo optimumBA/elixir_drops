@@ -276,7 +276,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ "Generating Code Screenshots..."
 
       assert html =~
-               " Your drop is almost ready! You can close this modal—your post will continue processing in the background"
+               " Your drop is almost ready! You can close this modal—your drop will continue processing in the background"
 
       created_drop = Repo.get_by!(Drop, user_id: user.id, title: "New Drop title")
       assert created_drop.screenshot.status == :pending
@@ -461,7 +461,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       {:ok, live, html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
 
-      assert html =~ "Edit post"
+      assert html =~ "Edit drop"
       assert html =~ drop.body
       assert html =~ drop.title
 

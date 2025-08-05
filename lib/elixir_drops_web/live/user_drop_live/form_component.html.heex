@@ -16,8 +16,8 @@
   >
     <div class="drop-text-editor text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
       <h2 class="font-semibold text-base md:text-lg text-[#252525] tracking-wide grid grid-cols-2">
-        <span :if={@live_action == :new} class="py-3 px-4">Write a new post</span>
-        <span :if={@live_action == :edit} class="py-3 px-4">Edit post</span>
+        <span :if={@live_action == :new} class="py-3 px-4">Write a new drop</span>
+        <span :if={@live_action == :edit} class="py-3 px-4">Edit drop</span>
         <span class="py-3 bg-[#dfdbfc]"></span>
       </h2>
       <div class="px-4">
@@ -56,7 +56,7 @@
           input_value(f, :title) && "hidden",
           input_value(f, :body) && "hidden"
         ]}>
-          See post preview as you write...
+          See drop preview as you write...
         </p>
         <div :if={input_value(f, :title) || input_value(f, :body)}>
           <h2 class="font-semibold text-sm md:text-base lg:text-lg text-[#252525] border-b-2 border-b-[#cfcfcf] tracking-wide pt-8 pb-4 mb-8">
@@ -89,7 +89,7 @@
           ]}
           type="submit"
         >
-          <span :if={@live_action == :new} class="phx-submit-loading:hidden">Post Drop</span>
+          <span :if={@live_action == :new} class="phx-submit-loading:hidden">Create Drop</span>
           <span :if={@live_action == :edit} class="phx-submit-loading:hidden">Update Drop</span>
           <span class="hidden phx-submit-loading:block">
             <Icons.loading_spin_circle class="text-white h-6 w-6" />

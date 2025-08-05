@@ -39,7 +39,7 @@ DropBodyHooks.DropBodyContainer = {
   },
 }
 
-DropBodyHooks.CreatePostButtonMobile = {
+DropBodyHooks.CreateDropButtonMobile = {
   mounted() {
     const button = this.el
 

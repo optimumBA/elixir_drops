@@ -55,7 +55,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, live, _html} = live(conn, ~p"/")
 
       live
-      |> element("#create-post-button")
+      |> element("#create-drop-button")
       |> render_click()
 
       assert :ok = refute_redirected(live, ~p"/drops/new")
@@ -67,7 +67,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, live, _html} = live(conn, ~p"/")
 
       live
-      |> element("#create-post-button")
+      |> element("#create-drop-button")
       |> render_click()
 
       {path, _flash} = assert_redirect(live)
@@ -650,7 +650,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       conn = sign_in_user(conn, user)
 
       {:ok, live, html} = live(conn, ~p"/drops/new")
-      assert html =~ "Write a new post"
+      assert html =~ "Write a new drop"
 
       live
       |> element("#confirm-close-editor-button")

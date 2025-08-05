@@ -45,8 +45,8 @@ defmodule ElixirDropsWeb.DropComponents do
             >
               <.icon name="hero-magnifying-glass" class="h-5 w-5" />
             </button>
-            <!-- Create Post Button - Always visible -->
-            <.create_post_button current_user={@current_user} live_action={@live_action} />
+            <!-- Create Drop Button - Always visible -->
+            <.create_drop_button current_user={@current_user} live_action={@live_action} />
 
             <%= if @current_user do %>
               <div
@@ -266,7 +266,7 @@ defmodule ElixirDropsWeb.DropComponents do
           <ul class="flex items-center" id="secondary-nav-links">
             <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center mr-8">
               <.link href={~p"/profile"}>
-                My posts
+                My drops
               </.link>
             </li>
             <!-- User Profile Search Input -->
@@ -442,12 +442,12 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :current_user, User
   attr :class, :string, default: nil
 
-  @spec create_post_button_mobile(assigns()) :: rendered()
-  def create_post_button_mobile(assigns) do
+  @spec create_drop_button_mobile(assigns()) :: rendered()
+  def create_drop_button_mobile(assigns) do
     ~H"""
     <.link
-      id="create-post-btn-mobile"
-      phx-hook="CreatePostButtonMobile"
+      id="create-drop-btn-mobile"
+      phx-hook="CreateDropButtonMobile"
       class={[
         "bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80",
         @class
@@ -488,7 +488,7 @@ defmodule ElixirDropsWeb.DropComponents do
           :if={@screenshot.status != :completed}
           class="w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2 font-light"
         >
-          Your drop is almost ready! You can close this modal—your post will continue processing in the background.
+          Your drop is almost ready! You can close this modal—your drop will continue processing in the background.
         </p>
         <p
           :if={@screenshot.status == :completed}
@@ -496,7 +496,7 @@ defmodule ElixirDropsWeb.DropComponents do
         >
           Here's your screenshot!
           <span class="text-sm md:text-base lg:text-lg block font-light">
-            You can now view and share your drop post
+            You can now view and share your drop
           </span>
         </p>
 
@@ -531,14 +531,14 @@ defmodule ElixirDropsWeb.DropComponents do
               phx-click={hide_popup("generating-screenshots-popup")}
               navigate={~p"/drops/#{@screenshot.drop_short_id}/edit"}
             >
-              Edit post
+              Edit drop
             </.link>
             <.link
               type="button"
               class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
               navigate={~p"/profile"}
             >
-              View posts
+              View drops
             </.link>
           </div>
         </div>
@@ -621,7 +621,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp create_post_button(assigns) do
+  defp create_drop_button(assigns) do
     ~H"""
     <.link
       class={[
@@ -629,7 +629,7 @@ defmodule ElixirDropsWeb.DropComponents do
         @current_user && "text-[#eae8fd] bg-blue_primary hover:opacity-80",
         !@current_user && "text-blue_primary border-blue_primary border-2 hover:bg-[#eae8fd]"
       ]}
-      id="create-post-button"
+      id="create-drop-button"
       phx-click={
         if @current_user,
           do: JS.navigate(~p"/drops/new"),
@@ -637,7 +637,7 @@ defmodule ElixirDropsWeb.DropComponents do
       }
     >
       <span><.icon name="hero-plus" /></span>
-      <span>Create Post</span>
+      <span>Create Drop</span>
     </.link>
     """
   end
@@ -691,7 +691,7 @@ defmodule ElixirDropsWeb.DropComponents do
             id="view-user-drops-link"
           >
             <span><Icons.drops_icon /></span>
-            <span> My posts </span>
+            <span> My drops </span>
           </.link>
         </li>
         <li class="nav-list-border full-bleed"></li>
