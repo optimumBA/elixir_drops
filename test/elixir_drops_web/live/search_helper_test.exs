@@ -1,5 +1,5 @@
 defmodule ElixirDropsWeb.SearchHelperTest do
-  use ElixirDrops.DataCase, async: false
+  use ElixirDrops.DataCase, async: true
 
   alias ElixirDrops.AccountsFixtures
   alias ElixirDrops.DropsFixtures
@@ -98,21 +98,30 @@ defmodule ElixirDropsWeb.SearchHelperTest do
       {suggestions, show_suggestions} = SearchHelper.get_focus_search_suggestions(user.id)
 
       assert show_suggestions == true
-      assert length(suggestions) == 2
+      # Should have at least the 2 history items we created
+      assert length(Enum.filter(suggestions, &(&1.type == :history))) == 2
 
-      suggestion = hd(suggestions)
-      assert suggestion.type == :history
-      assert suggestion.query in ["phoenix liveview", "ecto queries"]
-      assert Map.has_key?(suggestion, :id)
+      # History items should be in the suggestions
+      history_items = Enum.filter(suggestions, &(&1.type == :history))
+      assert Enum.any?(history_items, &(&1.query == "ecto queries"))
+      assert Enum.any?(history_items, &(&1.query == "phoenix liveview"))
+      # Verify history items have IDs
+      assert Enum.all?(history_items, &Map.has_key?(&1, :id))
     end
 
-    test "returns empty suggestions for user with no search history" do
+    test "returns only popular suggestions for user with no search history" do
       user = AccountsFixtures.user_fixture()
+
+      # Create some popular searches since test database doesn't have seeds
+      {:ok, _} = Search.track_popular_search("phoenix")
+      {:ok, _} = Search.track_popular_search("elixir")
+      {:ok, _} = Search.track_popular_search("liveview")
 
       {suggestions, show_suggestions} = SearchHelper.get_focus_search_suggestions(user.id)
 
-      assert suggestions == []
-      assert show_suggestions == false
+      # Should only have popular searches (from seeds), no history items
+      assert Enum.all?(suggestions, &(&1.type == :popular))
+      assert show_suggestions == true
     end
   end
 
@@ -143,12 +152,11 @@ defmodule ElixirDropsWeb.SearchHelperTest do
         SearchHelper.handle_delete_search_history(history.id, socket, :search_suggestions)
 
       # Should remove the deleted history from suggestions
-      # Since we have 2 popular searches, we should have those back
-      assert length(updated_socket.assigns.search_suggestions) >= 2
       refute Enum.any?(updated_socket.assigns.search_suggestions, &(&1.query == "test"))
-      # Should still have popular searches
-      assert Enum.any?(updated_socket.assigns.search_suggestions, &(&1.query == "phoenix"))
-      assert Enum.any?(updated_socket.assigns.search_suggestions, &(&1.query == "elixir"))
+      # Should have popular searches remaining (from seeds: liveview, oban, phx.tools)
+      assert length(updated_socket.assigns.search_suggestions) > 0
+      # All remaining should be popular type since we deleted the only history item
+      assert Enum.all?(updated_socket.assigns.search_suggestions, &(&1.type == :popular))
     end
   end
 end

@@ -249,7 +249,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           drop: %{title: "New Drop title", body: "Drop body"}
         )
         |> render_submit()
-        |> follow_redirect(conn, ~p"/profile")
+        |> follow_redirect(conn)
 
       refute has_element?(updated_live, "#loading-spinner")
       assert html =~ "New Drop title"
@@ -469,7 +469,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         live
         |> form("#drops-editor-form", drop: %{title: "New Drop title", body: "New Drop body"})
         |> render_submit()
-        |> follow_redirect(conn, ~p"/profile")
+        |> follow_redirect(conn)
 
       refute_enqueued(
         worker: ScreenshotGeneratorWorker,
@@ -554,7 +554,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
         drop: %{title: "New Drop title", body: "New Drop body without code block"}
       )
       |> render_submit()
-      |> follow_redirect(conn, ~p"/profile")
+      |> follow_redirect(conn)
 
       refute_enqueued(
         worker: ScreenshotGeneratorWorker,
@@ -898,9 +898,20 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       # Create popular searches to ensure we have both history and popular suggestions
       # These popular searches should NOT overlap with the search history
-      popular_search_fixture(%{query: "ecto", search_count: 10})
-      popular_search_fixture(%{query: "liveview", search_count: 8})
-      popular_search_fixture(%{query: "genserver", search_count: 5})
+      popular_search_fixture(%{
+        query: "ecto_unique_#{System.unique_integer([:positive])}",
+        search_count: 10
+      })
+
+      popular_search_fixture(%{
+        query: "liveview_unique_#{System.unique_integer([:positive])}",
+        search_count: 8
+      })
+
+      popular_search_fixture(%{
+        query: "genserver_unique_#{System.unique_integer([:positive])}",
+        search_count: 5
+      })
 
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/profile")
@@ -914,9 +925,9 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ "phoenix"
 
       # Should show popular searches (excluding those in history)
-      assert html =~ "ecto"
-      assert html =~ "liveview"
-      assert html =~ "genserver"
+      assert html =~ "ecto_unique_"
+      assert html =~ "liveview_unique_"
+      assert html =~ "genserver_unique_"
 
       # Verify deduplication by checking the history is ordered and unique
       history = ElixirDrops.Search.get_user_search_history(user.id)

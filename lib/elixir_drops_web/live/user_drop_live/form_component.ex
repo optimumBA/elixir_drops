@@ -75,23 +75,29 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     updated_params = Map.put(drop_params, "screenshot", screenshot)
 
     case create_or_update_drop(socket, socket.assigns.live_action, updated_params) do
-      {:ok, %{screenshot: %{status: :pending}} = drop} ->
-        enqueue_seo_screenshot_creation(
-          drop,
-          socket.assigns.drop.body,
-          socket.assigns.live_action
-        )
-
-        changeset = Drops.change_drop(drop)
-        {:noreply, assign_form(socket, changeset)}
-
-      {:ok, drop} ->
-        enqueue_sitemap_generation(drop)
-        {:noreply, push_navigate(socket, to: ~p"/profile")}
-
-      {:error, changeset} ->
-        {:noreply, assign_form(socket, changeset)}
+      {:ok, drop} -> handle_save_success(socket, drop)
+      {:error, error} -> handle_save_error(socket, error)
     end
+  end
+
+  defp handle_save_success(socket, %{screenshot: %{status: :pending}} = drop) do
+    enqueue_seo_screenshot_creation(
+      drop,
+      socket.assigns.drop.body,
+      socket.assigns.live_action
+    )
+
+    changeset = Drops.change_drop(drop)
+    {:noreply, assign_form(socket, changeset)}
+  end
+
+  defp handle_save_success(socket, drop) do
+    enqueue_sitemap_generation(drop)
+    {:noreply, push_navigate(socket, to: ~p"/d/#{drop.short_id}")}
+  end
+
+  defp handle_save_error(socket, %Ecto.Changeset{} = changeset) do
+    {:noreply, assign_form(socket, changeset)}
   end
 
   defp create_or_update_drop(socket, :edit, drop_params) do

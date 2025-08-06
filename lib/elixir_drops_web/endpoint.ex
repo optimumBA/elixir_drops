@@ -1,6 +1,8 @@
 defmodule ElixirDropsWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :elixir_drops
 
+  # Let PhoenixTest.Playwright.Case handle sandbox setup automatically
+
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
@@ -12,8 +14,8 @@ defmodule ElixirDropsWeb.Endpoint do
   ]
 
   socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: [connect_info: [session: @session_options]]
+    websocket: [connect_info: [:user_agent, session: @session_options]],
+    longpoll: [connect_info: [:user_agent, session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -44,6 +46,11 @@ defmodule ElixirDropsWeb.Endpoint do
 
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+
+  # SQL Sandbox for feature tests
+  if Application.compile_env(:elixir_drops, :sql_sandbox) do
+    plug Phoenix.Ecto.SQL.Sandbox
+  end
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

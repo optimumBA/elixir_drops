@@ -15,7 +15,7 @@ defmodule ElixirDrops.SearchFixtures do
     {:ok, search_history} =
       attrs
       |> Enum.into(%{
-        query: "some query",
+        query: "search query#{System.unique_integer([:positive])}",
         results_count: 42,
         user_id: user_id
       })

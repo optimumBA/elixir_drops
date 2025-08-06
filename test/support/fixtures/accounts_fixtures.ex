@@ -23,8 +23,8 @@ defmodule ElixirDrops.AccountsFixtures do
       |> Enum.into(%{
         avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
         email: unique_user_email(),
-        github_id: 1_456_872,
-        github_username: "github_username",
+        github_id: System.unique_integer([:positive]),
+        github_username: "user#{System.unique_integer([:positive])}",
         name: "some_name"
       })
       |> Accounts.register_user()

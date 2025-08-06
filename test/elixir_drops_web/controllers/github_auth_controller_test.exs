@@ -54,7 +54,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
       user = user_fixture(github_id: 1234)
       ueberauth_auth = Map.put(@ueberauth_auth, :uid, 1234)
 
-      assert Repo.aggregate(User, :count) == 1
+      initial_count = Repo.aggregate(User, :count)
 
       conn =
         conn
@@ -62,7 +62,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
         |> assign(:ueberauth_auth, ueberauth_auth)
         |> GithubAuthController.callback(%{})
 
-      assert Repo.aggregate(User, :count) == 1
+      assert Repo.aggregate(User, :count) == initial_count
 
       assert user_token = get_session(conn, :user_token)
       assert %User{} = current_user = Accounts.get_user_by_session_token(user_token)
@@ -70,7 +70,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
     end
 
     test "when user does not exist it creates a new user and logs them in", %{conn: conn} do
-      assert Repo.aggregate(User, :count) == 0
+      initial_count = Repo.aggregate(User, :count)
 
       conn =
         conn
@@ -78,7 +78,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
         |> assign(:ueberauth_auth, @ueberauth_auth)
         |> GithubAuthController.callback(%{})
 
-      assert Repo.aggregate(User, :count) == 1
+      assert Repo.aggregate(User, :count) == initial_count + 1
 
       assert user_token = get_session(conn, :user_token)
       assert %User{} = user = Accounts.get_user_by_session_token(user_token)
@@ -86,7 +86,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
     end
 
     test "when user is not valid it returns an error", %{conn: conn} do
-      assert Repo.aggregate(User, :count) == 0
+      initial_count = Repo.aggregate(User, :count)
 
       ueberauth_auth =
         @ueberauth_auth
@@ -101,10 +101,11 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
         |> GithubAuthController.callback(%{})
 
       assert redirected_to(conn, 302)
-      assert Repo.aggregate(User, :count) == 0
+      assert Repo.aggregate(User, :count) == initial_count
     end
 
     test "returns error when auth.info in invalid", %{conn: conn} do
+      initial_count = Repo.aggregate(User, :count)
       ueberauth_auth = Map.put(@ueberauth_auth, :info, nil)
 
       conn =
@@ -114,7 +115,7 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
         |> GithubAuthController.callback(%{})
 
       assert redirected_to(conn, 302)
-      assert Repo.aggregate(User, :count) == 0
+      assert Repo.aggregate(User, :count) == initial_count
     end
 
     test "extracts user name from auth", %{conn: conn} do

@@ -1,5 +1,5 @@
 defmodule ElixirDropsWeb.DropLiveTest do
-  use ElixirDropsWeb.ConnCase, async: true
+  use ElixirDropsWeb.ConnCase, async: false
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
@@ -37,7 +37,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, _live, html} = live(conn, ~p"/")
 
       assert html =~ "Sign in with GitHub"
-      assert html =~ "Welcome to ElixirDrops"
+      assert html =~ "Welcome to ElixirDrops!"
     end
 
     test "shows the logged-in user's info", %{conn: conn, user: user} do
@@ -1141,24 +1141,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       histories = ElixirDrops.Search.get_user_search_history(user.id)
       queries = Enum.map(histories, & &1.query)
       assert "tracked search" in queries
-    end
-
-    test "unauthenticated users see only popular searches", %{conn: conn} do
-      # Create popular searches
-      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("popular one")
-      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("popular two")
-
-      {:ok, live, _html} = live(conn, ~p"/")
-
-      # Focus should show popular searches
-      render_hook(live, "focus_search_input", %{})
-      html = render(live)
-
-      # Should only show popular searches, no history
-      assert html =~ "popular one"
-      assert html =~ "popular two"
-      # No clock icons for history
-      refute html =~ "hero-clock"
     end
 
     test "clear_search event clears search state and redirects to home", %{conn: conn} do

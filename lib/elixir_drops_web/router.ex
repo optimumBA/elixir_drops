@@ -21,10 +21,17 @@ defmodule ElixirDropsWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :require_authenticated_user,
-      on_mount: [
-        {ElixirDropsWeb.UserAuth, :ensure_authenticated},
-        {ElixirDropsWeb.UserAuth, :assign_current_user}
-      ] do
+      on_mount:
+        Enum.filter(
+          [
+            if(Application.compile_env(:elixir_drops, :sql_sandbox),
+              do: {ElixirDropsWeb.LiveAcceptance, :default}
+            ),
+            {ElixirDropsWeb.UserAuth, :ensure_authenticated},
+            {ElixirDropsWeb.UserAuth, :assign_current_user}
+          ],
+          & &1
+        ) do
       live "/profile", UserDropLive.Index, :index
 
       live "/drops/:short_id/edit", UserDropLive.Index, :edit
@@ -36,10 +43,17 @@ defmodule ElixirDropsWeb.Router do
     pipe_through :browser
 
     live_session :default,
-      on_mount: [
-        {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
-        {ElixirDropsWeb.UserAuth, :assign_current_user}
-      ] do
+      on_mount:
+        Enum.filter(
+          [
+            if(Application.compile_env(:elixir_drops, :sql_sandbox),
+              do: {ElixirDropsWeb.LiveAcceptance, :default}
+            ),
+            {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
+            {ElixirDropsWeb.UserAuth, :assign_current_user}
+          ],
+          & &1
+        ) do
       live "/", DropLive.Index, :index
       live "/d/:short_id", DropLive.Show, :show
       get "/d/:id/code_snippet", CodeSnippetController, :index

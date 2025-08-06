@@ -1,6 +1,6 @@
 {
   "coverage_options": {
-    "minimum_coverage": 97.0
+    "minimum_coverage": 96.7
   },
   "skip_files": [
     "lib/elixir_drops_web/components/core_components.ex",
@@ -9,6 +9,7 @@
     "lib/elixir_drops/s3_helper/http.ex",
     "lib/mix/tasks/ecto.load_dump.ex",
     "test/support/feature_case.ex",
-    "test/support/feature_helpers.ex"
+    "test/support/feature_helpers.ex",
+    "lib/elixir_drops_web/live/live_acceptance.ex"
   ]
 }

@@ -15,7 +15,10 @@ defmodule ElixirDrops.StructuredData do
   """
   @spec generate_drop_json_ld(Drop.t()) :: String.t()
   def generate_drop_json_ld(%Drop{} = drop) do
-    image_url = drop.screenshot.meta_url || "https://elixirdrops.net/images/seo_default_image.png"
+    image_url =
+      (drop.screenshot && drop.screenshot.meta_url) ||
+        "https://elixirdrops.net/images/seo_default_image.png"
+
     user_avatar = drop.user.avatar
     user_name = drop.user.name || "Anonymous"
 

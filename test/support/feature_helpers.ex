@@ -5,9 +5,12 @@ defmodule ElixirDrops.FeatureHelpers do
   Provides browser automation utilities for PhoenixTest.Playwright tests.
   """
 
+  import Ecto.Query
   import PhoenixTest, except: [unwrap: 2]
   import PhoenixTest.Playwright, only: [unwrap: 2]
 
+  alias ElixirDrops.Drops
+  alias ElixirDrops.Repo
   alias PhoenixTest.Playwright.Frame
 
   @type key :: String.t()
@@ -24,7 +27,13 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec sign_in_user(session(), ElixirDrops.Accounts.User.t()) :: session()
   def sign_in_user(session, user) do
     # Visit the dev auth endpoint and let it handle the redirect
-    visit(session, "/dev/auth/#{user.id}")
+    session
+    |> visit("/dev/auth/#{user.id}")
+    |> then(fn s ->
+      # Wait for redirect to complete
+      Process.sleep(100)
+      s
+    end)
   end
 
   @doc """
@@ -109,10 +118,10 @@ defmodule ElixirDrops.FeatureHelpers do
         // Set viewport properties that Tailwind CSS can see
         Object.defineProperty(window, 'innerWidth', { value: #{width} });
         Object.defineProperty(window, 'innerHeight', { value: #{height} });
-        
+
         // Trigger resize event to make CSS media queries re-evaluate
         window.dispatchEvent(new Event('resize'));
-        
+
         // Also try to set the actual window size if possible
         if (window.resizeTo) {
           window.resizeTo(#{width}, #{height});
@@ -142,13 +151,20 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec scroll_down(session(), integer()) :: session()
   def scroll_down(session, pixels \\ 300) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} =
-        Frame.evaluate(frame_id, """
-          window.scrollBy(0, #{pixels})
-        """)
-    end)
+      _result =
+        case Frame.evaluate(frame_id, """
+               (() => {
+                 window.scrollBy(0, #{pixels});
+                 return window.scrollY;
+               })()
+             """) do
+          {:ok, value} -> value
+          value when is_number(value) -> value
+          other -> raise "Unexpected scroll_down result: #{inspect(other)}"
+        end
 
-    session
+      {:ok, session}
+    end)
   end
 
   @doc """
@@ -157,13 +173,20 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec scroll_up(session(), integer()) :: session()
   def scroll_up(session, pixels \\ 300) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} =
-        Frame.evaluate(frame_id, """
-          window.scrollBy(0, -#{pixels})
-        """)
-    end)
+      _result =
+        case Frame.evaluate(frame_id, """
+               (() => {
+                 window.scrollBy(0, -#{pixels});
+                 return window.scrollY;
+               })()
+             """) do
+          {:ok, value} -> value
+          value when is_number(value) -> value
+          other -> raise "Unexpected scroll_up result: #{inspect(other)}"
+        end
 
-    session
+      {:ok, session}
+    end)
   end
 
   @doc """
@@ -172,16 +195,23 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec scroll_to_element(session(), selector()) :: session()
   def scroll_to_element(session, selector) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} =
-        Frame.evaluate(frame_id, """
-          document.querySelector('#{selector}')?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          })
-        """)
-    end)
+      _result =
+        case Frame.evaluate(frame_id, """
+               (() => {
+                 document.querySelector('#{selector}')?.scrollIntoView({
+                   behavior: 'smooth',
+                   block: 'center'
+                 });
+                 return true;
+               })()
+             """) do
+          {:ok, value} -> value
+          value when is_boolean(value) -> value
+          other -> raise "Unexpected scroll_to_element result: #{inspect(other)}"
+        end
 
-    session
+      {:ok, session}
+    end)
   end
 
   @doc """
@@ -207,11 +237,19 @@ defmodule ElixirDrops.FeatureHelpers do
   """
   @spec current_path(session()) :: String.t()
   def current_path(session) do
-    unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, current_url} = Frame.url(frame_id)
-      uri = URI.parse(current_url)
-      uri.path || "/"
-    end)
+    # We need to extract the frame_id directly to get the path value
+    %{frame_id: frame_id} = session
+
+    current_url =
+      case Frame.evaluate(frame_id, "window.location.href") do
+        {:ok, url} -> url
+        url when is_binary(url) -> url
+        {:error, reason} -> raise "Failed to get current URL: #{inspect(reason)}"
+        other -> raise "Unexpected Frame.evaluate result: #{inspect(other)}"
+      end
+
+    uri = URI.parse(current_url)
+    uri.path || "/"
   end
 
   @doc """
@@ -220,14 +258,20 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec assert_url_contains(session(), String.t()) :: session()
   def assert_url_contains(session, expected_text) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, current_url} = Frame.url(frame_id)
+      current_url =
+        case Frame.evaluate(frame_id, "window.location.href") do
+          {:ok, url} -> url
+          url when is_binary(url) -> url
+          {:error, reason} -> raise "Failed to get current URL: #{inspect(reason)}"
+          other -> raise "Unexpected Frame.evaluate result: #{inspect(other)}"
+        end
 
       unless String.contains?(current_url, expected_text) do
         raise "Expected URL to contain '#{expected_text}', but current URL is: #{current_url}"
       end
-    end)
 
-    session
+      {:ok, session}
+    end)
   end
 
   @doc """
@@ -236,6 +280,11 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec assert_path_matches(session(), Regex.t()) :: session()
   def assert_path_matches(session, pattern) do
     path = current_path(session)
+
+    # Debug: Check what current_path is returning
+    if not is_binary(path) do
+      raise "current_path returned #{inspect(path)} instead of a string"
+    end
 
     unless Regex.match?(pattern, path) do
       raise "Expected path '#{path}' to match pattern #{inspect(pattern)}"
@@ -281,26 +330,27 @@ defmodule ElixirDrops.FeatureHelpers do
   end
 
   @doc """
-  Focus on search input based on viewport. 
+  Focus on search input based on viewport.
   Handles desktop vs mobile search input conflicts.
   """
   @spec focus_search_input(session()) :: session()
   def focus_search_input(session) do
     unwrap(session, fn %{frame_id: frame_id} ->
       # Try mobile first (if visible), then desktop
-      Frame.evaluate(frame_id, """
-        const mobileInput = document.querySelector("#mobile-search-input input");
-        const desktopInput = document.querySelector("#desktop-search-query");
-        
-        if (mobileInput && mobileInput.offsetParent !== null) {
-          mobileInput.focus();
-        } else if (desktopInput && desktopInput.offsetParent !== null) {
-          desktopInput.focus();
-        }
-      """)
-    end)
+      _result =
+        Frame.evaluate(frame_id, """
+          const mobileInput = document.querySelector("#mobile-search-input input");
+          const desktopInput = document.querySelector("#desktop-search-query");
 
-    session
+          if (mobileInput && mobileInput.offsetParent !== null) {
+            mobileInput.focus();
+          } else if (desktopInput && desktopInput.offsetParent !== null) {
+            desktopInput.focus();
+          }
+        """)
+
+      {:ok, session}
+    end)
   end
 
   @doc """
@@ -313,14 +363,14 @@ defmodule ElixirDrops.FeatureHelpers do
       Frame.evaluate(frame_id, """
         const mobileInput = document.querySelector("#mobile-search-input input");
         const desktopInput = document.querySelector("#desktop-search-query");
-        
+
         let targetInput;
         if (mobileInput && mobileInput.offsetParent !== null) {
           targetInput = mobileInput;
         } else if (desktopInput && desktopInput.offsetParent !== null) {
           targetInput = desktopInput;
         }
-        
+
         if (targetInput) {
           targetInput.value = "";
           targetInput.focus();
@@ -344,10 +394,16 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec assert_element(session(), selector(), keyword()) :: session()
   def assert_element(session, selector, opts) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, element_count} =
-        Frame.evaluate(frame_id, """
-          document.querySelectorAll("#{selector}").length
-        """)
+      element_count =
+        case Frame.evaluate(frame_id, """
+               document.querySelectorAll("#{selector}").length
+             """) do
+          {:ok, count} -> count
+          {:error, reason} -> raise "Failed to count elements: #{inspect(reason)}"
+          # Handle case where Frame.evaluate returns the count directly
+          count when is_integer(count) -> count
+          other -> raise "Unexpected Frame.evaluate result: #{inspect(other)}"
+        end
 
       validate_element_count(selector, element_count, opts)
     end)
@@ -379,51 +435,64 @@ defmodule ElixirDrops.FeatureHelpers do
   @doc """
   Assert that a form field has the expected value.
 
+  Uses PhoenixTest's native assert_has functionality with label and value options.
+  This is more reliable than custom JavaScript evaluation.
+
   Useful for verifying that forms are pre-populated correctly or that
   user input has been preserved during validation errors.
   """
   @spec assert_field_value(session(), String.t(), String.t()) :: session()
   def assert_field_value(session, field_name, expected_value) do
-    unwrap(session, fn %{frame_id: frame_id} ->
-      # Find the input/textarea by label text or name attribute
-      {:ok, actual_value} =
-        Frame.evaluate(frame_id, """
-          (() => {
-            // Try to find by label text first
-            const labels = Array.from(document.querySelectorAll('label'));
-            const labelElement = labels.find(label => label.textContent.trim() === "#{field_name}");
-            
-            let input;
-            if (labelElement) {
-              // Find associated input
-              const forId = labelElement.getAttribute('for');
-              if (forId) {
-                input = document.getElementById(forId);
-              } else {
-                input = labelElement.querySelector('input, textarea, select');
-              }
-            }
-            
-            // Fallback: find by name attribute
-            if (!input) {
-              input = document.querySelector(`input[name*="${field_name}"], textarea[name*="${field_name}"], select[name*="${field_name}"]`);
-            }
-            
-            // Fallback: find by placeholder
-            if (!input) {
-              input = document.querySelector(`input[placeholder*="${field_name}"], textarea[placeholder*="${field_name}"]`);
-            }
-            
-            if (!input) {
-              throw new Error(`Could not find field: ${field_name}`);
-            }
-            
-            return input.value;
-          })()
-        """)
+    # Use PhoenixTest's native field value assertion
+    # Try textarea first, then input as fallback
+    assert_has(session, "textarea", value: expected_value, label: field_name)
+  rescue
+    _error ->
+      # Fallback to input if textarea doesn't match
+      assert_has(session, "input", value: expected_value, label: field_name)
+  end
 
-      unless actual_value == expected_value do
-        raise "Expected field '#{field_name}' to have value '#{expected_value}', got '#{actual_value}'"
+  @doc """
+  Click on an element that contains specific text.
+
+  This is a workaround for PhoenixTest.Playwright's text selector issues.
+  Instead of click(selector, text: content), use click_element_with_text(selector, content).
+  """
+  @spec click_element_with_text(session(), selector(), String.t()) :: session()
+  def click_element_with_text(session, selector, text) do
+    # Use Frame.evaluate directly without unwrap for click operations that may cause navigation
+    unwrap(session, fn %{frame_id: frame_id} ->
+      case Frame.evaluate(frame_id, """
+             (() => {
+               const elements = document.querySelectorAll("#{selector}");
+               for (let element of elements) {
+                 if (element.textContent.includes("#{text}")) {
+                   element.click();
+                   return true;
+                 }
+               }
+               throw new Error("Could not find element '#{selector}' containing text '#{text}'");
+             })()
+           """) do
+        {:ok, _result} ->
+          # Click succeeded
+          :ok
+
+        # Handle navigation-related context destruction
+        {:error, %{error: %{error: %{message: "Execution context was destroyed" <> _}}}} ->
+          # Click succeeded but caused navigation - this is expected
+          :ok
+
+        {:error, reason} ->
+          raise "Failed to click element: #{inspect(reason)}"
+
+        # Handle case where Frame.evaluate returns the result directly
+        true ->
+          # Click succeeded
+          :ok
+
+        other ->
+          raise "Unexpected Frame.evaluate result: #{inspect(other)}"
       end
     end)
 
@@ -461,15 +530,15 @@ defmodule ElixirDrops.FeatureHelpers do
           if (!element) {
             throw new Error("Element #{selector} does not exist in DOM");
           }
-          
+
           // Force element to be visible and clickable for testing
           element.style.display = 'flex';
           element.style.visibility = 'visible';
           element.style.pointerEvents = 'auto';
-          
+
           // Click the element
           element.click();
-          
+
           return true;
         })()
       """)
@@ -479,5 +548,23 @@ defmodule ElixirDrops.FeatureHelpers do
     end)
 
     session
+  end
+
+  @doc """
+  Get the most recently created drop by a user.
+
+  This is useful in tests to get the drop that was just created
+  after a form submission.
+  """
+  @spec get_latest_drop_by_user(ElixirDrops.Accounts.User.t()) :: Drops.Drop.t() | nil
+  def get_latest_drop_by_user(user) do
+    query =
+      from(d in Drops.Drop,
+        where: d.user_id == ^user.id,
+        order_by: [desc: d.inserted_at],
+        limit: 1
+      )
+
+    Repo.one(query)
   end
 end

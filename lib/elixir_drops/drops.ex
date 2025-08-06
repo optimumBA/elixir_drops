@@ -11,6 +11,8 @@ defmodule ElixirDrops.Drops do
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.Repo
 
+  require Logger
+
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
   @type drop :: Drop.t()
@@ -202,34 +204,49 @@ defmodule ElixirDrops.Drops do
 
   """
   @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
-  def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    short_id = ShortIdGenerator.generate()
-
-    attrs =
-      attrs
-      |> Map.put(:short_id, short_id)
-      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
-
-    changeset =
-      %Drop{}
-      |> Drop.changeset(attrs)
-      |> Ecto.Changeset.put_change(:user_id, user.id)
+  def create_drop(%Drop{} = _drop, %User{} = user, attrs \\ %{}) do
+    prepared_attrs = prepare_drop_attrs(attrs)
+    changeset = build_drop_changeset(prepared_attrs, user)
 
     case Repo.insert(changeset) do
-      {:ok, drop} ->
-        drop = Repo.preload(drop, [:user])
-
-        :ok = broadcast_drop_creation(drop)
-
-        {:ok, drop}
-
-      {:error, changeset} ->
-        if changeset.errors[:short_id] do
-          create_drop(drop, user, attrs)
-        else
-          {:error, changeset}
-        end
+      {:ok, drop} -> handle_create_success(drop)
+      {:error, error} -> handle_create_error(error, user, prepared_attrs)
     end
+  end
+
+  defp prepare_drop_attrs(attrs) do
+    short_id = ShortIdGenerator.generate()
+
+    attrs
+    |> Map.put(:short_id, short_id)
+    |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+  end
+
+  defp build_drop_changeset(attrs, user) do
+    %Drop{}
+    |> Drop.changeset(attrs)
+    |> Ecto.Changeset.put_change(:user_id, user.id)
+  end
+
+  defp handle_create_success(drop) do
+    drop = Repo.preload(drop, [:user])
+    :ok = broadcast_drop_creation(drop)
+    {:ok, drop}
+  end
+
+  defp handle_create_error(%Ecto.Changeset{} = changeset, user, attrs) do
+    if changeset.errors[:short_id] do
+      # Generate a new short_id and retry
+      create_drop(%Drop{}, user, Map.delete(attrs, :short_id))
+    else
+      {:error, changeset}
+    end
+  end
+
+  defp handle_create_error(error, _user, _attrs) do
+    # Handle other error types
+    Logger.error("Unexpected error in create_drop: #{inspect(error)}")
+    {:error, error}
   end
 
   @doc """

@@ -72,8 +72,7 @@ defmodule ElixirDrops.MixProject do
       {:mdex, "~> 0.1"},
       {:mox, "~> 1.1", only: :test},
       {:oban, "~> 2.18"},
-      {:phoenix_test, "~> 0.4", only: :test, runtime: false},
-      {:phoenix_test_playwright, "~> 0.1", only: :test, runtime: false},
+      {:phoenix_test_playwright, "~> 0.7", only: :test, runtime: false},
       {:timex, "~> 3.7"},
       {:ueberauth_github, "~> 0.8.3"},
       {:wallaby, github: "almirsarajcic/wallaby", branch: "releases"}
@@ -102,7 +101,7 @@ defmodule ElixirDrops.MixProject do
     [
       {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.5"},
-      {:ecto_sql, "~> 3.10"},
+      {:ecto_sql, "~> 3.13"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
@@ -143,6 +142,7 @@ defmodule ElixirDrops.MixProject do
         "cmd npm i -D prettier prettier-plugin-toml",
         "ecto.setup",
         "assets.setup",
+        "cmd --cd assets npx playwright install chromium",
         "assets.build"
       ],
       "ecto.setup": ["ecto.create", "ecto.load_dump", "ecto.migrate", "run priv/repo/seeds.exs"],
@@ -172,7 +172,7 @@ defmodule ElixirDrops.MixProject do
       ],
       "test.features": [
         "assets.deploy",
-        "cmd --app elixir_drops FEATURE_TESTS=true mix test --only feature --color"
+        "cmd FEATURE_TESTS=true mix test --only feature --color"
       ],
       prettier: ["cmd npx prettier -w ."]
     ]
