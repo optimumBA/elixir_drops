@@ -22,6 +22,7 @@ import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 import topbar from '../vendor/topbar'
+import AnimatedCardHooks from './hooks/animate_card'
 import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
@@ -33,6 +34,7 @@ import SearchSuggestionsHooks from './hooks/search_suggestions'
 import WelcomeMessageHooks from './hooks/welcome_message'
 
 let Hooks = {
+  ...AnimatedCardHooks,
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
   ...DropsContainerHooks,

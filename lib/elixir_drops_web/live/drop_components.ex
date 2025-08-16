@@ -89,20 +89,13 @@ defmodule ElixirDropsWeb.DropComponents do
     assigns = assign(assigns, :text, get_preview_text(assigns.drop.body))
 
     ~H"""
-    <div class="drop-card">
-      <div :if={@drop.screenshot} class="screenshot-wrapper">
-        <div :if={@drop.screenshot.internal_url} class="screenshot-header">
-          <div class="window-dot"></div>
-          <div class="window-dot"></div>
-          <div class="window-dot"></div>
-        </div>
-        <img
-          :if={@drop.screenshot && @drop.screenshot.internal_url}
-          src={@drop.screenshot.internal_url}
-          class="screenshot-image"
-          id={"drop-image:#{@drop.id}"}
-        />
-      </div>
+    <div
+      class="drop-card"
+      id={"drop-card-#{@drop.id}"}
+      phx-hook="GridCardData"
+      data-drop-short-id={@drop.short_id}
+    >
+      <.drop_screenshot class="rounded-t-md" drop={@drop} page_link={~p"/d/#{@drop.short_id}"} />
 
       <div class="drop-content">
         <h3 class="drop-title">{@drop.title}</h3>
@@ -155,20 +148,31 @@ defmodule ElixirDropsWeb.DropComponents do
   def drop(assigns) do
     ~H"""
     <div
-      class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
+      class={[
+        "text-sm md:text-base leading-[1.5] relative",
+        "w-[95%] md:w-[97%] max-w-md md:max-w-xl lg:max-w-3xl mx-auto",
+        "border border-[#CBCBCB] rounded-xl p-3 md:p-10"
+      ]}
+      id={"drop-details-#{@drop.short_id}"}
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <h1 class="font-[500] text-2xl md:text-4xl">{@drop.title}</h1>
-      <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
+      <.drop_screenshot class="rounded-xl" drop={@drop} page_link={~p"/"} />
+
+      <h1 class="font-[500] text-xl md:text-2xl mt-4">{@drop.title}</h1>
+
+      <div class="flex gap-x-3 items-center border-b-[1.5px] border-b-[#ececec] py-3 px-3 md:px-5 -mx-2 md:-mx-5">
         <img
           src={@drop.user.avatar}
           alt={@drop.user.github_username}
           class="rounded-full h-12 w-12 object-cover"
         />
         <div>
-          <p class="mb-1">{@drop.user.github_username}</p>
-          <p class="text-[#696969] text-xs">
-            <.created_at drop={@drop} />
+          <p class="mb-1 flex items-center gap-x-1">
+            <span>{@drop.user.github_username}</span>
+            <span>•</span>
+            <span class="text-[#696969] text-xs">
+              <.created_at drop={@drop} />
+            </span>
           </p>
         </div>
       </div>
@@ -185,10 +189,14 @@ defmodule ElixirDropsWeb.DropComponents do
         id="copy-link-#{@drop.id}"
         data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
         phx-hook="CopyToClipboard"
-        class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
+        class={[
+          "py-3 px-3 md:px-5 mt-4 -mx-2 md:-mx-5",
+          "text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] cursor-pointer",
+          "flex items-center justify-end gap-x-2"
+        ]}
       >
         <span><.icon name="hero-link" class="h-4 w-4 stroke-2" /></span>
-        <span>Copy link</span>
+        <span class="opacity-75">Copy link</span>
       </p>
 
       <.link
@@ -201,6 +209,29 @@ defmodule ElixirDropsWeb.DropComponents do
       </.link>
 
       <.copy_prompt />
+    </div>
+    """
+  end
+
+  attr :drop, Drop, required: true
+  attr :class, :string, default: nil
+  attr :page_link, :string, default: nil
+  attr :active?, :boolean, default: false
+
+  defp drop_screenshot(assigns) do
+    ~H"""
+    <div :if={@drop.screenshot} class={["screenshot-wrapper", @class]}>
+      <div :if={@drop.screenshot.internal_url} class="screenshot-header">
+        <div class="window-dot"></div>
+        <div class="window-dot"></div>
+        <div class="window-dot" phx-click={@page_link && JS.navigate(@page_link)}></div>
+      </div>
+      <img
+        :if={@drop.screenshot && @drop.screenshot.internal_url}
+        src={@drop.screenshot.internal_url}
+        class="screenshot-image"
+        id={"drop-image:#{@drop.id}"}
+      />
     </div>
     """
   end
@@ -563,7 +594,7 @@ defmodule ElixirDropsWeb.DropComponents do
             fill-rule="evenodd"
             clip-rule="evenodd"
             d="M13 0.25H8.944C7.106 0.25 5.65 0.25 4.511 0.403C3.339 0.561 2.39 0.893 1.641 1.641C0.893 2.39 0.561 3.339 0.403 4.511C0.25 5.651 0.25 7.106 0.25 8.944V15C0.250024 15.8934 0.568936 16.7575 1.14934 17.4367C1.72974 18.1159 2.53351 18.5657 3.416 18.705C3.553 19.469 3.818 20.121 4.348 20.652C4.95 21.254 5.708 21.512 6.608 21.634C7.475 21.75 8.578 21.75 9.945 21.75H13.055C14.422 21.75 15.525 21.75 16.392 21.634C17.292 21.512 18.05 21.254 18.652 20.652C19.254 20.05 19.512 19.292 19.634 18.392C19.75 17.525 19.75 16.422 19.75 15.055V9.945C19.75 8.578 19.75 7.475 19.634 6.608C19.512 5.708 19.254 4.95 18.652 4.348C18.121 3.818 17.469 3.553 16.705 3.416C16.5657 2.53351 16.1159 1.72974 15.4367 1.14934C14.7575 0.568936 13.8934 0.250024 13 0.25ZM15.13 3.271C14.9779 2.827 14.6909 2.44166 14.3089 2.16893C13.927 1.89619 13.4693 1.74971 13 1.75H9C7.093 1.75 5.739 1.752 4.71 1.89C3.705 2.025 3.125 2.279 2.702 2.702C2.279 3.125 2.025 3.705 1.89 4.711C1.752 5.739 1.75 7.093 1.75 9V15C1.75 15.4693 1.89619 15.927 2.16892 16.3089C2.44166 16.6908 2.827 16.9779 3.271 17.13C3.25 16.52 3.25 15.83 3.25 15.055V9.945C3.25 8.578 3.25 7.475 3.367 6.608C3.487 5.708 3.747 4.95 4.348 4.348C4.95 3.746 5.708 3.488 6.608 3.367C7.475 3.25 8.578 3.25 9.945 3.25H13.055C13.83 3.25 14.52 3.25 15.13 3.271ZM5.408 5.41C5.685 5.133 6.073 4.953 6.808 4.854C7.562 4.753 8.564 4.751 9.999 4.751H12.999C14.434 4.751 15.435 4.753 16.191 4.854C16.925 4.953 17.313 5.134 17.59 5.41C17.867 5.687 18.047 6.075 18.146 6.81C18.247 7.564 18.249 8.566 18.249 10.001V15.001C18.249 16.436 18.247 17.437 18.146 18.193C18.047 18.927 17.866 19.315 17.59 19.592C17.313 19.869 16.925 20.049 16.19 20.148C15.435 20.249 14.434 20.251 12.999 20.251H9.999C8.564 20.251 7.562 20.249 6.807 20.148C6.073 20.049 5.685 19.868 5.408 19.592C5.131 19.315 4.951 18.927 4.852 18.192C4.751 17.437 4.749 16.436 4.749 15.001V10.001C4.749 8.566 4.751 7.564 4.852 6.809C4.951 6.075 5.132 5.687 5.408 5.41Z"
-            fill="#EAE8FD"
+            fill="#CBCBCB"
           />
         </svg>
 

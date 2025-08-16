@@ -121,7 +121,6 @@
 .screenshot-wrapper {
   width: 100%;
   background: #252525;
-  border-radius: 12px 12px 0 0;
   overflow: hidden;
 }
 
@@ -144,7 +143,7 @@
   background: #ff5f57;
 }
 .window-dot:nth-child(2) {
-  background: #ffbd2e;
+  background: #fff;
 }
 .window-dot:nth-child(3) {
   background: #28ca42;
@@ -228,4 +227,11 @@
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+.expand-card {
+  animation-duration: 900ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
+  animation-fill-mode: forwards;
+  will-change: transform;
 }

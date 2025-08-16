@@ -8,7 +8,21 @@
     search_suggestions={@search_suggestions}
   />
 
-  <section class="pt-10 py-4">
+  <section
+  class="relative"
+  id="drop-details"
+  data-short-id={@drop.short_id}
+  phx-hook="AnimateDropExpansion">
+    <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
+    <.link
+      navigate={~p"/"}
+      class={[
+        "text-[#2F19EE] text-lg font-[500] flex items-center gap-x-2 hover:opacity-75",
+        "w-[93%] md:w-[97%] max-w-md md:max-w-xl lg:max-w-3xl mx-auto my-4"
+      ]}
+    >
+      <.icon name="hero-arrow-left" class="h-5 w-5" /> Back to Homepage
+    </.link>
     <DropComponents.drop current_user={@current_user} drop={@drop} />
   </section>
 
@@ -23,6 +37,8 @@
   search_suggestions={@search_suggestions}
   current_user={@current_user}
 />
+
+<style class="expand-animations"></style>
 
 <script type="application/ld+json">
   <%= raw(StructuredData.generate_drop_json_ld(@drop)) %>
