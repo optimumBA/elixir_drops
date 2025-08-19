@@ -9,10 +9,11 @@
   />
 
   <section
-  class="relative"
-  id="drop-details"
-  data-short-id={@drop.short_id}
-  phx-hook="AnimateDropExpansion">
+    class="relative"
+    id="drop-details"
+    data-short-id={@drop.short_id}
+    phx-hook="AnimateDropExpansion"
+  >
     <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
     <.link
       navigate={~p"/"}
@@ -38,7 +39,8 @@
   current_user={@current_user}
 />
 
-<style class="expand-animations"></style>
+<style class="expand-animations">
+</style>
 
 <script type="application/ld+json">
   <%= raw(StructuredData.generate_drop_json_ld(@drop)) %>

@@ -18,6 +18,10 @@
 
 .masonry-item {
   width: calc(33.333% - 16px);
+  -webkit-transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  -moz-transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  -o-transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 @media (min-width: 1401px) and (max-width: 1800px) {
@@ -131,22 +135,6 @@
   align-items: center;
   padding: 0 12px;
   gap: 6px;
-}
-
-.window-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.window-dot:nth-child(1) {
-  background: #ff5f57;
-}
-.window-dot:nth-child(2) {
-  background: #fff;
-}
-.window-dot:nth-child(3) {
-  background: #28ca42;
 }
 
 .screenshot-image {

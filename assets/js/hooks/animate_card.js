@@ -1,3 +1,5 @@
+import { animate } from "motion"
+
 let AnimatedCardHooks = {}
 
 AnimatedCardHooks.GridCardData = {
@@ -27,62 +29,45 @@ AnimatedCardHooks.AnimateDropExpansion = {
     const element = dropDetails.querySelector(`#drop-details-${shortId}`)
     const animationDataString = sessionStorage.getItem(`cardAnimationData-${shortId}`)
     
-    if (!animationDataString || !element) return
+    if (!animationDataString || !element) {
+      animate(element, { opacity: [0, 1] }, { duration: 0.3, ease: "easeOut" })
+      return
+    }
     
     const animationData = JSON.parse(animationDataString)
+    console.log(animationData)
     sessionStorage.removeItem(`cardAnimationData-${shortId}`)
     
-    const animateExpansion = (element, startData) => {
-      const endRect = element.getBoundingClientRect()
-      
-      const startScale = {
-        x: startData.width / endRect.width,
-        y: startData.height / endRect.height
-      }
-      
-      const transformOriginX = startData.x + (startData.width / 2)
-      const transformOriginY = 0
-      
-      const transformOrigin = `${transformOriginX}px ${transformOriginY}px`
-      
-      const ease = (progress, power = 1.8) => {
-        return 1 - Math.pow(1 - progress, power)
-      }
-      
-      const frameCount = 100
-      const expandAnimation = `expand-${shortId}`
-      
-      let animation = `@keyframes ${expandAnimation} {\n`
-      
-      for (let i = 0; i <= frameCount; i++) {
-        const step = (i / frameCount) * 100
-        const easedStep = ease(i / frameCount)
-        
-        const xScale = startScale.x + (1 - startScale.x) * easedStep
-        const yScale = startScale.y + (1 - startScale.y) * easedStep
-        
-        animation += `  ${step}% {\n    transform: scale(${xScale}, ${yScale});\n  }\n`
-      }
-      
-      animation += '}\n'
-      
-      let styleSheet = document.querySelector('.expand-animations')
-      
-      styleSheet.textContent += animation
- 
-      element.style.transformOrigin = transformOrigin
-      element.classList.add('expand-card')
-      element.style.animationName = expandAnimation
-      
-      element.addEventListener('animationend', () => {
-        element.classList.remove('expand-card')
-        element.style.animationName = ''
-        element.style.transform = ''
-        element.style.transformOrigin = ''
-      }, { once: true })
-    }
+    this.animateExpansion(element, animationData)
+  },
 
-    animateExpansion(element, animationData)
+  animateExpansion(element, startData) {
+    const endRect = element.getBoundingClientRect()
+    
+    const startScale = {
+      x: startData.width / endRect.width,
+      y: startData.height / endRect.height
+    }
+    
+    const transformOriginX = startData.x + (startData.width / 2)
+    const transformOriginY = 0
+    
+    element.style.transformOrigin = `${transformOriginX}px ${transformOriginY}px`
+    
+    animate(
+      element,
+      {
+        scale: [startScale.x, 1],
+        scaleY: [startScale.y, 1],
+        opacity: [0.8, 1]
+      },
+      {
+        duration: 1.0,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }
+    ).then(() => {
+      element.style.transformOrigin = ''
+    })
   }
 }
 

@@ -22,7 +22,22 @@ MasonryHooks.Masonry = {
       }
     }, 300)
 
+    this.handleItemRemove = (event) => {
+      const dropId = event.detail?.dropId
+      if (dropId) {
+        const dropCard = document.querySelector(`#drop-card-${dropId}`)
+        if (dropCard) {
+          const masonryItem = dropCard.closest('.masonry-item')
+          if (masonryItem && this.el.contains(masonryItem) && this.masonry) {
+            this.masonry.remove(masonryItem)
+            this.masonry.layout()
+          }
+        }
+      }
+    }
+
     window.addEventListener('resize', this.handleResize)
+    window.addEventListener('masonry-item-remove', this.handleItemRemove)
   },
 
   updated() {
@@ -44,6 +59,7 @@ MasonryHooks.Masonry = {
 
   destroyed() {
     window.removeEventListener('resize', this.handleResize)
+    window.removeEventListener('masonry-item-remove', this.handleItemRemove)
     if (this.masonry) {
       this.masonry.destroy()
     }

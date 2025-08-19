@@ -95,7 +95,21 @@ defmodule ElixirDropsWeb.DropComponents do
       phx-hook="GridCardData"
       data-drop-short-id={@drop.short_id}
     >
-      <.drop_screenshot class="rounded-t-md" drop={@drop} page_link={~p"/d/#{@drop.short_id}"} />
+      <.drop_screenshot
+        class="rounded-t-md"
+        drop={@drop}
+        page_link={~p"/d/#{@drop.short_id}"}
+        red_dot_action={JS.dispatch("masonry-item-remove", detail: %{dropId: @drop.id})}
+        green_dot_action={JS.navigate(~p"/d/#{@drop.short_id}")}
+      />
+
+      <div :if={!@drop.screenshot} class="py-[12px] px-[6px]">
+        <.window_actions
+          red_dot_action={JS.navigate(~p"/")}
+          green_dot_action={JS.navigate(~p"/")}
+          yellow_inactive_color="bg-gray-400"
+        />
+      </div>
 
       <div class="drop-content">
         <h3 class="drop-title">{@drop.title}</h3>
@@ -156,7 +170,22 @@ defmodule ElixirDropsWeb.DropComponents do
       id={"drop-details-#{@drop.short_id}"}
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <.drop_screenshot class="rounded-xl" drop={@drop} page_link={~p"/"} />
+      <.drop_screenshot
+        class="rounded-xl"
+        drop={@drop}
+        page_link={~p"/"}
+        green_dot_action={JS.navigate(~p"/")}
+        yellow_dot_action={JS.navigate(~p"/")}
+      />
+
+      <div :if={!@drop.screenshot} class="py-[12px] px-[6px]">
+        <.window_actions
+          red_dot_action={JS.navigate(~p"/")}
+          green_dot_action={JS.navigate(~p"/")}
+          yellow_dot_action={JS.navigate(~p"/")}
+          yellow_inactive_color="bg-gray-400"
+        />
+      </div>
 
       <h1 class="font-[500] text-xl md:text-2xl mt-4">{@drop.title}</h1>
 
@@ -217,14 +246,19 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :class, :string, default: nil
   attr :page_link, :string, default: nil
   attr :active?, :boolean, default: false
+  attr :red_dot_action, :any, default: nil
+  attr :green_dot_action, :any, default: nil
+  attr :yellow_dot_action, :any, default: nil
 
   defp drop_screenshot(assigns) do
     ~H"""
     <div :if={@drop.screenshot} class={["screenshot-wrapper", @class]}>
       <div :if={@drop.screenshot.internal_url} class="screenshot-header">
-        <div class="window-dot"></div>
-        <div class="window-dot"></div>
-        <div class="window-dot" phx-click={@page_link && JS.navigate(@page_link)}></div>
+        <.window_actions
+          green_dot_action={@green_dot_action}
+          red_dot_action={@red_dot_action}
+          yellow_dot_action={@yellow_dot_action}
+        />
       </div>
       <img
         :if={@drop.screenshot && @drop.screenshot.internal_url}
@@ -233,6 +267,125 @@ defmodule ElixirDropsWeb.DropComponents do
         id={"drop-image:#{@drop.id}"}
       />
     </div>
+    """
+  end
+
+  attr :green_dot_action, :any, default: nil
+  attr :red_dot_action, :any, default: nil
+  attr :rest, :global
+  attr :has_screenshot?, :boolean, default: true
+  attr :yellow_dot_action, :any, default: nil
+  attr :yellow_inactive_color, :string, default: "bg-white"
+
+  defp window_actions(assigns) do
+    dots_config = [
+      %{
+        type: :red,
+        action: assigns.red_dot_action,
+        color_class: "red-dot",
+        bg_color: "bg-[#ff5f57]",
+        inactive_color: "bg-white",
+        icon: :x_mark
+      },
+      %{
+        type: :yellow,
+        action: assigns.yellow_dot_action,
+        color_class: "yellow-dot",
+        bg_color: "bg-[#efd342]",
+        inactive_color: assigns.yellow_inactive_color,
+        icon: :minus
+      },
+      %{
+        type: :green,
+        action: assigns.green_dot_action,
+        color_class: "green-dot",
+        bg_color: "bg-[#28ca42]",
+        inactive_color: "bg-white",
+        icon: :expand
+      }
+    ]
+
+    assigns = assign(assigns, :dots_config, dots_config)
+
+    ~H"""
+    <div class="flex items-center gap-x-1" {@rest}>
+      <.window_dot
+        :for={dot <- @dots_config}
+        action={dot.action}
+        color_class={dot.color_class}
+        bg_color={dot.bg_color}
+        inactive_color={dot.inactive_color}
+        icon_type={dot.icon}
+      />
+    </div>
+    """
+  end
+
+  attr :action, :any
+  attr :color_class, :string
+  attr :bg_color, :string
+  attr :inactive_color, :string, default: "bg-white"
+  attr :icon_type, :atom
+
+  defp window_dot(assigns) do
+    ~H"""
+    <div
+      class={[
+        "w-3 h-3 rounded-full flex items-center justify-center group",
+        @color_class,
+        @action && @bg_color,
+        !@action && @inactive_color
+      ]}
+      phx-click={@action}
+    >
+      <.window_dot_icon icon_type={@icon_type} show_icon={!!@action} />
+    </div>
+    """
+  end
+
+  attr :icon_type, :atom, required: true
+  attr :show_icon, :boolean, required: true
+
+  defp window_dot_icon(%{icon_type: :x_mark} = assigns) do
+    ~H"""
+    <.icon
+      name="hero-x-mark-solid"
+      class={[
+        "h-2 w-2 hidden",
+        @show_icon && "group-hover:block"
+      ]}
+    />
+    """
+  end
+
+  defp window_dot_icon(%{icon_type: :minus} = assigns) do
+    ~H"""
+    <.icon
+      name="hero-minus"
+      class={[
+        "h-2 w-2 hidden",
+        @show_icon && "group-hover:block"
+      ]}
+    />
+    """
+  end
+
+  defp window_dot_icon(%{icon_type: :expand} = assigns) do
+    ~H"""
+    <svg
+      width="6"
+      height="6"
+      viewBox="0 0 8 8"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      class={[
+        "hidden",
+        @show_icon && "group-hover:block"
+      ]}
+    >
+      <path d="M1 1V6.33333L6.33333 1H1Z" fill="#247523" />
+      <path d="M7 7H1.66667L7 1.66667V7Z" fill="#247523" />
+    </svg>
     """
   end
 
