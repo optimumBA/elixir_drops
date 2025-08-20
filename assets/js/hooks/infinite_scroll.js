@@ -17,7 +17,6 @@ InfiniteScrollHooks.InfiniteScroll = {
     // Initial positioning and observer setup with retry mechanism
     setTimeout(() => {
       this.positionMarker().then(() => {
-        console.log('positioned')
         this.connectObserver()
       })
     }, 200)
@@ -59,8 +58,6 @@ InfiniteScrollHooks.InfiniteScroll = {
     this.el.style.top = `${maxBottom + 50}px`
     this.el.style.left = '0'
     this.el.style.width = '100%'
-
-    console.log('Marker positioned at:', maxBottom + 50)
   },
 
   setupResizeHandler() {
@@ -105,7 +102,6 @@ InfiniteScrollHooks.InfiniteScroll = {
         const [entry] = entries
 
         if (entry.isIntersecting && !this.pending && !this.isResizing) {
-          console.log('intersecting loading more')
           this.loadMore()
         }
       },
