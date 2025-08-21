@@ -87,7 +87,7 @@ InfiniteScrollHooks.InfiniteScroll = {
 
     this.pending = true
     this.disconnectObserver()
-  
+
     this.pushEvent('load-more', { layout_complete: true })
   },
 }

@@ -78,12 +78,14 @@ MasonryHooks.Masonry = {
   },
 
   dispatchLayoutComplete() {
-    document.dispatchEvent(new CustomEvent('masonry-layout-complete', {
-      detail: { 
-        masonryElement: this.el,
-        trigger: 'layout'
-      }
-    }))
+    document.dispatchEvent(
+      new CustomEvent('masonry-layout-complete', {
+        detail: {
+          masonryElement: this.el,
+          trigger: 'layout',
+        },
+      })
+    )
   },
 
   layoutWithImageLoading() {
