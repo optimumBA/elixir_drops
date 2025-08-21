@@ -97,7 +97,6 @@ defmodule ElixirDropsWeb.DropsListHelper do
           data-page={@page}
           id="infinite-scroll-marker"
           phx-hook="InfiniteScroll"
-          class="opacity-0 h-1 w-full pointer-events-none"
         >
         </div>
 

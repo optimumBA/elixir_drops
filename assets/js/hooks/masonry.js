@@ -77,6 +77,15 @@ MasonryHooks.Masonry = {
     this.layoutWithImageLoading()
   },
 
+  dispatchLayoutComplete() {
+    document.dispatchEvent(new CustomEvent('masonry-layout-complete', {
+      detail: { 
+        masonryElement: this.el,
+        trigger: 'layout'
+      }
+    }))
+  },
+
   layoutWithImageLoading() {
     this.isLayouting = true
 
@@ -98,6 +107,8 @@ MasonryHooks.Masonry = {
               card.classList.add('animation-complete')
             }
           })
+
+          this.dispatchLayoutComplete()
         }, 500)
       }
     })
