@@ -90,16 +90,18 @@ defmodule ElixirDropsWeb.DropsListHelper do
               </div>
             </div>
           </div>
-        </div>
 
-        <div
-          data-end-of-timeline={if assigns[:end_of_timeline?], do: "true", else: "false"}
-          data-page={@page}
-          id="infinite-scroll-marker"
-          phx-hook="InfiniteScroll"
-        >
+          <div
+            data-end-of-timeline={if assigns[:end_of_timeline?], do: "true", else: "false"}
+            data-page={@page}
+            id="infinite-scroll-marker"
+            phx-hook="InfiniteScroll"
+            class="absolute h-3 w-full bottom-0"
+          >
+          </div>
         </div>
-
+      </div>
+      <div :if={!@is_search_no_results}>
         <div :if={@loading_more && !assigns[:end_of_timeline?]} class="masonry-loading-indicator">
           <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin">
           </div>

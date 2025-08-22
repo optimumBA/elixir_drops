@@ -4,12 +4,13 @@ InfiniteScrollHooks.InfiniteScroll = {
   mounted() {
     this.pending = false
     this.observer = null
-    this.isResizing = false
     this.masonryEl = document.querySelector('[phx-hook="Masonry"]')
 
-    document.addEventListener('masonry-layout-complete', () => {
-      this.repositionAndReconnect()
-    })
+    if (this.masonryEl) {
+      this.masonryEl._masonryHook = this.masonryEl.__liveViewHooks__?.Masonry
+    }
+
+    this.connectObserver()
 
     this.handleEvent('load-more-complete', () => {
       this.pending = false
@@ -18,27 +19,6 @@ InfiniteScrollHooks.InfiniteScroll = {
         this.connectObserver()
       }, 500)
     })
-
-    this.handleResize = () => {
-      this.isResizing = true
-      this.disconnectObserver()
-    }
-
-    window.addEventListener('resize', this.handleResize)
-  },
-
-  repositionAndReconnect() {
-    this.isResizing = false
-    this.repositionMarker()
-    this.connectObserver()
-  },
-
-  repositionMarker() {
-    if (!this.masonryEl) return
-
-    const masonryGrid = this.masonryEl
-
-    masonryGrid.after(this.el)
   },
 
   updated() {
@@ -87,6 +67,10 @@ InfiniteScrollHooks.InfiniteScroll = {
 
     this.pending = true
     this.disconnectObserver()
+
+    if (this.masonryEl && this.masonryEl._masonryHook?.waitForLayoutComplete) {
+      await this.masonryEl._masonryHook.waitForLayoutComplete()
+    }
 
     this.pushEvent('load-more', { layout_complete: true })
   },
