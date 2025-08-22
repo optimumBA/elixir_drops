@@ -7,6 +7,6 @@
     "masonry-layout": "^4.2.2"
   },
   "devDependencies": {
-    "playwright": "^1.54.2"
+    "@playwright/test": "^1.55.0"
   }
 }
