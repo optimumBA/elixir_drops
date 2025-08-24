@@ -637,6 +637,45 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute String.contains?(decoded["articleBody"], "</script>")
       refute String.contains?(decoded["headline"], "</script>")
     end
+
+    test "displays markdown section in desktop view", %{conn: conn, drop: drop} do
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      # Check for Markdown section header
+      assert html =~ "Markdown"
+      assert html =~ "hero-information-circle"
+
+      # Check for View as Markdown link
+      assert html =~ ~s(href="/d/#{drop.short_id}.md")
+      assert html =~ "View as Markdown"
+      # markdown_icon renders as SVG
+      assert html =~ ~s(<svg)
+      assert html =~ "hero-arrow-top-right-on-square"
+
+      # Check for Copy Markdown URL
+      assert html =~ "Copy Markdown URL"
+      # clipboard_copy_icon also renders as SVG, already checked above
+      assert html =~ ~s(/d/#{drop.short_id}.md)
+      assert html =~ ~s(phx-hook="CopyToClipboard")
+    end
+
+    test "markdown menu opens in new tab", %{conn: conn, drop: drop} do
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      # Check that markdown link has target="_blank"
+      assert html =~ ~s(target="_blank")
+      assert html =~ ~s(href="/d/#{drop.short_id}.md")
+    end
+
+    test "copy markdown URL has proper clipboard integration", %{conn: conn, drop: drop} do
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      # Check that copy markdown URL has proper clipboard setup
+      assert html =~ ~s(id="copy-markdown-#{drop.short_id}")
+      assert html =~ ~s(/d/#{drop.short_id}.md)
+      assert html =~ ~s(phx-hook="CopyToClipboard")
+      assert html =~ "cursor-pointer"
+    end
   end
 
   describe "close editor button" do

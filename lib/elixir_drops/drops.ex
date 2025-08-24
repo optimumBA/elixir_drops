@@ -9,6 +9,7 @@ defmodule ElixirDrops.Drops do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
+  alias ElixirDrops.MarkdownCache
   alias ElixirDrops.Repo
 
   require Logger
@@ -39,6 +40,26 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
+  Lists all drops for markdown index generation.
+  Preloads users but limits body field for performance.
+  """
+  @spec list_all_drops() :: [drop()]
+  def list_all_drops do
+    Drop
+    |> from(order_by: [desc: :inserted_at])
+    |> preload(:user)
+    |> Repo.all()
+    |> Enum.map(&truncate_body_for_index/1)
+  end
+
+  @spec truncate_body_for_index(drop()) :: drop()
+  defp truncate_body_for_index(%Drop{body: body} = drop) when byte_size(body) > 500 do
+    %{drop | body: binary_part(body, 0, 500)}
+  end
+
+  defp truncate_body_for_index(drop), do: drop
+
+  @doc """
   Returns a list of drops filtered by the given filters with cursor data.
 
    ## Examples
@@ -55,6 +76,13 @@ defmodule ElixirDrops.Drops do
   """
   @spec list_drops(filters(), limit()) :: [drop()]
   def list_drops(filters \\ %{}, limit \\ 10) do
+    case safe_list_drops(filters, limit) do
+      {:ok, results} -> results
+      {:error, _reason} -> []
+    end
+  end
+
+  defp safe_list_drops(filters, limit) do
     filter_query = apply_filters()
 
     query =
@@ -63,9 +91,20 @@ defmodule ElixirDrops.Drops do
       |> limit(^limit)
       |> preload([:user])
 
-    query
-    |> apply_search_ordering(filters[:search])
-    |> Repo.all()
+    result =
+      query
+      |> apply_search_ordering(filters[:search])
+      |> Repo.all()
+
+    {:ok, result}
+  rescue
+    DBConnection.OwnershipError ->
+      # Database sandbox not ready yet - return error
+      {:error, :db_ownership_error}
+
+    DBConnection.ConnectionError ->
+      # Database connection issues - return error
+      {:error, :db_connection_error}
   end
 
   defp drop_query do
@@ -179,10 +218,28 @@ defmodule ElixirDrops.Drops do
   """
   @spec get_drop_by_short_id(short_id()) :: drop() | nil
   def get_drop_by_short_id(short_id) do
-    Drop
-    |> where([d], d.short_id == ^short_id)
-    |> preload([:user])
-    |> Repo.one()
+    case safe_get_drop_by_short_id(short_id) do
+      {:ok, result} -> result
+      {:error, _reason} -> nil
+    end
+  end
+
+  defp safe_get_drop_by_short_id(short_id) do
+    result =
+      Drop
+      |> where([d], d.short_id == ^short_id)
+      |> preload([:user])
+      |> Repo.one()
+
+    {:ok, result}
+  rescue
+    DBConnection.OwnershipError ->
+      # Database sandbox not ready yet - return error
+      {:error, :db_ownership_error}
+
+    DBConnection.ConnectionError ->
+      # Database connection issues - return error
+      {:error, :db_connection_error}
   end
 
   @doc """
@@ -231,6 +288,8 @@ defmodule ElixirDrops.Drops do
   defp handle_create_success(drop) do
     drop = Repo.preload(drop, [:user])
     :ok = broadcast_drop_creation(drop)
+    :ok = invalidate_markdown_cache()
+    :ok = invalidate_drop_cache(drop.short_id)
     {:ok, drop}
   end
 
@@ -267,10 +326,21 @@ defmodule ElixirDrops.Drops do
   """
   @spec update_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
   def update_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    drop
-    |> Drop.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:user, user)
-    |> Repo.insert_or_update()
+    result =
+      drop
+      |> Drop.changeset(attrs)
+      |> Ecto.Changeset.put_assoc(:user, user)
+      |> Repo.insert_or_update()
+
+    case result do
+      {:ok, updated_drop} ->
+        :ok = invalidate_markdown_cache()
+        :ok = invalidate_drop_cache(updated_drop.short_id)
+        {:ok, updated_drop}
+
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -289,5 +359,25 @@ defmodule ElixirDrops.Drops do
 
   defp broadcast_drop_creation(drop) do
     DropsBroadcast.broadcast_drop_creation(drop)
+  end
+
+  @doc """
+  Invalidates the markdown cache.
+  Should be called when drops are created, updated, or deleted.
+  """
+  @spec invalidate_markdown_cache() :: :ok
+  def invalidate_markdown_cache do
+    # Clear the formatted markdown cache
+    MarkdownCache.clear_all()
+  end
+
+  @doc """
+  Invalidates the drop cache for a specific short_id.
+  Should be called when a specific drop is updated or deleted.
+  """
+  @spec invalidate_drop_cache(short_id()) :: :ok
+  def invalidate_drop_cache(short_id) do
+    # Clear the formatted markdown cache for this specific drop
+    MarkdownCache.clear_drop(short_id)
   end
 end

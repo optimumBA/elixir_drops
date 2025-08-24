@@ -7,5 +7,6 @@
   ~r/test\/support\/feature_helpers\.ex.* Function PhoenixTest\.Playwright\.Frame\.press\/3 does not exist\./,
   ~r/test\/support\/feature_helpers\.ex.* Function PhoenixTest\.Playwright\.Frame\.url\/1 does not exist\./,
   ~r/test\/support\/feature_helpers\.ex.* Function PhoenixTest\.Playwright\.Frame\.type\/4 does not exist\./,
-  ~r/test\/support\/feature_helpers\.ex.* Function PhoenixTest\.assert_has\/3 does not exist\./
+  ~r/test\/support\/feature_helpers\.ex.* Function PhoenixTest\.assert_has\/3 does not exist\./,
+  ~r/test\/support\/feature_helpers\.ex.* Function PhoenixTest\.Playwright\.refute_has\/3 does not exist\./
 ]

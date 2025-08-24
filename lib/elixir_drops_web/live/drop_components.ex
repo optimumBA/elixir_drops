@@ -81,6 +81,7 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :drop, Drop, required: true
+  attr :open_menus, :map, default: %{}
   attr :show_card_menu?, :boolean, default: false
   attr :user_id, :string
 
@@ -122,12 +123,13 @@ defmodule ElixirDropsWeb.DropComponents do
 
           <%= if @show_card_menu? do %>
             <button
-              class="text-[#797979] hover:text-[#5947F1]"
+              class="text-[#797979] hover:text-[#5947F1] relative p-2"
               id={"drop-card-menu-btn-#{@drop.id}"}
-              data-drop-id={@drop.id}
               phx-click={JS.toggle(to: "#drop-card-menu-#{@drop.id}")}
+              phx-stop-propagation="true"
+              type="button"
             >
-              <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
+              <Icons.three_dots_icon class="h-5 w-5 pointer-events-none" />
             </button>
           <% else %>
             <.drop_card_action_default id={"#{@drop.id}-main"} short_id={@drop.short_id} />
@@ -158,7 +160,10 @@ defmodule ElixirDropsWeb.DropComponents do
       class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <h1 class="font-[500] text-2xl md:text-4xl">{@drop.title}</h1>
+      <div class="flex justify-between items-start">
+        <h1 class="font-[500] text-2xl md:text-4xl flex-1">{@drop.title}</h1>
+      </div>
+
       <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
         <img
           src={@drop.user.avatar}
@@ -172,6 +177,37 @@ defmodule ElixirDropsWeb.DropComponents do
           </p>
         </div>
       </div>
+      
+    <!-- Action row below author's name -->
+      <div class="flex items-center justify-end py-4 border-b border-gray-200">
+        <!-- Right side: Action buttons -->
+        <div class="flex items-center gap-4">
+          
+    <!-- Copy link button -->
+          <div
+            class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer"
+            id={"single-drop-copy-link-#{@drop.id}"}
+            data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
+            phx-hook="CopyToClipboard"
+          >
+            <.icon name="hero-link" class="h-5 w-5" />
+            <span class="hidden md:inline text-sm">Copy link</span>
+          </div>
+          
+    <!-- Three dots menu button -->
+          <button
+            class="text-[#797979] hover:text-[#5947F1] p-2"
+            id={"action-row-menu-btn-#{@drop.id}"}
+            phx-click={
+              JS.toggle(to: "#drop-menu-#{@drop.id}")
+              |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
+            }
+            type="button"
+          >
+            <Icons.three_dots_icon class="h-5 w-5" />
+          </button>
+        </div>
+      </div>
 
       <div
         class="leading-[1.6] grid w-full py-3 drop-full-content"
@@ -180,25 +216,13 @@ defmodule ElixirDropsWeb.DropComponents do
       >
         {to_html(@drop.body)}
       </div>
-
-      <p
-        id="copy-link-#{@drop.id}"
-        data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
-        phx-hook="CopyToClipboard"
-        class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
-      >
-        <span><.icon name="hero-link" class="h-4 w-4 stroke-2" /></span>
-        <span>Copy link</span>
-      </p>
-
-      <.link
-        :if={@current_user && @current_user.id == @drop.user_id}
-        navigate={~p"/drops/#{@drop.short_id}/edit"}
-        class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] flex items-center justify-center gap-x-2 py-2"
-      >
-        <.icon name="hero-pencil" class="h-4 w-4 stroke-2" />
-        <span>Edit</span>
-      </.link>
+      
+    <!-- Three-dots dropdown menu -->
+      <.drop_page_menu
+        id={@drop.id}
+        short_id={@drop.short_id}
+        author?={@current_user && @current_user.id == @drop.user_id}
+      />
 
       <.copy_prompt />
     </div>
@@ -547,6 +571,60 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :short_id, :string, required: true
+  attr :show_separator, :boolean, default: true
+
+  @spec markdown_menu(assigns()) :: rendered()
+  def markdown_menu(assigns) do
+    ~H"""
+    <!-- Markdown Section Divider -->
+    <div :if={@show_separator} class="border-t border-gray-200 my-3"></div>
+
+    <!-- Markdown Section Header with Info Icon -->
+    <div class="mb-2 px-2">
+      <div class="flex items-center gap-2">
+        <span class="text-[#8e8e8e] text-sm">Markdown</span>
+        <div class="relative group">
+          <.icon name="hero-information-circle" class="h-5 w-5 text-[#8e8e8e] cursor-help" />
+          <!-- Tooltip -->
+          <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100001]">
+            <div class="bg-[#FFFFFF] text-[#000000] text-xs rounded-lg py-2 px-4 w-[240px] font-roboto font-normal leading-[15px] border border-gray-200 shadow-md">
+              View this Drop in Markdown format or copy Markdown URL for your AI workflow
+              <!-- Tooltip arrow -->
+              <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-[#FFFFFF]">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View as Markdown -->
+    <.link
+      href={"/d/#{@short_id}.md"}
+      target="_blank"
+      class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center justify-between px-2 py-2 rounded hover:bg-gray-50 gap-3"
+    >
+      <div class="flex items-center gap-2">
+        <Icons.markdown_icon class="h-5 w-5" />
+        <span>View as Markdown</span>
+      </div>
+      <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+    </.link>
+
+    <!-- Copy Markdown URL -->
+    <div
+      class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+      id={"copy-markdown-#{@short_id}"}
+      data-clipboard-text={url(~p"/d/#{[@short_id, ".md"]}")}
+      phx-hook="CopyToClipboard"
+    >
+      <Icons.clipboard_copy_icon class="h-5 w-5" />
+      <span>Copy Markdown URL</span>
+    </div>
+    """
+  end
+
   defp copy_prompt(assigns) do
     ~H"""
     <template id="copy-prompt-template">
@@ -642,26 +720,66 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp drop_card_menu(assigns) do
+  defp drop_page_menu(assigns) do
     ~H"""
     <div
-      class="drop-card-menu text-sm md:text-base hidden absolute right-6 top-[8rem] md:top-[9rem] py-6 pl-6 pr-12 rounded-md bg-white shadow-xl shadow-[#aaa4af] z-[100000]"
-      id={"drop-card-menu-#{@id}"}
-      phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
+      class="text-sm hidden opacity-0 absolute right-0 top-12 py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] transition-opacity duration-200"
+      id={"drop-menu-#{@id}"}
+      phx-click-away={
+        JS.hide(to: "#drop-menu-#{@id}")
+        |> JS.add_class("opacity-0", to: "#drop-menu-#{@id}")
+      }
     >
-      <.drop_card_action_default id={"#{@id}-menu"} short_id={@short_id}>
-        <:inner_text>
-          Copy link
-        </:inner_text>
-      </.drop_card_action_default>
+      <!-- Markdown Section -->
+      <.markdown_menu short_id={@short_id} show_separator={false} />
 
       <.link
         :if={@author?}
-        navigate={"/drops/#{@short_id}/edit"}
-        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
+        navigate={~p"/drops/#{@short_id}/edit"}
+        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 mt-3 rounded hover:bg-gray-50 border-t border-gray-200"
+        id={"edit-drop-page-#{@id}"}
+      >
+        <.icon name="hero-pencil" class="h-5 w-5" />
+        <span>Edit drop</span>
+      </.link>
+    </div>
+    """
+  end
+
+  defp drop_card_menu(assigns) do
+    ~H"""
+    <div
+      class="drop-card-menu text-sm absolute right-2 top-[7.5rem] md:top-[8.5rem] py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] hidden"
+      id={"drop-card-menu-#{@id}"}
+      phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
+      onclick="event.stopPropagation()"
+    >
+      <!-- Sharing Section Header -->
+      <div class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
+        Sharing
+      </div>
+
+      <div
+        id={"card-copy-link-menu-#{@id}"}
+        data-clipboard-text={url(~p"/d/#{@short_id}")}
+        phx-hook="CopyToClipboard"
+        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+      >
+        <.icon name="hero-link" class="h-5 w-5" />
+        <span>Copy Drop link</span>
+      </div>
+      
+    <!-- Markdown Section -->
+      <.markdown_menu short_id={@short_id} />
+
+      <.link
+        :if={@author?}
+        navigate={~p"/drops/#{@short_id}/edit"}
+        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 mt-3 rounded hover:bg-gray-50 border-t border-gray-200"
         id={"edit-drop-#{@id}"}
       >
-        <.icon name="hero-pencil" class="h-4 md:h-6 w-4 md:w-6" /> Edit drop
+        <.icon name="hero-pencil" class="h-5 w-5" />
+        <span>Edit drop</span>
       </.link>
     </div>
     """
@@ -681,13 +799,13 @@ defmodule ElixirDropsWeb.DropComponents do
           class="w-16 h-16 rounded-full"
         />
       </div>
-      <p class="text-[1.2rem] mx-auto mt-1 cursor-default">{@current_user.github_username}</p>
+      <p class="text-base mx-auto mt-1 cursor-default">{@current_user.github_username}</p>
 
       <ul class="mt-10 grid gap-y-6">
         <li class="px-5">
           <.link
             href={~p"/profile"}
-            class="flex gap-x-2 hover:text-[#5947F1]"
+            class="text-sm flex gap-x-2 hover:text-[#5947F1]"
             id="view-user-drops-link"
           >
             <span><Icons.drops_icon /></span>
@@ -696,7 +814,7 @@ defmodule ElixirDropsWeb.DropComponents do
         </li>
         <li class="nav-list-border full-bleed"></li>
         <li class="px-5">
-          <.link href={~p"/auth/logout"} class="flex gap-x-2 hover:text-[#5947F1]">
+          <.link href={~p"/auth/logout"} class="text-sm flex gap-x-2 hover:text-[#5947F1]">
             <span><Icons.sign_out_icon /></span>
             <span>Sign out</span>
           </.link>
