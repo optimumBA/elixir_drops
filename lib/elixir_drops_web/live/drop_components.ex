@@ -616,7 +616,7 @@ defmodule ElixirDropsWeb.DropComponents do
     <div
       class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
       id={"copy-markdown-#{@short_id}"}
-      data-clipboard-text={url(~p"/d/#{[@short_id, ".md"]}")}
+      data-clipboard-text={url(~p"/d/#{@short_id}") <> ".md"}
       phx-hook="CopyToClipboard"
     >
       <Icons.clipboard_copy_icon class="h-5 w-5" />
