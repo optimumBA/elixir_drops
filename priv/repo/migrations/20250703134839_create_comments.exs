@@ -5,8 +5,6 @@ defmodule ElixirDrops.Repo.Migrations.CreateComments do
     create table(:comments, primary_key: false) do
       add :id, :binary_id, primary_key: true
       add :body, :text, null: false
-      add :body_html, :text, null: false
-      add :edited_at, :utc_datetime_usec
       add :deleted_at, :utc_datetime_usec
       add :parent_id, references(:comments, on_delete: :nilify_all, type: :binary_id)
       add :drop_id, references(:drops, on_delete: :delete_all, type: :binary_id), null: false
@@ -18,6 +16,5 @@ defmodule ElixirDrops.Repo.Migrations.CreateComments do
     create index(:comments, [:drop_id])
     create index(:comments, [:parent_id])
     create index(:comments, [:user_id])
-    create index(:comments, [:inserted_at])
   end
 end

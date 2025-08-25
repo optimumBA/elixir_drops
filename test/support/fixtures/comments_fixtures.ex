@@ -5,49 +5,22 @@ defmodule ElixirDrops.CommentsFixtures do
   """
 
   alias ElixirDrops.Comments
+  alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Accounts.User
 
   @doc """
   Generate a comment.
   """
-  @spec comment_fixture(map()) :: Comments.Comment.t()
-  def comment_fixture(attrs \\ %{}) do
-    user = Map.get(attrs, :user) || ElixirDrops.AccountsFixtures.user_fixture()
-
-    drop =
-      Map.get(attrs, :drop) ||
-        ElixirDrops.DropsFixtures.drop_fixture(%ElixirDrops.Drops.Drop{}, user)
+  @spec comment_fixture(Drop.t(), User.t(), Comment.t() | nil, map()) :: Comments.Comment.t()
+  def comment_fixture(%Drop{} = drop, %User{} = user, parent \\ nil, attrs \\ %{}) do
+    attrs =
+      Enum.into(attrs, %{
+        body: "some body"
+      })
 
     {:ok, comment} =
-      attrs
-      |> Map.delete(:user)
-      |> Map.delete(:drop)
-      |> Enum.into(%{
-        body: "some body",
-        drop_id: drop.id,
-        user_id: user.id
-      })
-      |> Comments.create_comment()
+      Comments.create_comment(drop, user, parent, attrs)
 
     comment
-  end
-
-  @doc """
-  Generate a reply comment.
-  """
-  @spec reply_fixture(Comments.Comment.t(), map()) :: Comments.Comment.t()
-  def reply_fixture(parent_comment, attrs \\ %{}) do
-    user = ElixirDrops.AccountsFixtures.user_fixture(%{github_id: :rand.uniform(1_000_000)})
-
-    {:ok, reply} =
-      attrs
-      |> Enum.into(%{
-        body: "some reply",
-        drop_id: parent_comment.drop_id,
-        parent_id: parent_comment.id,
-        user_id: user.id
-      })
-      |> Comments.create_comment()
-
-    reply
   end
 end
