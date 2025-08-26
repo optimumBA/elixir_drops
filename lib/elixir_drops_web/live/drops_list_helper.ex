@@ -15,6 +15,18 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @type rendered :: Phoenix.LiveView.Rendered.t()
   @type socket :: Phoenix.LiveView.Socket.t()
 
+  attr :batch_size, :integer, default: 10
+  attr :current_user, :any
+  attr :drops, :list, required: true
+  attr :drops_empty?, :boolean, required: true
+  attr :end_of_timeline?, :boolean
+  attr :id, :string, required: true
+  attr :loading_more, :boolean, default: false
+  attr :page, :integer
+  attr :search_query, :string, default: ""
+  attr :searching, :boolean, default: false
+  attr :show_user_drops?, :boolean, default: false
+
   @spec drops_list(assigns()) :: rendered()
   def drops_list(assigns) do
     # Check if we're searching and have no results
@@ -78,7 +90,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
             <div class="relative">
               <DropComponents.drop_card
                 drop={drop}
-                show_card_menu?={@show_user_drops?}
+                show_card_menu?={true}
                 user_id={@current_user && @current_user.id}
               />
 

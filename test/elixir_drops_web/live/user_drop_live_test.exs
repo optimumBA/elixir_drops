@@ -1211,4 +1211,75 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert path == ~p"/"
     end
   end
+
+  describe "drop card markdown menu" do
+    setup [:create_drops_setup]
+
+    test "displays markdown menu in drop card menus", %{conn: conn, drop: drop, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, _live, html} = live(conn, ~p"/profile")
+
+      # Check for drop card menu elements
+      assert html =~ ~s(id="drop-card-menu-#{drop.id}")
+
+      # Check for sharing section header
+      assert html =~ "Sharing"
+      assert html =~ "Copy Drop link"
+
+      # Check for Markdown section header with info icon
+      assert html =~ "Markdown"
+      assert html =~ "hero-information-circle"
+
+      # Check for View as Markdown link
+      assert html =~ ~s(href="/d/#{drop.short_id}.md")
+      assert html =~ "View as Markdown"
+      # markdown_icon renders as SVG
+      assert html =~ ~s(<svg)
+      assert html =~ "hero-arrow-top-right-on-square"
+
+      # Check for Copy Markdown URL
+      assert html =~ "Copy Markdown URL"
+      # clipboard_copy_icon also renders as SVG, already checked above
+      assert html =~ ~s(/d/#{drop.short_id}.md)
+      assert html =~ ~s(phx-hook="CopyToClipboard")
+    end
+
+    test "markdown menu has proper structure and styling", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, _live, html} = live(conn, ~p"/profile")
+
+      # Check for proper CSS classes and structure
+      # Header color
+      assert html =~ "text-[#8e8e8e]"
+      # Menu item color
+      assert html =~ "text-[#4f4f4f]"
+      # Hover color
+      assert html =~ "hover:text-[#5947F1]"
+      # Hover background
+      assert html =~ "hover:bg-gray-50"
+      assert html =~ "cursor-pointer"
+
+      # Check for proper gap and spacing
+      assert html =~ "gap-3"
+      assert html =~ "gap-2"
+    end
+
+    test "markdown menu clipboard integration is properly configured", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+      {:ok, _live, html} = live(conn, ~p"/profile")
+
+      # Check for unique ID for copy markdown functionality
+      assert html =~ ~s(id="copy-markdown-#{drop.short_id}")
+
+      # Check for proper clipboard data attribute
+      assert html =~ ~s(/d/#{drop.short_id}.md)
+
+      # Check for CopyToClipboard hook
+      assert html =~ ~s(phx-hook="CopyToClipboard")
+    end
+  end
 end

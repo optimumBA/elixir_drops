@@ -4,6 +4,7 @@ defmodule ElixirDropsWeb.Router do
   import ElixirDropsWeb.UserAuth
 
   pipeline :browser do
+    plug ElixirDropsWeb.Plugs.MarkdownInterceptor
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
@@ -13,9 +14,21 @@ defmodule ElixirDropsWeb.Router do
     plug :fetch_current_user
   end
 
+  pipeline :markdown do
+    plug :accepts, ["markdown", "text"]
+    plug :put_resp_content_type, "text/markdown"
+  end
+
   # pipeline :api do
   #   plug :accepts, ["json"]
   # end
+
+  # Markdown pipeline for .md requests only
+  scope "/", ElixirDropsWeb do
+    pipe_through :markdown
+
+    get "/index.md", MarkdownController, :index
+  end
 
   scope "/", ElixirDropsWeb do
     pipe_through [:browser, :require_authenticated_user]
@@ -28,7 +41,8 @@ defmodule ElixirDropsWeb.Router do
               do: {ElixirDropsWeb.LiveAcceptance, :default}
             ),
             {ElixirDropsWeb.UserAuth, :ensure_authenticated},
-            {ElixirDropsWeb.UserAuth, :assign_current_user}
+            {ElixirDropsWeb.UserAuth, :assign_current_user},
+            {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
           ],
           & &1
         ) do
@@ -50,7 +64,8 @@ defmodule ElixirDropsWeb.Router do
               do: {ElixirDropsWeb.LiveAcceptance, :default}
             ),
             {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
-            {ElixirDropsWeb.UserAuth, :assign_current_user}
+            {ElixirDropsWeb.UserAuth, :assign_current_user},
+            {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
           ],
           & &1
         ) do

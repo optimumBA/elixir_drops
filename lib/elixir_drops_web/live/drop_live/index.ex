@@ -1,8 +1,6 @@
 defmodule ElixirDropsWeb.DropLive.Index do
   use ElixirDropsWeb, :live_view
 
-  on_mount {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
-
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Search
