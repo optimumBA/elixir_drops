@@ -18,7 +18,6 @@ MasonryHooks.Masonry = {
     this.handleResize = this.debounce(() => {
       this.sendViewportDimensions()
       if (this.masonry) {
-        this.isLayouting = true
         this.masonry.layout()
       }
     }, 300)
