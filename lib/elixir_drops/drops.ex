@@ -10,7 +10,10 @@ defmodule ElixirDrops.Drops do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
+  alias ElixirDrops.MarkdownCache
   alias ElixirDrops.Repo
+
+  require Logger
 
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
@@ -38,6 +41,26 @@ defmodule ElixirDrops.Drops do
   end
 
   @doc """
+  Lists all drops for markdown index generation.
+  Preloads users but limits body field for performance.
+  """
+  @spec list_all_drops() :: [drop()]
+  def list_all_drops do
+    Drop
+    |> from(order_by: [desc: :inserted_at])
+    |> preload(:user)
+    |> Repo.all()
+    |> Enum.map(&truncate_body_for_index/1)
+  end
+
+  @spec truncate_body_for_index(drop()) :: drop()
+  defp truncate_body_for_index(%Drop{body: body} = drop) when byte_size(body) > 500 do
+    %{drop | body: binary_part(body, 0, 500)}
+  end
+
+  defp truncate_body_for_index(drop), do: drop
+
+  @doc """
   Returns a list of drops filtered by the given filters with cursor data.
 
    ## Examples
@@ -54,27 +77,65 @@ defmodule ElixirDrops.Drops do
   """
   @spec list_drops(filters(), limit()) :: [drop()]
   def list_drops(filters \\ %{}, limit \\ 10) do
+    case safe_list_drops(filters, limit) do
+      {:ok, results} -> results
+      {:error, _reason} -> []
+    end
+  end
+
+  defp safe_list_drops(filters, limit) do
     filter_query = apply_filters()
 
-    drop_query()
-    |> where(^filter_query.(filters))
-    |> order_by([d], {:desc, d.inserted_at})
-    |> limit(^limit)
-    |> preload([:user])
-    |> select_merge([d], %{
-      comment_count:
-        subquery(
-          from(c in Comment,
-            where: c.drop_id == parent_as(:drop).id and is_nil(c.deleted_at),
-            select: count(c.id)
-          )
-        )
-    })
-    |> Repo.all()
+    query =
+      drop_query()
+      |> where(^filter_query.(filters))
+      |> limit(^limit)
+      |> preload([:user])
+
+    result =
+      query
+      |> apply_search_ordering(filters[:search])
+      |> Repo.all()
+
+    {:ok, result}
+  rescue
+    DBConnection.OwnershipError ->
+      # Database sandbox not ready yet - return error
+      {:error, :db_ownership_error}
+
+    DBConnection.ConnectionError ->
+      # Database connection issues - return error
+      {:error, :db_connection_error}
   end
 
   defp drop_query do
     from drop in Drop, as: :drop
+  end
+
+  defp apply_search_ordering(query, search_query)
+       when is_binary(search_query) and search_query != "" do
+    query
+    |> select_merge([drop: drop], %{
+      relevance_rank:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
+    })
+    |> order_by(
+      [drop: drop],
+      {:desc,
+       fragment(
+         "ts_rank(?, websearch_to_tsquery('english', ?))",
+         drop.search_vector,
+         ^search_query
+       )}
+    )
+  end
+
+  defp apply_search_ordering(query, _no_search) do
+    order_by(query, [d], {:desc, d.inserted_at})
   end
 
   defp apply_filters do
@@ -106,6 +167,17 @@ defmodule ElixirDrops.Drops do
   defp apply_filter({:user_id, user_id}, dynamic) do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
+
+  defp apply_filter({:search, query}, dynamic) when is_binary(query) and query != "" do
+    # Use PostgreSQL websearch_to_tsquery for better search experience
+    # websearch_to_tsquery handles phrases, AND/OR operators naturally
+    dynamic(
+      [drop: drop],
+      ^dynamic and fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^query)
+    )
+  end
+
+  defp apply_filter({:search, _}, dynamic), do: dynamic
 
   defp apply_filter(_other, dynamic), do: dynamic
 
@@ -156,21 +228,28 @@ defmodule ElixirDrops.Drops do
   """
   @spec get_drop_by_short_id(short_id()) :: drop() | nil
   def get_drop_by_short_id(short_id) do
-    query = from(d in Drop, as: :drop)
+    case safe_get_drop_by_short_id(short_id) do
+      {:ok, result} -> result
+      {:error, _reason} -> nil
+    end
+  end
 
-    query
-    |> where([d], d.short_id == ^short_id)
-    |> preload([:user])
-    |> select_merge([d], %{
-      comment_count:
-        subquery(
-          from(c in Comment,
-            where: c.drop_id == parent_as(:drop).id and is_nil(c.deleted_at),
-            select: count(c.id)
-          )
-        )
-    })
-    |> Repo.one()
+  defp safe_get_drop_by_short_id(short_id) do
+    result =
+      Drop
+      |> where([d], d.short_id == ^short_id)
+      |> preload([:user])
+      |> Repo.one()
+
+    {:ok, result}
+  rescue
+    DBConnection.OwnershipError ->
+      # Database sandbox not ready yet - return error
+      {:error, :db_ownership_error}
+
+    DBConnection.ConnectionError ->
+      # Database connection issues - return error
+      {:error, :db_connection_error}
   end
 
   @doc """
@@ -192,34 +271,51 @@ defmodule ElixirDrops.Drops do
 
   """
   @spec create_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
-  def create_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    short_id = ShortIdGenerator.generate()
-
-    attrs =
-      attrs
-      |> Map.put(:short_id, short_id)
-      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
-
-    changeset =
-      %Drop{}
-      |> Drop.changeset(attrs)
-      |> Ecto.Changeset.put_change(:user_id, user.id)
+  def create_drop(%Drop{} = _drop, %User{} = user, attrs \\ %{}) do
+    prepared_attrs = prepare_drop_attrs(attrs)
+    changeset = build_drop_changeset(prepared_attrs, user)
 
     case Repo.insert(changeset) do
-      {:ok, drop} ->
-        drop = Repo.preload(drop, [:user])
-
-        :ok = broadcast_drop_creation(drop)
-
-        {:ok, drop}
-
-      {:error, changeset} ->
-        if changeset.errors[:short_id] do
-          create_drop(drop, user, attrs)
-        else
-          {:error, changeset}
-        end
+      {:ok, drop} -> handle_create_success(drop)
+      {:error, error} -> handle_create_error(error, user, prepared_attrs)
     end
+  end
+
+  defp prepare_drop_attrs(attrs) do
+    short_id = ShortIdGenerator.generate()
+
+    attrs
+    |> Map.put(:short_id, short_id)
+    |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+  end
+
+  defp build_drop_changeset(attrs, user) do
+    %Drop{}
+    |> Drop.changeset(attrs)
+    |> Ecto.Changeset.put_change(:user_id, user.id)
+  end
+
+  defp handle_create_success(drop) do
+    drop = Repo.preload(drop, [:user])
+    :ok = broadcast_drop_creation(drop)
+    :ok = invalidate_markdown_cache()
+    :ok = invalidate_drop_cache(drop.short_id)
+    {:ok, drop}
+  end
+
+  defp handle_create_error(%Ecto.Changeset{} = changeset, user, attrs) do
+    if changeset.errors[:short_id] do
+      # Generate a new short_id and retry
+      create_drop(%Drop{}, user, Map.delete(attrs, :short_id))
+    else
+      {:error, changeset}
+    end
+  end
+
+  defp handle_create_error(error, _user, _attrs) do
+    # Handle other error types
+    Logger.error("Unexpected error in create_drop: #{inspect(error)}")
+    {:error, error}
   end
 
   @doc """
@@ -240,10 +336,21 @@ defmodule ElixirDrops.Drops do
   """
   @spec update_drop(drop(), user(), attrs()) :: {:ok, drop()} | {:error, changeset()}
   def update_drop(%Drop{} = drop, %User{} = user, attrs \\ %{}) do
-    drop
-    |> Drop.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:user, user)
-    |> Repo.insert_or_update()
+    result =
+      drop
+      |> Drop.changeset(attrs)
+      |> Ecto.Changeset.put_assoc(:user, user)
+      |> Repo.insert_or_update()
+
+    case result do
+      {:ok, updated_drop} ->
+        :ok = invalidate_markdown_cache()
+        :ok = invalidate_drop_cache(updated_drop.short_id)
+        {:ok, updated_drop}
+
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -262,5 +369,25 @@ defmodule ElixirDrops.Drops do
 
   defp broadcast_drop_creation(drop) do
     DropsBroadcast.broadcast_drop_creation(drop)
+  end
+
+  @doc """
+  Invalidates the markdown cache.
+  Should be called when drops are created, updated, or deleted.
+  """
+  @spec invalidate_markdown_cache() :: :ok
+  def invalidate_markdown_cache do
+    # Clear the formatted markdown cache
+    MarkdownCache.clear_all()
+  end
+
+  @doc """
+  Invalidates the drop cache for a specific short_id.
+  Should be called when a specific drop is updated or deleted.
+  """
+  @spec invalidate_drop_cache(short_id()) :: :ok
+  def invalidate_drop_cache(short_id) do
+    # Clear the formatted markdown cache for this specific drop
+    MarkdownCache.clear_drop(short_id)
   end
 end

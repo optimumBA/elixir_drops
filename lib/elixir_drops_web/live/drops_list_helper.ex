@@ -5,6 +5,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Search
   alias ElixirDropsWeb.DropComponents
 
   @type assigns :: map()
@@ -14,16 +15,45 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @type rendered :: Phoenix.LiveView.Rendered.t()
   @type socket :: Phoenix.LiveView.Socket.t()
 
+  attr :batch_size, :integer, default: 10
+  attr :current_user, :any
+  attr :drops, :list, required: true
+  attr :drops_empty?, :boolean, required: true
+  attr :end_of_timeline?, :boolean
+  attr :id, :string, required: true
+  attr :loading_more, :boolean, default: false
+  attr :page, :integer
+  attr :search_query, :string, default: ""
+  attr :searching, :boolean, default: false
+  attr :show_user_drops?, :boolean, default: false
+
   @spec drops_list(assigns()) :: rendered()
   def drops_list(assigns) do
+    # Check if we're searching and have no results
+    is_search_no_results = assigns.searching && assigns.drops_empty?
+
     assigns =
       assigns
       |> Map.put_new(:loading_more, false)
       |> Map.put_new(:batch_size, 10)
+      |> Map.put_new(:search_query, "")
+      |> Map.put_new(:searching, false)
+      |> assign(:is_search_no_results, is_search_no_results)
 
     ~H"""
     <div class="mt-12">
-      <div class={[@drops_empty? && "py-8", !@drops_empty? && "masonry-container py-8"]}>
+      <!-- No search results component -->
+      <div :if={@is_search_no_results}>
+        <DropComponents.no_results
+          search_query={@search_query}
+          suggested_searches={get_suggested_searches()}
+        />
+      </div>
+      <!-- Regular drops list -->
+      <div
+        :if={!@is_search_no_results}
+        class={[@drops_empty? && "py-8", !@drops_empty? && "masonry-container py-8"]}
+      >
         <div
           id={@id}
           phx-update="stream"
@@ -40,13 +70,13 @@ defmodule ElixirDropsWeb.DropsListHelper do
             class="drops-empty only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
           >
             <div class="flex flex-col items-center justify-center">
-              <p>You haven't created any post yet.</p>
+              <p>You haven't created any drop yet.</p>
               <.link
                 navigate={~p"/drops/new"}
                 class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 md:hidden py-2 mt-2 rounded-lg flex items-center gap-x-2"
               >
                 <span><.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" /></span>
-                <span> Create Post</span>
+                <span> Create Drop</span>
               </.link>
             </div>
           </div>
@@ -60,7 +90,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
             <div class="relative">
               <DropComponents.drop_card
                 drop={drop}
-                show_card_menu?={@show_user_drops?}
+                show_card_menu?={true}
                 user_id={@current_user && @current_user.id}
               />
 
@@ -72,23 +102,43 @@ defmodule ElixirDropsWeb.DropsListHelper do
               </div>
             </div>
           </div>
+
+          <div
+            data-end-of-timeline={if assigns[:end_of_timeline?], do: "true", else: "false"}
+            data-page={@page}
+            id="infinite-scroll-marker"
+            phx-hook="InfiniteScroll"
+            class="absolute h-3 w-full bottom-0"
+          >
+          </div>
         </div>
       </div>
-
-      <div
-        data-end-of-timeline={if assigns[:end_of_timeline?], do: "true", else: "false"}
-        data-page={@page}
-        id="infinite-scroll-marker"
-        phx-hook="InfiniteScroll"
-      >
-      </div>
-
-      <div :if={@loading_more && !assigns[:end_of_timeline?]} class="masonry-loading-indicator">
-        <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-        <span>Loading <%= @batch_size %> more...</span>
+      <div :if={!@is_search_no_results}>
+        <div :if={@loading_more && !assigns[:end_of_timeline?]} class="masonry-loading-indicator">
+          <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin">
+          </div>
+          <span>Loading {@batch_size} more...</span>
+        </div>
       </div>
     </div>
     """
+  end
+
+  # Helper function to get suggested searches for no results
+  defp get_suggested_searches do
+    # Get top popular searches from database ordered by search count, fallback to hardcoded list if empty
+    popular_searches =
+      Search.list_popular_searches()
+      |> Enum.sort_by(& &1.search_count, :desc)
+      |> Enum.take(5)
+      |> Enum.map(& &1.query)
+
+    if Enum.empty?(popular_searches) do
+      # Fallback to hardcoded suggestions if no popular searches exist
+      ~w[phoenix elixir ecto liveview genserver]
+    else
+      popular_searches
+    end
   end
 
   @spec assign_drops(socket()) :: socket()

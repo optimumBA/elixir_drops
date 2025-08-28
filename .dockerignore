@@ -44,6 +44,10 @@ erl_crash.dump
 /priv/static/assets/
 /priv/static/cache_manifest.json
 
+# Ignore digested assets with hashes
+/priv/static/**/*-????????????????????????????????.*
+/priv/static/**/*.gz
+
 # Optimum development/test artifacts
 /.cursor/
 /.github/
@@ -73,6 +77,8 @@ README.md
 # Optimum Codegen
 /.vscode/
 /codegen/
+/AGENTS.md
 /CLAUDE.md
 .mcp.json
 *.code-workspace
+opencode.json

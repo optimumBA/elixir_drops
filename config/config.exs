@@ -26,6 +26,10 @@ config :wallaby,
   chromedriver: [
     headless: true
   ],
+  hackney_options: [
+    recv_timeout: 60_000,
+    timeout: 60_000
+  ],
   max_wait_time: 10_000,
   screenshot_on_failure: true
 

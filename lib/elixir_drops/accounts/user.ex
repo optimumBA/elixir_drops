@@ -5,6 +5,9 @@ defmodule ElixirDrops.Accounts.User do
 
   import Ecto.Changeset
 
+  alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Search.SearchHistory
+
   @type t :: %__MODULE__{}
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -15,6 +18,9 @@ defmodule ElixirDrops.Accounts.User do
     field :github_id, :integer
     field :github_username, :string
     field :name, :string
+
+    has_many :drops, Drop
+    has_many :search_histories, SearchHistory
 
     timestamps()
   end

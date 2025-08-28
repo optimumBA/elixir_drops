@@ -6,11 +6,14 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.SearchHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
     if connected?(socket), do: Drops.subscribe()
+
+    user_id = socket.assigns.current_user.id
 
     {:ok,
      socket
@@ -23,12 +26,37 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:batch_size, 15)
      |> assign(:initial_load, true)
      |> assign(:loading_more, false)
-     |> DropsListHelper.assign_drops()}
+     |> assign(:search_query, "")
+     |> assign(:drops_empty?, true)
+     |> SearchHelper.initialize_profile_search_assigns(user_id)}
   end
 
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+    search_query = params["q"] || ""
+
+    socket =
+      socket
+      |> assign(:search_query, search_query)
+      |> assign(:searching, search_query != "")
+      |> update_search_filters(search_query)
+      |> DropsListHelper.assign_drops()
+      |> apply_action(socket.assigns.live_action, params)
+
+    {:noreply, socket}
+  end
+
+  defp update_search_filters(socket, search_query) do
+    current_filters = socket.assigns.drop_filters
+
+    filters =
+      if search_query != "" do
+        Map.put(current_filters, :search, search_query)
+      else
+        Map.delete(current_filters, :search)
+      end
+
+    assign(socket, :drop_filters, filters)
   end
 
   @impl Phoenix.LiveView
@@ -54,6 +82,103 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   def handle_event("load-more-complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
+  end
+
+  def handle_event("search_submit", %{"query" => query}, socket) do
+    trimmed_query =
+      query
+      |> to_string()
+      |> String.trim()
+
+    # Track search history and popular searches
+    SearchHelper.track_search(query, socket, %{})
+
+    socket =
+      socket
+      |> assign(:search_query, trimmed_query)
+      |> assign(:show_profile_suggestions, false)
+      |> assign(:profile_search_suggestions, [])
+
+    # Stay on profile page with search query
+    if trimmed_query != "" do
+      {:noreply, push_navigate(socket, to: ~p"/profile?q=#{trimmed_query}")}
+    else
+      {:noreply, push_navigate(socket, to: ~p"/profile")}
+    end
+  end
+
+  def handle_event("close_search_overlay", _params, socket) do
+    {:noreply, assign(socket, :show_profile_suggestions, false)}
+  end
+
+  def handle_event("clear_search", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_query, "")
+     |> assign(:show_profile_suggestions, false)
+     |> assign(:profile_search_suggestions, [])
+     |> push_patch(to: ~p"/profile")}
+  end
+
+  def handle_event("load_suggestions", %{"query" => query}, socket) when is_binary(query) do
+    user_id = socket.assigns.current_user.id
+    suggestions = ElixirDrops.Search.get_search_suggestions(user_id, query)
+
+    {:noreply,
+     socket
+     |> assign(:profile_search_suggestions, suggestions)
+     |> assign(:show_profile_suggestions, length(suggestions) > 0)}
+  end
+
+  def handle_event("load_suggestions", _params, socket) do
+    {:noreply, assign(socket, :show_profile_suggestions, false)}
+  end
+
+  def handle_event("delete_search_history", %{"id" => id}, socket) do
+    case ElixirDrops.Search.delete_search_history(id, socket.assigns.current_user.id) do
+      {:ok, _search_history} ->
+        # Re-fetch suggestions to update the list
+        user_id = socket.assigns.current_user.id
+        {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
+        {:noreply, assign(socket, :profile_search_suggestions, suggestions)}
+
+      {:error, _reason} ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("blur_search_input", _params, socket) do
+    {:noreply, assign(socket, :show_profile_suggestions, false)}
+  end
+
+  def handle_event("focus_search_input", _params, socket) do
+    user_id = socket.assigns.current_user.id
+    {suggestions, show_suggestions} = SearchHelper.get_focus_search_suggestions(user_id)
+
+    {:noreply,
+     socket
+     |> assign(:profile_search_suggestions, suggestions)
+     |> assign(:show_profile_suggestions, show_suggestions)}
+  end
+
+  # Handle navbar search submit - navigate to homepage with search
+  def handle_event("navbar_search_submit", %{"query" => query}, socket) do
+    trimmed_query = String.trim(query)
+    # Track search history and popular searches
+    SearchHelper.track_search(query, socket, %{})
+
+    socket =
+      socket
+      |> assign(:navbar_search_query, trimmed_query)
+      |> assign(:show_suggestions, false)
+      |> assign(:search_suggestions, [])
+
+    # Navigate to homepage with search query
+    if trimmed_query != "" do
+      {:noreply, push_navigate(socket, to: ~p"/?q=#{trimmed_query}")}
+    else
+      {:noreply, push_navigate(socket, to: ~p"/")}
+    end
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
@@ -82,6 +207,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       nil ->
         socket
         |> assign(:drop, nil)
+        |> put_flash(:error, "You can only edit your own drops")
         |> push_navigate(to: ~p"/")
 
       %Drop{} = drop ->

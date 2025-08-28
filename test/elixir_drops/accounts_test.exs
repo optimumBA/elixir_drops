@@ -58,7 +58,8 @@ defmodule ElixirDrops.AccountsTest do
     end
 
     test "validates github_id uniqueness" do
-      user = user_fixture()
+      # Create a user with a specific github_id
+      _user = user_fixture(%{github_id: 1_456_872})
 
       new_user = %{
         avatar: "https://avatars.githubusercontent.com/u/#{user.github_id}?v=4",
@@ -217,16 +218,19 @@ defmodule ElixirDrops.AccountsTest do
     end
 
     test "returns user if user already exists", %{user: user_1} do
+      # Use the same github_id as the existing user to test that it returns the existing one
       user_attrs = %{
-        avatar: user_1.avatar,
-        email: user_1.email,
-        github_username: user_1.github_username,
+        avatar: "https://avatars.githubusercontent.com/u/different?v=4",
+        email: "different@gmail.com",
+        github_username: "different_username",
         github_id: user_1.github_id,
-        name: user_1.name
+        name: "different_name"
       }
 
       {:ok, user_2} = Accounts.get_or_create_user(user_attrs)
 
+      # Should return the existing user, not create a new one
+      assert user_1.id == user_2.id
       assert user_1.email == user_2.email
       assert user_1.github_username == user_2.github_username
       assert user_1.github_id == user_2.github_id

@@ -17,9 +17,13 @@ defmodule ElixirDrops.Drops.Drop do
   schema "drops" do
     field :body, :string
     embeds_one :screenshot, Screenshot, on_replace: :update
+    field :search_vector, :string, load_in_query: false
     field :short_id, :string
     field :title, :string
     field :comment_count, :integer, virtual: true
+
+    # Virtual field for search relevance ranking
+    field :relevance_rank, :float, virtual: true
 
     belongs_to :user, User
 
@@ -32,6 +36,7 @@ defmodule ElixirDrops.Drops.Drop do
     |> cast(attrs, [:body, :short_id, :title, :user_id])
     |> cast_embed(:screenshot)
     |> validate_required([:body, :short_id, :title])
+    |> validate_length(:title, max: 255)
     |> unique_constraint(:short_id)
   end
 end

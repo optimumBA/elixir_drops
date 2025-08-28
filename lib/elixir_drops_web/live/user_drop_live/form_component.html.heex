@@ -16,13 +16,14 @@
   >
     <div class="drop-text-editor text-[#767676] text-sm bg-white rounded-xl overflow-hidden">
       <h2 class="font-semibold text-base md:text-lg text-[#252525] tracking-wide grid grid-cols-2">
-        <span :if={@live_action == :new} class="py-3 px-4">Write a new post</span>
-        <span :if={@live_action == :edit} class="py-3 px-4">Edit post</span>
+        <span :if={@live_action == :new} class="py-3 px-4">Write a new drop</span>
+        <span :if={@live_action == :edit} class="py-3 px-4">Edit drop</span>
         <span class="py-3 bg-[#dfdbfc]"></span>
       </h2>
       <div class="px-4">
         <.custom_input
           field={f[:title]}
+          label="Title"
           placeholder="Please provide a Drop summary for the title"
           input_field_class="drop-title-input text-sm md:text-md placeholder:text-inherit border-t-0 border-x-0 border-b-2 border-b-[#cfcfcf] focus:border-b-[#7d6ff4] pt-8 pb-4 w-full mb-8"
           phx-debounce="blur"
@@ -30,6 +31,7 @@
 
         <.custom_input
           field={f[:body]}
+          label="Body"
           placeholder="Start writing..."
           type="textarea"
           input_field_class="drop-editor-input text-sm md:text-md placeholder:text-inherit placeholder:italic border-2 border-[#dedede] focus:border-[#7d6ff4] rounded-md h-[calc(100vh-408px)] min-h-[40vh] w-full"
@@ -54,17 +56,17 @@
           input_value(f, :title) && "hidden",
           input_value(f, :body) && "hidden"
         ]}>
-          See post preview as you write...
+          See drop preview as you write...
         </p>
         <div :if={input_value(f, :title) || input_value(f, :body)}>
           <h2 class="font-semibold text-sm md:text-base lg:text-lg text-[#252525] border-b-2 border-b-[#cfcfcf] tracking-wide pt-8 pb-4 mb-8">
-            <%= input_value(f, :title) && DropComponents.to_html(input_value(f, :title)) %>
+            {input_value(f, :title) && DropComponents.to_html(input_value(f, :title))}
           </h2>
           <div
             class="drop-preview text-[#4f4f4f] text-sm md:text-md pb-3 mb-pb-0 w-full h-[calc(100vh-408px)] min-h-[40vh] overflow-y-scroll"
             id="drop-preview"
           >
-            <%= input_value(f, :body) && DropComponents.to_html(input_value(f, :body)) %>
+            {input_value(f, :body) && DropComponents.to_html(input_value(f, :body))}
           </div>
         </div>
       </div>
@@ -87,7 +89,7 @@
           ]}
           type="submit"
         >
-          <span :if={@live_action == :new} class="phx-submit-loading:hidden">Post Drop</span>
+          <span :if={@live_action == :new} class="phx-submit-loading:hidden">Create Drop</span>
           <span :if={@live_action == :edit} class="phx-submit-loading:hidden">Update Drop</span>
           <span class="hidden phx-submit-loading:block">
             <Icons.loading_spin_circle class="text-white h-6 w-6" />

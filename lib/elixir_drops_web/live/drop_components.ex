@@ -10,6 +10,13 @@ defmodule ElixirDropsWeb.DropComponents do
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
 
+  attr :current_user, User
+  attr :live_action, :atom, required: true
+  attr :search_query, :string, default: ""
+  attr :show_suggestions, :boolean, default: false
+  attr :search_suggestions, :list, default: []
+  attr :show_user_drops?, :boolean, default: false
+
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
     ~H"""
@@ -20,12 +27,28 @@ defmodule ElixirDropsWeb.DropComponents do
             <Icons.elixir_drops_logo class="w-32 md:w-48" />
           </.link>
         </div>
-
+        <!-- Desktop Search -->
+        <div class="hidden lg:flex flex-1 max-w-md mx-8">
+          <.search_input_desktop
+            search_query={@search_query}
+            show_suggestions={@show_suggestions}
+            search_suggestions={@search_suggestions}
+            current_user={@current_user}
+          />
+        </div>
         <div>
-          <%= if @current_user do %>
-            <div class="flex items-center gap-x-4">
-              <.create_post_button current_user={@current_user} live_action={@live_action} />
+          <div class="flex items-center gap-x-4">
+            <!-- Mobile/Tablet Search Icon -->
+            <button
+              class="lg:hidden p-2 text-[#4F4F4F] hover:text-[#5947F1]"
+              phx-click={JS.toggle(to: "#search-overlay")}
+            >
+              <.icon name="hero-magnifying-glass" class="h-5 w-5" />
+            </button>
+            <!-- Create Drop Button - Always visible -->
+            <.create_drop_button current_user={@current_user} live_action={@live_action} />
 
+            <%= if @current_user do %>
               <div
                 class="flex items-center gap-x-3 cursor-pointer"
                 phx-click={JS.toggle_class("hidden", to: "#slide-menu")}
@@ -35,17 +58,13 @@ defmodule ElixirDropsWeb.DropComponents do
                   alt={@current_user.github_username}
                   class="w-10 h-10 rounded-full"
                 />
-                <p class="hidden md:block"><%= @current_user.github_username %></p>
+                <p class="hidden md:block">{@current_user.github_username}</p>
                 <button class="hidden md:block">
                   <.icon name="hero-chevron-down" class="text-[#4F4F4F]" />
                 </button>
                 <.slide_menu current_user={@current_user} />
               </div>
-            </div>
-          <% else %>
-            <div class="flex items-center gap-x-4">
-              <.create_post_button current_user={@current_user} live_action={@live_action} />
-
+            <% else %>
               <.link
                 href={~p"/auth/github"}
                 class="font-semibold text-[#eae8fd] text-xs md:text-sm bg-blue_primary hover:opacity-80 px-2 md:px-5 py-2 rounded-lg flex items-center gap-x-2"
@@ -53,8 +72,8 @@ defmodule ElixirDropsWeb.DropComponents do
                 <span><Icons.github_icon /></span>
                 <span> Sign in with GitHub</span>
               </.link>
-            </div>
-          <% end %>
+            <% end %>
+          </div>
         </div>
       </nav>
     </header>
@@ -62,6 +81,7 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :drop, Drop, required: true
+  attr :open_menus, :map, default: %{}
   attr :show_card_menu?, :boolean, default: false
   attr :user_id, :string
 
@@ -86,16 +106,16 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <div class="drop-content">
-        <h3 class="drop-title"><%= @drop.title %></h3>
+        <h3 class="drop-title">{@drop.title}</h3>
         <div class="drop-body">
-          <%= @text %>
+          {@text}
         </div>
 
         <div class="flex justify-between">
           <div class="drop-meta">
             <img src={@drop.user.avatar} alt={@drop.user.github_username} class="user-avatar" />
             <a href={~p"/d/#{@drop.short_id}"} class="hidden"></a>
-            <p><%= @drop.user.github_username %></p>
+            <p>{@drop.user.github_username}</p>
             <p class="text-[#868686] text-xs before:content-['•'] before:mr-1">
               <.created_at drop={@drop} />
             </p>
@@ -103,12 +123,13 @@ defmodule ElixirDropsWeb.DropComponents do
 
           <%= if @show_card_menu? do %>
             <button
-              class="text-[#797979] hover:text-[#5947F1]"
+              class="text-[#797979] hover:text-[#5947F1] relative p-2"
               id={"drop-card-menu-btn-#{@drop.id}"}
-              data-drop-id={@drop.id}
               phx-click={JS.toggle(to: "#drop-card-menu-#{@drop.id}")}
+              phx-stop-propagation="true"
+              type="button"
             >
-              <.icon name="hero-ellipsis-horizontal" class="h-5 w-5" />
+              <Icons.three_dots_icon class="h-5 w-5 pointer-events-none" />
             </button>
           <% else %>
             <.drop_card_action_default id={"#{@drop.id}-main"} short_id={@drop.short_id} />
@@ -124,11 +145,12 @@ defmodule ElixirDropsWeb.DropComponents do
   defp created_at(assigns) do
     ~H"""
     <relative-time datetime={"#{assigns.drop.inserted_at}Z"}>
-      <%= Timex.format!(assigns.drop.inserted_at, "{relative}", :relative) %>
+      {Timex.format!(assigns.drop.inserted_at, "{relative}", :relative)}
     </relative-time>
     """
   end
 
+  attr :current_user, User, default: nil
   attr :drop, Drop, required: true
 
   @spec drop(assigns()) :: rendered()
@@ -138,7 +160,10 @@ defmodule ElixirDropsWeb.DropComponents do
       class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <h1 class="font-[500] text-2xl md:text-4xl"><%= @drop.title %></h1>
+      <div class="flex justify-between items-start">
+        <h1 class="font-[500] text-2xl md:text-4xl flex-1">{@drop.title}</h1>
+      </div>
+
       <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
         <img
           src={@drop.user.avatar}
@@ -146,10 +171,41 @@ defmodule ElixirDropsWeb.DropComponents do
           class="rounded-full h-12 w-12 object-cover"
         />
         <div>
-          <p class="mb-1"><%= @drop.user.github_username %></p>
+          <p class="mb-1">{@drop.user.github_username}</p>
           <p class="text-[#696969] text-xs">
             <.created_at drop={@drop} />
           </p>
+        </div>
+      </div>
+      
+    <!-- Action row below author's name -->
+      <div class="flex items-center justify-end py-4 border-b border-gray-200">
+        <!-- Right side: Action buttons -->
+        <div class="flex items-center gap-4">
+          
+    <!-- Copy link button -->
+          <div
+            class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer"
+            id={"single-drop-copy-link-#{@drop.id}"}
+            data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
+            phx-hook="CopyToClipboard"
+          >
+            <.icon name="hero-link" class="h-5 w-5" />
+            <span class="hidden md:inline text-sm">Copy link</span>
+          </div>
+          
+    <!-- Three dots menu button -->
+          <button
+            class="text-[#797979] hover:text-[#5947F1] p-2"
+            id={"action-row-menu-btn-#{@drop.id}"}
+            phx-click={
+              JS.toggle(to: "#drop-menu-#{@drop.id}")
+              |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
+            }
+            type="button"
+          >
+            <Icons.three_dots_icon class="h-5 w-5" />
+          </button>
         </div>
       </div>
 
@@ -158,18 +214,15 @@ defmodule ElixirDropsWeb.DropComponents do
         id="drop-body"
         phx-hook="DropBodyContainer"
       >
-        <%= to_html(@drop.body) %>
+        {to_html(@drop.body)}
       </div>
-
-      <p
-        id="copy-link-#{@id}"
-        data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
-        phx-hook="CopyToClipboard"
-        class="mt-4 text-sm text-[#4f4f4f] hover:text-[#5947F1] border-y-[1px] border-y-[#dddddd] flex items-center justify-end gap-x-2 py-3 cursor-pointer"
-      >
-        <span><.icon name="hero-link" class="h-4 w-4 stroke-2" /></span>
-        <span>Copy link</span>
-      </p>
+      
+    <!-- Three-dots dropdown menu -->
+      <.drop_page_menu
+        id={@drop.id}
+        short_id={@drop.short_id}
+        author?={@current_user && @current_user.id == @drop.user_id}
+      />
 
       <.copy_prompt />
     </div>
@@ -207,6 +260,11 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :current_user, User, required: true
+  attr :search_query, :string, default: ""
+  attr :show_suggestions, :boolean, default: false
+  attr :search_suggestions, :list, default: []
+  attr :show_profile_suggestions, :boolean, default: false
+  attr :profile_search_suggestions, :list, default: []
 
   @spec user_drops_header(assigns()) :: rendered()
   def user_drops_header(assigns) do
@@ -222,19 +280,95 @@ defmodule ElixirDropsWeb.DropComponents do
             />
           </div>
           <p>
-            <%= @current_user.github_username %>
+            {@current_user.github_username}
           </p>
         </div>
       </div>
 
-      <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary grid justify-center md:justify-start">
-        <ul class="flex" id="secondary-nav-links">
-          <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center">
-            <.link href={~p"/profile"}>
-              My posts
-            </.link>
-          </li>
-        </ul>
+      <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
+        <div class="flex items-center px-4 md:px-0">
+          <ul class="flex items-center" id="secondary-nav-links">
+            <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center mr-8">
+              <.link href={~p"/profile"}>
+                My drops
+              </.link>
+            </li>
+            <!-- User Profile Search Input -->
+            <li class="min-h-full py-4 border-b-2 border-b-transparent hover:border-b-gray-300 flex items-center">
+              <div id="profile-search-input" class="relative" phx-hook="SearchSuggestions">
+                <form
+                  phx-submit={JS.push("search_submit") |> JS.hide(to: "#profile-search-dropdown")}
+                  class="relative flex items-center"
+                >
+                  <.icon name="hero-magnifying-glass" class="absolute left-3 h-4 w-4 text-gray-500" />
+                  <label for="profile-search-query" class="sr-only">Search your drops</label>
+                  <input
+                    id="profile-search-query"
+                    type="text"
+                    name="query"
+                    value={@search_query}
+                    placeholder="Search drops"
+                    phx-change="load_suggestions"
+                    class={[
+                      "pl-10 pr-4 py-2 bg-transparent border-0",
+                      "focus:outline-none focus:ring-0 placeholder-gray-500 text-sm",
+                      "min-w-[200px]"
+                    ]}
+                  />
+                </form>
+                <!-- Search Suggestions Dropdown -->
+                <div
+                  :if={@show_profile_suggestions and length(@profile_search_suggestions) > 0}
+                  id="profile-search-dropdown"
+                  class={[
+                    "absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50",
+                    "max-h-80 overflow-y-auto min-w-[200px]"
+                  ]}
+                >
+                  <div class="py-2">
+                    <div
+                      :for={suggestion <- @profile_search_suggestions}
+                      class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
+                      tabindex="0"
+                      phx-click={
+                        JS.push("search_submit", value: %{query: suggestion.query})
+                        |> JS.hide(to: "#profile-search-dropdown")
+                      }
+                    >
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <.icon
+                            :if={suggestion.type == :history}
+                            name="hero-clock"
+                            class="h-4 w-4 text-gray-400"
+                          />
+                          <.icon
+                            :if={suggestion.type == :popular}
+                            name="hero-magnifying-glass"
+                            class="h-4 w-4 text-gray-400"
+                          />
+                          <span class="text-sm text-gray-900">{suggestion.query}</span>
+                        </div>
+                        <button
+                          :if={suggestion.type == :history}
+                          type="button"
+                          tabindex="0"
+                          phx-click={
+                            JS.push("delete_search_history", value: %{id: suggestion.id})
+                            |> JS.show(to: "#profile-search-dropdown")
+                          }
+                          class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <.icon name="hero-trash" class="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
       </nav>
     </div>
     """
@@ -332,12 +466,12 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :current_user, User
   attr :class, :string, default: nil
 
-  @spec create_post_button_mobile(assigns()) :: rendered()
-  def create_post_button_mobile(assigns) do
+  @spec create_drop_button_mobile(assigns()) :: rendered()
+  def create_drop_button_mobile(assigns) do
     ~H"""
     <.link
-      id="create-post-btn-mobile"
-      phx-hook="CreatePostButtonMobile"
+      id="create-drop-btn-mobile"
+      phx-hook="CreateDropButtonMobile"
       class={[
         "bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80",
         @class
@@ -378,7 +512,7 @@ defmodule ElixirDropsWeb.DropComponents do
           :if={@screenshot.status != :completed}
           class="w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2 font-light"
         >
-          Your drop is almost ready! You can close this modal—your post will continue processing in the background.
+          Your drop is almost ready! You can close this modal—your drop will continue processing in the background.
         </p>
         <p
           :if={@screenshot.status == :completed}
@@ -386,7 +520,7 @@ defmodule ElixirDropsWeb.DropComponents do
         >
           Here's your screenshot!
           <span class="text-sm md:text-base lg:text-lg block font-light">
-            You can now view and share your drop post
+            You can now view and share your drop
           </span>
         </p>
 
@@ -421,18 +555,72 @@ defmodule ElixirDropsWeb.DropComponents do
               phx-click={hide_popup("generating-screenshots-popup")}
               navigate={~p"/drops/#{@screenshot.drop_short_id}/edit"}
             >
-              Edit post
+              Edit drop
             </.link>
             <.link
               type="button"
               class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
               navigate={~p"/profile"}
             >
-              View posts
+              View drops
             </.link>
           </div>
         </div>
       </div>
+    </div>
+    """
+  end
+
+  attr :short_id, :string, required: true
+  attr :show_separator, :boolean, default: true
+
+  @spec markdown_menu(assigns()) :: rendered()
+  def markdown_menu(assigns) do
+    ~H"""
+    <!-- Markdown Section Divider -->
+    <div :if={@show_separator} class="border-t border-gray-200 my-3"></div>
+
+    <!-- Markdown Section Header with Info Icon -->
+    <div class="mb-2 px-2">
+      <div class="flex items-center gap-2">
+        <span class="text-[#8e8e8e] text-sm">Markdown</span>
+        <div class="relative group">
+          <.icon name="hero-information-circle" class="h-5 w-5 text-[#8e8e8e] cursor-help" />
+          <!-- Tooltip -->
+          <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100001]">
+            <div class="bg-[#FFFFFF] text-[#000000] text-xs rounded-lg py-2 px-4 w-[240px] font-roboto font-normal leading-[15px] border border-gray-200 shadow-md">
+              View this Drop in Markdown format or copy Markdown URL for your AI workflow
+              <!-- Tooltip arrow -->
+              <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-[#FFFFFF]">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View as Markdown -->
+    <.link
+      href={"/d/#{@short_id}.md"}
+      target="_blank"
+      class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center justify-between px-2 py-2 rounded hover:bg-gray-50 gap-3"
+    >
+      <div class="flex items-center gap-2">
+        <Icons.markdown_icon class="h-5 w-5" />
+        <span>View as Markdown</span>
+      </div>
+      <.icon name="hero-arrow-top-right-on-square" class="h-4 w-4" />
+    </.link>
+
+    <!-- Copy Markdown URL -->
+    <div
+      class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+      id={"copy-markdown-#{@short_id}"}
+      data-clipboard-text={url(~p"/d/#{@short_id}") <> ".md"}
+      phx-hook="CopyToClipboard"
+    >
+      <Icons.clipboard_copy_icon class="h-5 w-5" />
+      <span>Copy Markdown URL</span>
     </div>
     """
   end
@@ -511,7 +699,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp create_post_button(assigns) do
+  defp create_drop_button(assigns) do
     ~H"""
     <.link
       class={[
@@ -519,7 +707,7 @@ defmodule ElixirDropsWeb.DropComponents do
         @current_user && "text-[#eae8fd] bg-blue_primary hover:opacity-80",
         !@current_user && "text-blue_primary border-blue_primary border-2 hover:bg-[#eae8fd]"
       ]}
-      id="create-post-button"
+      id="create-drop-button"
       phx-click={
         if @current_user,
           do: JS.navigate(~p"/drops/new"),
@@ -527,31 +715,71 @@ defmodule ElixirDropsWeb.DropComponents do
       }
     >
       <span><.icon name="hero-plus" /></span>
-      <span>Create Post</span>
+      <span>Create Drop</span>
     </.link>
+    """
+  end
+
+  defp drop_page_menu(assigns) do
+    ~H"""
+    <div
+      class="text-sm hidden opacity-0 absolute right-0 top-12 py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] transition-opacity duration-200"
+      id={"drop-menu-#{@id}"}
+      phx-click-away={
+        JS.hide(to: "#drop-menu-#{@id}")
+        |> JS.add_class("opacity-0", to: "#drop-menu-#{@id}")
+      }
+    >
+      <!-- Markdown Section -->
+      <.markdown_menu short_id={@short_id} show_separator={false} />
+
+      <.link
+        :if={@author?}
+        navigate={~p"/drops/#{@short_id}/edit"}
+        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 mt-3 rounded hover:bg-gray-50 border-t border-gray-200"
+        id={"edit-drop-page-#{@id}"}
+      >
+        <.icon name="hero-pencil" class="h-5 w-5" />
+        <span>Edit drop</span>
+      </.link>
+    </div>
     """
   end
 
   defp drop_card_menu(assigns) do
     ~H"""
     <div
-      class="drop-card-menu text-sm md:text-base hidden absolute right-6 top-[8rem] md:top-[9rem] py-6 pl-6 pr-12 rounded-md bg-white shadow-xl shadow-[#aaa4af] z-[100000]"
+      class="drop-card-menu text-sm absolute right-2 top-[7.5rem] md:top-[8.5rem] py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] hidden"
       id={"drop-card-menu-#{@id}"}
       phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
+      onclick="event.stopPropagation()"
     >
-      <.drop_card_action_default id={"#{@id}-menu"} short_id={@short_id}>
-        <:inner_text>
-          Copy link
-        </:inner_text>
-      </.drop_card_action_default>
+      <!-- Sharing Section Header -->
+      <div class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
+        Sharing
+      </div>
+
+      <div
+        id={"card-copy-link-menu-#{@id}"}
+        data-clipboard-text={url(~p"/d/#{@short_id}")}
+        phx-hook="CopyToClipboard"
+        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+      >
+        <.icon name="hero-link" class="h-5 w-5" />
+        <span>Copy Drop link</span>
+      </div>
+      
+    <!-- Markdown Section -->
+      <.markdown_menu short_id={@short_id} />
 
       <.link
         :if={@author?}
-        navigate={"/drops/#{@short_id}/edit"}
-        class="text-[#797979] hover:text-[#5947F1] flex items-center justify-center gap-x-2 mt-6"
+        navigate={~p"/drops/#{@short_id}/edit"}
+        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 mt-3 rounded hover:bg-gray-50 border-t border-gray-200"
         id={"edit-drop-#{@id}"}
       >
-        <.icon name="hero-pencil" class="h-4 md:h-6 w-4 md:w-6" /> Edit drop
+        <.icon name="hero-pencil" class="h-5 w-5" />
+        <span>Edit drop</span>
       </.link>
     </div>
     """
@@ -571,22 +799,22 @@ defmodule ElixirDropsWeb.DropComponents do
           class="w-16 h-16 rounded-full"
         />
       </div>
-      <p class="text-[1.2rem] mx-auto mt-1 cursor-default"><%= @current_user.github_username %></p>
+      <p class="text-base mx-auto mt-1 cursor-default">{@current_user.github_username}</p>
 
       <ul class="mt-10 grid gap-y-6">
         <li class="px-5">
           <.link
             href={~p"/profile"}
-            class="flex gap-x-2 hover:text-[#5947F1]"
+            class="text-sm flex gap-x-2 hover:text-[#5947F1]"
             id="view-user-drops-link"
           >
             <span><Icons.drops_icon /></span>
-            <span> My posts </span>
+            <span> My drops </span>
           </.link>
         </li>
         <li class="nav-list-border full-bleed"></li>
         <li class="px-5">
-          <.link href={~p"/auth/logout"} class="flex gap-x-2 hover:text-[#5947F1]">
+          <.link href={~p"/auth/logout"} class="text-sm flex gap-x-2 hover:text-[#5947F1]">
             <span><Icons.sign_out_icon /></span>
             <span>Sign out</span>
           </.link>
@@ -613,7 +841,7 @@ defmodule ElixirDropsWeb.DropComponents do
       ]}
     >
       <.icon name="hero-link-solid" class="h-4 w-4 md:h-6 md:w-6" />
-      <%= render_slot(@inner_text) %>
+      {render_slot(@inner_text)}
     </div>
     """
   end
@@ -748,5 +976,297 @@ defmodule ElixirDropsWeb.DropComponents do
     # Clean up extra whitespace
     |> String.replace(~r/\n{3,}/, "\n\n")
     |> String.trim()
+  end
+
+  attr :search_query, :string, required: true
+  attr :show_suggestions, :boolean, required: true
+  attr :search_suggestions, :list, required: true
+  attr :current_user, User
+
+  @spec search_input_desktop(assigns()) :: rendered()
+  def search_input_desktop(assigns) do
+    ~H"""
+    <div id="desktop-search-input" class="relative w-full" phx-hook="SearchSuggestions">
+      <form
+        phx-submit={JS.push("navbar_search_submit") |> JS.hide(to: "#navbar-search-dropdown")}
+        class="relative"
+      >
+        <label for="desktop-search-query" class="sr-only">Search drops</label>
+        <input
+          id="desktop-search-query"
+          type="text"
+          name="query"
+          value={@search_query}
+          placeholder="Search drops"
+          phx-change="load_navbar_suggestions"
+          class={[
+            "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
+            "border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
+            "placeholder-gray-500 text-sm"
+          ]}
+        />
+        <.icon
+          name="hero-magnifying-glass"
+          class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+        />
+        <button
+          :if={@search_query != ""}
+          type="button"
+          phx-click="clear_search"
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+        >
+          <.icon name="hero-x-mark" class="h-4 w-4 text-gray-400 hover:text-gray-600" />
+        </button>
+      </form>
+      <!-- Search Suggestions Dropdown -->
+      <div
+        :if={@show_suggestions and length(@search_suggestions) > 0}
+        id="navbar-search-dropdown"
+        class={[
+          "absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50",
+          "max-h-80 overflow-y-auto"
+        ]}
+      >
+        <div class="py-2">
+          <div
+            :for={suggestion <- @search_suggestions}
+            class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
+            tabindex="0"
+            phx-click={
+              JS.push("navbar_search_submit", value: %{query: suggestion.query})
+              |> JS.hide(to: "#navbar-search-dropdown")
+            }
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <.icon
+                  :if={suggestion.type == :history}
+                  name="hero-clock"
+                  class="h-4 w-4 text-gray-400"
+                />
+                <.icon
+                  :if={suggestion.type == :popular}
+                  name="hero-magnifying-glass"
+                  class="h-4 w-4 text-gray-400"
+                />
+                <span class="text-sm text-gray-800">{suggestion.query}</span>
+              </div>
+              <button
+                :if={suggestion.type == :history}
+                type="button"
+                tabindex="0"
+                class="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
+                phx-click={
+                  JS.push("delete_navbar_search_history", value: %{id: suggestion.id})
+                  |> JS.show(to: "#navbar-search-dropdown")
+                }
+              >
+                <.icon name="hero-trash" class="h-3 w-3 text-gray-500" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  attr :search_query, :string, required: true
+  attr :show_suggestions, :boolean, required: true
+  attr :search_suggestions, :list, required: true
+  attr :current_user, User
+
+  @spec search_overlay_mobile(assigns()) :: rendered()
+  def search_overlay_mobile(assigns) do
+    ~H"""
+    <div
+      id="search-overlay"
+      class="hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-lg"
+      phx-hook="MobileSearchOverlay"
+    >
+      <!-- Search bar matching Figma design -->
+      <div id="mobile-search-wrapper" class="relative">
+        <div
+          id="mobile-search-input"
+          class="flex items-center gap-4 px-4 py-3 bg-white"
+          phx-hook="SearchSuggestions"
+        >
+          <button
+            class="p-1 text-gray-600 hover:text-gray-900"
+            phx-click={JS.hide(to: "#search-overlay")}
+          >
+            <.icon name="hero-arrow-left" class="h-6 w-6" />
+          </button>
+
+          <form
+            phx-submit={JS.push("search_submit") |> JS.hide(to: "#search-overlay")}
+            class="flex-1 relative"
+          >
+            <input
+              type="text"
+              name="query"
+              value={@search_query}
+              placeholder="Search drops"
+              phx-change="load_suggestions"
+              phx-focus="focus_search_input"
+              phx-blur="blur_search_input"
+              class={[
+                "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
+                "border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
+                "placeholder-gray-500 text-base"
+              ]}
+              autofocus
+            />
+            <.icon
+              name="hero-magnifying-glass"
+              class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+            />
+            <button
+              :if={@search_query != ""}
+              type="button"
+              phx-click="clear_search"
+              class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+            >
+              <.icon name="hero-x-mark" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+            </button>
+          </form>
+        </div>
+        <!-- Search Suggestions -->
+        <div
+          :if={@show_suggestions and length(@search_suggestions) > 0}
+          id="mobile-search-dropdown"
+          class="absolute top-full left-0 right-0 bg-white border-t border-gray-200 max-h-80 overflow-y-auto"
+        >
+          <div
+            :for={suggestion <- @search_suggestions}
+            class="px-4 py-3 hover:bg-gray-50 cursor-pointer group"
+            tabindex="0"
+            phx-click="search_submit"
+            phx-value-query={suggestion.query}
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <.icon
+                  :if={suggestion.type == :history}
+                  name="hero-clock"
+                  class="h-5 w-5 text-gray-400"
+                />
+                <.icon
+                  :if={suggestion.type == :popular}
+                  name="hero-magnifying-glass"
+                  class="h-5 w-5 text-gray-400"
+                />
+                <span class="text-base text-gray-800">{suggestion.query}</span>
+              </div>
+              <button
+                :if={suggestion.type == :history}
+                type="button"
+                tabindex="0"
+                class="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 rounded"
+                phx-click="delete_search_history"
+                phx-value-id={suggestion.id}
+                phx-stop-propagation="true"
+              >
+                <.icon name="hero-trash" class="h-4 w-4 text-gray-500" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  attr :search_query, :string, required: true
+  attr :suggested_searches, :list, default: []
+
+  @spec no_results(assigns()) :: rendered()
+  def no_results(assigns) do
+    ~H"""
+    <!-- No search results - matches Figma design exactly -->
+    <div class="flex flex-col items-center justify-center min-h-[60vh] px-4 py-8">
+      <div class="w-full max-w-[772px] flex flex-col items-center gap-8">
+        <!-- Main Illustration - Drop Card with Magnifying Glass -->
+        <div class="relative w-[392px] h-[345px] rounded-[16px]">
+          <!-- Drop Card Component -->
+          <div class="absolute left-1/2 top-[49px] transform -translate-x-1/2 w-[258px] bg-white rounded-[9px] shadow-[0px_3px_14px_0px_rgba(19,0,33,0.12)] p-[15px] flex flex-col gap-[19px]">
+            <!-- Drop Card Background with gradient and code elements -->
+            <div class="relative w-[233px] h-[150px] rounded-[13px] bg-gradient-to-b from-[#eae8fd80] from-[40%] to-[#bfb8fa66] to-[116%] overflow-hidden">
+              <!-- Background decorative elements -->
+              <img
+                src={~p"/images/no-results-group1.svg"}
+                alt=""
+                class="absolute bottom-[65%] left-[0%] right-[71%] top-[-18%]"
+              />
+              <img
+                src={~p"/images/no-results-group2.svg"}
+                alt=""
+                class="absolute bottom-[-9%] left-[0%] right-[75%] top-[62%]"
+              />
+              <img
+                src={~p"/images/no-results-group3.svg"}
+                alt=""
+                class="absolute bottom-[-25%] left-[17%] right-[-8%] top-[-46%]"
+              />
+            </div>
+            <!-- Code Block Representation -->
+            <div class="bg-white rounded-[5px] shadow-[0px_1.78px_7.12px_0px_rgba(0,0,0,0.12)] p-[9px] flex flex-col gap-[5px]">
+              <div class="bg-[#eae8fd] h-[4px] w-[212px]"></div>
+              <div class="bg-[#eae8fd] h-[4px] w-[133px]"></div>
+              <div class="bg-[#eae8fd] h-[4px] w-[122px]"></div>
+              <div class="bg-[#eae8fd] h-[4px] w-[103px]"></div>
+            </div>
+          </div>
+          <!-- Magnifying Glass Illustration -->
+          <img
+            src={~p"/images/no-results-magnifier.svg"}
+            alt=""
+            class="absolute bottom-[4%] left-[-7%] w-[131px] h-[81px] transform rotate-[340deg]"
+          />
+        </div>
+        <!-- Text Content -->
+        <div class="w-full flex flex-col items-center gap-8">
+          <!-- Main Message -->
+          <div class="w-full min-w-full text-center">
+            <p class="font-normal text-[28px] leading-[40px] text-[#797979] tracking-[0.07px] mb-0">
+              Sorry we couldn't find any results for this search.
+            </p>
+            <p class="font-normal text-[28px] leading-[40px] text-[#797979] tracking-[0.07px]">
+              Try searching any of these.
+            </p>
+          </div>
+          <!-- Suggested Search Links -->
+          <div
+            :if={length(@suggested_searches) > 0}
+            class="flex flex-col gap-[33px] items-center justify-center w-full"
+          >
+            <!-- First row of suggestions -->
+            <div class="flex flex-row gap-6 items-center justify-center w-full font-normal text-[20px] leading-[24px]">
+              <.link
+                :for={suggestion <- Enum.take(@suggested_searches, 3)}
+                href={~p"/?q=#{suggestion}"}
+                class="text-[#5947f1] hover:underline whitespace-nowrap"
+              >
+                {String.capitalize(suggestion)}
+              </.link>
+            </div>
+            <!-- Second row of suggestions -->
+            <div
+              :if={length(@suggested_searches) > 3}
+              class="flex flex-row gap-6 items-center justify-center font-normal text-[20px] leading-[24px]"
+            >
+              <.link
+                :for={suggestion <- Enum.drop(@suggested_searches, 3) |> Enum.take(2)}
+                href={~p"/?q=#{suggestion}"}
+                class="text-[#5947f1] hover:underline whitespace-nowrap"
+              >
+                {String.capitalize(suggestion)}
+              </.link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
   end
 end

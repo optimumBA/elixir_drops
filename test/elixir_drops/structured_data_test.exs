@@ -139,5 +139,27 @@ defmodule ElixirDrops.StructuredDataTest do
       refute "defmodule" in keywords
       refute "MyModule" in keywords
     end
+
+    test "handles non-string body for keyword extraction", %{drop: drop} do
+      # Test the fallback clause for extract_keywords when body is not a string
+      drop_with_nil_body = %{drop | body: nil}
+
+      json_ld = StructuredData.generate_drop_json_ld(drop_with_nil_body)
+      decoded = Jason.decode!(json_ld)
+
+      # Should return empty keywords list when body is nil
+      assert decoded["keywords"] == []
+    end
+
+    test "handles non-string input for script tag escaping", %{drop: drop} do
+      # Test the fallback clause for escape_script_tags when input is not a string
+      drop_with_nil_body = %{drop | body: nil}
+
+      json_ld = StructuredData.generate_drop_json_ld(drop_with_nil_body)
+      decoded = Jason.decode!(json_ld)
+
+      # Should handle nil body gracefully
+      assert decoded["articleBody"] == ""
+    end
   end
 end

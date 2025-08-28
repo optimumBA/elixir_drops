@@ -3,10 +3,12 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
+  alias ElixirDrops.Search
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
@@ -25,7 +27,37 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:batch_size, 15)
      |> assign(:initial_load, true)
      |> assign(:loading_more, false)
-     |> DropsListHelper.assign_drops()}
+     |> assign(:search_query, "")
+     |> assign(:searching, false)
+     |> assign(:drops_empty?, true)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_params(params, _url, socket) do
+    search_query = params["q"] || ""
+
+    socket =
+      socket
+      |> assign(:search_query, search_query)
+      |> assign(:navbar_search_query, search_query)
+      |> assign(:searching, search_query != "")
+      |> update_search_filters(search_query)
+      |> DropsListHelper.assign_drops()
+
+    {:noreply, socket}
+  end
+
+  defp update_search_filters(socket, search_query) do
+    current_filters = socket.assigns.drop_filters
+
+    filters =
+      if search_query != "" do
+        Map.put(current_filters, :search, search_query)
+      else
+        Map.delete(current_filters, :search)
+      end
+
+    assign(socket, :drop_filters, filters)
   end
 
   @impl Phoenix.LiveView
@@ -59,6 +91,118 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:new_drops?, false)
      |> assign(:page, 1)
      |> DropsListHelper.assign_drops()}
+  end
+
+  def handle_event("search_submit", %{"query" => query}, socket) do
+    trimmed_query =
+      query
+      |> to_string()
+      |> String.trim()
+
+    # Track search history and popular searches
+    current_filters = update_search_filters(socket, trimmed_query).assigns.drop_filters
+    SearchHelper.track_search(query, socket, current_filters)
+
+    socket =
+      socket
+      |> assign(:search_query, trimmed_query)
+      |> assign(:searching, trimmed_query != "")
+      |> assign(:show_suggestions, false)
+      |> assign(:search_suggestions, [])
+
+    # Update URL and trigger search
+    {:noreply,
+     push_patch(socket, to: ~p"/?#{if trimmed_query != "", do: [q: trimmed_query], else: []}")}
+  end
+
+  def handle_event("load_suggestions", %{"query" => query}, socket) when is_binary(query) do
+    trimmed_query = String.trim(query)
+
+    cond do
+      String.length(trimmed_query) < 2 ->
+        {:noreply,
+         socket
+         |> assign(:search_suggestions, [])
+         |> assign(:show_suggestions, false)}
+
+      socket.assigns.current_user ->
+        suggestions = Search.get_search_suggestions(socket.assigns.current_user.id, query)
+
+        {:noreply,
+         socket
+         |> assign(:search_suggestions, suggestions)
+         |> assign(:show_suggestions, true)}
+
+      true ->
+        # For unauthenticated users, show only popular searches
+        suggestions = Search.get_popular_search_suggestions(trimmed_query, 5)
+
+        {:noreply,
+         socket
+         |> assign(:search_suggestions, suggestions)
+         |> assign(:show_suggestions, true)}
+    end
+  end
+
+  def handle_event("load_suggestions", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_suggestions, [])
+     |> assign(:show_suggestions, false)}
+  end
+
+  def handle_event("delete_search_history", %{"id" => history_id}, socket) do
+    with %{current_user: %{id: user_id}} <- socket.assigns,
+         {:ok, _} <- Search.delete_search_history(history_id, user_id) do
+      # Re-fetch suggestions like focus does
+      {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
+      {:noreply, assign(socket, :search_suggestions, suggestions)}
+    else
+      _error -> {:noreply, socket}
+    end
+  end
+
+  def handle_event("close_search_overlay", _params, socket) do
+    {:noreply, assign(socket, :show_suggestions, false)}
+  end
+
+  def handle_event("clear_search", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:search_query, "")
+     |> assign(:navbar_search_query, "")
+     |> assign(:show_suggestions, false)
+     |> assign(:search_suggestions, [])
+     |> push_patch(to: ~p"/")}
+  end
+
+  def handle_event("focus_search_input", _params, socket) do
+    SearchHelper.handle_focus_search_input(socket, :search_suggestions)
+  end
+
+  def handle_event("blur_search_input", _params, socket) do
+    {:noreply, assign(socket, :show_suggestions, false)}
+  end
+
+  # Override navbar search submit to use push_patch instead of push_navigate for homepage
+  def handle_event("navbar_search_submit", %{"query" => query}, socket) do
+    trimmed_query = String.trim(query)
+    # Track search history and popular searches
+    current_filters = update_search_filters(socket, trimmed_query).assigns.drop_filters
+    SearchHelper.track_search(query, socket, current_filters)
+
+    socket =
+      socket
+      |> assign(:navbar_search_query, trimmed_query)
+      |> assign(:show_suggestions, false)
+      |> assign(:search_suggestions, [])
+
+    # Since we're already on the homepage, use push_patch for better UX
+    if trimmed_query != "" do
+      {:noreply, push_patch(socket, to: ~p"/?q=#{trimmed_query}")}
+    else
+      {:noreply, push_patch(socket, to: ~p"/")}
+    end
   end
 
   @impl Phoenix.LiveView

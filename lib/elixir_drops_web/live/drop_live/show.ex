@@ -256,14 +256,19 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   defp assign_drop(socket, drop) do
+    title =
+      drop.title
+      |> Phoenix.HTML.html_escape()
+      |> Phoenix.HTML.safe_to_string()
+
     socket
     |> assign(:drop, drop)
-    |> assign(:page_title, drop.title)
     |> assign(:comment_changeset, Comments.change_comment(%Comments.Comment{}))
     |> assign(:comment_count, drop.comment_count || 0)
     |> assign(:has_more_comments, false)
     |> assign(:replying_to, nil)
     |> assign(:editing_comment, nil)
+    |> assign(:page_title, title)
     |> assign_seo_attributes()
   end
 
@@ -292,8 +297,14 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp assign_seo_attributes(socket) do
     %{drop: drop} = socket.assigns
 
+    description =
+      drop.title
+      |> Phoenix.HTML.html_escape()
+      |> Phoenix.HTML.safe_to_string()
+      |> seo_description()
+
     attributes = %{
-      description: seo_description(drop.title),
+      description: description,
       image_url: get_image_url(drop),
       type: "article",
       url: url(~p"/d/#{drop.short_id}")
@@ -331,5 +342,17 @@ defmodule ElixirDropsWeb.DropLive.Show do
     @images_regex
     |> Regex.replace(markdown, "")
     |> String.replace(@consecutive_whitespace_regex, " ")
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("navbar_search_submit", %{"query" => query}, socket) do
+    trimmed_query = String.trim(query)
+
+    # Navigate to homepage with search query
+    if trimmed_query != "" do
+      {:noreply, push_navigate(socket, to: ~p"/?q=#{trimmed_query}")}
+    else
+      {:noreply, push_navigate(socket, to: ~p"/")}
+    end
   end
 end

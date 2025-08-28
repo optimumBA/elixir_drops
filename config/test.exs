@@ -11,14 +11,23 @@ config :elixir_drops, ElixirDrops.Repo,
   hostname: "localhost",
   database: "elixir_drops_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: System.schedulers_online() * 2
+  pool_size: min(System.schedulers_online() * 2, 20),
+  queue_target: 5000,
+  queue_interval: 10_000,
+  timeout: 60_000
 
-# We don't run a server during test. If one is required,
-# you can enable the server option below.
+# Get test port from environment or use default
+test_port = String.to_integer(System.get_env("PORT_TEST") || "4100")
+
+# Only start server for feature tests to avoid unnecessary overhead
+# Server is needed for PhoenixTest.Playwright browser automation
+server_enabled? = System.get_env("FEATURE_TESTS") == "true"
+
 config :elixir_drops, ElixirDropsWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: String.to_integer(System.get_env("PORT_TEST") || "4100")],
+  http: [ip: {127, 0, 0, 1}, port: test_port],
   secret_key_base: "VwmzCly3NO1QYT8AFbHvceC6eRjzjJK+d7B//nUvmfNaP3xfGE3QSn+gc2rK4rUe",
-  server: false
+  server: server_enabled?,
+  url: [host: "localhost", port: test_port]
 
 # In test we don't send emails
 config :elixir_drops, ElixirDrops.Mailer, adapter: Swoosh.Adapters.Test
@@ -38,8 +47,29 @@ config :phoenix_live_view,
 
 config :elixir_drops, Oban, testing: :manual
 
+config :elixir_drops, :dev_auth_bypass, true
+config :elixir_drops, dev_routes: true
+
+# PhoenixTest.Playwright configuration
+config :phoenix_test,
+  driver: PhoenixTest.Playwright,
+  endpoint: ElixirDropsWeb.Endpoint,
+  otp_app: :elixir_drops,
+  playwright: [
+    browser: :chromium,
+    browser_launch_timeout: 30_000,
+    headless: System.get_env("PW_HEADLESS", "true") == "true",
+    js_logger: false,
+    screenshot: System.get_env("PW_SCREENSHOT", "false") == "true",
+    timeout: System.get_env("PW_TIMEOUT", "500") |> String.to_integer(),
+    trace: System.get_env("PW_TRACE", "false") == "true"
+  ]
+
 config :elixir_drops,
   wallaby_auth: [
     username: "test_elixir_drops_wallaby",
     password: "test_password"
   ]
+
+# Enable SQL Sandbox for concurrent browser testing (Phoenix.Ecto.SQL.Sandbox pattern)
+config :elixir_drops, :sql_sandbox, true
