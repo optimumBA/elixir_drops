@@ -56,11 +56,14 @@ defmodule ElixirDropsWeb.CustomInputComponents do
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
   attr :label_class, :string, default: nil, doc: "classes for input label"
-  attr :input_field_class, :string, default: nil, doc: "classes for input field"
+  attr :input_field_class, :any, default: nil, doc: "classes for input field"
+  attr :class, :any, default: nil, doc: "classes for input container"
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step)
+
+  slot :extra_content, required: false
 
   @spec custom_input(assigns()) :: rendered()
   def custom_input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
@@ -76,7 +79,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
 
   def custom_input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div>
+    <div class={@class} phx-feedback-for={@id}>
       <.custom_label for={@id} class={@label_class}>{@label}</.custom_label>
       <textarea
         id={@id}
@@ -87,6 +90,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         ]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
+      {render_slot(@extra_content)}
       <.custom_error :for={msg <- @errors}>{msg}</.custom_error>
     </div>
     """
@@ -94,7 +98,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
 
   def custom_input(assigns) do
     ~H"""
-    <div>
+    <div class={@class} phx-feedback-for={@id}>
       <.custom_label for={@id}>{@label}</.custom_label>
       <input
         type={@type}
@@ -107,6 +111,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         ]}
         {@rest}
       />
+      {render_slot(@extra_content)}
       <.custom_error :for={msg <- @errors}>{msg}</.custom_error>
     </div>
     """

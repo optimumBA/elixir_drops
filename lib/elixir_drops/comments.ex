@@ -57,7 +57,7 @@ defmodule ElixirDrops.Comments do
     |> order_by([c], desc: c.inserted_at)
     |> limit(^limit)
     |> offset(^offset)
-    |> preload([:drop, :user, replies: [:user]])
+    |> preload([:drop, :user, replies: [:user, parent: [:replies, :user]]])
     |> Repo.all()
   end
 
@@ -78,7 +78,7 @@ defmodule ElixirDrops.Comments do
   @spec get_comment!(comment_id) :: comment()
   def get_comment!(id) do
     comment = Repo.get!(Comment, id)
-    Repo.preload(comment, [:user, :drop])
+    Repo.preload(comment, [:user, :drop, replies: [:user, parent: [:replies, :user]]])
   end
 
   @doc """
@@ -219,7 +219,7 @@ defmodule ElixirDrops.Comments do
   end
 
   defp broadcast_comment_event({:ok, comment} = result, event) do
-    comment = Repo.preload(comment, [:user, :drop, replies: :user])
+    comment = Repo.preload(comment, [:user, :drop, replies: [:user, parent: [:replies, :user]]])
     CommentsBroadcast.broadcast_comment_event(comment, event)
     result
   end
