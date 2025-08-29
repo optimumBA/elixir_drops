@@ -33,7 +33,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   # Should immediately show the comments(see reload UI automatically) -> Maybe pubsub???
   @impl Phoenix.LiveView
-  def handle_event("new_comment", %{"comment" => comment_params, "parent_id" => parent_id}, socket) do
+  def handle_event(
+        "new_comment",
+        %{"comment" => comment_params, "parent_id" => parent_id},
+        socket
+      ) do
     comment = create_comment(socket, comment_params, parent_id)
 
     case comment do
@@ -105,7 +109,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   #   {:noreply, socket}
   # end
-
 
   # def handle_event(
   #       "update_comment",
@@ -221,17 +224,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
       nil,
       params
     )
-end
+  end
 
-defp create_comment(socket, params, parent_id) do
-  parent_comment = Comments.get_comment!(parent_id)
-  Comments.create_comment(
-    socket.assigns.drop,
-    socket.assigns.current_user,
-    parent_comment,
-    params
-  )
-end
+  defp create_comment(socket, params, parent_id) do
+    parent_comment = Comments.get_comment!(parent_id)
+
+    Comments.create_comment(
+      socket.assigns.drop,
+      socket.assigns.current_user,
+      parent_comment,
+      params
+    )
+  end
 
   defp assign_drop(socket, nil) do
     socket

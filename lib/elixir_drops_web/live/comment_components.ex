@@ -26,7 +26,14 @@ defmodule ElixirDropsWeb.CommentComponents do
       </h3>
 
       <div :if={@current_user}>
-        <.comment_form form={@form} comment_type={:comment} comment={nil} />
+        <.comment_form
+          form={@form}
+          comment_type={:comment}
+          comment={nil}
+          id="comment-form"
+          field_id="comment-form-field"
+          class="hidden"
+        />
       </div>
       <div :if={!@current_user}>
         <p class="text-gray-600 text-center text-sm bg-[#EAE8FD80] py-4 rounded-lg">
@@ -49,21 +56,30 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 
+  attr :class, :string, default: nil
   attr :comment_type, :atom
-  attr :form, Phoenix.HTML.Form, required: true
   attr :comment, :any
+  attr :field_id, :string, required: true
+  attr :form, Phoenix.HTML.Form, required: true
+  attr :id, :string, required: true
+  attr :parent, :any, default: nil
 
   defp comment_form(assigns) do
     ~H"""
     <.form
       for={@form}
-      id="comment-form"
-      phx-submit={JS.push("new_comment", value: %{parent_id: @comment_type == :response && @comment.id || nil})}
+      id={@id}
+      phx-submit={
+        JS.push("new_comment",
+          value: %{parent_id: (@comment_type == :response && @comment.id) || nil}
+        )
+      }
       phx-change="validate_comment"
-
+      class={@class}
     >
       <div class="group">
         <.custom_input
+        id={@field_id}
           class={[
             "border-[1px] border-gray-200 focus-within:border-[#2F19EE] px-2 py-3 ",
             "rounded-lg transition-colors duration-100"
@@ -76,7 +92,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           field={@form[:body]}
           type="textarea"
           placeholder={
-            if @comment_type == :comment, do: "What are your thoughts?", else: "Replying to"
+            if @comment_type == :comment, do: "What are your thoughts?", else: "Replying to #{@parent.user.name}"
           }
           aria-label={if @comment_type == :comment, do: "Add a comment", else: "Add a reply"}
           phx-debounce="1000"
@@ -112,38 +128,50 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   defp comment(assigns) do
     ~H"""
-    <div class="comment font-roboto">
+    <div
+      class="comment font-roboto"
+      >
       <.comment_header comment={@comment} current_user={@current_user} />
       <.comment_body comment={@comment} />
       <.comment_actions comment={@comment} current_user={@current_user} form={@form} />
-      <div :if={@comment.replies}>
+      <div :if={@comment.replies} class="ml-10 mt-4">
         <div :for={reply <- @comment.replies} id={reply.id}>
-          <.comment comment={reply} current_user={@current_user} form={@form} />
+          <.comment
+            comment={reply}
+             current_user={@current_user}
+             form={@form} />
         </div>
       </div>
+
     </div>
     """
   end
 
   defp comment_body(assigns) do
     ~H"""
-    <div class="comment-body text-[.9rem] text-gray-600 leading-6 prose mt-2">
+    <div
+    class="comment-body text-[.9rem] md:text-base/8 text-[#575757] leading-8 prose mt-2"
+    id={"comment-body-#{@comment.id}"}
+      phx-hook="DropBodyContainer"
+
+    >
       {DropComponents.to_html(@comment.body)}
+      <DropComponents.copy_prompt />
     </div>
     """
   end
 
-  # Need to pass the parent_id to the form
   attr :comment, Comment, required: true
   attr :current_user, :any, required: true
   attr :form, Phoenix.HTML.Form, required: true
+  attr :parent, :any, default: nil
 
   defp comment_actions(assigns) do
     ~H"""
     <div class="comment-actions mt-4">
       <div class="flex items-center gap-x-6 text-xs md:text-sm text-gray-500 mb-4">
         <button
-          :if={Enum.count(@comment.replies) > 0 && !@comment.parent_id}
+          :if={!@comment.parent_id && Enum.count(@comment.replies) > 0}
           class="flex items-center gap-x-1"
           phx-click={JS.toggle(to: "replies-#{@comment.id}")}
         >
@@ -155,9 +183,15 @@ defmodule ElixirDropsWeb.CommentComponents do
           Reply
         </button>
       </div>
-      <div class="hidden" id={"reply-form-#{@comment.id}"}>
-        <.comment_form form={@form} comment_type={:response} comment={@comment} />
-      </div>
+        <.comment_form
+          id={"reply-form-#{@comment.id}"}
+          form={@form}
+          comment_type={:response}
+          comment={@comment}
+          class="hidden"
+          parent={@comment}
+          field_id={"reply-form-field-#{@comment.id}"}
+        />
     </div>
     """
   end
@@ -208,11 +242,3 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 end
-# Render replies
-# Deletion
-# Editing
-# Automatic UI update -> Check stream insert(Maybe inserting the comment could work just fine)
-# Replying to Name
-# Fix preloading error
-# Check markdown formatting
-# Clean up unused code
