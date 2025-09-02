@@ -31,7 +31,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign_drop(drop)}
   end
 
-  # Should immediately show the comments(see reload UI automatically) -> Maybe pubsub???
   @impl Phoenix.LiveView
   def handle_event(
         "new_comment",
@@ -51,6 +50,19 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
+  def handle_event("edit_comment", %{"comment_id" => comment_id}, socket) do
+    changeset =
+      comment_id
+      |> Comments.get_comment!()
+      |> Comments.change_comment()
+
+    {:noreply,
+     socket
+     |> assign(:comment_form, to_form(changeset))
+     |> assign(:editing_comment, comment_id)
+     |> push_event("edit_comment", %{comment_id: comment_id})}
+  end
+
   def handle_event("validate_comment", %{"comment" => comment_params}, socket) do
     changeset =
       %Comments.Comment{}
@@ -59,129 +71,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply, assign(socket, :comment_form, to_form(changeset))}
   end
-
-  # def handle_event("reply", %{"comment-id" => comment_id}, socket) do
-  #   # When we update replying_to, we need to force re-render of stream items
-  #   # by resetting the stream with the same data
-  #   %{drop: drop} = socket.assigns
-  #   comments = Comments.list_drop_comments(drop.id)
-
-  #   socket =
-  #     socket
-  #     |> assign(:replying_to, comment_id)
-  #     |> stream(:comments, comments, reset: true)
-
-  #   {:noreply, socket}
-  # end
-
-  # def handle_event("cancel_reply", _params, socket) do
-  #   %{drop: drop} = socket.assigns
-  #   comments = Comments.list_drop_comments(drop.id)
-
-  #   socket =
-  #     socket
-  #     |> assign(:replying_to, nil)
-  #     |> stream(:comments, comments, reset: true)
-
-  #   {:noreply, socket}
-  # end
-
-  # def handle_event("edit_comment_toggle", %{"comment-id" => comment_id}, socket) do
-  #   %{drop: drop} = socket.assigns
-  #   comments = Comments.list_drop_comments(drop.id)
-
-  #   socket =
-  #     socket
-  #     |> assign(:editing_comment, comment_id)
-  #     |> stream(:comments, comments, reset: true)
-
-  #   {:noreply, socket}
-  # end
-
-  # def handle_event("cancel_edit", _params, socket) do
-  #   %{drop: drop} = socket.assigns
-  #   comments = Comments.list_drop_comments(drop.id)
-
-  #   socket =
-  #     socket
-  #     |> assign(:editing_comment, nil)
-  #     |> stream(:comments, comments, reset: true)
-
-  #   {:noreply, socket}
-  # end
-
-  # def handle_event(
-  #       "update_comment",
-  #       %{"comment-id" => comment_id, "comment" => comment_params},
-  #       socket
-  #     ) do
-  #   comment = Comments.get_comment!(comment_id)
-
-  #   case Comments.update_comment(comment, comment_params) do
-  #     {:ok, _comment} ->
-  #       socket =
-  #         socket
-  #         |> assign(:editing_comment, nil)
-  #         |> reload_comments_preserving_ui_state()
-
-  #       {:noreply, socket}
-
-  #     {:error, changeset} ->
-  #       # Assign the error changeset for the specific comment being edited
-  #       socket =
-  #         socket
-  #         |> assign(:comment_changeset, changeset)
-  #         |> put_flash(:error, "Failed to update comment")
-
-  #       {:noreply, socket}
-  #   end
-  # end
-
-  # def handle_event("delete_comment", %{"comment-id" => comment_id}, socket) do
-  #   %{current_user: current_user} = socket.assigns
-  #   comment = Comments.get_comment!(comment_id)
-
-  #   # Check if user can delete this comment
-  #   if comment.user_id == current_user.id do
-  #     case Comments.delete_comment(comment) do
-  #       {:ok, _comment} ->
-  #         socket = reload_comments_preserving_ui_state(socket)
-  #         {:noreply, socket}
-
-  #       {:error, _changeset} ->
-  #         {:noreply, put_flash(socket, :error, "Failed to delete comment")}
-  #     end
-  #   else
-  #     {:noreply, put_flash(socket, :error, "You can only delete your own comments")}
-  #   end
-  # end
-
-  # def handle_event("load_more_comments", _params, socket) do
-  #   %{drop: drop} = socket.assigns
-
-  #   # Count comments currently displayed to use as offset
-  #   # Since we can't directly count stream items, we'll track this separately
-  #   current_count =
-  #     case socket.assigns[:loaded_comments_count] do
-  #       # Initial load shows 10
-  #       nil -> 10
-  #       count -> count
-  #     end
-
-  #   new_comments = Comments.list_drop_comments(drop.id, offset: current_count)
-
-  #   socket =
-  #     socket
-  #     |> then(fn s ->
-  #       Enum.reduce(new_comments, s, fn comment, acc ->
-  #         stream_insert(acc, :comments, comment, at: -1)
-  #       end)
-  #     end)
-  #     |> assign(:has_more_comments, length(new_comments) >= 10)
-  #     |> assign(:loaded_comments_count, current_count + length(new_comments))
-
-  #   {:noreply, socket}
-  # end
 
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
@@ -193,29 +82,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
       {:noreply, push_navigate(socket, to: ~p"/")}
     end
   end
-
-  # @impl Phoenix.LiveView
-  # def handle_info(
-  #       %{event: "comment_event", payload: %{event: event, comment: _comment}},
-  #       socket
-  #     )
-  #     when event in [:created, :updated, :deleted] do
-  #   # Reload all comments to handle nested replies properly
-  #   %{drop: drop} = socket.assigns
-  #   comments = Comments.list_drop_comments(drop.id)
-  #   comment_count = Comments.count_drop_comments(drop.id)
-
-  #   socket =
-  #     socket
-  #     |> stream(:comments, comments, reset: true)
-  #     |> assign(:comment_count, comment_count)
-  #     |> assign(:has_more_comments, length(comments) >= 10)
-  #     |> assign(:loaded_comments_count, length(comments))
-
-  #   {:noreply, socket}
-  # end
-
-  # def handle_info({Drops.DropsBroadcast, _event, _drop}, socket), do: {:noreply, socket}
 
   defp create_comment(socket, params, nil) do
     Comments.create_comment(

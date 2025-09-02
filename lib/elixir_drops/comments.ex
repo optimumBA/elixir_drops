@@ -21,8 +21,26 @@ defmodule ElixirDrops.Comments do
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
-  @preload_list [:user, parent: [:user], replies: [:user, parent: [:user], replies: [:replies, :user, parent: [:user]]]]
-
+  @preload_list [
+    :user,
+    parent: [:user],
+    replies: [
+      :user,
+      parent: [:user],
+      replies: [
+        :user,
+        parent: [:user],
+        replies: [
+          :user,
+          parent: [:user],
+          replies: [
+            :user,
+            parent: [:user]
+          ]
+        ]
+      ]
+    ]
+  ]
 
   @doc """
   Subscribe to comment events for a drop.

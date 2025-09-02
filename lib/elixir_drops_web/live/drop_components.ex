@@ -177,11 +177,11 @@ defmodule ElixirDropsWeb.DropComponents do
           </p>
         </div>
       </div>
-    <!-- Action row below author's name -->
+      <!-- Action row below author's name -->
       <div class="flex items-center justify-end py-4 border-b border-gray-200">
         <!-- Right side: Action buttons -->
         <div class="flex items-center gap-4">
-    <!-- Copy link button -->
+          <!-- Copy link button -->
           <div
             class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer"
             id={"single-drop-copy-link-#{@drop.id}"}
@@ -191,7 +191,7 @@ defmodule ElixirDropsWeb.DropComponents do
             <.icon name="hero-link" class="h-5 w-5" />
             <span class="hidden md:inline text-sm">Copy link</span>
           </div>
-    <!-- Three dots menu button -->
+          <!-- Three dots menu button -->
           <button
             class="text-[#797979] hover:text-[#5947F1] p-2"
             id={"action-row-menu-btn-#{@drop.id}"}
@@ -213,7 +213,7 @@ defmodule ElixirDropsWeb.DropComponents do
       >
         {to_html(@drop.body)}
       </div>
-
+      
     <!-- Three-dots dropdown menu -->
       <.drop_page_menu
         id={@drop.id}
@@ -766,7 +766,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <.icon name="hero-link" class="h-5 w-5" />
         <span>Copy Drop link</span>
       </div>
-
+      
     <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} />
 
