@@ -19,7 +19,7 @@ DropBodyHooks.DropBodyContainer = {
 
     codeBlocks.forEach((codeBlock) => {
       const copyPrompt = createCopyPrompt()
- 
+
       codeBlock.insertAdjacentElement('beforebegin', copyPrompt)
 
       new ClipboardJS(copyPrompt, {

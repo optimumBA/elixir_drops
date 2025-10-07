@@ -130,14 +130,14 @@ blockquote *:last-child {
 .drop-body ol,
 .drop-full-content ol,
 .drop-preview ol,
- .comment-body ol{
+.comment-body ol {
   list-style: decimal inside;
 }
 
 .drop-body ul,
 .drop-full-content ul,
 .drop-preview ul,
- .comment-body ul {
+.comment-body ul {
   list-style: disc inside;
 }
 

@@ -8,8 +8,7 @@ CommentFormHooks.CommentForm = {
       form.classList.remove('hidden')
       form.classList.add('block')
     })
-  }
-
+  },
 }
 
 export default CommentFormHooks

@@ -9,6 +9,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   @type assigns() :: map()
   @type rendered() :: Phoenix.LiveView.Rendered.t()
 
+  attr :character_count, :integer, default: 0
   attr :comment_count, :integer, required: true
   attr :comments, :any, required: true
   attr :current_url, :string, required: true
@@ -26,6 +27,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       <div :if={@current_user}>
         <.comment_form
           form={@form}
+          character_count={@character_count}
           comment_type={:comment}
           comment={nil}
           id="comment-form"
@@ -53,6 +55,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 
+  attr :character_count, :integer, default: 0
   attr :class, :string, default: nil
   attr :comment_type, :atom
   attr :comment, :any
@@ -120,7 +123,7 @@ defmodule ElixirDropsWeb.CommentComponents do
 
       <div class="text-xs text-gray-500 flex justify-between items-center mt-2">
         <p>Supports basic Markdown: **bold**, *italic*, and [links](url).</p>
-        <p>Max 1000 characters.</p>
+        <p>Max 1000 characters ({@character_count}/1000)</p>
       </div>
     </.form>
     """
@@ -164,10 +167,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       id={"replies-#{@comment.id}-depth-#{@depth}"}
       phx-click-away={JS.hide(to: "#replies-#{@comment.id}-depth-#{@depth}")}
     >
-      <div
-        :for={reply <- @comment.replies}
-        class="ml-6 md:ml-10 space-y-4 pl-4"
-      >
+      <div :for={reply <- @comment.replies} class="ml-6 md:ml-10 space-y-4 pl-4">
         <.comment comment={reply} current_user={@current_user} form={@form} depth={@depth + 1} />
       </div>
     </div>
@@ -311,9 +311,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       >
         <button
           class="flex items-center gap-x-2 mb-6"
-          phx-click={
-            JS.push("edit_comment", value: %{comment_id: @comment.id})
-          }
+          phx-click={JS.push("edit_comment", value: %{comment_id: @comment.id})}
         >
           <.icon name="hero-pencil" class="w-4 h-4" /> Edit comment
         </button>

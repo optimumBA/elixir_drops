@@ -27,6 +27,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply,
      socket
+     |> assign(:character_count, 0)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)}
   end
@@ -63,13 +64,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> push_event("edit_comment", %{comment_id: comment_id})}
   end
 
-  def handle_event("validate_comment", %{"comment" => comment_params}, socket) do
+  def handle_event("validate_comment", %{"comment" => %{"body" => body} = comment_params}, socket) do
+    character_count = String.length(body)
+
     changeset =
       %Comments.Comment{}
       |> Comments.change_comment(comment_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :comment_form, to_form(changeset))}
+    {:noreply,
+     socket
+     |> assign(:comment_form, to_form(changeset))
+     |> assign(:character_count, character_count)}
   end
 
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
