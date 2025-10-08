@@ -17,11 +17,8 @@ CommentFormHooks.CommentForm = {
     })
 
     this.handleEvent('reply_char_count', ({ form_id, count }) => {
-      if (!form_id) return
-      try {
-        const span = document.getElementById(`${form_id}-char-count`)
-        if (span) span.textContent = count
-      } catch (_) {}
+      const span = document.getElementById(`${form_id}-char-count`)
+      span.textContent = count
     })
   },
 }
