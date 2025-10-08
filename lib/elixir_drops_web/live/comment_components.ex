@@ -280,8 +280,13 @@ defmodule ElixirDropsWeb.CommentComponents do
       id={"comment-body-#{@comment.id}-depth-#{@depth}"}
       phx-hook="DropBodyContainer"
     >
-      {DropComponents.to_html(@comment.body)}
-      <DropComponents.copy_prompt />
+      <div :if={!@comment.deleted_at}>
+        {DropComponents.to_html(@comment.body)}
+        <DropComponents.copy_prompt />
+      </div>
+      <div :if={@comment.deleted_at}>
+        [deleted]
+      </div>
     </div>
     """
   end

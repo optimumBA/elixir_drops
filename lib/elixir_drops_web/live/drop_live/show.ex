@@ -140,6 +140,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
+  def handle_event("delete_comment", %{"comment_id" => comment_id}, socket) do
+    comment = Comments.get_comment!(comment_id)
+
+    case Comments.delete_comment(comment) do
+      {:ok, _comment} ->
+        {:noreply, put_flash(socket, :info, "Comment successfully deleted")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Comment deletion failed")}
+    end
+  end
+
   defp create_comment(socket, params, nil) do
     Comments.create_comment(
       socket.assigns.drop,
