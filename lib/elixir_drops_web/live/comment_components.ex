@@ -9,8 +9,6 @@ defmodule ElixirDropsWeb.CommentComponents do
   @type assigns() :: map()
   @type rendered() :: Phoenix.LiveView.Rendered.t()
 
-  attr :character_count, :integer, default: 0
-  attr :reply_character_count, :integer, default: 0
   attr :comment_count, :integer, required: true
   attr :comments, :any, required: true
   attr :current_url, :string, required: true
@@ -29,7 +27,6 @@ defmodule ElixirDropsWeb.CommentComponents do
       <div :if={@current_user} class="border border-red-400">
         <.comment_form
           form={@form}
-          character_count={@character_count}
           comment_type={:comment}
           comment={nil}
           id="comment-form"
@@ -56,7 +53,6 @@ defmodule ElixirDropsWeb.CommentComponents do
           current_user={@current_user}
           form={@form}
           reply_form={@reply_form}
-          reply_character_count={@reply_character_count}
           depth={0}
         />
       </div>
@@ -64,7 +60,6 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 
-  attr :character_count, :integer, default: 0
   attr :class, :string, default: nil
   attr :comment_type, :atom
   attr :comment, :any
@@ -91,6 +86,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       class={@class}
       phx-hook="CommentForm"
     >
+      <input type="hidden" name="form_id" value={@id} />
       <div class="group">
         <.custom_input
           id={@field_id}
@@ -111,7 +107,7 @@ defmodule ElixirDropsWeb.CommentComponents do
               else: "Replying to #{@parent.user.name}"
           }
           aria-label={if @comment_type == :comment, do: "Add a comment", else: "Add a reply"}
-          phx-debounce="1000"
+          phx-debounce="100"
         >
           <:extra_content>
             <div class="justify-end gap-x-4 mt-3 hidden group-focus-within:flex">
@@ -138,7 +134,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         <p>Supports basic Markdown: **bold**, *italic*, and [links](url).</p>
         <p>
           Max 1000 characters
-          ({@character_count}/1000)
+          (<span id={"#{@id}-char-count"}>0</span>/1000)
         </p>
       </div>
     </.form>
@@ -150,7 +146,6 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :form, Phoenix.HTML.Form, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
   attr :depth, :integer, default: 0
-  attr :reply_character_count, :integer, default: 0
 
   defp comment(assigns) do
     ~H"""
@@ -161,7 +156,6 @@ defmodule ElixirDropsWeb.CommentComponents do
         comment={@comment}
         current_user={@current_user}
         reply_form={@reply_form}
-        reply_character_count={@reply_character_count}
         depth={@depth}
       />
 
@@ -295,7 +289,6 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :comment, Comment, required: true
   attr :current_user, :any, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
-  attr :reply_character_count, :integer, default: 0
   attr :parent, :any, default: nil
   attr :depth, :integer, default: 10
 
@@ -329,7 +322,6 @@ defmodule ElixirDropsWeb.CommentComponents do
         id={"reply-form-#{@comment.id}-depth-#{@depth}"}
         form={@reply_form}
         comment_type={:response}
-        character_count={@reply_character_count}
         comment={@comment}
         class="hidden"
         parent={@comment}
