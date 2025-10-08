@@ -78,6 +78,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign(:character_count, character_count)}
   end
 
+  def handle_event("cancel", _params, socket) do
+    changeset =
+      %Comments.Comment{}
+      |> Comments.change_comment(%{"body" => ""})
+
+    {:noreply,
+     socket
+     |> assign(:comment_form, to_form(changeset))
+     |> assign(:character_count, 0)
+     |> push_event("cancel_comment", %{})}
+  end
+
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
 

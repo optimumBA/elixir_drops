@@ -8,6 +8,13 @@ CommentFormHooks.CommentForm = {
       form.classList.remove('hidden')
       form.classList.add('block')
     })
+
+    this.handleEvent('cancel_comment', () => {
+      const active = document.activeElement
+      if (active && typeof active.blur === 'function') {
+        active.blur()
+      }
+    })
   },
 }
 

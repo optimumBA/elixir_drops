@@ -106,7 +106,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         >
           <:extra_content>
             <div class="justify-end gap-x-4 mt-3 hidden group-focus-within:flex">
-              <button type="button" class="hover:opacity-80">
+              <button phx-click="cancel" type="button" class="hover:opacity-80">
                 Cancel
               </button>
               <button
@@ -305,7 +305,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         id={"comment-actions-#{@comment.id}-depth-#{@depth}"}
         class={[
           "grid items-center absolute top-8 right-4 z-10",
-          "bg-white p-4 rounded-md shadow-md border border-[.2px] border-gray-200 md:w-[30%] hidden"
+          "bg-white p-4 rounded-md shadow-md border-[.2px] border-gray-200 md:w-[30%] hidden"
         ]}
         phx-click-away={JS.hide(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")}
       >
