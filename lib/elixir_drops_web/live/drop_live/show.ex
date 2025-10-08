@@ -37,14 +37,16 @@ defmodule ElixirDropsWeb.DropLive.Show do
         %{"comment" => comment_params, "parent_id" => parent_id},
         socket
       ) do
-    comment = create_comment(socket, comment_params, parent_id)
-
-    case comment do
+    case create_comment(socket, comment_params, parent_id) do
       {:ok, _comment} ->
         changeset = Comments.change_comment(%Comments.Comment{})
+        comments = Comments.list_drop_comments(socket.assigns.drop.id)
+        comment_count = socket.assigns.comment_count + 1
 
         {:noreply,
          socket
+         |> stream(:comments, comments, reset: true)
+         |> assign(:comment_count, comment_count)
          |> assign(:comment_form, to_form(changeset))
          |> assign(:reply_form, to_form(changeset))}
 
@@ -89,7 +91,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   def handle_event(
         "validate_reply",
-        %{"comment" => %{"body" => body} = comment_params, "form_id" => form_id},
+        %{
+          "comment" => %{"body" => body} = comment_params,
+          "form_id" => form_id,
+          "parent_id" => parent_id
+        },
         socket
       ) do
     character_count = String.length(body)
@@ -99,10 +105,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Comments.change_comment(comment_params)
       |> Map.put(:action, :validate)
 
-    {:noreply,
-     socket
-     |> assign(:reply_form, to_form(changeset))
-     |> push_event("reply_char_count", %{form_id: form_id, count: character_count})}
+    {
+      :noreply,
+      socket
+      |> assign(:reply_form, to_form(changeset))
+      |> push_event("reply_char_count", %{form_id: form_id, count: character_count})
+      |> stream_insert(:comments, Comments.get_comment!(parent_id))
+    }
   end
 
   def handle_event("cancel", _params, socket) do
@@ -205,6 +214,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   defp assign_comments(socket, drop) do
     comments = Comments.list_drop_comments(drop.id)
+
     comment_count = Comments.count_drop_comments(drop.id)
 
     socket

@@ -86,6 +86,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       class={@class}
       phx-hook="CommentForm"
     >
+      <input :if={@comment_type == :response} type="hidden" name="parent_id" value={@comment.id} />
       <input type="hidden" name="form_id" value={@id} />
       <div class="group">
         <.custom_input
@@ -317,7 +318,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           <span>{if Enum.count(@comment.replies) == 1, do: "reply", else: "replies"}</span>
         </button>
         <button
-          :if={@current_user}
+          :if={@current_user && is_nil(@comment.parent_id)}
           phx-click={JS.toggle(to: "#reply-form-#{@comment.id}-depth-#{@depth}")}
         >
           Reply
