@@ -44,10 +44,16 @@ defmodule ElixirDropsWeb.DropLive.Show do
       {:ok, _comment} ->
         changeset = Comments.change_comment(%Comments.Comment{})
 
-        {:noreply, assign(socket, :comment_form, to_form(changeset))}
+        {:noreply,
+         socket
+         |> assign(:comment_form, to_form(changeset))
+         |> assign(:reply_form, to_form(changeset))}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, :comment_form, to_form(changeset))}
+        {:noreply,
+         socket
+         |> assign(:comment_form, to_form(changeset))
+         |> assign(:reply_form, to_form(changeset))}
     end
   end
 
@@ -78,6 +84,21 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign(:character_count, character_count)}
   end
 
+  def handle_event("validate_reply", %{"comment" => %{"body" => body} = comment_params}, socket) do
+    dbg(body)
+    character_count = String.length(body)
+
+    changeset =
+      %Comments.Comment{}
+      |> Comments.change_comment(comment_params)
+      |> Map.put(:action, :validate)
+
+    {:noreply,
+     socket
+     |> assign(:character_count, character_count)
+     |> assign(:reply_form, to_form(changeset))}
+  end
+
   def handle_event("cancel", _params, socket) do
     changeset =
       %Comments.Comment{}
@@ -87,6 +108,17 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:comment_form, to_form(changeset))
      |> assign(:character_count, 0)
+     |> push_event("cancel_comment", %{})}
+  end
+
+  def handle_event("cancel_reply", _params, socket) do
+    changeset =
+      %Comments.Comment{}
+      |> Comments.change_comment(%{"body" => ""})
+
+    {:noreply,
+     socket
+     |> assign(:reply_form, to_form(changeset))
      |> push_event("cancel_comment", %{})}
   end
 
@@ -142,6 +174,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     socket
     |> assign(:drop, drop)
     |> assign(:comment_form, to_form(comment_changeset))
+    |> assign(:reply_form, to_form(comment_changeset))
     |> assign(:comment_count, drop.comment_count || 0)
     |> assign(:has_more_comments, false)
     |> assign(:replying_to, nil)

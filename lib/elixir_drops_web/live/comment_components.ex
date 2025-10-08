@@ -15,6 +15,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
   attr :form, Phoenix.HTML.Form, required: true
+  attr :reply_form, Phoenix.HTML.Form, required: true
 
   @spec comment_section(assigns()) :: rendered()
   def comment_section(assigns) do
@@ -49,7 +50,13 @@ defmodule ElixirDropsWeb.CommentComponents do
 
     <div id="comments" phx-update="stream" class="space-y-6 last:mb-10">
       <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 p-4">
-        <.comment comment={comment} current_user={@current_user} form={@form} depth={0} />
+        <.comment
+          comment={comment}
+          current_user={@current_user}
+          form={@form}
+          reply_form={@reply_form}
+          depth={0}
+        />
       </div>
     </div>
     """
@@ -74,7 +81,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           value: %{parent_id: (@comment_type == :response && @comment.id) || nil}
         )
       }
-      phx-change="validate_comment"
+      phx-change={if @comment_type == :comment, do: "validate_comment", else: "validate_reply"}
       phx-click-away={
         if @comment_type == :response,
           do: JS.hide(to: "#reply-form-#{@comment.id}-depth-#{Map.get(assigns, :depth, 0)}")
@@ -106,7 +113,11 @@ defmodule ElixirDropsWeb.CommentComponents do
         >
           <:extra_content>
             <div class="justify-end gap-x-4 mt-3 hidden group-focus-within:flex">
-              <button phx-click="cancel" type="button" class="hover:opacity-80">
+              <button
+                phx-click={if @comment_type == :comment, do: "cancel", else: "cancel_reply"}
+                type="button"
+                class="hover:opacity-80"
+              >
                 Cancel
               </button>
               <button
@@ -132,6 +143,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :comment, Comment, required: true
   attr :current_user, :any, required: true
   attr :form, Phoenix.HTML.Form, required: true
+  attr :reply_form, Phoenix.HTML.Form, required: true
   attr :depth, :integer, default: 0
 
   defp comment(assigns) do
@@ -139,7 +151,13 @@ defmodule ElixirDropsWeb.CommentComponents do
     <div class="comment font-roboto">
       <.comment_header comment={@comment} current_user={@current_user} depth={@depth} />
       <.comment_body comment={@comment} depth={@depth} />
-      <.comment_actions comment={@comment} current_user={@current_user} form={@form} depth={@depth} />
+      <.comment_actions
+        comment={@comment}
+        current_user={@current_user}
+        form={@form}
+        reply_form={@reply_form}
+        depth={@depth}
+      />
 
       <div
         class={[
@@ -148,7 +166,13 @@ defmodule ElixirDropsWeb.CommentComponents do
         ]}
         id={"comment-replies-#{@comment.id}"}
       >
-        <.comment_replies comment={@comment} current_user={@current_user} form={@form} depth={@depth} />
+        <.comment_replies
+          comment={@comment}
+          current_user={@current_user}
+          form={@form}
+          reply_form={@reply_form}
+          depth={@depth}
+        />
       </div>
     </div>
     """
@@ -157,6 +181,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :comment, Comment, required: true
   attr :current_user, :any, required: true
   attr :form, Phoenix.HTML.Form, required: true
+  attr :reply_form, Phoenix.HTML.Form, required: true
   attr :depth, :integer
 
   defp comment_replies(assigns) do
@@ -168,7 +193,13 @@ defmodule ElixirDropsWeb.CommentComponents do
       phx-click-away={JS.hide(to: "#replies-#{@comment.id}-depth-#{@depth}")}
     >
       <div :for={reply <- @comment.replies} class="ml-6 md:ml-10 space-y-4 pl-4">
-        <.comment comment={reply} current_user={@current_user} form={@form} depth={@depth + 1} />
+        <.comment
+          comment={reply}
+          current_user={@current_user}
+          form={@form}
+          reply_form={@reply_form}
+          depth={@depth + 1}
+        />
       </div>
     </div>
     """
@@ -193,8 +224,9 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :comment, Comment, required: true
   attr :current_user, :any, required: true
   attr :form, Phoenix.HTML.Form, required: true
+  attr :reply_form, Phoenix.HTML.Form, required: true
   attr :parent, :any, default: nil
-  attr :depth, :integer, default: 0
+  attr :depth, :integer, default: 10
 
   defp comment_actions(assigns) do
     ~H"""
@@ -224,7 +256,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       </div>
       <.comment_form
         id={"reply-form-#{@comment.id}-depth-#{@depth}"}
-        form={@form}
+        form={@reply_form}
         comment_type={:response}
         comment={@comment}
         class="hidden"

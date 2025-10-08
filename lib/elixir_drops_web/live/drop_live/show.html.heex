@@ -18,6 +18,7 @@
         character_count={@character_count}
         comment_count={@comment_count || @drop.comment_count || 0}
         form={@comment_form}
+        reply_form={@reply_form}
         current_user={@current_user}
         current_url={~p"/d/#{@drop.short_id}"}
         comments={@streams.comments}
