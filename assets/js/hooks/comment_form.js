@@ -16,12 +16,11 @@ CommentFormHooks.CommentForm = {
       }
     })
 
-    this.handleEvent('reply_char_count', (event) => {
-      const { form_id, count } = event || {}
+    this.handleEvent('reply_char_count', ({ form_id, count }) => {
       if (!form_id) return
       try {
         const span = document.getElementById(`${form_id}-char-count`)
-        if (span) span.textContent = String(count)
+        if (span) span.textContent = count
       } catch (_) {}
     })
   },
