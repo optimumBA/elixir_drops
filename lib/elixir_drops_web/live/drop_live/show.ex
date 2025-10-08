@@ -28,6 +28,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply,
      socket
      |> assign(:character_count, 0)
+     |> assign(:reply_character_count, 0)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)}
   end
@@ -85,7 +86,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   def handle_event("validate_reply", %{"comment" => %{"body" => body} = comment_params}, socket) do
-    dbg(body)
     character_count = String.length(body)
 
     changeset =
@@ -95,8 +95,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply,
      socket
-     |> assign(:character_count, character_count)
-     |> assign(:reply_form, to_form(changeset))}
+     |> assign(:reply_form, to_form(changeset))
+     |> assign(:reply_character_count, character_count)}
   end
 
   def handle_event("cancel", _params, socket) do
@@ -119,6 +119,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply,
      socket
      |> assign(:reply_form, to_form(changeset))
+     |> assign(:reply_character_count, 0)
      |> push_event("cancel_comment", %{})}
   end
 

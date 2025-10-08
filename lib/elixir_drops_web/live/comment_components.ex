@@ -10,6 +10,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   @type rendered() :: Phoenix.LiveView.Rendered.t()
 
   attr :character_count, :integer, default: 0
+  attr :reply_character_count, :integer, default: 0
   attr :comment_count, :integer, required: true
   attr :comments, :any, required: true
   attr :current_url, :string, required: true
@@ -25,7 +26,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         Comments ({@comment_count})
       </h3>
 
-      <div :if={@current_user}>
+      <div :if={@current_user} class="border border-red-400">
         <.comment_form
           form={@form}
           character_count={@character_count}
@@ -48,13 +49,14 @@ defmodule ElixirDropsWeb.CommentComponents do
       </div>
     </div>
 
-    <div id="comments" phx-update="stream" class="space-y-6 last:mb-10">
+    <div id="comments" phx-update="stream" class="space-y-6 last:mb-10 border-2 border-blue-800">
       <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 p-4">
         <.comment
           comment={comment}
           current_user={@current_user}
           form={@form}
           reply_form={@reply_form}
+          reply_character_count={@reply_character_count}
           depth={0}
         />
       </div>
@@ -134,7 +136,10 @@ defmodule ElixirDropsWeb.CommentComponents do
 
       <div class="text-xs text-gray-500 flex justify-between items-center mt-2">
         <p>Supports basic Markdown: **bold**, *italic*, and [links](url).</p>
-        <p>Max 1000 characters ({@character_count}/1000)</p>
+        <p>
+          Max 1000 characters
+          ({@character_count}/1000)
+        </p>
       </div>
     </.form>
     """
@@ -145,6 +150,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :form, Phoenix.HTML.Form, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
   attr :depth, :integer, default: 0
+  attr :reply_character_count, :integer, default: 0
 
   defp comment(assigns) do
     ~H"""
@@ -154,8 +160,8 @@ defmodule ElixirDropsWeb.CommentComponents do
       <.comment_actions
         comment={@comment}
         current_user={@current_user}
-        form={@form}
         reply_form={@reply_form}
+        reply_character_count={@reply_character_count}
         depth={@depth}
       />
 
@@ -174,95 +180,6 @@ defmodule ElixirDropsWeb.CommentComponents do
           depth={@depth}
         />
       </div>
-    </div>
-    """
-  end
-
-  attr :comment, Comment, required: true
-  attr :current_user, :any, required: true
-  attr :form, Phoenix.HTML.Form, required: true
-  attr :reply_form, Phoenix.HTML.Form, required: true
-  attr :depth, :integer
-
-  defp comment_replies(assigns) do
-    ~H"""
-    <div
-      :if={@comment.replies && Enum.any?(@comment.replies)}
-      class="mt-4"
-      id={"replies-#{@comment.id}-depth-#{@depth}"}
-      phx-click-away={JS.hide(to: "#replies-#{@comment.id}-depth-#{@depth}")}
-    >
-      <div :for={reply <- @comment.replies} class="ml-6 md:ml-10 space-y-4 pl-4">
-        <.comment
-          comment={reply}
-          current_user={@current_user}
-          form={@form}
-          reply_form={@reply_form}
-          depth={@depth + 1}
-        />
-      </div>
-    </div>
-    """
-  end
-
-  defp comment_body(assigns) do
-    depth = Map.get(assigns, :depth, 0)
-    assigns = assign(assigns, :depth, depth)
-
-    ~H"""
-    <div
-      class="comment-body text-[.9rem] md:text-base/8 text-[#575757] leading-8 prose mt-2"
-      id={"comment-body-#{@comment.id}-depth-#{@depth}"}
-      phx-hook="DropBodyContainer"
-    >
-      {DropComponents.to_html(@comment.body)}
-      <DropComponents.copy_prompt />
-    </div>
-    """
-  end
-
-  attr :comment, Comment, required: true
-  attr :current_user, :any, required: true
-  attr :form, Phoenix.HTML.Form, required: true
-  attr :reply_form, Phoenix.HTML.Form, required: true
-  attr :parent, :any, default: nil
-  attr :depth, :integer, default: 10
-
-  defp comment_actions(assigns) do
-    ~H"""
-    <div class="comment-actions mt-4">
-      <div class="flex items-center gap-x-6 text-xs md:text-sm text-gray-500 mb-4">
-        <button
-          :if={@depth == 0 && Enum.count(@comment.replies) > 0}
-          class="flex items-center gap-x-1"
-          phx-click={
-            JS.toggle(
-              to: "#comment-replies-#{@comment.id}",
-              in: "fade-in-scale",
-              out: "fade-out-scale"
-            )
-          }
-        >
-          <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-4 h-4" />
-          <span>{Enum.count(@comment.replies)}</span>
-          <span>{if Enum.count(@comment.replies) == 1, do: "reply", else: "replies"}</span>
-        </button>
-        <button
-          :if={@current_user}
-          phx-click={JS.toggle(to: "#reply-form-#{@comment.id}-depth-#{@depth}")}
-        >
-          Reply
-        </button>
-      </div>
-      <.comment_form
-        id={"reply-form-#{@comment.id}-depth-#{@depth}"}
-        form={@reply_form}
-        comment_type={:response}
-        comment={@comment}
-        class="hidden"
-        parent={@comment}
-        field_id={"reply-form-field-#{@comment.id}-depth-#{@depth}"}
-      />
     </div>
     """
   end
@@ -354,6 +271,96 @@ defmodule ElixirDropsWeb.CommentComponents do
         >
           <.icon name="hero-trash" class="w-4 h-4" /> Delete comment
         </button>
+      </div>
+    </div>
+    """
+  end
+
+  defp comment_body(assigns) do
+    depth = Map.get(assigns, :depth, 0)
+    assigns = assign(assigns, :depth, depth)
+
+    ~H"""
+    <div
+      class="comment-body text-[.9rem] md:text-base/8 text-[#575757] leading-8 prose mt-2"
+      id={"comment-body-#{@comment.id}-depth-#{@depth}"}
+      phx-hook="DropBodyContainer"
+    >
+      {DropComponents.to_html(@comment.body)}
+      <DropComponents.copy_prompt />
+    </div>
+    """
+  end
+
+  attr :comment, Comment, required: true
+  attr :current_user, :any, required: true
+  attr :reply_form, Phoenix.HTML.Form, required: true
+  attr :reply_character_count, :integer, default: 0
+  attr :parent, :any, default: nil
+  attr :depth, :integer, default: 10
+
+  defp comment_actions(assigns) do
+    ~H"""
+    <div class="comment-actions mt-4">
+      <div class="flex items-center gap-x-6 text-xs md:text-sm text-gray-500 mb-4">
+        <button
+          :if={@depth == 0 && Enum.count(@comment.replies) > 0}
+          class="flex items-center gap-x-1"
+          phx-click={
+            JS.toggle(
+              to: "#comment-replies-#{@comment.id}",
+              in: "fade-in-scale",
+              out: "fade-out-scale"
+            )
+          }
+        >
+          <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-4 h-4" />
+          <span>{Enum.count(@comment.replies)}</span>
+          <span>{if Enum.count(@comment.replies) == 1, do: "reply", else: "replies"}</span>
+        </button>
+        <button
+          :if={@current_user}
+          phx-click={JS.toggle(to: "#reply-form-#{@comment.id}-depth-#{@depth}")}
+        >
+          Reply
+        </button>
+      </div>
+      <.comment_form
+        id={"reply-form-#{@comment.id}-depth-#{@depth}"}
+        form={@reply_form}
+        comment_type={:response}
+        character_count={@reply_character_count}
+        comment={@comment}
+        class="hidden"
+        parent={@comment}
+        field_id={"reply-form-field-#{@comment.id}-depth-#{@depth}"}
+      />
+    </div>
+    """
+  end
+
+  attr :comment, Comment, required: true
+  attr :current_user, :any, required: true
+  attr :form, Phoenix.HTML.Form, required: true
+  attr :reply_form, Phoenix.HTML.Form, required: true
+  attr :depth, :integer
+
+  defp comment_replies(assigns) do
+    ~H"""
+    <div
+      :if={@comment.replies && Enum.any?(@comment.replies)}
+      class="mt-4"
+      id={"replies-#{@comment.id}-depth-#{@depth}"}
+      phx-click-away={JS.hide(to: "#replies-#{@comment.id}-depth-#{@depth}")}
+    >
+      <div :for={reply <- @comment.replies} class="ml-6 md:ml-10 space-y-4 pl-4">
+        <.comment
+          comment={reply}
+          current_user={@current_user}
+          form={@form}
+          reply_form={@reply_form}
+          depth={@depth + 1}
+        />
       </div>
     </div>
     """
