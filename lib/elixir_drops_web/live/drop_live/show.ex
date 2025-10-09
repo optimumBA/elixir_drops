@@ -22,12 +22,14 @@ defmodule ElixirDropsWeb.DropLive.Show do
   # end
 
   @impl Phoenix.LiveView
-  def handle_params(%{"short_id" => short_id}, _url, socket) do
+  def handle_params(params, _url, socket) do
+    short_id = params["short_id"]
     drop = Drops.get_drop_by_short_id(short_id)
 
     {:noreply,
      socket
      |> assign(:show_user_drops?, false)
+     |> assign(:delete_comment_id, params["delete_comment_id"])
      |> assign_drop(drop)}
   end
 
@@ -157,15 +159,25 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_event("delete_comment", %{"comment_id" => comment_id}, socket) do
+  def handle_event(
+        "delete_comment",
+        %{"comment_id" => comment_id, "patch_url" => patch_url},
+        socket
+      ) do
     comment = Comments.get_comment!(comment_id)
 
     case Comments.delete_comment(comment) do
       {:ok, _comment} ->
-        {:noreply, put_flash(socket, :info, "Comment successfully deleted")}
+        {:noreply,
+         socket
+         |> put_flash(:info, "Comment successfully deleted")
+         |> push_patch(to: patch_url)}
 
       {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Comment deletion failed")}
+        {:noreply,
+         socket
+         |> put_flash(:error, "Comment was not deleted")
+         |> push_patch(to: patch_url)}
     end
   end
 

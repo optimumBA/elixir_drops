@@ -21,6 +21,7 @@
         reply_form={@reply_form}
         current_user={@current_user}
         current_url={~p"/d/#{@drop.short_id}"}
+        delete_comment_id={@delete_comment_id}
         comments={@streams.comments}
         top_level_comment_count={@top_level_comment_count}
       />

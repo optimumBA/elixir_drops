@@ -4,6 +4,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.Comments.Comment
+  alias ElixirDropsWeb.Comment.CommentFormComponent
   alias ElixirDropsWeb.DropComponents
 
   @type assigns() :: map()
@@ -17,6 +18,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :form, Phoenix.HTML.Form, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
   attr :top_level_comment_count, :integer, required: true
+  attr :delete_comment_id, :string, default: nil
 
   @spec comment_section(assigns()) :: rendered()
   def comment_section(assigns) do
@@ -52,6 +54,8 @@ defmodule ElixirDropsWeb.CommentComponents do
           <.comment
             comment={comment}
             current_user={@current_user}
+            current_url={@current_url}
+            delete_comment_id={@delete_comment_id}
             form={@form}
             reply_form={@reply_form}
             depth={0}
@@ -165,14 +169,22 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   attr :comment, Comment, required: true
   attr :current_user, :any, required: true
+  attr :current_url, :string, required: true
   attr :form, Phoenix.HTML.Form, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
   attr :depth, :integer, default: 0
+  attr :delete_comment_id, :string, default: nil
 
   defp comment(assigns) do
     ~H"""
     <div class="comment font-roboto">
-      <.comment_header comment={@comment} current_user={@current_user} depth={@depth} />
+      <.comment_header
+        comment={@comment}
+        current_user={@current_user}
+        current_url={@current_url}
+        delete_comment_id={@delete_comment_id}
+        depth={@depth}
+      />
       <.comment_body comment={@comment} depth={@depth} />
       <.comment_actions
         comment={@comment}
@@ -191,9 +203,11 @@ defmodule ElixirDropsWeb.CommentComponents do
         <.comment_replies
           comment={@comment}
           current_user={@current_user}
+          current_url={@current_url}
           form={@form}
           reply_form={@reply_form}
           depth={@depth}
+          delete_comment_id={@delete_comment_id}
         />
       </div>
     </div>
@@ -202,7 +216,9 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   attr :comment, Comment, required: true
   attr :current_user, :any, required: true
+  attr :current_url, :string, required: true
   attr :depth, :integer, default: 0
+  attr :delete_comment_id, :string, default: nil
 
   defp comment_header(assigns) do
     depth = Map.get(assigns, :depth, 0)
@@ -284,10 +300,29 @@ defmodule ElixirDropsWeb.CommentComponents do
 
         <button
           class="text-red-600 flex items-center gap-x-2"
-          phx-click={JS.push("delete_comment", value: %{comment_id: @comment.id})}
+          phx-click={JS.patch("#{@current_url}?delete_comment_id=#{@comment.id}")}
+          type="button"
         >
           <.icon name="hero-trash" class="w-4 h-4" /> Delete comment
         </button>
+      </div>
+
+      <div
+        :if={@delete_comment_id == to_string(@comment.id)}
+        id={"delete-comment-modal-#{@comment.id}"}
+      >
+        <.modal
+          id={"delete-comment-modal-#{@comment.id}-modal"}
+          show
+          on_cancel={JS.patch(@current_url)}
+        >
+          <.live_component
+            module={CommentFormComponent}
+            id={"delete-modal-#{@comment.id}"}
+            comment={@comment}
+            patch={@current_url}
+          />
+        </.modal>
       </div>
     </div>
     """
@@ -361,9 +396,11 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   attr :comment, Comment, required: true
   attr :current_user, :any, required: true
+  attr :current_url, :string, required: true
   attr :form, Phoenix.HTML.Form, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
   attr :depth, :integer
+  attr :delete_comment_id, :string, default: nil
 
   defp comment_replies(assigns) do
     ~H"""
@@ -376,6 +413,8 @@ defmodule ElixirDropsWeb.CommentComponents do
         <.comment
           comment={reply}
           current_user={@current_user}
+          current_url={@current_url}
+          delete_comment_id={@delete_comment_id}
           form={@form}
           reply_form={@reply_form}
           depth={@depth + 1}
