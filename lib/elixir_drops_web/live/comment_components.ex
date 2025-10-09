@@ -21,58 +21,60 @@ defmodule ElixirDropsWeb.CommentComponents do
   @spec comment_section(assigns()) :: rendered()
   def comment_section(assigns) do
     ~H"""
-    <div class="comments-section mt-8 border-y py-8">
-      <h3 class="text-lg font-semibold mb-6 text-gray-700">
-        Comments ({@comment_count})
-      </h3>
-
-      <div :if={@current_user} class="border border-red-400">
-        <.comment_form
-          form={@form}
-          comment_type={:comment}
-          comment={nil}
-          id="comment-form"
-          field_id="comment-form-field"
-        />
+    <div>
+      <div class="comments-section mt-8 border-y py-8">
+        <h3 class="text-lg font-semibold mb-6 text-gray-700">
+          Comments ({@comment_count})
+        </h3>
+        <div :if={@current_user} class="border border-red-400">
+          <.comment_form
+            form={@form}
+            comment_type={:comment}
+            comment={nil}
+            id="comment-form"
+            field_id="comment-form-field"
+          />
+        </div>
+        <div :if={!@current_user}>
+          <p class="text-gray-600 text-center text-sm bg-[#EAE8FD80] py-4 rounded-lg">
+            <.link
+              href={~p"/auth/github" <> "?return_to=#{assigns[:current_url] || "/"}"}
+              class="text-indigo-600 hover:opacity-80 font-medium"
+            >
+              Sign in with GitHub
+            </.link>
+            to join the discussion
+          </p>
+        </div>
       </div>
-      <div :if={!@current_user}>
-        <p class="text-gray-600 text-center text-sm bg-[#EAE8FD80] py-4 rounded-lg">
-          <.link
-            href={~p"/auth/github" <> "?return_to=#{assigns[:current_url] || "/"}"}
-            class="text-indigo-600 hover:opacity-80 font-medium"
-          >
-            Sign in with GitHub
-          </.link>
-          to join the discussion
-        </p>
+      <div id="comments" phx-update="stream" class="space-y-6 last:mb-10 border-2 border-blue-800">
+        <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 p-4">
+          <.comment
+            comment={comment}
+            current_user={@current_user}
+            form={@form}
+            reply_form={@reply_form}
+            depth={0}
+          />
+        </div>
+      </div>
+      <div class="flex flex-col items-center mx-auto mt-4 mb-8">
+        <button
+          class={[
+            "text-[#2F19EE] text-sm px-4 py-2 border border-[#2F19EE] rounded-md hover:opacity-70",
+            !(@top_level_comment_count >= @comment_offset) && "hidden"
+          ]}
+          type="button"
+          phx-click={
+            JS.push("load_more",
+              value: %{offset: @comment_offset}
+            )
+          }
+        >
+          See more responses
+        </button>
       </div>
     </div>
-
-    <div id="comments" phx-update="stream" class="space-y-6 last:mb-10 border-2 border-blue-800">
-      <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 p-4">
-        <.comment
-          comment={comment}
-          current_user={@current_user}
-          form={@form}
-          reply_form={@reply_form}
-          depth={0}
-        />
-      </div>
-    </div>
-    <button
-      class={[
-        "bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70",
-        !(@top_level_comment_count >= @comment_offset) && "hidden"
-      ]}
-      type="button"
-      phx-click={
-        JS.push("load_more",
-          value: %{offset: @comment_offset}
-        )
-      }
-    >
-      load more
-    </button>
     """
   end
 
@@ -365,7 +367,6 @@ defmodule ElixirDropsWeb.CommentComponents do
       :if={@comment.replies && Enum.any?(@comment.replies)}
       class="mt-4"
       id={"replies-#{@comment.id}-depth-#{@depth}"}
-      phx-click-away={JS.hide(to: "#replies-#{@comment.id}-depth-#{@depth}")}
     >
       <div :for={reply <- @comment.replies} class="ml-6 md:ml-10 space-y-4 pl-4">
         <.comment
