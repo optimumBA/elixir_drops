@@ -37,6 +37,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
         %{"comment" => comment_params, "parent_id" => parent_id},
         socket
       ) do
+    parent_id =
+      if parent_id == "nil" do
+        nil
+      else
+        parent_id
+      end
+
     case create_comment(socket, comment_params, parent_id) do
       {:ok, _comment} ->
         changeset = Comments.change_comment(%Comments.Comment{})

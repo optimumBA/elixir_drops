@@ -91,7 +91,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       id={@id}
       phx-submit={
         JS.push("new_comment",
-          value: %{parent_id: (@comment_type == :response && @comment.id) || nil}
+          value: %{parent_id: (@comment_type == :response && @comment.id) || "nil"}
         )
       }
       phx-change={if @comment_type == :comment, do: "validate_comment", else: "validate_reply"}
@@ -243,7 +243,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           </span>
           <span class="text-sm">{Timex.format!(@comment.inserted_at, "{relative}", :relative)}</span>
           <span
-            :if={@current_user.id == @comment.user_id && !@comment.parent_id}
+            :if={@current_user && @current_user.id == @comment.user_id && !@comment.parent_id}
             class="bg-[#eeeeee] text-[#575757] text-xs inline-block px-2 py-1 rounded-md"
           >
             You
@@ -251,7 +251,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         </p>
 
         <button
-          :if={@current_user.id == @comment.user_id}
+          :if={@current_user && @current_user.id == @comment.user_id}
           class="ml-auto"
           aria-label="Toggle comment actions"
           phx-click={JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")}
@@ -261,7 +261,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       </div>
 
       <div
-        :if={@current_user.id == @comment.user_id}
+        :if={@current_user && @current_user.id == @comment.user_id}
         id={"comment-actions-#{@comment.id}-depth-#{@depth}"}
         class={[
           "grid items-center absolute top-8 right-4 z-10",
