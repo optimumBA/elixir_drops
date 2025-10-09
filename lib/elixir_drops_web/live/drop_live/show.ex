@@ -34,35 +34,32 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @impl Phoenix.LiveView
   def handle_event(
         "new_comment",
-        %{"comment" => comment_params, "parent_id" => parent_id},
+        %{"comment" => comment_params, "parent_id" => parent_id, "comment_type" => comment_type},
         socket
       ) do
-    parent_id =
-      if parent_id == "nil" do
-        nil
-      else
-        parent_id
+    parent_id = if parent_id == "nil", do: nil, else: parent_id
+
+    {socket, changeset} =
+      case create_comment(socket, comment_params, parent_id) do
+        {:ok, _comment} ->
+          changeset = Comments.change_comment(%Comments.Comment{})
+          comments = Comments.list_drop_comments(socket.assigns.drop.id)
+          comment_count = socket.assigns.comment_count + 1
+
+          socket =
+            socket
+            |> stream(:comments, comments, reset: true)
+            |> assign(:comment_count, comment_count)
+
+          {socket, changeset}
+
+        {:error, changeset} ->
+          {put_flash(socket, :error, "Failed to add your comment"), changeset}
       end
 
-    case create_comment(socket, comment_params, parent_id) do
-      {:ok, _comment} ->
-        changeset = Comments.change_comment(%Comments.Comment{})
-        comments = Comments.list_drop_comments(socket.assigns.drop.id)
-        comment_count = socket.assigns.comment_count + 1
+    form_key = if comment_type == "comment", do: :comment_form, else: :reply_form
 
-        {:noreply,
-         socket
-         |> stream(:comments, comments, reset: true)
-         |> assign(:comment_count, comment_count)
-         |> assign(:comment_form, to_form(changeset))
-         |> assign(:reply_form, to_form(changeset))}
-
-      {:error, changeset} ->
-        {:noreply,
-         socket
-         |> assign(:comment_form, to_form(changeset))
-         |> assign(:reply_form, to_form(changeset))}
-    end
+    {:noreply, assign(socket, form_key, to_form(changeset))}
   end
 
   def handle_event("edit_comment", %{"comment_id" => comment_id}, socket) do

@@ -93,7 +93,10 @@ defmodule ElixirDropsWeb.CommentComponents do
       id={@id}
       phx-submit={
         JS.push("new_comment",
-          value: %{parent_id: (@comment_type == :response && @comment.id) || "nil"}
+          value: %{
+            comment_type: @comment_type,
+            parent_id: (@comment_type == :response && @comment.id) || "nil"
+          }
         )
       }
       phx-change={if @comment_type == :comment, do: "validate_comment", else: "validate_reply"}
