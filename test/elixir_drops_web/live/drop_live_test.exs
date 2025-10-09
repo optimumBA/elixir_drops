@@ -155,8 +155,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html2 =~ "Edit drop"
     end
 
-    # FIXME: Fix flaky test
-    @tag :skip
+    # @tag :skip
     test "user gets updated with new a drop not requiring screenshot generation", %{
       conn: conn,
       user: user
@@ -229,8 +228,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert has_element?(live, "#drop-#{drop.id}")
     end
 
-    # FIXME: Fix flaky test
-    @tag :skip
+    # @tag :skip
     test "user does not see an indicator when an existing drop's screenshot is regenerated",
          %{
            conn: conn,
@@ -327,8 +325,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert render_hook(live, "load-more-complete", %{}) =~ "drops"
     end
 
-    # FIXME: Fix flaky test
-    @tag :skip
     test "screenshot generation started broadcast doesn't change page state", %{
       conn: conn,
       user: user

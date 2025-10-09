@@ -4,9 +4,9 @@ defmodule ElixirDrops.CommentsFixtures do
   entities via the `ElixirDrops.Comments` context.
   """
 
+  alias ElixirDrops.Accounts.User
   alias ElixirDrops.Comments
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Accounts.User
 
   @doc """
   Generate a comment.

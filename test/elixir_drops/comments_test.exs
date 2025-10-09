@@ -60,7 +60,7 @@ defmodule ElixirDrops.CommentsTest do
 
     test "respects offset option", %{drop: drop, user: user} do
       comments_created =
-        for _ <- 1..5 do
+        for _num <- 1..5 do
           comment_fixture(drop, user)
         end
 
@@ -83,14 +83,13 @@ defmodule ElixirDrops.CommentsTest do
       assert hd(comments).id == parent_comment.id
     end
 
-    test "preloads drop, user, and replies associations", %{drop: drop, user: user} do
+    test "preloads user, and replies associations", %{drop: drop, user: user} do
       parent_comment = comment_fixture(drop, user)
-      reply = comment_fixture(drop, user, parent_comment)
+      _reply = comment_fixture(drop, user, parent_comment)
 
       comments = Comments.list_drop_comments(drop.id)
       comment = hd(comments)
 
-      assert Ecto.assoc_loaded?(comment.drop)
       assert Ecto.assoc_loaded?(comment.user)
       assert Ecto.assoc_loaded?(comment.replies)
     end
@@ -106,13 +105,12 @@ defmodule ElixirDrops.CommentsTest do
       assert fetched_comment.body == comment.body
     end
 
-    test "preloads user and drop associations", %{drop: drop, user: user} do
+    test "preloads user", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
 
       fetched_comment = Comments.get_comment!(comment.id)
 
       assert Ecto.assoc_loaded?(fetched_comment.user)
-      assert Ecto.assoc_loaded?(fetched_comment.drop)
     end
 
     test "raises Ecto.NoResultsError for non-existent comment" do

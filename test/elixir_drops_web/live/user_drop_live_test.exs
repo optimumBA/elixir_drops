@@ -66,8 +66,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert path == ~p"/"
     end
 
-    # FIXME: Fix flaky test
-    @tag :skip
     test "user can view newer drops with infinite scroll", %{conn: conn, user: user} do
       _drops = create_multiple_drops(user, 35)
 
@@ -203,8 +201,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert render(live) =~ "100%"
     end
 
-    # FIXME: Fix flaky test
-    @tag :skip
     test "handles progress animation complete event", %{
       conn: conn,
       drop: drop,
@@ -852,7 +848,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       # Try finding the form with a simpler selector first
       form_element = element(live, "#profile-search-input form")
-      assert form_element != nil
+      assert form_element
 
       # Submit search from profile page
       live

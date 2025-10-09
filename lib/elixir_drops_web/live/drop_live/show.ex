@@ -4,22 +4,22 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDrops.Comments
   alias ElixirDrops.Drops
   alias ElixirDrops.StructuredData
-  alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.CommentComponents
+  alias ElixirDropsWeb.DropComponents
 
   @consecutive_whitespace_regex ~r/\s+/
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
-  @impl Phoenix.LiveView
-  def mount(_params, _session, socket) do
-    user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
+  # @impl Phoenix.LiveView
+  # def mount(_params, _session, socket) do
+  #   user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
 
-    {:ok,
-     socket
-     |> assign(:current_user, user)
-     |> stream(:comments, [])}
-  end
+  #   {:ok,
+  #    socket
+  #    |> assign(:current_user, user)
+  #    |> stream(:comments, [])}
+  # end
 
   @impl Phoenix.LiveView
   def handle_params(%{"short_id" => short_id}, _url, socket) do
@@ -116,8 +116,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   def handle_event("cancel", _params, socket) do
     changeset =
-      %Comments.Comment{}
-      |> Comments.change_comment(%{"body" => ""})
+      Comments.change_comment(
+        %Comments.Comment{},
+        %{"body" => ""}
+      )
 
     {:noreply,
      socket
@@ -128,8 +130,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   def handle_event("cancel_reply", _params, socket) do
     changeset =
-      %Comments.Comment{}
-      |> Comments.change_comment(%{"body" => ""})
+      Comments.change_comment(
+        %Comments.Comment{},
+        %{"body" => ""}
+      )
 
     {:noreply,
      socket
