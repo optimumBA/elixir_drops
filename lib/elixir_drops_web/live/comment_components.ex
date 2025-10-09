@@ -10,11 +10,13 @@ defmodule ElixirDropsWeb.CommentComponents do
   @type rendered() :: Phoenix.LiveView.Rendered.t()
 
   attr :comment_count, :integer, required: true
+  attr :comment_offset, :integer, required: true
   attr :comments, :any, required: true
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
   attr :form, Phoenix.HTML.Form, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
+  attr :top_level_comment_count, :integer, required: true
 
   @spec comment_section(assigns()) :: rendered()
   def comment_section(assigns) do
@@ -57,6 +59,20 @@ defmodule ElixirDropsWeb.CommentComponents do
         />
       </div>
     </div>
+    <button
+      class={[
+        "bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70",
+        !(@top_level_comment_count >= @comment_offset) && "hidden"
+      ]}
+      type="button"
+      phx-click={
+        JS.push("load_more",
+          value: %{offset: @comment_offset}
+        )
+      }
+    >
+      load more
+    </button>
     """
   end
 

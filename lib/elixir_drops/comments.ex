@@ -118,6 +118,13 @@ defmodule ElixirDrops.Comments do
     |> Repo.aggregate(:count)
   end
 
+  @spec count_drop_top_level_comments(drop_id) :: non_neg_integer()
+  def count_drop_top_level_comments(drop_id) do
+    Comment
+    |> where([c], c.drop_id == ^drop_id and is_nil(c.deleted_at) and is_nil(c.parent_id))
+    |> Repo.aggregate(:count)
+  end
+
   @doc """
   Creates a comment.
 

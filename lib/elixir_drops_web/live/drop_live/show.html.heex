@@ -16,11 +16,13 @@
     <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <CommentComponents.comment_section
         comment_count={@comment_count || @drop.comment_count || 0}
+        comment_offset={@comment_offset}
         form={@comment_form}
         reply_form={@reply_form}
         current_user={@current_user}
         current_url={~p"/d/#{@drop.short_id}"}
         comments={@streams.comments}
+        top_level_comment_count={@top_level_comment_count}
       />
     </section>
   <% end %>
