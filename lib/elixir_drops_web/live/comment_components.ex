@@ -245,6 +245,7 @@ defmodule ElixirDropsWeb.CommentComponents do
             title={@comment.parent.user.name}
           >
             {@comment.parent.user.name}
+            {if @comment.parent.deleted_at, do: " (Deleted Comment)"}
           </span>
           <span class="text-sm">{Timex.format!(@comment.inserted_at, "{relative}", :relative)}</span>
           <span
@@ -298,7 +299,7 @@ defmodule ElixirDropsWeb.CommentComponents do
 
     ~H"""
     <div
-      class="comment-body text-[.9rem] md:text-base/8 text-[#575757] leading-8 prose mt-2"
+      class="comment-body text-[.9rem] md:text-base/8 text-[#575757] leading-8 prose mt-2 break-words prose-pre:overflow-x-auto"
       id={"comment-body-#{@comment.id}-depth-#{@depth}"}
       phx-hook="DropBodyContainer"
     >
