@@ -11,13 +11,16 @@ defmodule ElixirDropsWeb.Comment.CommentFormComponent do
       <section class="flex gap-4 justify-end">
         <button
           class="flex items-center gap-x-2 rounded-lg mb-6 px-6 py-4 bg-[#EEEEEE]"
-          phx-click={JS.patch(@patch)}
+          phx-click={JS.exec("data-cancel", to: "#delete-comment-modal-#{@comment.id}-modal")}
         >
           Cancel
         </button>
         <button
           class="flex items-center gap-x-2 mb-6 text-[#EAE8FD] px-6 py-4 rounded-lg bg-[#2F19EE]"
-          phx-click={JS.push("delete_comment", value: %{comment_id: @comment.id, patch_url: @patch})}
+          phx-click={
+            hide_modal("delete-comment-modal-#{@comment.id}-modal")
+            |> JS.push("delete_comment", value: %{comment_id: @comment.id, patch_url: @patch})
+          }
         >
           Confirm
         </button>
