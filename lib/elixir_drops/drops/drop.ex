@@ -20,7 +20,7 @@ defmodule ElixirDrops.Drops.Drop do
     field :search_vector, :string, load_in_query: false
     field :short_id, :string
     field :title, :string
-    field :comment_count, :integer, virtual: true
+    field :comment_count, :integer
 
     # Virtual field for search relevance ranking
     field :relevance_rank, :float, virtual: true
@@ -33,7 +33,7 @@ defmodule ElixirDrops.Drops.Drop do
   @spec changeset(t(), attrs()) :: Ecto.Changeset.t()
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
-    |> cast(attrs, [:body, :short_id, :title, :user_id])
+    |> cast(attrs, [:body, :comment_count, :short_id, :title, :user_id])
     |> cast_embed(:screenshot)
     |> validate_required([:body, :short_id, :title])
     |> validate_length(:title, max: 255)

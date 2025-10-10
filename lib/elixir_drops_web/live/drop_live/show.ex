@@ -11,15 +11,15 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
-  # @impl Phoenix.LiveView
-  # def mount(_params, _session, socket) do
-  #   user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
+  @impl Phoenix.LiveView
+  def mount(_params, _session, socket) do
+    user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
 
-  #   {:ok,
-  #    socket
-  #    |> assign(:current_user, user)
-  #    |> stream(:comments, [])}
-  # end
+    {:ok,
+     socket
+     |> assign(:current_user, user)
+     |> stream(:comments, [])}
+  end
 
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
@@ -240,7 +240,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> assign(:drop, drop)
     |> assign(:comment_form, to_form(comment_changeset))
     |> assign(:reply_form, to_form(comment_changeset))
-    |> assign(:comment_count, drop.comment_count || 0)
     |> assign(:has_more_comments, false)
     |> assign(:replying_to, nil)
     |> assign(:editing_comment, nil)
