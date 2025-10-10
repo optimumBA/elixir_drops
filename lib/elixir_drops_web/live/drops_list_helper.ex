@@ -178,6 +178,10 @@ defmodule ElixirDropsWeb.DropsListHelper do
       filters
       |> Map.merge(socket.assigns.drop_filters)
       |> Drops.list_drops(batch_size)
+      |> Enum.map(fn drop ->
+        count = Comments.count_drop_comments(drop.id)
+        Map.put(drop, :comment_count, count)
+      end)
 
     last_drop = List.last(drops)
 
