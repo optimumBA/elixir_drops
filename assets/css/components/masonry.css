@@ -21,13 +21,6 @@
   width: calc(33.333% - 16px);
 }
 
-@media (min-width: 1401px) and (max-width: 1800px) {
-  .grid-sizer,
-  .masonry-item {
-    width: calc(25% - 18px);
-  }
-}
-
 @media (min-width: 1801px) {
   .grid-sizer,
   .masonry-item {
@@ -35,15 +28,28 @@
     min-width: 300px;
   }
 }
+@media (max-width: 1800px) {
+  .grid-sizer,
+  .masonry-item {
+    width: calc(25% - 18px);
+  }
+}
 
-@media (max-width: 768px) {
+@media (max-width: 1500px) {
+  .grid-sizer,
+  .masonry-item {
+    width: calc(33% - 12px);
+  }
+}
+
+@media (max-width: 1200px) {
   .grid-sizer,
   .masonry-item {
     width: calc(50% - 12px);
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 730px) {
   .grid-sizer,
   .masonry-item {
     width: 100%;
