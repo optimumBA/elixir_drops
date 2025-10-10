@@ -370,7 +370,10 @@ defmodule ElixirDropsWeb.CommentComponents do
             )
           }
         >
-          <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-4 h-4" />
+          <div class="w-5 h-5">
+            <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-full h-full object-cover" />
+          </div>
+
           <span>{Enum.count(@comment.replies)}</span>
           <span>{if Enum.count(@comment.replies) == 1, do: "reply", else: "replies"}</span>
         </button>

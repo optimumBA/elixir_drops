@@ -119,6 +119,13 @@ defmodule ElixirDropsWeb.DropComponents do
             <p class="text-[#868686] text-xs before:content-['•'] before:mr-1">
               <.created_at drop={@drop} />
             </p>
+
+            <div class="flex items-center gap-1 text-[#868686] text-xs before:content-['•'] before:mr-1">
+              <div class="w-5 h-5">
+                <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-full h-full object-cover" />
+              </div>
+              <div>{@drop.comment_count}</div>
+            </div>
           </div>
 
           <%= if @show_card_menu? do %>
