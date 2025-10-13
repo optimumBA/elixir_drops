@@ -5,9 +5,9 @@ defmodule ElixirDrops.CommentsTest do
   import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
 
-  alias ElixirDrops.Comments.CommentsBroadcast
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
+  alias ElixirDrops.Comments.CommentsBroadcast
   alias ElixirDrops.Drops.Drop
 
   @invalid_attrs %{body: nil}
