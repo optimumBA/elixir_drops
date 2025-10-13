@@ -12,17 +12,14 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
-  @impl Phoenix.LiveView
-  def mount(_params, _session, socket) do
-    user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
+  # @impl Phoenix.LiveView
+  # def mount(_params, _session, socket) do
+  #   user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
 
-    {:ok,
-     socket
-     |> assign(:new_comments?, false)
-     |> assign(:current_user, user)
-     |> assign(:recent_comment_id, nil)
-     |> stream(:comments, [])}
-  end
+  #   {:ok,
+  #    socket
+  #    |> assign(:current_user, user)}
+  # end
 
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
@@ -33,8 +30,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply,
      socket
-     |> assign(:show_user_drops?, false)
      |> assign(:delete_comment_id, params["delete_comment_id"])
+     |> assign(:new_comments?, false)
+     |> assign(:recent_comment_id, nil)
+     |> assign(:show_user_drops?, false)
      |> assign_drop(drop)}
   end
 

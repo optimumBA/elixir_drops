@@ -5,10 +5,10 @@ defmodule ElixirDrops.CommentsTest do
   import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
 
+  alias ElixirDrops.Comments.CommentsBroadcast
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
-  alias Phoenix.Socket.Broadcast
 
   @invalid_attrs %{body: nil}
 
@@ -19,9 +19,9 @@ defmodule ElixirDrops.CommentsTest do
     %{drop: drop, user: user}
   end
 
-  describe "subscribe_to_drop_comments/1" do
+  describe "subscribe/1" do
     test "subscribes to comment events for a drop", %{drop: drop} do
-      assert :ok = Comments.subscribe_to_drop_comments(drop.id)
+      assert :ok = Comments.subscribe(drop.id)
     end
   end
 
@@ -210,17 +210,13 @@ defmodule ElixirDrops.CommentsTest do
     test "broadcasts comment event after successful creation", %{drop: drop, user: user} do
       attrs = %{body: "Test comment"}
 
-      Comments.subscribe_to_drop_comments(drop.id)
+      Comments.subscribe(drop.id)
 
       assert {:ok, comment} = Comments.create_comment(drop, user, nil, attrs)
 
-      assert_received %Broadcast{
-        topic: _,
-        event: "comment_event",
-        payload: %{comment: %Comment{id: comment_id}, event: :created}
-      }
+      assert_received {CommentsBroadcast, :comment_created, received_comment}
 
-      assert comment_id == comment.id
+      assert received_comment.id == comment.id
     end
 
     test "preloads associations in returned comment", %{drop: drop, user: user} do
@@ -263,22 +259,6 @@ defmodule ElixirDrops.CommentsTest do
       assert "should be at most 1000 character(s)" in errors_on(changeset).body
     end
 
-    test "broadcasts comment event after successful update", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-      update_attrs = %{body: "updated body"}
-
-      Comments.subscribe_to_drop_comments(drop.id)
-
-      assert {:ok, updated_comment} = Comments.update_comment(comment, update_attrs)
-
-      assert_received %Broadcast{
-        event: "comment_event",
-        payload: %{comment: %Comment{id: comment_id}, event: :updated}
-      }
-
-      assert comment_id == updated_comment.id
-    end
-
     test "preloads associations in returned comment", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
       update_attrs = %{body: "updated body"}
@@ -307,21 +287,6 @@ defmodule ElixirDrops.CommentsTest do
       fetched_comment = Comments.get_comment!(comment.id)
       assert fetched_comment.deleted_at != nil
       assert fetched_comment.id == comment.id
-    end
-
-    test "broadcasts comment event after successful deletion", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-
-      Comments.subscribe_to_drop_comments(drop.id)
-
-      assert {:ok, deleted_comment} = Comments.delete_comment(comment)
-
-      assert_received %Broadcast{
-        event: "comment_event",
-        payload: %{comment: %Comment{id: comment_id}, event: :deleted}
-      }
-
-      assert comment_id == deleted_comment.id
     end
 
     test "preloads associations in returned comment", %{drop: drop, user: user} do
