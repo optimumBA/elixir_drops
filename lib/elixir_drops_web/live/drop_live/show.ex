@@ -20,6 +20,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:new_comments?, false)
      |> assign(:current_user, user)
+     |> assign(:recent_comment_id, nil)
      |> stream(:comments, [])}
   end
 
@@ -47,15 +48,16 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {socket, changeset} =
       case create_comment(socket, comment_params, parent_id) do
-        {:ok, _comment} ->
+        {:ok, comment} ->
           changeset = Comments.change_comment(%Comments.Comment{})
           comments = Comments.list_drop_comments(socket.assigns.drop.id)
           comment_count = socket.assigns.comment_count + 1
 
           socket =
             socket
-            |> stream(:comments, comments, reset: true)
             |> assign(:comment_count, comment_count)
+            |> assign(:recent_comment_id, comment.id)
+            |> stream(:comments, comments, reset: true)
 
           {socket, changeset}
 
@@ -202,9 +204,34 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments)}
   end
 
+  def handle_event(
+        "stream_new_comments",
+        _params,
+        %{
+          assigns: %{
+            drop: drop
+          }
+        } =
+          socket
+      ) do
+    comments = Comments.list_drop_comments(drop.id)
+
+    {:noreply,
+     socket
+     |> assign(:new_comments?, false)
+     |> stream(:comments, comments, reset: true)}
+  end
+
   @impl Phoenix.LiveView
-  def handle_info({CommentsBroadcast, :comment_created}, socket) do
-    {:noreply, assign(socket, :new_comments?, true)}
+  def handle_info(
+        {CommentsBroadcast, :comment_created, comment},
+        %{assigns: %{recent_comment_id: recent_comment_id}} = socket
+      ) do
+    if comment.id == recent_comment_id do
+      {:noreply, socket}
+    else
+      {:noreply, assign(socket, :new_comments?, true)}
+    end
   end
 
   defp create_comment(socket, params, nil) do

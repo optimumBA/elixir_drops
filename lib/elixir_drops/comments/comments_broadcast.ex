@@ -28,7 +28,8 @@ defmodule ElixirDrops.Comments.CommentsBroadcast do
       topic,
       {
         __MODULE__,
-        :comment_created
+        :comment_created,
+        comment
       }
     )
   end

@@ -28,7 +28,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         <h3 class="text-lg font-semibold mb-6 text-gray-700">
           Comments ({@comment_count})
         </h3>
-        <div :if={@current_user} class="border border-red-400">
+        <div :if={@current_user}>
           <.comment_form
             form={@form}
             comment_type={:comment}
@@ -49,7 +49,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           </p>
         </div>
       </div>
-      <div id="comments" phx-update="stream" class="space-y-6 last:mb-10 border-2 border-blue-800">
+      <div id="comments" phx-update="stream" class="space-y-6 last:mb-10">
         <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 p-4">
           <.comment
             comment={comment}
