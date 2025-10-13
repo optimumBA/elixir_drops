@@ -120,7 +120,7 @@ defmodule ElixirDropsWeb.DropComponents do
               <.created_at drop={@drop} />
             </p>
 
-            <div class="flex items-center gap-1 text-[#868686] text-xs before:content-['•'] before:mr-1">
+            <div class="flex items-center gap-2 text-[#868686] text-xs before:content-['•'] before:mr-1">
               <div class="w-5 h-5">
                 <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-full h-full object-cover" />
               </div>
@@ -159,6 +159,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   attr :current_user, User, default: nil
   attr :drop, Drop, required: true
+  attr :comment_count, :integer
 
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do
@@ -185,7 +186,13 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
       </div>
       <!-- Action row below author's name -->
-      <div class="flex items-center justify-end py-4 border-b border-gray-200">
+      <div class="flex items-center justify-between py-4 border-b border-gray-200">
+        <div class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer">
+          <.icon name="hero-link" class="h-5 w-5" />
+          <span class="inline text-sm">
+            {@comment_count} {if @comment_count > 0, do: "comments", else: "comment"}
+          </span>
+        </div>
         <!-- Right side: Action buttons -->
         <div class="flex items-center gap-4">
           <!-- Copy link button -->

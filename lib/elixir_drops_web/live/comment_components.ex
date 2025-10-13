@@ -361,21 +361,26 @@ defmodule ElixirDropsWeb.CommentComponents do
       <div class="flex items-center gap-x-6 text-xs md:text-sm text-gray-500 mb-4">
         <button
           :if={@depth == 0 && Enum.count(@comment.replies) > 0}
-          class="flex items-center gap-x-1"
+          class="flex items-center gap-2"
           phx-click={
-            JS.toggle(
-              to: "#comment-replies-#{@comment.id}",
-              in: "fade-in-scale",
-              out: "fade-out-scale"
-            )
+            JS.toggle(to: "#comment-replies-#{@comment.id}")
+            |> JS.toggle(to: "#comment-replies-count-#{@comment.id}", display: "inline-block")
+            |> JS.toggle(to: "#hide-text-#{@comment.id}", display: "inline-block")
           }
         >
-          <div class="w-5 h-5">
+          <div class="w-5 h-5 md:w-6 md:h-6">
             <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-full h-full object-cover" />
           </div>
 
-          <span>{Enum.count(@comment.replies)}</span>
-          <span>{if Enum.count(@comment.replies) == 1, do: "reply", else: "replies"}</span>
+          <div>
+            <span id={"comment-replies-count-#{@comment.id}"}>
+              {Enum.count(@comment.replies)}
+            </span>
+            <span id={"hide-text-#{@comment.id}"} class="hidden">Hide</span>
+            <span>
+              {if Enum.count(@comment.replies) == 1, do: "reply", else: "replies"}
+            </span>
+          </div>
         </button>
         <button
           :if={@current_user && is_nil(@comment.parent_id)}
