@@ -16,11 +16,11 @@ defmodule ElixirDrops.Drops.Drop do
   @foreign_key_type :binary_id
   schema "drops" do
     field :body, :string
+    field :comment_count, :integer, virtual: true
     embeds_one :screenshot, Screenshot, on_replace: :update
     field :search_vector, :string, load_in_query: false
     field :short_id, :string
     field :title, :string
-    field :comment_count, :integer, virtual: true
 
     # Virtual field for search relevance ranking
     field :relevance_rank, :float, virtual: true

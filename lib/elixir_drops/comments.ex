@@ -29,15 +29,7 @@ defmodule ElixirDrops.Comments do
       parent: [:user],
       replies: [
         :user,
-        parent: [:user],
-        replies: [
-          :user,
-          parent: [:user],
-          replies: [
-            :user,
-            parent: [:user]
-          ]
-        ]
+        parent: [:user]
       ]
     ]
   ]
