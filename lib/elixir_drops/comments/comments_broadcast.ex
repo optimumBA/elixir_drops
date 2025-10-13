@@ -4,26 +4,33 @@ defmodule ElixirDrops.Comments.CommentsBroadcast do
   """
 
   alias ElixirDrops.Comments.Comment
-  alias ElixirDropsWeb.Endpoint
+  alias ElixirDrops.PubSub
 
   @doc """
   Subscribes to comment events for a drop.
   """
-  @spec subscribe_to_drop(String.t()) :: :ok
-  def subscribe_to_drop(drop_id) do
-    drop_id
-    |> topic()
-    |> Endpoint.subscribe()
+  @spec subscribe(String.t()) :: :ok
+  def subscribe(drop_id) do
+    topic = topic(drop_id)
+    Phoenix.PubSub.subscribe(PubSub, topic)
   end
 
   @doc """
-  Broadcasts a comment event to all subscribers.
+  Broadcasts when a comment is created to all subscribers.
   """
-  @spec broadcast_comment_event(Comment.t(), atom()) :: :ok
-  def broadcast_comment_event(%Comment{} = comment, event) do
-    comment.drop_id
-    |> topic()
-    |> Endpoint.broadcast("comment_event", %{event: event, comment: comment})
+
+  @spec broadcast_comment_creation(Comment.t()) :: :ok
+  def broadcast_comment_creation(%Comment{} = comment) do
+    topic = topic(comment.drop_id)
+
+    Phoenix.PubSub.broadcast(
+      PubSub,
+      topic,
+      {
+        __MODULE__,
+        :comment_created
+      }
+    )
   end
 
   defp topic(drop_id), do: "drop_comments:#{drop_id}"

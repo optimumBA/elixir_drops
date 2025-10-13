@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Comments
+  alias ElixirDrops.Comments.CommentsBroadcast
   alias ElixirDrops.Drops
   alias ElixirDrops.StructuredData
   alias ElixirDropsWeb.CommentComponents
@@ -11,20 +12,23 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
-  # @impl Phoenix.LiveView
-  # def mount(_params, _session, socket) do
-  #   user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
+  @impl Phoenix.LiveView
+  def mount(_params, _session, socket) do
+    user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
 
-  #   {:ok,
-  #    socket
-  #    |> assign(:current_user, user)
-  #    |> stream(:comments, [])}
-  # end
+    {:ok,
+     socket
+     |> assign(:new_comments?, false)
+     |> assign(:current_user, user)
+     |> stream(:comments, [])}
+  end
 
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
     short_id = params["short_id"]
     drop = Drops.get_drop_by_short_id(short_id)
+
+    if connected?(socket), do: Comments.subscribe(drop.id)
 
     {:noreply,
      socket
@@ -198,6 +202,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments)}
   end
 
+  @impl Phoenix.LiveView
+  def handle_info({CommentsBroadcast, :comment_created}, socket) do
+    {:noreply, assign(socket, :new_comments?, true)}
+  end
+
   defp create_comment(socket, params, nil) do
     Comments.create_comment(
       socket.assigns.drop,
@@ -229,10 +238,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
       drop.title
       |> Phoenix.HTML.html_escape()
       |> Phoenix.HTML.safe_to_string()
-
-    if connected?(socket) do
-      Comments.subscribe_to_drop_comments(drop.id)
-    end
 
     comment_changeset = Comments.change_comment(%Comments.Comment{})
 

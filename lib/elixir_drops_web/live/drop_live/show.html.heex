@@ -12,6 +12,20 @@
     <DropComponents.drop comment_count={@comment_count} current_user={@current_user} drop={@drop} />
   </section>
 
+  <button
+    :if={@new_comments?}
+    class={[
+      "text-white text-sm flex items-center justify-center gap-x-1 bg-[#9666d9] hover:opacity-80 rounded-xl",
+      "px-4 py-2",
+      "fixed top-20 left-1/2 -translate-x-1/2 z-50 shadow-lg"
+    ]}
+    id="new-drops-indicator"
+    phx-click={JS.push("refresh-drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")}
+  >
+    <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
+    <span>New Comments</span>
+  </button>
+
   <%= if @drop do %>
     <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <CommentComponents.comment_section

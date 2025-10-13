@@ -51,9 +51,10 @@ defmodule ElixirDrops.Comments do
       :ok
 
   """
-  @spec subscribe_to_drop_comments(drop_id) :: :ok
-  def subscribe_to_drop_comments(drop_id) do
-    CommentsBroadcast.subscribe_to_drop(drop_id)
+
+  @spec subscribe(drop_id()) :: :ok
+  def subscribe(drop_id) do
+    CommentsBroadcast.subscribe(drop_id)
   end
 
   @doc """
@@ -146,7 +147,7 @@ defmodule ElixirDrops.Comments do
     %Comment{}
     |> create_comment_changeset(drop, user, parent, attrs)
     |> Repo.insert()
-    |> broadcast_comment_event(:created)
+    |> broadcast_comment_creation()
   end
 
   defp create_comment_changeset(comment, drop, user, parent, attrs) do
@@ -187,7 +188,6 @@ defmodule ElixirDrops.Comments do
     comment
     |> Comment.changeset(attrs)
     |> Repo.update()
-    |> broadcast_comment_event(:updated)
   end
 
   @doc """
@@ -207,7 +207,6 @@ defmodule ElixirDrops.Comments do
     comment
     |> Ecto.Changeset.change(deleted_at: DateTime.utc_now())
     |> Repo.update()
-    |> broadcast_comment_event(:deleted)
   end
 
   @doc """
@@ -252,11 +251,11 @@ defmodule ElixirDrops.Comments do
     user_id == current_user_id
   end
 
-  defp broadcast_comment_event({:ok, comment} = result, event) do
+  defp broadcast_comment_creation({:ok, comment} = result) do
     comment = Repo.preload(comment, @preload_list)
-    CommentsBroadcast.broadcast_comment_event(comment, event)
+    CommentsBroadcast.broadcast_comment_creation(comment)
     result
   end
 
-  defp broadcast_comment_event(error, _event), do: error
+  defp broadcast_comment_creation(error), do: error
 end
