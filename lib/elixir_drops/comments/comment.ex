@@ -7,7 +7,6 @@ defmodule ElixirDrops.Comments.Comment do
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Repo
 
   @type t :: %__MODULE__{}
 
@@ -32,22 +31,5 @@ defmodule ElixirDrops.Comments.Comment do
     |> cast(attrs, [:body])
     |> validate_required([:body])
     |> validate_length(:body, min: 1, max: 1000)
-    |> validate_parent_depth()
-  end
-
-  defp validate_parent_depth(changeset) do
-    case get_change(changeset, :parent_id) do
-      nil ->
-        changeset
-
-      parent_id ->
-        parent = Repo.get(Comment, parent_id)
-
-        if parent && parent.parent_id do
-          add_error(changeset, :parent_id, "replies cannot have replies")
-        else
-          changeset
-        end
-    end
   end
 end

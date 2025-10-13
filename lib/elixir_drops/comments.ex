@@ -150,16 +150,22 @@ defmodule ElixirDrops.Comments do
   end
 
   defp create_comment_changeset(comment, drop, user, parent, attrs) do
-    changeset =
-      comment
-      |> Comment.changeset(attrs)
-      |> Ecto.Changeset.put_assoc(:drop, drop)
-      |> Ecto.Changeset.put_assoc(:user, user)
+    comment
+    |> Comment.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:drop, drop)
+    |> Ecto.Changeset.put_assoc(:user, user)
+    |> verify_parent_comment(parent)
+  end
 
-    if parent do
-      Ecto.Changeset.put_assoc(changeset, :parent, parent)
-    else
-      changeset
+  defp verify_parent_comment(changeset, nil), do: changeset
+
+  defp verify_parent_comment(changeset, parent) do
+    case is_nil(parent.parent_id) do
+      true ->
+        Ecto.Changeset.put_assoc(changeset, :parent, parent)
+
+      false ->
+        Ecto.Changeset.add_error(changeset, :parent_id, "replies cannot have replies")
     end
   end
 

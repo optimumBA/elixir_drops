@@ -17,10 +17,6 @@
   top: 0;
 }
 
-.masonry-item {
-  width: calc(33.333% - 16px);
-}
-
 @media (min-width: 1801px) {
   .grid-sizer,
   .masonry-item {
