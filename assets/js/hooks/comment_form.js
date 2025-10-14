@@ -5,7 +5,9 @@ CommentFormHooks.CommentForm = {
     const form = this.el
 
     this.handleEvent('edit_comment', ({ comment_id }) => {
-      const container = document.getElementById(`edit-comment-container-${comment_id}`)
+      const container = document.getElementById(
+        `edit-comment-container-${comment_id}`
+      )
       if (!container) return
       container.classList.remove('hidden')
       container.classList.add('block')
