@@ -40,7 +40,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @impl Phoenix.LiveView
   def handle_event(
         "new_comment",
-        %{"comment" => comment_params, "parent_id" => parent_id, "comment_type" => comment_type},
+        %{"comment" => comment_params, "parent_id" => parent_id},
         socket
       ) do
     parent_id = if parent_id == "nil", do: nil, else: parent_id
@@ -64,7 +64,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
           {put_flash(socket, :error, "Failed to add your comment"), changeset}
       end
 
-    form_key = if comment_type == "comment", do: :comment_form, else: :reply_form
+    form_key = if parent_id, do: :reply_form, else: :new_comment_form
 
     {:noreply, assign(socket, form_key, to_form(changeset))}
   end
@@ -99,7 +99,12 @@ defmodule ElixirDropsWeb.DropLive.Show do
       if comment_id == "nil" do
         assign(socket, :new_comment_form, to_form(changeset))
       else
+        comment = Comments.get_comment!(comment_id)
+
         socket
+        |> assign(:comment_form, to_form(changeset))
+        |> stream_insert(:comments, comment)
+        |> push_event("edit_comment", %{comment_id: comment_id})
       end
 
     {:noreply,
@@ -124,10 +129,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     # Distinguish between editing an existing reply vs creating a new reply
     if String.starts_with?(form_id, "edit-comment-form-") do
-      #  avoid streaming to keep the form visible
+      # Editing existing reply: update edit form changeset, re-stream parent to render errors,
+      # and re-open the edit container so it stays visible.
+      comment_id = String.replace_prefix(form_id, "edit-comment-form-", "")
+      comment = Comments.get_comment!(comment_id)
+      top_level_comment = get_top_level_comment(comment)
+
       {:noreply,
        socket
-       |> push_event("reply_char_count", %{form_id: form_id, count: character_count})}
+       |> assign(:comment_form, to_form(changeset))
+       |> stream_insert(:comments, top_level_comment)
+       |> push_event("reply_char_count", %{form_id: form_id, count: character_count})
+       |> push_event("edit_comment", %{comment_id: comment_id})}
     else
       # Creating a new reply: update :reply_form and stream the parent to reflect live updates
       {
