@@ -78,6 +78,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply, assign(socket, :comment_form, to_form(changeset))}
   end
 
+  # Understood
   def handle_event(
         "validate_comment",
         %{
@@ -98,7 +99,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
       if comment_id == "nil" do
         assign(socket, :new_comment_form, to_form(changeset))
       else
-        assign(socket, :comment_form, to_form(changeset))
+        socket
       end
 
     {:noreply,
@@ -123,10 +124,9 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     # Distinguish between editing an existing reply vs creating a new reply
     if String.starts_with?(form_id, "edit-comment-form-") do
-      # Editing a reply: update the shared :comment_form and avoid streaming to keep the form visible
+      #  avoid streaming to keep the form visible
       {:noreply,
        socket
-       |> assign(:comment_form, to_form(changeset))
        |> push_event("reply_char_count", %{form_id: form_id, count: character_count})}
     else
       # Creating a new reply: update :reply_form and stream the parent to reflect live updates
@@ -140,12 +140,15 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
+  # Understood
   def handle_event(
         "update_comment_form",
         %{"comment_id" => comment_id},
         socket
       ) do
     comment = Comments.get_comment!(comment_id)
+    character_count = String.length(comment.body)
+    form_id = "edit-comment-form-#{comment_id}"
 
     form =
       comment
@@ -158,7 +161,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:comment_form, form)
      |> stream_insert(:comments, top_level_comment)
-     |> push_event("edit_comment", %{comment_id: comment_id})}
+     |> push_event("edit_comment", %{comment_id: comment_id})
+     |> push_event("reply_char_count", %{form_id: form_id, count: character_count})}
   end
 
   def handle_event(
