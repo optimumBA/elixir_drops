@@ -80,7 +80,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   def handle_event(
         "validate_comment",
-        %{"comment" => %{"body" => body} = comment_params, "form_id" => form_id},
+        %{
+          "comment" => %{"body" => body} = comment_params,
+          "form_id" => form_id,
+          "comment_id" => comment_id
+        },
         socket
       ) do
     character_count = String.length(body)
@@ -90,10 +94,15 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Comments.change_comment(comment_params)
       |> Map.put(:action, :validate)
 
+    socket =
+      if comment_id == "nil" do
+        assign(socket, :new_comment_form, to_form(changeset))
+      else
+        assign(socket, :comment_form, to_form(changeset))
+      end
+
     {:noreply,
-     socket
-     |> assign(:comment_form, to_form(changeset))
-     |> push_event("reply_char_count", %{form_id: form_id, count: character_count})}
+     push_event(socket, "reply_char_count", %{form_id: form_id, count: character_count})}
   end
 
   def handle_event(
@@ -238,6 +247,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
+  # Understood
   def handle_event(
         "load_more",
         %{"offset" => offset},
@@ -255,6 +265,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments)}
   end
 
+  # Understood
   def handle_event(
         "stream_new_comments",
         _params,
@@ -275,6 +286,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments, reset: true)}
   end
 
+  # Understood
   @impl Phoenix.LiveView
   def handle_info(
         {CommentsBroadcast, :comment_created, comment},
@@ -329,6 +341,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     socket
     |> assign(:drop, drop)
     |> assign(:comment_form, to_form(comment_changeset))
+    |> assign(:new_comment_form, to_form(comment_changeset))
     |> assign(:reply_form, to_form(comment_changeset))
     |> assign(:page_title, title)
     |> assign_comments(drop)

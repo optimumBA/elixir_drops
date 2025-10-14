@@ -18,6 +18,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
   attr :delete_comment_id, :string, default: nil
+  attr :new_comment_form, Phoenix.HTML.Form, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
   attr :top_level_comment_count, :integer, required: true
 
@@ -31,7 +32,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         </h3>
         <div :if={@current_user}>
           <.comment_form
-            form={@comment_form}
+            form={@new_comment_form}
             comment_type={:comment}
             id="comment-form"
             field_id="comment-form-field"
@@ -118,6 +119,13 @@ defmodule ElixirDropsWeb.CommentComponents do
       phx-hook="CommentForm"
     >
       <input :if={@comment_type == :response} type="hidden" name="parent_id" value={@parent.id} />
+      <input
+        :if={@comment && @comment_type == :comment}
+        type="hidden"
+        name="comment_id"
+        value={@comment.id}
+      />
+      <input :if={!@comment && @comment_type == :comment} type="hidden" name="comment_id" value="nil" />
       <input type="hidden" name="form_id" value={@id} />
       <div class="group">
         <.custom_input
