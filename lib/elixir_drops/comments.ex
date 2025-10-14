@@ -215,34 +215,6 @@ defmodule ElixirDrops.Comments do
     Comment.changeset(comment, attrs)
   end
 
-  @doc """
-  Checks if a user can edit a comment.
-
-  ## Examples
-
-      iex> can_edit_comment?(%Comment{user_id: "123"}, "123")
-      true
-
-  """
-  @spec can_edit_comment?(comment(), user_id) :: boolean()
-  def can_edit_comment?(%Comment{user_id: user_id}, current_user_id) do
-    user_id == current_user_id
-  end
-
-  @doc """
-  Checks if a user can delete a comment.
-
-  ## Examples
-
-      iex> can_delete_comment?(%Comment{user_id: "123"}, "123")
-      true
-
-  """
-  @spec can_delete_comment?(Comment.t(), String.t()) :: boolean()
-  def can_delete_comment?(%Comment{user_id: user_id}, current_user_id) do
-    user_id == current_user_id
-  end
-
   defp broadcast_comment_creation({:ok, comment} = result) do
     comment = Repo.preload(comment, @preload_list)
     CommentsBroadcast.broadcast_comment_creation(comment)

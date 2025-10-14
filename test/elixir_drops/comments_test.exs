@@ -354,46 +354,4 @@ defmodule ElixirDrops.CommentsTest do
       assert "should be at most 1000 character(s)" in errors_on(changeset).body
     end
   end
-
-  describe "can_edit_comment?/2" do
-    test "returns true for comment owner", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-
-      assert Comments.can_edit_comment?(comment, user.id)
-    end
-
-    test "returns false for different user", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-      another_user = user_fixture(%{github_id: 999_998})
-
-      refute Comments.can_edit_comment?(comment, another_user.id)
-    end
-
-    test "returns false for nil user_id", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-
-      refute Comments.can_edit_comment?(comment, nil)
-    end
-  end
-
-  describe "can_delete_comment?/2" do
-    test "returns true for comment owner", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-
-      assert Comments.can_delete_comment?(comment, user.id)
-    end
-
-    test "returns false for different user", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-      another_user = user_fixture(%{github_id: 999_999})
-
-      refute Comments.can_delete_comment?(comment, another_user.id)
-    end
-
-    test "returns false for nil user_id", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-
-      refute Comments.can_delete_comment?(comment, nil)
-    end
-  end
 end

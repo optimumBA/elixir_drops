@@ -4,9 +4,11 @@ CommentFormHooks.CommentForm = {
   mounted() {
     const form = this.el
 
-    this.handleEvent('edit_comment', (event) => {
-      form.classList.remove('hidden')
-      form.classList.add('block')
+    this.handleEvent('edit_comment', ({ comment_id }) => {
+      const container = document.getElementById(`edit-comment-container-${comment_id}`)
+      if (!container) return
+      container.classList.remove('hidden')
+      container.classList.add('block')
     })
 
     this.handleEvent('cancel_comment', () => {

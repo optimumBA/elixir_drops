@@ -75,11 +75,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Comments.get_comment!()
       |> Comments.change_comment()
 
-    {:noreply,
-     socket
-     |> assign(:comment_form, to_form(changeset))
-     |> assign(:editing_comment, comment_id)
-     |> push_event("edit_comment", %{comment_id: comment_id})}
+    {:noreply, assign(socket, :comment_form, to_form(changeset))}
   end
 
   def handle_event(
@@ -116,13 +112,69 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Comments.change_comment(comment_params)
       |> Map.put(:action, :validate)
 
-    {
-      :noreply,
-      socket
-      |> assign(:reply_form, to_form(changeset))
-      |> push_event("reply_char_count", %{form_id: form_id, count: character_count})
-      |> stream_insert(:comments, Comments.get_comment!(parent_id))
-    }
+    # Distinguish between editing an existing reply vs creating a new reply
+    if String.starts_with?(form_id, "edit-comment-form-") do
+      # Editing a reply: update the shared :comment_form and avoid streaming to keep the form visible
+      {:noreply,
+       socket
+       |> assign(:comment_form, to_form(changeset))
+       |> push_event("reply_char_count", %{form_id: form_id, count: character_count})}
+    else
+      # Creating a new reply: update :reply_form and stream the parent to reflect live updates
+      {
+        :noreply,
+        socket
+        |> assign(:reply_form, to_form(changeset))
+        |> push_event("reply_char_count", %{form_id: form_id, count: character_count})
+        |> stream_insert(:comments, Comments.get_comment!(parent_id))
+      }
+    end
+  end
+
+  def handle_event(
+        "update_comment_form",
+        %{"comment_id" => comment_id},
+        socket
+      ) do
+    comment = Comments.get_comment!(comment_id)
+
+    form =
+      comment
+      |> Comments.change_comment()
+      |> to_form()
+
+    top_level_comment = get_top_level_comment(comment)
+
+    {:noreply,
+     socket
+     |> assign(:comment_form, form)
+     |> stream_insert(:comments, top_level_comment)
+     |> push_event("edit_comment", %{comment_id: comment_id})}
+  end
+
+  def handle_event(
+        "update_comment",
+        %{"comment" => comment_params, "comment_id" => comment_id},
+        socket
+      ) do
+    comment = Comments.get_comment!(comment_id)
+
+    case Comments.update_comment(comment, comment_params) do
+      {:ok, updated} ->
+        top_level = get_top_level_comment(updated)
+        changeset = Comments.change_comment(%Comments.Comment{})
+
+        {:noreply,
+         socket
+         |> assign(:comment_form, to_form(changeset))
+         |> stream_insert(:comments, top_level)}
+
+      {:error, changeset} ->
+        {:noreply,
+         socket
+         |> assign(:comment_form, to_form(changeset))
+         |> put_flash(:error, "Failed to update comment")}
+    end
   end
 
   def handle_event("cancel", _params, socket) do
@@ -214,9 +266,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
           socket
       ) do
     comments = Comments.list_drop_comments(drop.id)
+    comment_count = Comments.count_drop_comments(drop.id)
 
     {:noreply,
      socket
+     |> assign(:comment_count, comment_count)
      |> assign(:new_comments?, false)
      |> stream(:comments, comments, reset: true)}
   end
@@ -232,6 +286,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
       {:noreply, assign(socket, :new_comments?, true)}
     end
   end
+
+  defp get_top_level_comment(%{parent_id: nil} = comment), do: comment
+
+  defp get_top_level_comment(%{parent_id: parent_id}),
+    do: get_top_level_comment(Comments.get_comment!(parent_id))
 
   defp create_comment(socket, params, nil) do
     Comments.create_comment(
@@ -267,6 +326,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     comment_changeset = Comments.change_comment(%Comments.Comment{})
 
+    # dbg(to_form(comment_changeset).data)
+
     socket
     |> assign(:drop, drop)
     |> assign(:comment_form, to_form(comment_changeset))
@@ -291,17 +352,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> assign(:comment_count, comment_count)
     |> assign(:top_level_comment_count, top_level_comment_count)
   end
-
-  # defp reload_comments_preserving_ui_state(socket) do
-  #   %{drop: drop} = socket.assigns
-  #   comments = Comments.list_drop_comments(drop.id)
-  #   comment_count = Comments.count_drop_comments(drop.id)
-
-  #   socket
-  #   |> stream(:comments, comments, reset: true)
-  #   |> assign(:comment_count, comment_count)
-  #   |> assign(:has_more_comments, length(comments) >= 10)
-  # end
 
   defp assign_seo_attributes(socket) do
     %{drop: drop} = socket.assigns
