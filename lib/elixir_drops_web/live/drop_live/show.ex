@@ -326,15 +326,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     comment_changeset = Comments.change_comment(%Comments.Comment{})
 
-    # dbg(to_form(comment_changeset).data)
-
     socket
     |> assign(:drop, drop)
     |> assign(:comment_form, to_form(comment_changeset))
     |> assign(:reply_form, to_form(comment_changeset))
-    |> assign(:has_more_comments, false)
-    |> assign(:replying_to, nil)
-    |> assign(:editing_comment, nil)
     |> assign(:page_title, title)
     |> assign_comments(drop)
     |> assign_seo_attributes()

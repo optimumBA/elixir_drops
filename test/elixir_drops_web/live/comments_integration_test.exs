@@ -59,9 +59,7 @@ defmodule ElixirDropsWeb.CommentsIntegrationTest do
 
       # Visit page without being logged in
       conn = build_conn()
-      {:ok, view, html} = live(conn, ~p"/d/#{drop.short_id}")
-
-      open_browser(view)
+      {:ok, _view, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       # Should see the comment but not the form
       assert html =~ "Comments (1)"
