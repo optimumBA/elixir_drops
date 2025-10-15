@@ -83,8 +83,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
         "validate_comment",
         %{
           "comment" => %{"body" => body} = comment_params,
-          "form_id" => form_id,
-          "comment_id" => comment_id
+          "comment_id" => comment_id,
+          "form_id" => form_id
         },
         socket
       ) do
@@ -108,7 +108,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
       end
 
     {:noreply,
-     push_event(socket, "reply_char_count", %{form_id: form_id, count: character_count})}
+     push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})}
   end
 
   def handle_event(
@@ -139,7 +139,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
        socket
        |> assign(:comment_form, to_form(changeset))
        |> stream_insert(:comments, top_level_comment)
-       |> push_event("reply_char_count", %{form_id: form_id, count: character_count})
+       |> push_event("reply_char_count", %{count: character_count, form_id: form_id})
        |> push_event("edit_comment", %{comment_id: comment_id})}
     else
       # Creating a new reply: update :reply_form and stream the parent to reflect live updates
@@ -147,7 +147,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
         :noreply,
         socket
         |> assign(:reply_form, to_form(changeset))
-        |> push_event("reply_char_count", %{form_id: form_id, count: character_count})
+        |> push_event("reply_char_count", %{count: character_count, form_id: form_id})
         |> stream_insert(:comments, Comments.get_comment!(parent_id))
       }
     end
@@ -175,7 +175,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign(:comment_form, form)
      |> stream_insert(:comments, top_level_comment)
      |> push_event("edit_comment", %{comment_id: comment_id})
-     |> push_event("reply_char_count", %{form_id: form_id, count: character_count})}
+     |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
   end
 
   def handle_event(
@@ -212,8 +212,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply,
      socket
-     |> assign(:comment_form, to_form(changeset))
      |> assign(:character_count, 0)
+     |> assign(:comment_form, to_form(changeset))
      |> push_event("cancel_comment", %{})}
   end
 
@@ -226,8 +226,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply,
      socket
-     |> assign(:reply_form, to_form(changeset))
      |> assign(:reply_character_count, 0)
+     |> assign(:reply_form, to_form(changeset))
      |> push_event("cancel_comment", %{})}
   end
 
@@ -356,11 +356,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
     comment_changeset = Comments.change_comment(%Comments.Comment{})
 
     socket
-    |> assign(:drop, drop)
     |> assign(:comment_form, to_form(comment_changeset))
+    |> assign(:drop, drop)
     |> assign(:new_comment_form, to_form(comment_changeset))
-    |> assign(:reply_form, to_form(comment_changeset))
     |> assign(:page_title, title)
+    |> assign(:reply_form, to_form(comment_changeset))
     |> assign_comments(drop)
     |> assign_seo_attributes()
   end
@@ -371,10 +371,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
     top_level_comment_count = Comments.count_drop_top_level_comments(drop.id)
 
     socket
-    |> stream(:comments, comments, reset: true)
-    |> assign(:comment_offset, 10)
     |> assign(:comment_count, drop.comment_count)
+    |> assign(:comment_offset, 10)
     |> assign(:top_level_comment_count, top_level_comment_count)
+    |> stream(:comments, comments, reset: true)
   end
 
   defp assign_seo_attributes(socket) do

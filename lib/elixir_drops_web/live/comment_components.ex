@@ -32,10 +32,10 @@ defmodule ElixirDropsWeb.CommentComponents do
         </h3>
         <div :if={@current_user}>
           <.comment_form
-            form={@new_comment_form}
             comment_type={:comment}
-            id="comment-form"
             field_id="comment-form-field"
+            form={@new_comment_form}
+            id="comment-form"
           />
         </div>
         <div :if={!@current_user}>
@@ -53,15 +53,15 @@ defmodule ElixirDropsWeb.CommentComponents do
       <div id="comments" phx-update="stream" class="space-y-6 last:mb-10">
         <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 p-4">
           <.comment
-            comment_type={:comment}
             comment={comment}
-            current_user={@current_user}
-            current_url={@current_url}
-            parent={nil}
-            delete_comment_id={@delete_comment_id}
             comment_form={@comment_form}
-            reply_form={@reply_form}
+            comment_type={:comment}
+            current_url={@current_url}
+            current_user={@current_user}
+            delete_comment_id={@delete_comment_id}
             depth={0}
+            parent={nil}
+            reply_form={@reply_form}
           />
         </div>
       </div>
@@ -197,24 +197,24 @@ defmodule ElixirDropsWeb.CommentComponents do
     <div class="comment font-roboto">
       <.comment_header
         comment={@comment}
-        current_user={@current_user}
         current_url={@current_url}
+        current_user={@current_user}
         delete_comment_id={@delete_comment_id}
         depth={@depth}
       />
       <.comment_body
-        comment_type={@comment_type}
         comment={@comment}
-        parent={@parent}
+        comment_type={@comment_type}
+        current_user={@current_user}
         depth={@depth}
         form={@comment_form}
-        current_user={@current_user}
+        parent={@parent}
       />
       <.comment_actions
         comment={@comment}
         current_user={@current_user}
-        reply_form={@reply_form}
         depth={@depth}
+        reply_form={@reply_form}
       />
 
       <div
@@ -226,12 +226,12 @@ defmodule ElixirDropsWeb.CommentComponents do
       >
         <.comment_replies
           comment={@comment}
-          current_user={@current_user}
-          current_url={@current_url}
           comment_form={@comment_form}
-          reply_form={@reply_form}
-          depth={@depth}
+          current_url={@current_url}
+          current_user={@current_user}
           delete_comment_id={@delete_comment_id}
+          depth={@depth}
+          reply_form={@reply_form}
         />
       </div>
     </div>
@@ -340,9 +340,9 @@ defmodule ElixirDropsWeb.CommentComponents do
           on_cancel={JS.patch(@current_url)}
         >
           <.live_component
-            module={CommentFormComponent}
-            id={"delete-modal-#{@comment.id}"}
             comment={@comment}
+            id={"delete-modal-#{@comment.id}"}
+            module={CommentFormComponent}
             patch={@current_url}
           />
         </.modal>
@@ -371,12 +371,12 @@ defmodule ElixirDropsWeb.CommentComponents do
     </div>
     <div :if={!@comment.deleted_at} id={"edit-comment-container-#{@comment.id}"} class="hidden">
       <.comment_form
-        form={@form}
-        comment_type={@comment_type}
         comment={@comment}
-        parent={@parent}
-        id={"edit-comment-form-#{@comment.id}"}
+        comment_type={@comment_type}
         field_id="edit-comment-form-field"
+        form={@form}
+        id={"edit-comment-form-#{@comment.id}"}
+        parent={@parent}
       />
     </div>
     """
@@ -423,13 +423,13 @@ defmodule ElixirDropsWeb.CommentComponents do
         </button>
       </div>
       <.comment_form
-        id={"reply-form-#{@comment.id}-depth-#{@depth}"}
-        form={@reply_form}
-        comment_type={:response}
-        comment={nil}
-        parent={@comment}
         class="hidden"
+        comment={nil}
+        comment_type={:response}
         field_id={"reply-form-field-#{@comment.id}-depth-#{@depth}"}
+        form={@reply_form}
+        id={"reply-form-#{@comment.id}-depth-#{@depth}"}
+        parent={@comment}
       />
     </div>
     """
@@ -453,14 +453,14 @@ defmodule ElixirDropsWeb.CommentComponents do
       <div :for={reply <- @comment.replies} class="ml-6 md:ml-10 space-y-4 pl-4">
         <.comment
           comment={reply}
-          comment_type={:response}
-          current_user={@current_user}
-          current_url={@current_url}
-          delete_comment_id={@delete_comment_id}
           comment_form={@comment_form}
-          reply_form={@reply_form}
-          parent={Comments.get_comment!(reply.parent_id)}
+          comment_type={:response}
+          current_url={@current_url}
+          current_user={@current_user}
+          delete_comment_id={@delete_comment_id}
           depth={@depth + 1}
+          parent={Comments.get_comment!(reply.parent_id)}
+          reply_form={@reply_form}
         />
       </div>
     </div>
