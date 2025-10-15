@@ -150,7 +150,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           phx-debounce="100"
         >
           <:extra_content>
-            <div class="justify-end gap-x-4 mt-3 hidden group-focus-within:flex">
+            <div class="justify-end gap-x-4 mt-3 flex opacity-0 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-hover:pointer-events-auto">
               <button
                 phx-click={if @comment_type == :comment, do: "cancel", else: "cancel_reply"}
                 type="button"
