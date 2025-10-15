@@ -297,7 +297,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         </p>
 
         <button
-          :if={@current_user && @current_user.id == @comment.user_id}
+          :if={@current_user && @current_user.id == @comment.user_id && is_nil(@comment.deleted_at)}
           class="ml-auto"
           aria-label="Toggle comment actions"
           phx-click={JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")}
@@ -307,7 +307,6 @@ defmodule ElixirDropsWeb.CommentComponents do
       </div>
 
       <div
-        :if={@current_user && @current_user.id == @comment.user_id}
         id={"comment-actions-#{@comment.id}-depth-#{@depth}"}
         class={[
           "grid items-center absolute top-8 right-4 z-10",

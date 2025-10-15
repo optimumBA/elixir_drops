@@ -37,31 +37,32 @@ defmodule ElixirDropsWeb.CustomInputComponents do
       <.custom_input field={@form[:email]} type="email" />
       <.custom_input name="my-input" errors={["oh no!"]} />
   """
-  attr :id, :any, default: nil
-  attr :name, :any
-  attr :label, :string, default: nil
-  attr :value, :any
-
-  attr :type, :string,
-    default: "text",
-    values: ~w(checkbox color date datetime-local email file month number password
-               range search select tel text textarea time url week)
+  attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
+  attr :class, :any, default: nil, doc: "classes for input container"
+  attr :errors, :list, default: []
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
 
-  attr :errors, :list, default: []
-  attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
-  attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
-  attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
-  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
-  attr :label_class, :string, default: nil, doc: "classes for input label"
+  attr :id, :any, default: nil
   attr :input_field_class, :any, default: nil, doc: "classes for input field"
-  attr :class, :any, default: nil, doc: "classes for input container"
+  attr :label, :string, default: nil
+  attr :label_class, :string, default: nil, doc: "classes for input label"
+  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :name, :any
+  attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
+  attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step)
+
+  attr :type, :string,
+    default: "text",
+    values: ~w(checkbox color date datetime-local email file month number password
+                             range search select tel text textarea time url week)
+
+  attr :value, :any
 
   slot :extra_content, required: false
 
