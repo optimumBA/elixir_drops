@@ -16,7 +16,7 @@ defmodule ElixirDrops.Comments.CommentsBroadcast do
   end
 
   @doc """
-  Broadcasts when a comment is created to all subscribers.
+  Broadcasts comment creation to all subscribers.
   """
 
   @spec broadcast_comment_creation(Comment.t()) :: :ok

@@ -368,13 +368,12 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp assign_comments(socket, drop) do
     comments = Comments.list_drop_comments(drop.id)
 
-    comment_count = Comments.count_drop_comments(drop.id)
     top_level_comment_count = Comments.count_drop_top_level_comments(drop.id)
 
     socket
     |> stream(:comments, comments, reset: true)
     |> assign(:comment_offset, 10)
-    |> assign(:comment_count, comment_count)
+    |> assign(:comment_count, drop.comment_count)
     |> assign(:top_level_comment_count, top_level_comment_count)
   end
 

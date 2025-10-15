@@ -39,7 +39,7 @@ defmodule ElixirDrops.Comments do
 
   ## Examples
 
-      iex> subscribe_to_drop_comments("550e8400-e29b-41d4-a716-446655440000")
+      iex> subscribe("550e8400-e29b-41d4-a716-446655440000")
       :ok
 
   """

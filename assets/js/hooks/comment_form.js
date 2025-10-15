@@ -2,8 +2,6 @@ let CommentFormHooks = {}
 
 CommentFormHooks.CommentForm = {
   mounted() {
-    const form = this.el
-
     this.handleEvent('edit_comment', ({ comment_id }) => {
       const container = document.getElementById(
         `edit-comment-container-${comment_id}`

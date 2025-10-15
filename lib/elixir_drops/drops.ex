@@ -236,9 +236,18 @@ defmodule ElixirDrops.Drops do
 
   defp safe_get_drop_by_short_id(short_id) do
     result =
-      Drop
+      drop_query()
       |> where([d], d.short_id == ^short_id)
       |> preload([:user])
+      |> select_merge([d], %{
+        comment_count:
+          subquery(
+            from(c in Comment,
+              where: c.drop_id == parent_as(:drop).id and is_nil(c.deleted_at),
+              select: count(c.id)
+            )
+          )
+      })
       |> Repo.one()
 
     {:ok, result}
