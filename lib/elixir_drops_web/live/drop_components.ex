@@ -157,9 +157,9 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :comment_count, :integer
   attr :current_user, User, default: nil
   attr :drop, Drop, required: true
-  attr :comment_count, :integer
 
   @spec drop(assigns()) :: rendered()
   def drop(assigns) do

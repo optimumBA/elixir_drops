@@ -22,8 +22,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
   # end
 
   @impl Phoenix.LiveView
-  def handle_params(params, _url, socket) do
-    short_id = params["short_id"]
+  def handle_params(
+        %{"short_id" => short_id} = params,
+        _url,
+        socket
+      ) do
     drop = Drops.get_drop_by_short_id(short_id)
 
     if connected?(socket), do: Comments.subscribe(drop.id)

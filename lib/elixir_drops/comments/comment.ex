@@ -14,8 +14,8 @@ defmodule ElixirDrops.Comments.Comment do
   @foreign_key_type :binary_id
   schema "comments" do
     field :body, :string
-    field :edited_at, :utc_datetime_usec
     field :deleted_at, :utc_datetime_usec
+    field :edited_at, :utc_datetime_usec
 
     belongs_to :drop, Drop
     belongs_to :parent, Comment
