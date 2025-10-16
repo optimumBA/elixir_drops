@@ -14,6 +14,7 @@ defmodule ElixirDrops.Comments.Comment do
   @foreign_key_type :binary_id
   schema "comments" do
     field :body, :string
+    field :edited_at, :utc_datetime_usec
     field :deleted_at, :utc_datetime_usec
 
     belongs_to :drop, Drop
@@ -28,7 +29,7 @@ defmodule ElixirDrops.Comments.Comment do
   @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(comment, attrs) do
     comment
-    |> cast(attrs, [:body])
+    |> cast(attrs, [:body, :deleted_at, :edited_at])
     |> validate_required([:body])
     |> validate_length(:body, min: 1, max: 1000)
   end

@@ -275,7 +275,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         >
           {@comment.user.name}
         </p>
-        <p class="text-gray-500 flex items-center gap-x-2">
+        <p class="text-[#8E8E8E] roboto-regular flex items-center gap-x-2">
           <span class="inline-block w-1 h-1 rounded-full bg-gray-500"></span>
           <svg
             :if={@comment.parent_id}
@@ -306,6 +306,22 @@ defmodule ElixirDropsWeb.CommentComponents do
             class="bg-[#eeeeee] text-[#575757] text-xs inline-block px-2 py-1 rounded-md"
           >
             You
+          </span>
+          <span
+            :if={@comment.edited_at && !@comment.deleted_at}
+            class="inline-block w-1 h-1 rounded-full bg-gray-500"
+          >
+          </span>
+          <span
+            :if={@comment.edited_at && !@comment.deleted_at}
+            class="text-xs inline-block py-1 italic"
+          >
+            Edited
+          </span>
+          <span :if={@comment.deleted_at} class="inline-block w-1 h-1 rounded-full bg-gray-500">
+          </span>
+          <span :if={@comment.deleted_at} class="text-xs inline-block py-1 italic">
+            Deleted
           </span>
         </p>
 
@@ -378,9 +394,6 @@ defmodule ElixirDropsWeb.CommentComponents do
         {DropComponents.to_html(@comment.body)}
         <DropComponents.copy_prompt />
       </div>
-      <div :if={@comment.deleted_at}>
-        [deleted]
-      </div>
     </div>
     <div :if={!@comment.deleted_at} id={"edit-comment-container-#{@comment.id}"} class="hidden">
       <.comment_form
@@ -429,7 +442,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           </div>
         </button>
         <button
-          :if={@current_user && is_nil(@comment.parent_id)}
+          :if={@current_user && is_nil(@comment.parent_id) && is_nil(@comment.deleted_at)}
           phx-click={
             JS.toggle(to: "#reply-form-#{@comment.id}-depth-#{@depth}")
             |> JS.focus(to: "#reply-form-field-#{@comment.id}-depth-#{@depth}")

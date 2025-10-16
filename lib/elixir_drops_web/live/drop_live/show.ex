@@ -74,6 +74,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
         %{"comment" => comment_params, "comment_id" => comment_id},
         socket
       ) do
+    edited_at = %{"edited_at" => DateTime.utc_now()}
+    comment_params = Map.merge(comment_params, edited_at)
     comment = Comments.get_comment!(comment_id)
 
     case Comments.update_comment(comment, comment_params) do
@@ -239,10 +241,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     case Comments.delete_comment(comment) do
       {:ok, _comment} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Comment successfully deleted")
-         |> push_patch(to: patch_url)}
+        {:noreply, push_patch(socket, to: patch_url)}
 
       {:error, _changeset} ->
         {:noreply,
