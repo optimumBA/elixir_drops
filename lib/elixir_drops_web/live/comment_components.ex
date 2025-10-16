@@ -105,7 +105,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           JS.push("new_comment",
             value: %{
               comment_type: @comment_type,
-              parent_id: if(@comment_type == :response, do: @parent.id, else: nil)
+              parent_id: if(@comment_type == :response, do: @parent.id, else: "nil")
             }
           )
         end
