@@ -386,7 +386,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       <.comment_form
         comment={@comment}
         comment_type={@comment_type}
-        field_id="edit-comment-form-field-#{@comment.id}"
+        field_id={"edit-comment-form-field-#{@comment.id}"}
         form={@form}
         id={"edit-comment-form-#{@comment.id}"}
         parent={@parent}

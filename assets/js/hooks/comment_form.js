@@ -9,6 +9,11 @@ CommentFormHooks.CommentForm = {
       if (!container) return
       container.classList.remove('hidden')
       container.classList.add('block')
+
+      const formCustomInput = document.getElementById(
+        `edit-comment-form-field-${comment_id}`
+      )
+      formCustomInput.focus()
     })
 
     this.handleEvent('cancel_comment', () => {
