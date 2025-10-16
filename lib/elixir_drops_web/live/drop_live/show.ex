@@ -43,8 +43,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
         %{"comment" => comment_params, "parent_id" => parent_id},
         socket
       ) do
-    parent_id = if parent_id == "nil", do: nil, else: parent_id
-
     {socket, changeset} =
       case create_comment(socket, comment_params, parent_id) do
         {:ok, comment} ->
@@ -67,6 +65,31 @@ defmodule ElixirDropsWeb.DropLive.Show do
     form_key = if parent_id, do: :reply_form, else: :new_comment_form
 
     {:noreply, assign(socket, form_key, to_form(changeset))}
+  end
+
+  def handle_event(
+        "update_comment",
+        %{"comment" => comment_params, "comment_id" => comment_id},
+        socket
+      ) do
+    comment = Comments.get_comment!(comment_id)
+
+    case Comments.update_comment(comment, comment_params) do
+      {:ok, updated} ->
+        top_level = get_top_level_comment(updated)
+        changeset = Comments.change_comment(%Comments.Comment{})
+
+        {:noreply,
+         socket
+         |> assign(:comment_form, to_form(changeset))
+         |> stream_insert(:comments, top_level)}
+
+      {:error, changeset} ->
+        {:noreply,
+         socket
+         |> assign(:comment_form, to_form(changeset))
+         |> put_flash(:error, "Failed to update comment")}
+    end
   end
 
   def handle_event("edit_comment", %{"comment_id" => comment_id}, socket) do
@@ -178,57 +201,20 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
   end
 
-  def handle_event(
-        "update_comment",
-        %{"comment" => comment_params, "comment_id" => comment_id},
-        socket
-      ) do
-    comment = Comments.get_comment!(comment_id)
-
-    case Comments.update_comment(comment, comment_params) do
-      {:ok, updated} ->
-        top_level = get_top_level_comment(updated)
-        changeset = Comments.change_comment(%Comments.Comment{})
-
-        {:noreply,
-         socket
-         |> assign(:comment_form, to_form(changeset))
-         |> stream_insert(:comments, top_level)}
-
-      {:error, changeset} ->
-        {:noreply,
-         socket
-         |> assign(:comment_form, to_form(changeset))
-         |> put_flash(:error, "Failed to update comment")}
-    end
-  end
-
-  def handle_event("cancel", _params, socket) do
+  def handle_event("cancel_new_comment", _params, socket) do
     changeset =
       Comments.change_comment(
         %Comments.Comment{},
         %{"body" => ""}
       )
 
-    {:noreply,
-     socket
-     |> assign(:character_count, 0)
-     |> assign(:comment_form, to_form(changeset))
-     |> push_event("cancel_comment", %{})}
-  end
-
-  def handle_event("cancel_reply", _params, socket) do
-    changeset =
-      Comments.change_comment(
-        %Comments.Comment{},
-        %{"body" => ""}
-      )
-
-    {:noreply,
-     socket
-     |> assign(:reply_character_count, 0)
-     |> assign(:reply_form, to_form(changeset))
-     |> push_event("cancel_comment", %{})}
+    {
+      :noreply,
+      socket
+      |> assign(:character_count, 0)
+      |> assign(:new_comment_form, to_form(changeset))
+      |> push_event("cancel_comment", %{})
+    }
   end
 
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
