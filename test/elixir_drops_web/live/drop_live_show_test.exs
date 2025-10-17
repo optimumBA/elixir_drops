@@ -93,23 +93,25 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert page =~ "Edited"
     end
 
-    test "empty comment edit shows validation error", %{conn: conn, drop: drop, user: user} do
+    test "empty comment edit causes submit button to be disabled", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
       {:ok, comment} =
         Comments.create_comment(drop, user, nil, %{body: "Some content"})
 
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
-      # Validate with empty body
-      html =
-        view
-        |> form("#edit-comment-form-#{comment.id}",
-          comment: %{body: ""},
-          comment_id: comment.id,
-          form_id: "edit-comment-form-#{comment.id}"
-        )
-        |> render_change()
+      view
+      |> form("#edit-comment-form-#{comment.id}",
+        comment: %{body: ""},
+        comment_id: comment.id,
+        form_id: "edit-comment-form-#{comment.id}"
+      )
+      |> render_change()
 
-      assert html =~ "can&#39;t be blank"
+      assert has_element?(view, "button#submit-button-edit-comment-form-#{comment.id}[disabled]")
     end
   end
 
@@ -241,14 +243,14 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       unique = "Some unique draft text #{System.unique_integer()}"
 
       # Type into the textarea to mark field as used
-      _ =
-        view
-        |> form("#comment-form",
-          comment: %{body: unique},
-          comment_id: "nil",
-          form_id: "comment-form"
-        )
-        |> render_change()
+
+      view
+      |> form("#comment-form",
+        comment: %{body: unique},
+        comment_id: "nil",
+        form_id: "comment-form"
+      )
+      |> render_change()
 
       # Click Cancel
       view

@@ -26,6 +26,12 @@ CommentFormHooks.CommentForm = {
     this.handleEvent('reply_char_count', ({ count, form_id }) => {
       const span = document.getElementById(`${form_id}-char-count`)
       span.textContent = count
+      const submitButton = document.getElementById(`submit-button-${form_id}`)
+      if (count > 0) {
+        submitButton.disabled = false
+      } else {
+        submitButton.disabled = true
+      }
     })
   },
 }
