@@ -2,11 +2,24 @@ let CommentFormHooks = {}
 
 CommentFormHooks.CommentForm = {
   mounted() {
+    this.handleEvent('cancel_comment', () => {
+      const active = document.activeElement
+      if (active && typeof active.blur === 'function') {
+        active.blur()
+      }
+    })
+
+    this.handleEvent('close_reply_form', ({ form_id }) => {
+      const form = document.getElementById(`${form_id}`)
+      form.style.removeProperty('display')
+      form.classList.remove('block')
+      form.classList.add('hidden')
+    })
+
     this.handleEvent('edit_comment', ({ comment_id }) => {
       const container = document.getElementById(
         `edit-comment-container-${comment_id}`
       )
-      if (!container) return
       container.classList.remove('hidden')
       container.classList.add('block')
 
@@ -14,13 +27,6 @@ CommentFormHooks.CommentForm = {
         `edit-comment-form-field-${comment_id}`
       )
       formCustomInput.focus()
-    })
-
-    this.handleEvent('cancel_comment', () => {
-      const active = document.activeElement
-      if (active && typeof active.blur === 'function') {
-        active.blur()
-      }
     })
 
     this.handleEvent('reply_char_count', ({ count, form_id }) => {

@@ -43,7 +43,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @impl Phoenix.LiveView
   def handle_event(
         "new_comment",
-        %{"comment" => comment_params, "parent_id" => parent_id},
+        %{"comment" => comment_params, "form_id" => form_id, "parent_id" => parent_id},
         socket
       ) do
     parent_id = if parent_id == "nil", do: nil, else: parent_id
@@ -67,9 +67,14 @@ defmodule ElixirDropsWeb.DropLive.Show do
           {put_flash(socket, :error, "Failed to add your comment"), changeset}
       end
 
+    updated_socket =
+      if parent_id,
+        do: push_event(socket, "close_reply_form", %{form_id: form_id}),
+        else: socket
+
     form_key = if parent_id, do: :reply_form, else: :new_comment_form
 
-    {:noreply, assign(socket, form_key, to_form(changeset))}
+    {:noreply, assign(updated_socket, form_key, to_form(changeset))}
   end
 
   def handle_event(
@@ -97,15 +102,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
          |> assign(:comment_form, to_form(changeset))
          |> put_flash(:error, "Failed to update comment")}
     end
-  end
-
-  def handle_event("edit_comment", %{"comment_id" => comment_id}, socket) do
-    changeset =
-      comment_id
-      |> Comments.get_comment!()
-      |> Comments.change_comment()
-
-    {:noreply, assign(socket, :comment_form, to_form(changeset))}
   end
 
   def handle_event(
@@ -149,7 +145,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   def handle_event(
-        "update_comment_form",
+        "change_edit_comment_form",
         %{"comment_id" => comment_id},
         socket
       ) do

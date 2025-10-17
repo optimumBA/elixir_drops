@@ -329,7 +329,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       >
         <button
           class="flex items-center gap-x-2 mb-6"
-          phx-click={JS.push("update_comment_form", value: %{comment_id: @comment.id})}
+          phx-click={JS.push("change_edit_comment_form", value: %{comment_id: @comment.id})}
         >
           <.icon name="hero-pencil" class="w-4 h-4" /> Edit comment
         </button>
