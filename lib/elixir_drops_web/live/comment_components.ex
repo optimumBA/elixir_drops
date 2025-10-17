@@ -211,45 +211,54 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   defp comment(assigns) do
     ~H"""
-    <div class="comment font-roboto">
-      <.comment_header
-        comment={@comment}
-        current_url={@current_url}
-        current_user={@current_user}
-        delete_comment_id={@delete_comment_id}
-        depth={@depth}
-      />
-      <.comment_body
-        comment={@comment}
-        comment_type={@comment_type}
-        current_user={@current_user}
-        depth={@depth}
-        form={@comment_form}
-        parent={@parent}
-      />
-      <.comment_actions
-        comment={@comment}
-        current_user={@current_user}
-        depth={@depth}
-        reply_form={@reply_form}
-      />
-
-      <div
-        class={[
-          @depth == 0 && "hidden",
-          "block"
-        ]}
-        id={"comment-replies-#{@comment.id}"}
-      >
-        <.comment_replies
+    <div class="flex gap-4 comment font-roboto">
+      <div>
+        <img
+          src={@comment.user.avatar || "/images/default-avatar.svg"}
+          alt={@comment.user.name}
+          class="w-11 h-11 rounded-full border border-gray-200 flex-shrink-0"
+        />
+      </div>
+      <div class="grow">
+        <.comment_header
           comment={@comment}
-          comment_form={@comment_form}
           current_url={@current_url}
           current_user={@current_user}
           delete_comment_id={@delete_comment_id}
           depth={@depth}
+        />
+        <.comment_body
+          comment={@comment}
+          comment_type={@comment_type}
+          current_user={@current_user}
+          depth={@depth}
+          form={@comment_form}
+          parent={@parent}
+        />
+        <.comment_actions
+          comment={@comment}
+          current_user={@current_user}
+          depth={@depth}
           reply_form={@reply_form}
         />
+
+        <div
+          class={[
+            @depth == 0 && "hidden",
+            "block"
+          ]}
+          id={"comment-replies-#{@comment.id}"}
+        >
+          <.comment_replies
+            comment={@comment}
+            comment_form={@comment_form}
+            current_url={@current_url}
+            current_user={@current_user}
+            delete_comment_id={@delete_comment_id}
+            depth={@depth}
+            reply_form={@reply_form}
+          />
+        </div>
       </div>
     </div>
     """
@@ -268,11 +277,6 @@ defmodule ElixirDropsWeb.CommentComponents do
     ~H"""
     <div class="comment-header relative">
       <div class="flex items-center gap-x-2 md:gap-x-3 text-xs md:text-sm">
-        <img
-          src={@comment.user.avatar || "/images/default-avatar.svg"}
-          alt={@comment.user.name}
-          class="w-8 h-8 rounded-full border border-gray-200 flex-shrink-0"
-        />
         <p
           class="font-medium text-gray-900 max-w-[10ch] md:max-w-[100%] truncate"
           title={@comment.user.name}
@@ -311,7 +315,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           aria-label="Toggle comment actions"
           phx-click={JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")}
         >
-          <.icon name="hero-ellipsis-vertical" class="w-4 h-4" />
+          <.icon name="hero-ellipsis-horizontal" class="w-4 h-4" />
         </button>
       </div>
 
