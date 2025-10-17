@@ -51,15 +51,15 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {socket, changeset} =
       case create_comment(socket, comment_params, parent_id) do
         {:ok, comment} ->
+          top_level_comment = get_top_level_comment(comment)
           changeset = Comments.change_comment(%Comments.Comment{})
-          comments = Comments.list_drop_comments(socket.assigns.drop.id)
           comment_count = socket.assigns.comment_count + 1
 
           socket =
             socket
             |> assign(:comment_count, comment_count)
             |> assign(:recent_comment_id, comment.id)
-            |> stream(:comments, comments, reset: true)
+            |> stream_insert(:comments, top_level_comment, at: 0)
 
           {socket, changeset}
 
@@ -70,11 +70,9 @@ defmodule ElixirDropsWeb.DropLive.Show do
     updated_socket =
       if parent_id,
         do: push_event(socket, "close_reply_form", %{form_id: form_id}),
-        else: socket
+        else: assign(socket, :new_comment_form, to_form(changeset))
 
-    form_key = if parent_id, do: :reply_form, else: :new_comment_form
-
-    {:noreply, assign(updated_socket, form_key, to_form(changeset))}
+    {:noreply, updated_socket}
   end
 
   def handle_event(
@@ -88,13 +86,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     case Comments.update_comment(comment, comment_params) do
       {:ok, updated} ->
-        top_level = get_top_level_comment(updated)
+        top_level_comment = get_top_level_comment(updated)
         changeset = Comments.change_comment(%Comments.Comment{})
 
         {:noreply,
          socket
          |> assign(:comment_form, to_form(changeset))
-         |> stream_insert(:comments, top_level)}
+         |> stream_insert(:comments, top_level_comment)}
 
       {:error, changeset} ->
         {:noreply,
@@ -262,7 +260,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  defp get_top_level_comment(%{parent_id: nil} = comment), do: comment
+  defp get_top_level_comment(%{parent_id: nil} = comment), do: Comments.get_comment!(comment.id)
 
   defp get_top_level_comment(%{parent_id: parent_id}),
     do: get_top_level_comment(Comments.get_comment!(parent_id))
