@@ -48,7 +48,7 @@ defmodule ElixirDrops.CommentsTest do
       assert length(comments) == 1
     end
 
-    test "respects limit option", %{drop: drop, user: user} do
+    test "respects the limit option", %{drop: drop, user: user} do
       for _ <- 1..5 do
         comment_fixture(drop, user)
       end
@@ -58,19 +58,23 @@ defmodule ElixirDrops.CommentsTest do
       assert length(comments) == 3
     end
 
-    test "respects offset option", %{drop: drop, user: user} do
+    test "respects the offset option", %{drop: drop, user: user} do
       comments_created =
         for _num <- 1..5 do
           comment_fixture(drop, user)
         end
 
-      comments = Comments.list_drop_comments(drop.id, limit: 2, offset: 2)
+      comments = Comments.list_drop_comments(drop.id, limit: 2, offset: 3)
 
       assert length(comments) == 2
-      comment_ids = Enum.map(comments, & &1.id)
-      created_ids = Enum.map(comments_created, & &1.id)
+      fetched_comment_ids = Enum.map(comments, & &1.id)
 
-      assert Enum.all?(comment_ids, &(&1 in created_ids))
+      created_comment_ids =
+        comments_created
+        |> Enum.drop(3)
+        |> Enum.map(& &1.id)
+
+      assert fetched_comment_ids == created_comment_ids
     end
 
     test "only returns top-level comments (no replies)", %{drop: drop, user: user} do
@@ -127,7 +131,10 @@ defmodule ElixirDrops.CommentsTest do
       assert Comments.count_drop_comments(drop.id) == 0
     end
 
-    test "returns correct count for drop with comments", %{drop: drop, user: user} do
+    test "returns correct count for drop with comments", %{
+      drop: drop,
+      user: user
+    } do
       for _comment <- 1..2 do
         comment_fixture(drop, user)
       end
@@ -165,6 +172,15 @@ defmodule ElixirDrops.CommentsTest do
       comment_fixture(drop, user, parent_comment)
 
       assert Comments.count_drop_comments(drop.id) == 2
+    end
+  end
+
+  describe "count_drop_top_level_comments/1" do
+    test "excludes replies in the total count", %{drop: drop, user: user} do
+      parent_comment = comment_fixture(drop, user)
+      _reply = comment_fixture(drop, user, parent_comment)
+
+      assert Comments.count_drop_top_level_comments(drop.id) == 1
     end
   end
 
@@ -226,6 +242,18 @@ defmodule ElixirDrops.CommentsTest do
 
       assert Ecto.assoc_loaded?(comment.user)
       assert Ecto.assoc_loaded?(comment.drop)
+    end
+
+    test "fails when a user tries to create a reply to a reply", %{drop: drop, user: user} do
+      attrs = %{body: "Test comment"}
+
+      parent_comment = comment_fixture(drop, user)
+      reply_comment = comment_fixture(drop, user, parent_comment)
+
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Comments.create_comment(drop, user, reply_comment, attrs)
+
+      assert "replies cannot have replies" in errors_on(changeset).parent_id
     end
   end
 
