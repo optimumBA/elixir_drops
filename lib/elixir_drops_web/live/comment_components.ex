@@ -437,12 +437,13 @@ defmodule ElixirDropsWeb.CommentComponents do
             </span>
             <span id={"hide-text-#{@comment.id}"} class="hidden">Hide</span>
             <span>
-              {if Enum.count(@comment.replies) == 1, do: "reply", else: "replies"}
+              {if Enum.count(@comment.replies) < 2, do: "reply", else: "replies"}
             </span>
           </div>
         </button>
         <button
           :if={@current_user && is_nil(@comment.parent_id) && is_nil(@comment.deleted_at)}
+          id={"reply-to-comment-button-#{@comment.id}"}
           phx-click={
             JS.toggle(to: "#reply-form-#{@comment.id}-depth-#{@depth}")
             |> JS.focus(to: "#reply-form-field-#{@comment.id}-depth-#{@depth}")

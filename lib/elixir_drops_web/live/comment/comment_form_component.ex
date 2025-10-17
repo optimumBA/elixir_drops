@@ -16,6 +16,7 @@ defmodule ElixirDropsWeb.Comment.CommentFormComponent do
           Cancel
         </button>
         <button
+          id={"confirm-comment-deletion-#{@comment.id}"}
           class="w-24 h-12 flex justify-center items-center rounded-lg mb-6 text-[#EAE8FD] bg-[#2F19EE]"
           phx-click={
             hide_modal("delete-comment-modal-#{@comment.id}-modal")
