@@ -12,7 +12,6 @@ CommentFormHooks.CommentForm = {
     this.handleEvent('close_reply_form', ({ form_id }) => {
       const form = document.getElementById(`${form_id}`)
       form.style.removeProperty('display')
-      form.classList.remove('block')
       form.classList.add('hidden')
     })
 

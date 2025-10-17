@@ -187,7 +187,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
 
-    # Navigate to homepage with search query
     if trimmed_query != "" do
       {:noreply, push_navigate(socket, to: ~p"/?q=#{trimmed_query}")}
     else

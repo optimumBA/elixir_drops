@@ -328,6 +328,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         phx-click-away={JS.hide(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")}
       >
         <button
+          id={"trigger-comment-edit-#{@comment.id}"}
           class="flex items-center gap-x-2 mb-6"
           phx-click={JS.push("change_edit_comment_form", value: %{comment_id: @comment.id})}
         >
