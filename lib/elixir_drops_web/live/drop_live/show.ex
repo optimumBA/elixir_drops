@@ -2,7 +2,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Comments
-  alias ElixirDrops.Comments.CommentsBroadcast
   alias ElixirDrops.Drops
   alias ElixirDrops.StructuredData
   alias ElixirDropsWeb.CommentComponents
@@ -29,12 +28,9 @@ defmodule ElixirDropsWeb.DropLive.Show do
       ) do
     drop = Drops.get_drop_by_short_id(short_id)
 
-    if connected?(socket), do: Comments.subscribe(drop.id)
-
     {:noreply,
      socket
      |> assign(:delete_comment_id, params["delete_comment_id"])
-     |> assign(:new_comments?, false)
      |> assign(:recent_comment_id, nil)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)}
@@ -226,38 +222,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:comment_offset, offset + 10)
      |> stream(:comments, comments)}
-  end
-
-  def handle_event(
-        "stream_new_comments",
-        _params,
-        %{
-          assigns: %{
-            drop: drop
-          }
-        } =
-          socket
-      ) do
-    comments = Comments.list_drop_comments(drop.id)
-    comment_count = Comments.count_drop_comments(drop.id)
-
-    {:noreply,
-     socket
-     |> assign(:comment_count, comment_count)
-     |> assign(:new_comments?, false)
-     |> stream(:comments, comments, reset: true)}
-  end
-
-  @impl Phoenix.LiveView
-  def handle_info(
-        {CommentsBroadcast, :comment_created, comment},
-        %{assigns: %{recent_comment_id: recent_comment_id}} = socket
-      ) do
-    if comment.id == recent_comment_id do
-      {:noreply, socket}
-    else
-      {:noreply, assign(socket, :new_comments?, true)}
-    end
   end
 
   defp get_top_level_comment(%{parent_id: nil} = comment), do: Comments.get_comment!(comment.id)

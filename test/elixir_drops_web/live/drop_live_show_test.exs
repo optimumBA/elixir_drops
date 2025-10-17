@@ -220,42 +220,6 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert render(view) =~ "Comment 15"
     end
 
-    test "indicator appears for others' comments and streams them on click", %{
-      conn: conn,
-      drop: drop
-    } do
-      other = user_fixture(%{github_id: 9_999_998})
-
-      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
-
-      {:ok, _c} = Comments.create_comment(drop, other, nil, %{body: "From someone else"})
-
-      Process.sleep(100)
-      assert has_element?(view, "#new-comments-indicator")
-
-      view
-      |> element("#new-comments-indicator")
-      |> render_click()
-
-      html = render(view)
-      refute html =~ "id=\"new-comments-indicator\""
-      assert html =~ "From someone else"
-    end
-
-    test "indicator does not appear for own new comment", %{
-      conn: conn,
-      drop: drop
-    } do
-      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
-
-      view
-      |> form("#comment-form", comment: %{body: "My own"})
-      |> render_submit()
-
-      Process.sleep(100)
-      refute has_element?(view, "#new-comments-indicator")
-    end
-
     test "cancel button clears textarea content", %{
       conn: conn,
       drop: drop

@@ -7,7 +7,6 @@ defmodule ElixirDrops.CommentsTest do
 
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
-  alias ElixirDrops.Comments.CommentsBroadcast
   alias ElixirDrops.Drops.Drop
 
   @invalid_attrs %{body: nil}
@@ -17,12 +16,6 @@ defmodule ElixirDrops.CommentsTest do
     drop = drop_fixture(%Drop{}, user)
 
     %{drop: drop, user: user}
-  end
-
-  describe "subscribe/1" do
-    test "subscribes to comment events for a drop", %{drop: drop} do
-      assert :ok = Comments.subscribe(drop.id)
-    end
   end
 
   describe "list_drop_comments/2" do
@@ -221,18 +214,6 @@ defmodule ElixirDrops.CommentsTest do
                Comments.create_comment(drop, user, nil, attrs)
 
       assert "should be at most 1000 character(s)" in errors_on(changeset).body
-    end
-
-    test "broadcasts comment event after successful creation", %{drop: drop, user: user} do
-      attrs = %{body: "Test comment"}
-
-      Comments.subscribe(drop.id)
-
-      assert {:ok, comment} = Comments.create_comment(drop, user, nil, attrs)
-
-      assert_received {CommentsBroadcast, :comment_created, received_comment}
-
-      assert received_comment.id == comment.id
     end
 
     test "preloads associations in returned comment", %{drop: drop, user: user} do

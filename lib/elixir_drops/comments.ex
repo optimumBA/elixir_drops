@@ -7,7 +7,6 @@ defmodule ElixirDrops.Comments do
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Comments.Comment
-  alias ElixirDrops.Comments.CommentsBroadcast
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
 
@@ -33,21 +32,6 @@ defmodule ElixirDrops.Comments do
       ]
     ]
   ]
-
-  @doc """
-  Subscribe to comment events for a drop.
-
-  ## Examples
-
-      iex> subscribe("550e8400-e29b-41d4-a716-446655440000")
-      :ok
-
-  """
-
-  @spec subscribe(drop_id()) :: :ok
-  def subscribe(drop_id) do
-    CommentsBroadcast.subscribe(drop_id)
-  end
 
   @doc """
   Lists comments for a drop with pagination.
@@ -139,7 +123,6 @@ defmodule ElixirDrops.Comments do
     %Comment{}
     |> create_comment_changeset(drop, user, parent, attrs)
     |> Repo.insert()
-    |> broadcast_comment_creation()
   end
 
   defp create_comment_changeset(comment, drop, user, parent, attrs) do
@@ -214,12 +197,4 @@ defmodule ElixirDrops.Comments do
   def change_comment(%Comment{} = comment, attrs \\ %{}) do
     Comment.changeset(comment, attrs)
   end
-
-  defp broadcast_comment_creation({:ok, comment} = result) do
-    comment = Repo.preload(comment, @preload_list)
-    CommentsBroadcast.broadcast_comment_creation(comment)
-    result
-  end
-
-  defp broadcast_comment_creation(error), do: error
 end
