@@ -204,7 +204,7 @@ defmodule ElixirDrops.Drops do
       comment_count:
         subquery(
           from(c in Comment,
-            where: c.drop_id == parent_as(:drop).id and is_nil(c.deleted_at),
+            where: c.drop_id == parent_as(:drop).id,
             select: count(c.id)
           )
         )
@@ -243,7 +243,7 @@ defmodule ElixirDrops.Drops do
         comment_count:
           subquery(
             from(c in Comment,
-              where: c.drop_id == parent_as(:drop).id and is_nil(c.deleted_at),
+              where: c.drop_id == parent_as(:drop).id,
               select: count(c.id)
             )
           )

@@ -91,14 +91,14 @@ defmodule ElixirDrops.Comments do
   @spec count_drop_comments(drop_id) :: non_neg_integer()
   def count_drop_comments(drop_id) do
     Comment
-    |> where([c], c.drop_id == ^drop_id and is_nil(c.deleted_at))
+    |> where([c], c.drop_id == ^drop_id)
     |> Repo.aggregate(:count)
   end
 
   @spec count_drop_top_level_comments(drop_id) :: non_neg_integer()
   def count_drop_top_level_comments(drop_id) do
     Comment
-    |> where([c], c.drop_id == ^drop_id and is_nil(c.deleted_at) and is_nil(c.parent_id))
+    |> where([c], c.drop_id == ^drop_id and is_nil(c.parent_id))
     |> Repo.aggregate(:count)
   end
 
@@ -166,22 +166,22 @@ defmodule ElixirDrops.Comments do
   end
 
   @doc """
-  Soft deletes a comment.
+  Deletes a comment.
 
   ## Examples
 
-      iex> delete_comment(%Comment{})
+      iex> delete_comment(comment_id)
       {:ok, %Comment{deleted_at: ~U[2023-01-01 00:00:00Z]}}
 
-      iex> delete_comment(%Comment{})
+      iex> delete_comment(comment_id)
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_comment(comment()) :: {:ok, comment()} | {:error, changeset()}
-  def delete_comment(%Comment{} = comment) do
-    comment
-    |> Ecto.Changeset.change(deleted_at: DateTime.utc_now())
-    |> Repo.update()
+  @spec delete_comment(comment_id()) :: {:ok, comment()} | {:error, changeset()}
+  def delete_comment(comment_id) do
+    Comment
+    |> Repo.get(comment_id)
+    |> Repo.delete()
   end
 
   @doc """

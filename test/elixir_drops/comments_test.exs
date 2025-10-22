@@ -149,17 +149,6 @@ defmodule ElixirDrops.CommentsTest do
       assert Comments.count_drop_comments(drop2.id) == 2
     end
 
-    test "excludes deleted comments from count", %{drop: drop, user: user} do
-      comment1 = comment_fixture(drop, user)
-      _comment2 = comment_fixture(drop, user)
-
-      assert Comments.count_drop_comments(drop.id) == 2
-
-      Comments.delete_comment(comment1)
-
-      assert Comments.count_drop_comments(drop.id) == 1
-    end
-
     test "includes replies in the total count", %{drop: drop, user: user} do
       parent_comment = comment_fixture(drop, user)
       comment_fixture(drop, user, parent_comment)
@@ -280,40 +269,19 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "delete_comment/1" do
-    test "soft deletes a comment", %{drop: drop, user: user} do
+    test "permanently deletes a comment", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
+      assert {:ok, %Comment{} = deleted_comment} = Comments.delete_comment(comment.id)
 
-      assert {:ok, %Comment{} = deleted_comment} = Comments.delete_comment(comment)
-      assert deleted_comment.deleted_at != nil
-      assert deleted_comment.id == comment.id
-    end
-
-    test "comment still exists but is marked as deleted", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-
-      assert {:ok, _deleted_comment} = Comments.delete_comment(comment)
-
-      fetched_comment = Comments.get_comment!(comment.id)
-      assert fetched_comment.deleted_at != nil
-      assert fetched_comment.id == comment.id
-    end
-
-    test "preloads associations in returned comment", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-
-      assert {:ok, deleted_comment} = Comments.delete_comment(comment)
-
-      assert Ecto.assoc_loaded?(deleted_comment.user)
-      assert Ecto.assoc_loaded?(deleted_comment.drop)
+      assert_raise Ecto.NoResultsError, fn ->
+        Comments.get_comment!(deleted_comment.id)
+      end
     end
 
     test "deleted comment is excluded from count", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
-
       assert Comments.count_drop_comments(drop.id) == 1
-
-      Comments.delete_comment(comment)
-
+      Comments.delete_comment(comment.id)
       assert Comments.count_drop_comments(drop.id) == 0
     end
   end

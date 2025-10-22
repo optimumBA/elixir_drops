@@ -178,7 +178,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert render(view) =~ "A reply"
     end
 
-    test "soft-deletes comment and hides its body", %{
+    test "deletes comment and removes it from the UI", %{
       conn: conn,
       drop: drop,
       user: user
@@ -192,12 +192,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       |> element("#confirm-comment-deletion-#{comment.id}", "Confirm")
       |> render_click()
 
-      deleted_comment = Comments.get_comment!(comment.id)
-      assert deleted_comment.deleted_at
-
-      html = render(view)
-      refute html =~ "Delete me"
-      assert html =~ "Deleted"
+      refute render(view) =~ "Delete me"
     end
 
     test "loads more comments when clicking \'see more responses\' button", %{

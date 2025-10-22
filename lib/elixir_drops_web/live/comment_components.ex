@@ -291,26 +291,14 @@ defmodule ElixirDropsWeb.CommentComponents do
           >
             You
           </span>
-          <span
-            :if={@comment.edited_at && !@comment.deleted_at}
-            class="inline-block w-1 h-1 rounded-full bg-gray-500"
-          >
-          </span>
-          <span
-            :if={@comment.edited_at && !@comment.deleted_at}
-            class="text-xs inline-block py-1 italic"
-          >
+          <span :if={@comment.edited_at} class="inline-block w-1 h-1 rounded-full bg-gray-500"></span>
+          <span :if={@comment.edited_at} class="text-xs inline-block py-1 italic">
             Edited
-          </span>
-          <span :if={@comment.deleted_at} class="inline-block w-1 h-1 rounded-full bg-gray-500">
-          </span>
-          <span :if={@comment.deleted_at} class="text-xs inline-block py-1 italic">
-            Deleted
           </span>
         </p>
 
         <button
-          :if={@current_user && @current_user.id == @comment.user_id && is_nil(@comment.deleted_at)}
+          :if={@current_user && @current_user.id == @comment.user_id}
           class="ml-auto"
           aria-label="Toggle comment actions"
           phx-click={JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")}
@@ -375,12 +363,12 @@ defmodule ElixirDropsWeb.CommentComponents do
       id={"comment-body-#{@comment.id}-depth-#{@depth}"}
       phx-hook="DropBodyContainer"
     >
-      <div :if={!@comment.deleted_at}>
+      <div>
         {DropComponents.to_html(@comment.body)}
         <DropComponents.copy_prompt />
       </div>
     </div>
-    <div :if={!@comment.deleted_at} id={"edit-comment-container-#{@comment.id}"} class="hidden">
+    <div id={"edit-comment-container-#{@comment.id}"} class="hidden">
       <.comment_form
         comment={@comment}
         comment_type={@comment_type}
@@ -427,7 +415,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           </div>
         </button>
         <button
-          :if={@current_user && is_nil(@comment.parent_id) && is_nil(@comment.deleted_at)}
+          :if={@current_user && is_nil(@comment.parent_id)}
           id={"reply-to-comment-button-#{@comment.id}"}
           phx-click={
             JS.toggle(to: "#reply-form-#{@comment.id}-depth-#{@depth}")
