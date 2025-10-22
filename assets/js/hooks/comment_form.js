@@ -9,7 +9,7 @@ CommentFormHooks.CommentForm = {
       }
     })
 
-    this.handleEvent('close_reply_form', ({ form_id }) => {
+    this.handleEvent('close_form', ({ form_id }) => {
       const form = document.getElementById(`${form_id}`)
       form.style.removeProperty('display')
       form.classList.add('hidden')

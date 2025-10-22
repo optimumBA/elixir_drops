@@ -22,7 +22,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply,
      socket
      |> assign(:delete_comment_id, params["delete_comment_id"])
-     |> assign(:recent_comment_id, nil)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)}
   end
@@ -45,7 +44,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
           socket =
             socket
             |> assign(:comment_count, comment_count)
-            |> assign(:recent_comment_id, comment.id)
             |> stream_insert(:comments, top_level_comment, at: 0)
 
           {socket, changeset}
@@ -56,7 +54,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     updated_socket =
       if parent_id,
-        do: push_event(socket, "close_reply_form", %{form_id: form_id}),
+        do: push_event(socket, "close_form", %{form_id: form_id}),
         else: assign(socket, :new_comment_form, to_form(changeset))
 
     {:noreply, updated_socket}
