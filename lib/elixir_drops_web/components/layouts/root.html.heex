@@ -8,7 +8,7 @@
     <.live_title>
       {assigns[:page_title] || "ElixirDrops"}
     </.live_title>
-    <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <link rel="icon" href={~p"/images/logo.png"} type="image/png" />
     <link
       :if={assigns[:drop] && assigns[:drop].short_id}
@@ -17,7 +17,8 @@
       href={url(~p"/d/#{assigns[:drop].short_id}") <> ".md"}
     />
     <link rel="index" type="text/markdown" href={url(~p"/index.md")} />
-    <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
+
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
     <script
       defer

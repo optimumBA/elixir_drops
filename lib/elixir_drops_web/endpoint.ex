@@ -24,7 +24,7 @@ defmodule ElixirDropsWeb.Endpoint do
   plug Plug.Static,
     at: "/",
     from: :elixir_drops,
-    gzip: false,
+    gzip: not code_reloading?,
     only: ElixirDropsWeb.static_paths()
 
   if Code.ensure_loaded?(Tidewave) do
