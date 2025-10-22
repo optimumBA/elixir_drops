@@ -3,7 +3,6 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
   use ElixirDropsWeb, :html
 
-  alias ElixirDrops.Comments
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Search
@@ -146,13 +145,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   def assign_drops(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
 
-    drops =
-      socket.assigns.drop_filters
-      |> Drops.list_drops(batch_size)
-      |> Enum.map(fn drop ->
-        count = Comments.count_drop_comments(drop.id)
-        Map.put(drop, :comment_count, count)
-      end)
+    drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
 
     last_drop = List.last(drops)
 
@@ -178,10 +171,6 @@ defmodule ElixirDropsWeb.DropsListHelper do
       filters
       |> Map.merge(socket.assigns.drop_filters)
       |> Drops.list_drops(batch_size)
-      |> Enum.map(fn drop ->
-        count = Comments.count_drop_comments(drop.id)
-        Map.put(drop, :comment_count, count)
-      end)
 
     last_drop = List.last(drops)
 

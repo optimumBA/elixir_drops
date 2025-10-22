@@ -90,6 +90,15 @@ defmodule ElixirDrops.Drops do
       drop_query()
       |> where(^filter_query.(filters))
       |> limit(^limit)
+      |> select_merge([d], %{
+        comment_count:
+          subquery(
+            from(c in Comment,
+              where: c.drop_id == parent_as(:drop).id,
+              select: count(c.id)
+            )
+          )
+      })
       |> preload([:user])
 
     result =
