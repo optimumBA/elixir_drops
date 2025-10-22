@@ -275,7 +275,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     assigns = assign(assigns, :depth, depth)
 
     ~H"""
-    <div class="comment-header relative">
+    <div class="comment-header relative mt-3">
       <div class="flex items-center gap-x-2 md:gap-x-3 text-xs md:text-sm">
         <p
           class="font-medium text-gray-900 max-w-[10ch] md:max-w-[100%] truncate"
@@ -389,10 +389,10 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   defp comment_actions(assigns) do
     ~H"""
-    <div class="comment-actions mt-4">
+    <div class="comment-actions">
       <div class="flex items-center gap-x-6 text-xs md:text-sm text-gray-500 mb-4">
         <button
-          :if={@depth == 0 && Enum.count(@comment.replies) > 0}
+          :if={Enum.count(@comment.replies) > 0}
           class="flex items-center gap-2"
           phx-click={
             JS.toggle(to: "#comment-replies-#{@comment.id}")

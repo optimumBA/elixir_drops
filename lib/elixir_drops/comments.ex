@@ -20,18 +20,28 @@ defmodule ElixirDrops.Comments do
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
-  @preload_list [
-    :user,
-    parent: [:user],
-    replies: [
+  defp replies_query do
+    from r in Comment, order_by: [desc: r.inserted_at]
+  end
+
+  defp preload_list do
+    [
       :user,
       parent: [:user],
-      replies: [
-        :user,
-        parent: [:user]
-      ]
+      replies:
+        {replies_query(),
+         [
+           :user,
+           parent: [:user],
+           replies:
+             {replies_query(),
+              [
+                :user,
+                parent: [:user]
+              ]}
+         ]}
     ]
-  ]
+  end
 
   @doc """
   Lists comments for a drop with pagination.
@@ -55,7 +65,7 @@ defmodule ElixirDrops.Comments do
     |> order_by([c], desc: c.inserted_at)
     |> limit(^limit)
     |> offset(^offset)
-    |> preload(^@preload_list)
+    |> preload(^preload_list())
     |> Repo.all()
   end
 
@@ -76,7 +86,7 @@ defmodule ElixirDrops.Comments do
   @spec get_comment!(comment_id) :: comment()
   def get_comment!(id) do
     comment = Repo.get!(Comment, id)
-    Repo.preload(comment, @preload_list)
+    Repo.preload(comment, preload_list())
   end
 
   @doc """

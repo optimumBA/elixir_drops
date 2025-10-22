@@ -11,15 +11,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
-  # @impl Phoenix.LiveView
-  # def mount(_params, _session, socket) do
-  #   user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
-
-  #   {:ok,
-  #    socket
-  #    |> assign(:current_user, user)}
-  # end
-
   @impl Phoenix.LiveView
   def handle_params(
         %{"short_id" => short_id} = params,
