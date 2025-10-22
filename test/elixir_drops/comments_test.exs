@@ -271,10 +271,10 @@ defmodule ElixirDrops.CommentsTest do
   describe "delete_comment/1" do
     test "permanently deletes a comment", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
-      assert {:ok, %Comment{} = deleted_comment} = Comments.delete_comment(comment.id)
+      assert {1, nil} = Comments.delete_comment(comment.id)
 
       assert_raise Ecto.NoResultsError, fn ->
-        Comments.get_comment!(deleted_comment.id)
+        Comments.get_comment!(comment.id)
       end
     end
 

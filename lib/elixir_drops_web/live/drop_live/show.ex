@@ -193,22 +193,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
         %{"comment_id" => comment_id, "patch_url" => patch_url},
         socket
       ) do
-    case Comments.delete_comment(comment_id) do
-      {:ok, comment} ->
-        comment_count = socket.assigns.comment_count + 1
-
-        {:noreply,
-         socket
-         |> assign(:comment_count, comment_count)
-         |> stream_delete(:comments, comment)
-         |> push_patch(to: patch_url)}
-
-      {:error, _changeset} ->
-        {:noreply,
-         socket
-         |> push_patch(to: patch_url)
-         |> put_flash(:error, "The comment was not successfully deleted")}
-    end
+    {1, nil} = Comments.delete_comment(comment_id)
+    {:noreply, push_patch(socket, to: patch_url)}
   end
 
   def handle_event(

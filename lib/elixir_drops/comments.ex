@@ -177,11 +177,11 @@ defmodule ElixirDrops.Comments do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_comment(comment_id()) :: {:ok, comment()} | {:error, changeset()}
+  @spec delete_comment(comment_id()) :: {integer(), nil}
   def delete_comment(comment_id) do
     Comment
-    |> Repo.get(comment_id)
-    |> Repo.delete()
+    |> where([c], c.id == ^comment_id)
+    |> Repo.delete_all()
   end
 
   @doc """

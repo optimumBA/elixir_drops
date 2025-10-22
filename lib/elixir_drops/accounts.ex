@@ -57,27 +57,6 @@ defmodule ElixirDrops.Accounts do
   end
 
   @doc """
-  Checks if a user exists by github_id and returns the user data.
-  This function is used to bypass GitHub API calls when the user already exists.
-
-  ## Examples
-
-      iex> get_existing_user_by_github_id(2_546_302)
-      {:ok, %User{}}
-
-      iex> get_existing_user_by_github_id(4444)
-      {:error, :user_not_found}
-
-  """
-  @spec get_existing_user_by_github_id(github_id()) :: {:ok, user()} | {:error, :user_not_found}
-  def get_existing_user_by_github_id(github_id) do
-    case Repo.get_by(User, github_id: github_id) do
-      nil -> {:error, :user_not_found}
-      user -> {:ok, user}
-    end
-  end
-
-  @doc """
   Gets a user by Github ID.
 
   ## Examples
