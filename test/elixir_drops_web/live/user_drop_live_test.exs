@@ -848,7 +848,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       # Try finding the form with a simpler selector first
       form_element = element(live, "#profile-search-input form")
-      assert form_element != nil
+      assert form_element
 
       # Submit search from profile page
       live
