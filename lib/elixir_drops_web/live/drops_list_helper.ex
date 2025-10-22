@@ -144,7 +144,6 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @spec assign_drops(socket()) :: socket()
   def assign_drops(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
-
     drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
 
     last_drop = List.last(drops)
