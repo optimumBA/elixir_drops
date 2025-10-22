@@ -1,58 +1,62 @@
-<section class="relative h-full w-full" id="drops-container" phx-hook="DropsContainer">
-  <DropComponents.navbar
-    current_user={@current_user}
-    live_action={@live_action}
-    search_query={@navbar_search_query}
-    show_suggestions={@show_suggestions}
-    search_suggestions={@search_suggestions}
-    show_user_drops?={false}
-  />
+<Layouts.app flash={@flash}>
+  <section class="relative h-full w-full" id="drops-container" phx-hook="DropsContainer">
+    <DropComponents.navbar
+      current_user={@current_user}
+      live_action={@live_action}
+      search_query={@navbar_search_query}
+      show_suggestions={@show_suggestions}
+      search_suggestions={@search_suggestions}
+      show_user_drops?={false}
+    />
 
-  <section class="text-[#252525] relative">
-    <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
+    <section class="text-[#252525] relative">
+      <DropComponents.welcome_message condition={@show_welcome_message? && !@current_user} />
 
-    <div class="mt-12">
-      <DropsListHelper.drops_list
-        batch_size={@batch_size}
-        current_user={@current_user}
-        drops={@streams.drops}
-        drops_empty?={@drops_empty?}
-        end_of_timeline?={@end_of_timeline?}
-        id="drops"
-        loading_more={@loading_more}
-        page={@page}
-        search_query={@search_query}
-        searching={@searching}
-        show_user_drops?={false}
-      />
-    </div>
+      <div class="mt-12">
+        <DropsListHelper.drops_list
+          batch_size={@batch_size}
+          current_user={@current_user}
+          drops={@streams.drops}
+          drops_empty?={@drops_empty?}
+          end_of_timeline?={@end_of_timeline?}
+          id="drops"
+          loading_more={@loading_more}
+          page={@page}
+          search_query={@search_query}
+          searching={@searching}
+          show_user_drops?={false}
+        />
+      </div>
 
-    <button
-      :if={@new_drops?}
-      class={[
-        "text-white text-sm flex items-center justify-center gap-x-1 bg-[#9666d9] hover:opacity-80 rounded-xl",
-        "px-4 py-2",
-        "fixed top-20 left-1/2 -translate-x-1/2 z-50 shadow-lg"
-      ]}
-      id="new-drops-indicator"
-      phx-click={JS.push("refresh-drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")}
-    >
-      <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
-      <span>New Drops</span>
-    </button>
+      <button
+        :if={@new_drops?}
+        class={[
+          "text-white text-sm flex items-center justify-center gap-x-1 bg-[#9666d9] hover:opacity-80 rounded-xl",
+          "px-4 py-2",
+          "fixed top-20 left-1/2 -translate-x-1/2 z-50 shadow-lg"
+        ]}
+        id="new-drops-indicator"
+        phx-click={
+          JS.push("refresh-drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")
+        }
+      >
+        <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
+        <span>New Drops</span>
+      </button>
+    </section>
+
+    <DropComponents.copied_link_popup_message />
+
+    <DropComponents.create_drop_button_mobile current_user={@current_user} />
   </section>
 
-  <DropComponents.copied_link_popup_message />
-
-  <DropComponents.create_drop_button_mobile current_user={@current_user} />
-</section>
-
-<DropComponents.cancel_form_popup_message current_user={@current_user} />
-<DropComponents.signin_popup_message />
-<!-- Mobile Search Overlay -->
-<DropComponents.search_overlay_mobile
-  search_query={@search_query}
-  show_suggestions={@show_suggestions}
-  search_suggestions={@search_suggestions}
-  current_user={@current_user}
-/>
+  <DropComponents.cancel_form_popup_message current_user={@current_user} />
+  <DropComponents.signin_popup_message />
+  <!-- Mobile Search Overlay -->
+  <DropComponents.search_overlay_mobile
+    search_query={@search_query}
+    show_suggestions={@show_suggestions}
+    search_suggestions={@search_suggestions}
+    current_user={@current_user}
+  />
+</Layouts.app>
