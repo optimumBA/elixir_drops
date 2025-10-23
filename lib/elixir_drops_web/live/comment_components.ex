@@ -51,7 +51,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         </div>
       </div>
       <div id="comments" phx-update="stream" class="space-y-6 last:mb-10">
-        <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 p-4">
+        <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 py-2">
           <.comment
             comment={comment}
             comment_form={@comment_form}
@@ -211,7 +211,7 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   defp comment(assigns) do
     ~H"""
-    <div class="flex gap-4 comment font-roboto">
+    <div class="flex gap-4 comment font-roboto" id={"comment-container-#{@comment.id}"}>
       <div class="shrink-0">
         <img
           src={@comment.user.avatar || "/images/default-avatar.svg"}
@@ -305,7 +305,10 @@ defmodule ElixirDropsWeb.CommentComponents do
           :if={@current_user && @current_user.id == @comment.user_id}
           class="ml-auto"
           aria-label="Toggle comment actions"
-          phx-click={JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")}
+          phx-click={
+            JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")
+            |> JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
+          }
         >
           <.icon name="hero-ellipsis-horizontal" class="w-4 h-4" />
         </button>
@@ -317,7 +320,10 @@ defmodule ElixirDropsWeb.CommentComponents do
           "grid items-center absolute top-8 right-4 z-10",
           "bg-white p-4 rounded-md shadow-md border-[.2px] border-gray-200 md:w-[30%] hidden"
         ]}
-        phx-click-away={JS.hide(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")}
+        phx-click-away={
+          JS.hide(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")
+          |> JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
+        }
       >
         <button
           id={"trigger-comment-edit-#{@comment.id}"}
@@ -336,10 +342,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         </button>
       </div>
 
-      <div
-        :if={@delete_comment_id == to_string(@comment.id)}
-        id={"delete-comment-modal-#{@comment.id}"}
-      >
+      <div :if={@delete_comment_id == @comment.id} id={"delete-comment-modal-#{@comment.id}"}>
         <.modal
           id={"delete-comment-modal-#{@comment.id}-modal"}
           show
@@ -457,7 +460,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       class="mt-4"
       id={"replies-#{@comment.id}-depth-#{@depth}"}
     >
-      <div :for={reply <- @comment.replies} class="ml-6 md:ml-10 space-y-4 pl-4">
+      <div :for={reply <- @comment.replies}>
         <.comment
           comment={reply}
           comment_form={@comment_form}
