@@ -150,7 +150,10 @@ defmodule ElixirDropsWeb.CommentComponents do
           phx-debounce="100"
         >
           <:extra_content>
-            <div class="justify-end gap-x-4 mt-3 flex opacity-0 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-hover:pointer-events-auto">
+            <div class={[
+              "justify-end gap-x-4 mt-3 flex pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-hover:pointer-events-auto",
+              !@comment && "opacity-0"
+            ]}>
               <button
                 :if={!@comment}
                 phx-click={
@@ -191,7 +194,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           Supports basic Markdown<span class="hidden sm:inline-block">: **bold**, *italic*, and [links](url)</span>.
         </p>
         <p>
-          Max 1000 characters
+          <span class="hidden sm:inline-block">Max 1000 characters</span>
           (<span id={"#{@id}-char-count"}>0</span>/1000)
         </p>
       </div>
@@ -227,18 +230,14 @@ defmodule ElixirDropsWeb.CommentComponents do
           delete_comment_id={@delete_comment_id}
           depth={@depth}
         />
-        <.comment_body
+        <.comment_body comment={@comment} depth={@depth} />
+        <.comment_actions
           comment={@comment}
           comment_type={@comment_type}
           current_user={@current_user}
           depth={@depth}
           form={@comment_form}
           parent={@parent}
-        />
-        <.comment_actions
-          comment={@comment}
-          current_user={@current_user}
-          depth={@depth}
           reply_form={@reply_form}
         />
 
@@ -376,22 +375,14 @@ defmodule ElixirDropsWeb.CommentComponents do
         <DropComponents.copy_prompt />
       </div>
     </div>
-    <div id={"edit-comment-container-#{@comment.id}"} class="hidden">
-      <.comment_form
-        comment={@comment}
-        comment_type={@comment_type}
-        field_id={"edit-comment-form-field-#{@comment.id}"}
-        form={@form}
-        id={"edit-comment-form-#{@comment.id}"}
-        parent={@parent}
-      />
-    </div>
     """
   end
 
   attr :comment, Comment, required: true
+  attr :comment_type, :atom
   attr :current_user, :any, required: true
   attr :depth, :integer, required: true
+  attr :form, Phoenix.HTML.Form, required: true
   attr :parent, :any, default: nil
   attr :reply_form, Phoenix.HTML.Form, required: true
 
@@ -442,6 +433,16 @@ defmodule ElixirDropsWeb.CommentComponents do
         id={"reply-form-#{@comment.id}-depth-#{@depth}"}
         parent={@comment}
       />
+      <div id={"edit-comment-container-#{@comment.id}"} class="hidden">
+        <.comment_form
+          comment={@comment}
+          comment_type={@comment_type}
+          field_id={"edit-comment-form-field-#{@comment.id}"}
+          form={@form}
+          id={"edit-comment-form-#{@comment.id}"}
+          parent={@parent}
+        />
+      </div>
     </div>
     """
   end
