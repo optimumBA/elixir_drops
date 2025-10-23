@@ -212,14 +212,14 @@ defmodule ElixirDropsWeb.CommentComponents do
   defp comment(assigns) do
     ~H"""
     <div class="flex gap-4 comment font-roboto">
-      <div>
+      <div class="shrink-0">
         <img
           src={@comment.user.avatar || "/images/default-avatar.svg"}
           alt={@comment.user.name}
           class="w-11 h-11 rounded-full border border-gray-200 flex-shrink-0"
         />
       </div>
-      <div class="grow">
+      <div class="grow overflow-hidden">
         <.comment_header
           comment={@comment}
           current_url={@current_url}
@@ -291,8 +291,12 @@ defmodule ElixirDropsWeb.CommentComponents do
           >
             You
           </span>
-          <span :if={@comment.edited_at} class="inline-block w-1 h-1 rounded-full bg-gray-500"></span>
-          <span :if={@comment.edited_at} class="text-xs inline-block py-1 italic">
+          <span
+            :if={@comment.edited_at}
+            class="hidden sm:inline-block w-1 h-1 rounded-full bg-gray-500"
+          >
+          </span>
+          <span :if={@comment.edited_at} class="hidden sm:inline-block text-xs py-1 italic">
             Edited
           </span>
         </p>
