@@ -328,14 +328,20 @@ defmodule ElixirDropsWeb.CommentComponents do
         <button
           id={"trigger-comment-edit-#{@comment.id}"}
           class="flex items-center gap-x-2 mb-6"
-          phx-click={JS.push("change_edit_comment_form", value: %{comment_id: @comment.id})}
+          phx-click={
+            JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")
+            |> JS.push("change_edit_comment_form", value: %{comment_id: @comment.id})
+          }
         >
           <.icon name="hero-pencil" class="w-4 h-4" /> Edit comment
         </button>
 
         <button
           class="text-red-600 flex items-center gap-x-2"
-          phx-click={JS.patch("#{@current_url}?delete_comment_id=#{@comment.id}")}
+          phx-click={
+            JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")
+            |> JS.patch("#{@current_url}?delete_comment_id=#{@comment.id}")
+          }
           type="button"
         >
           <.icon name="hero-trash" class="w-4 h-4" /> Delete comment
