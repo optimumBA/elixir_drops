@@ -50,7 +50,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           </p>
         </div>
       </div>
-      <div id="comments" phx-update="stream" class="space-y-6 last:mb-10">
+      <div id="comments" phx-update="stream" class="last:mb-10">
         <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 py-2">
           <.comment
             comment={comment}
@@ -284,6 +284,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           {@comment.user.name}
         </p>
         <p class="text-[#8E8E8E] roboto-regular flex items-center gap-x-2">
+          <span class="hidden sm:inline-block w-1 h-1 rounded-full bg-gray-500"></span>
           <span class="text-sm">{Timex.format!(@comment.inserted_at, "{relative}", :relative)}</span>
           <span
             :if={@current_user && @current_user.id == @comment.user_id && !@comment.parent_id}
@@ -457,7 +458,6 @@ defmodule ElixirDropsWeb.CommentComponents do
     ~H"""
     <div
       :if={@comment.replies && Enum.any?(@comment.replies)}
-      class="mt-4"
       id={"replies-#{@comment.id}-depth-#{@depth}"}
     >
       <div :for={reply <- @comment.replies}>
