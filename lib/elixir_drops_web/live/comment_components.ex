@@ -69,7 +69,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         <button
           class={[
             "text-[#2F19EE] text-sm px-4 py-2 border border-[#2F19EE] rounded-md hover:opacity-70",
-            !(@top_level_comment_count >= @comment_offset) && "hidden"
+            @top_level_comment_count <= @comment_offset && "hidden"
           ]}
           type="button"
           phx-click={

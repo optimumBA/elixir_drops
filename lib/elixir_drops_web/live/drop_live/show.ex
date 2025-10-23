@@ -253,9 +253,14 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   defp assign_comments(socket, drop) do
-    comments = Comments.list_drop_comments(drop.id)
-
     top_level_comment_count = Comments.count_drop_top_level_comments(drop.id)
+
+    limit =
+      if socket.assigns.delete_comment_id,
+        do: top_level_comment_count,
+        else: 10
+
+    comments = Comments.list_drop_comments(drop.id, limit: limit)
 
     socket
     |> assign(:comment_count, drop.comment_count)
