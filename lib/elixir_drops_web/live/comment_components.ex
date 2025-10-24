@@ -112,10 +112,6 @@ defmodule ElixirDropsWeb.CommentComponents do
         end
       }
       phx-change={if @comment_type == :comment, do: "validate_comment", else: "validate_reply"}
-      phx-click-away={
-        if @comment_type == :response,
-          do: JS.hide(to: "#reply-form-#{@parent.id}-depth-#{Map.get(assigns, :depth, 0)}")
-      }
       class={@class}
       phx-hook="CommentForm"
     >
