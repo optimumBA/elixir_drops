@@ -100,7 +100,8 @@ defmodule ElixirDropsWeb.CommentComponents do
       id={@id}
       phx-submit={
         if @comment do
-          JS.push("update_comment", value: %{comment_id: @comment.id})
+          JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
+          |> JS.push("update_comment", value: %{comment_id: @comment.id})
         else
           JS.push("new_comment",
             value: %{
@@ -168,7 +169,10 @@ defmodule ElixirDropsWeb.CommentComponents do
               </button>
               <button
                 :if={@comment}
-                phx-click={JS.toggle_class("hidden", to: "#edit-comment-container-#{@comment.id}")}
+                phx-click={
+                  JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
+                  |> JS.toggle_class("hidden", to: "#edit-comment-container-#{@comment.id}")
+                }
                 type="button"
                 class="hover:opacity-80"
               >
