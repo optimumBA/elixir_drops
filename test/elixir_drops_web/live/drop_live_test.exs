@@ -155,7 +155,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html2 =~ "Edit drop"
     end
 
-    # @tag :skip
     test "user gets updated with new a drop not requiring screenshot generation", %{
       conn: conn,
       user: user
@@ -228,7 +227,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
       assert has_element?(live, "#drop-#{drop.id}")
     end
 
-    # @tag :skip
     test "user does not see an indicator when an existing drop's screenshot is regenerated",
          %{
            conn: conn,
