@@ -86,9 +86,10 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         id={@id}
         name={@name}
         class={[
-          "focus:ring-0 sm:text-sm sm:leading-6",
+          "focus:ring-0 sm:text-sm sm:leading-6 resize-none overflow-hidden",
           @input_field_class
         ]}
+        phx-hook="TextArea"
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
       {render_slot(@extra_content)}

@@ -132,7 +132,7 @@ defmodule ElixirDropsWeb.CommentComponents do
             "rounded-lg transition-colors duration-100"
           ]}
           input_field_class={[
-            "border-0 py-0 block w-full rounded-lg min-h-[2rem] ",
+            "border-0 py-0 block w-full rounded-lg",
             "text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
             "placeholder:italic placeholder:text-gray-400"
           ]}
@@ -147,10 +147,32 @@ defmodule ElixirDropsWeb.CommentComponents do
           phx-debounce="100"
         >
           <:extra_content>
-            <div class={[
-              "justify-end gap-x-4 mt-3 flex pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-hover:pointer-events-auto",
-              !@comment && "opacity-0"
-            ]}>
+            <div
+              :if={!@comment and @comment_type == :comment}
+              class={[
+                "flex justify-end gap-x-4 mt-12 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-hover:pointer-events-auto",
+                "opacity-0"
+              ]}
+            >
+              <button phx-click="cancel_new_comment" type="button" class="hover:opacity-80">
+                Cancel
+              </button>
+              <button
+                id={"submit-button-#{@id}"}
+                class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
+                type="submit"
+                disabled
+              >
+                <span>Comment</span>
+              </button>
+            </div>
+
+            <div
+              :if={@comment || @comment_type == :response}
+              class={[
+                "justify-end gap-x-4 mt-16 flex"
+              ]}
+            >
               <button
                 :if={!@comment}
                 phx-click={

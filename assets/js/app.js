@@ -31,6 +31,7 @@ import MasonryHooks from './hooks/masonry'
 import MobileSearchOverlayHooks from './hooks/mobile_search_overlay'
 import ScreenshotProgressHooks from './hooks/screenshot_progress'
 import SearchSuggestionsHooks from './hooks/search_suggestions'
+import TextAreaHooks from './hooks/text_area'
 import WelcomeMessageHooks from './hooks/welcome_message'
 
 let Hooks = {
@@ -43,6 +44,7 @@ let Hooks = {
   ...MobileSearchOverlayHooks,
   ...ScreenshotProgressHooks,
   ...SearchSuggestionsHooks,
+  ...TextAreaHooks,
   ...WelcomeMessageHooks,
 }
 
