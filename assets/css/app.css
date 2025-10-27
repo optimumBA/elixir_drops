@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
 @import 'tailwindcss';
+@import './components/masonry.css';
 
 /* Content sources for Tailwind v4 */
 @source "../css";
@@ -12,8 +13,6 @@
 @plugin "../vendor/heroicons";
 
 /* This file is for your main application CSS */
-
-@import './components/masonry.css';
 
 /* Custom theme configuration */
 @theme {
@@ -403,4 +402,9 @@ blockquote *:last-child {
   display: block;
   word-wrap: break-word;
   line-height: 1.6;
+}
+
+.remove-outline:focus {
+  outline-style: none;
+  box-shadow: none;
 }

@@ -82,7 +82,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         id={@id}
         name={@name}
         class={[
-          "focus:ring-0 sm:text-sm sm:leading-6",
+          "remove-outline focus:ring-0 sm:text-sm sm:leading-6",
           @input_field_class
         ]}
         {@rest}
@@ -102,7 +102,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "focus:ring-0 sm:text-sm sm:leading-6",
+          "remove-outline focus:ring-0 sm:text-sm sm:leading-6",
           @input_field_class
         ]}
         {@rest}
