@@ -121,7 +121,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
-      form_id = "reply-form-#{reply_comment.id}-depth-1"
+      form_id = "reply-form-#{reply_comment.id}"
 
       view
       |> form("##{form_id}",
@@ -168,10 +168,10 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
       view
-      |> form("#reply-form-#{comment.id}-depth-0",
+      |> form("#reply-form-#{comment.id}",
         comment: %{body: "A reply"},
         parent_id: comment.id,
-        form_id: "reply-form-#{comment.id}-depth-0"
+        form_id: "reply-form-#{comment.id}"
       )
       |> render_submit()
 

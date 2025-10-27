@@ -16,11 +16,11 @@ CommentFormHooks.CommentForm = {
     })
 
     this.handleEvent('edit_comment', ({ comment_id }) => {
-      const container = document.getElementById(
-        `edit-comment-container-${comment_id}`
+      const editForm = document.getElementById(
+        `edit-comment-form-${comment_id}`
       )
-      container.classList.remove('hidden')
-      container.classList.add('block')
+      editForm.classList.remove('hidden')
+      editForm.classList.add('block')
 
       const formCustomInput = document.getElementById(
         `edit-comment-form-field-${comment_id}`

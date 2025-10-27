@@ -69,6 +69,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
     comment_params = Map.merge(comment_params, edited_at)
     comment = Comments.get_comment!(comment_id)
 
+    reply_form_id =
+      if comment.parent_id,
+        do: "reply-form-#{comment.parent_id}",
+        else: "reply-form-#{comment_id}"
+
     case Comments.update_comment(comment, comment_params) do
       {:ok, updated} ->
         top_level_comment = get_top_level_comment(updated)
@@ -77,6 +82,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
         {:noreply,
          socket
          |> assign(:comment_form, to_form(changeset))
+         |> push_event("close_form", %{form_id: reply_form_id})
          |> stream_insert(:comments, top_level_comment)}
 
       {:error, changeset} ->
@@ -136,6 +142,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
     character_count = String.length(comment.body)
     form_id = "edit-comment-form-#{comment_id}"
 
+    reply_form_id =
+      if comment.parent_id,
+        do: "reply-form-#{comment.parent_id}",
+        else: "reply-form-#{comment_id}"
+
     form =
       comment
       |> Comments.change_comment()
@@ -147,6 +158,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:comment_form, form)
      |> stream_insert(:comments, top_level_comment)
+     |> push_event("close_form", %{form_id: reply_form_id})
      |> push_event("edit_comment", %{comment_id: comment_id})
      |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
   end

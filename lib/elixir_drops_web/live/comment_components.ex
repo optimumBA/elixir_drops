@@ -178,7 +178,7 @@ defmodule ElixirDropsWeb.CommentComponents do
                 phx-click={
                   if @comment_type == :comment,
                     do: "cancel_new_comment",
-                    else: JS.hide(to: "#reply-form-#{@parent.id}-depth-0")
+                    else: JS.hide(to: "##{@id}")
                 }
                 type="button"
                 class="hover:opacity-80"
@@ -189,7 +189,7 @@ defmodule ElixirDropsWeb.CommentComponents do
                 :if={@comment}
                 phx-click={
                   JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
-                  |> JS.toggle_class("hidden", to: "#edit-comment-container-#{@comment.id}")
+                  |> JS.toggle_class("hidden", to: "##{@id}")
                 }
                 type="button"
                 class="hover:opacity-80"
@@ -250,14 +250,12 @@ defmodule ElixirDropsWeb.CommentComponents do
           current_url={@current_url}
           current_user={@current_user}
           delete_comment_id={@delete_comment_id}
-          depth={@depth}
         />
-        <.comment_body comment={@comment} depth={@depth} />
+        <.comment_body comment={@comment} />
         <.comment_actions
           comment={@comment}
           comment_type={@comment_type}
           current_user={@current_user}
-          depth={@depth}
           form={@comment_form}
           parent={@parent}
           reply_form={@reply_form}
@@ -265,8 +263,7 @@ defmodule ElixirDropsWeb.CommentComponents do
 
         <div
           class={[
-            @depth == 0 && "hidden",
-            "block"
+            "hidden"
           ]}
           id={"comment-replies-#{@comment.id}"}
         >
@@ -289,12 +286,8 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
   attr :delete_comment_id, :string, default: nil
-  attr :depth, :integer, required: true
 
   defp comment_header(assigns) do
-    depth = Map.get(assigns, :depth, 0)
-    assigns = assign(assigns, :depth, depth)
-
     ~H"""
     <div class="comment-header relative mt-3">
       <div class="flex items-center gap-x-2 md:gap-x-3 text-xs md:text-sm">
@@ -328,7 +321,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           class="ml-auto"
           aria-label="Toggle comment actions"
           phx-click={
-            JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")
+            JS.toggle(to: "#comment-actions-#{@comment.id}")
             |> JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
           }
         >
@@ -337,13 +330,13 @@ defmodule ElixirDropsWeb.CommentComponents do
       </div>
 
       <div
-        id={"comment-actions-#{@comment.id}-depth-#{@depth}"}
+        id={"comment-actions-#{@comment.id}"}
         class={[
           "grid items-center absolute top-8 right-4 z-10",
           "bg-white p-4 rounded-md shadow-md border-[.2px] border-gray-200 md:w-[30%] hidden"
         ]}
         phx-click-away={
-          JS.hide(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")
+          JS.hide(to: "#comment-actions-#{@comment.id}")
           |> JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
         }
       >
@@ -351,7 +344,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           id={"trigger-comment-edit-#{@comment.id}"}
           class="flex items-center gap-x-2 mb-6"
           phx-click={
-            JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")
+            JS.toggle(to: "#comment-actions-#{@comment.id}")
             |> JS.push("change_edit_comment_form", value: %{comment_id: @comment.id})
           }
         >
@@ -361,7 +354,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         <button
           class="text-red-600 flex items-center gap-x-2"
           phx-click={
-            JS.toggle(to: "#comment-actions-#{@comment.id}-depth-#{@depth}")
+            JS.toggle(to: "#comment-actions-#{@comment.id}")
             |> JS.patch("#{@current_url}?delete_comment_id=#{@comment.id}")
           }
           type="button"
@@ -389,13 +382,10 @@ defmodule ElixirDropsWeb.CommentComponents do
   end
 
   defp comment_body(assigns) do
-    depth = Map.get(assigns, :depth, 0)
-    assigns = assign(assigns, :depth, depth)
-
     ~H"""
     <div
       class="comment-body text-[.9rem] md:text-base/8 text-[#575757] leading-8 prose mt-2 break-words prose-pre:overflow-x-auto"
-      id={"comment-body-#{@comment.id}-depth-#{@depth}"}
+      id={"comment-body-#{@comment.id}"}
       phx-hook="DropBodyContainer"
     >
       <div>
@@ -409,7 +399,6 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :comment, Comment, required: true
   attr :comment_type, :atom
   attr :current_user, :any, required: true
-  attr :depth, :integer, required: true
   attr :form, Phoenix.HTML.Form, required: true
   attr :parent, :any, default: nil
   attr :reply_form, Phoenix.HTML.Form, required: true
@@ -445,8 +434,8 @@ defmodule ElixirDropsWeb.CommentComponents do
           :if={@current_user && is_nil(@comment.parent_id)}
           id={"reply-to-comment-button-#{@comment.id}"}
           phx-click={
-            JS.toggle(to: "#reply-form-#{@comment.id}-depth-#{@depth}")
-            |> JS.focus(to: "#reply-form-field-#{@comment.id}-depth-#{@depth}")
+            JS.toggle(to: "#reply-form-#{@comment.id}")
+            |> JS.focus(to: "#reply-form-field-#{@comment.id}")
           }
         >
           Reply
@@ -456,21 +445,20 @@ defmodule ElixirDropsWeb.CommentComponents do
         class="hidden"
         comment={nil}
         comment_type={:response}
-        field_id={"reply-form-field-#{@comment.id}-depth-#{@depth}"}
+        field_id={"reply-form-field-#{@comment.id}"}
         form={@reply_form}
-        id={"reply-form-#{@comment.id}-depth-#{@depth}"}
+        id={"reply-form-#{@comment.id}"}
         parent={@comment}
       />
-      <div id={"edit-comment-container-#{@comment.id}"} class="hidden">
-        <.comment_form
-          comment={@comment}
-          comment_type={@comment_type}
-          field_id={"edit-comment-form-field-#{@comment.id}"}
-          form={@form}
-          id={"edit-comment-form-#{@comment.id}"}
-          parent={@parent}
-        />
-      </div>
+      <.comment_form
+        class="hidden"
+        comment={@comment}
+        comment_type={@comment_type}
+        field_id={"edit-comment-form-field-#{@comment.id}"}
+        form={@form}
+        id={"edit-comment-form-#{@comment.id}"}
+        parent={@parent}
+      />
     </div>
     """
   end
