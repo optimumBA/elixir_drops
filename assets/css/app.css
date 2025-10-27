@@ -406,5 +406,4 @@ blockquote *:last-child {
 
 .remove-outline:focus {
   outline-style: none;
-  box-shadow: none;
 }
