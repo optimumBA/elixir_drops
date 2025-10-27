@@ -54,7 +54,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     updated_socket =
       if parent_id,
-        do: push_event(socket, "close_form", %{form_id: form_id}),
+        do: push_event(socket, "hide_form", %{form_id: form_id}),
         else: assign(socket, :new_comment_form, to_form(changeset))
 
     {:noreply, updated_socket}
@@ -82,7 +82,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
         {:noreply,
          socket
          |> assign(:comment_form, to_form(changeset))
-         |> push_event("close_form", %{form_id: reply_form_id})
+         |> push_event("hide_form", %{form_id: reply_form_id})
          |> stream_insert(:comments, top_level_comment)}
 
       {:error, changeset} ->
@@ -158,7 +158,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:comment_form, form)
      |> stream_insert(:comments, top_level_comment)
-     |> push_event("close_form", %{form_id: reply_form_id})
+     |> push_event("hide_form", %{form_id: reply_form_id})
      |> push_event("edit_comment", %{comment_id: comment_id})
      |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
   end
