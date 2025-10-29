@@ -1,8 +1,10 @@
 defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
+  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Drops
   alias ElixirDrops.StructuredData
+  alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.DropComponents
 
   @consecutive_whitespace_regex ~r/\s+/
@@ -25,11 +27,16 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> push_patch(to: ~p"/")
   end
 
-  defp assign_drop(socket, drop) do
+  defp assign_drop(%{assigns: %{current_user: user}} = socket, drop) do
     title =
       drop.title
       |> Phoenix.HTML.html_escape()
       |> Phoenix.HTML.safe_to_string()
+
+    socket =
+      if user,
+        do: assign(socket, :bookmarked?, Bookmarks.drop_bookmarked?(drop.id, user.id)),
+        else: assign(socket, :bookmarked?, false)
 
     socket
     |> assign(:drop, drop)
@@ -97,5 +104,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
     else
       {:noreply, push_navigate(socket, to: ~p"/")}
     end
+  end
+
+  def handle_event(event, params, socket)
+      when event in ["remove_from_bookmark", "bookmark_drop"] do
+    BookmarkHelpers.handle_bookmark_event(event, params, socket)
   end
 end

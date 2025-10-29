@@ -9,7 +9,7 @@
   />
 
   <section class="pt-10 py-4">
-    <DropComponents.drop current_user={@current_user} drop={@drop} />
+    <DropComponents.drop bookmarked?={@bookmarked?} current_user={@current_user} drop={@drop} />
   </section>
 
   <DropComponents.copied_link_popup_message />

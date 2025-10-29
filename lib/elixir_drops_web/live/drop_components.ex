@@ -4,6 +4,7 @@ defmodule ElixirDropsWeb.DropComponents do
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.Icons
 
@@ -137,7 +138,12 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
       </div>
 
-      <.drop_card_menu author?={@drop.user_id == @user_id} id={@drop.id} short_id={@drop.short_id} />
+      <.drop_card_menu
+        author?={@drop.user_id == @user_id}
+        id={@drop.id}
+        short_id={@drop.short_id}
+        user_id={@user_id}
+      />
     </div>
     """
   end
@@ -150,6 +156,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :bookmarked?, :boolean
   attr :current_user, User, default: nil
   attr :drop, Drop, required: true
 
@@ -182,8 +189,33 @@ defmodule ElixirDropsWeb.DropComponents do
       <div class="flex items-center justify-end py-4 border-b border-gray-200">
         <!-- Right side: Action buttons -->
         <div class="flex items-center gap-4">
-          
-    <!-- Copy link button -->
+          <div class="flex items-center gap-2 text-[#4f4f4f] cursor-pointer">
+            <div
+              :if={@current_user && @bookmarked?}
+              class="flex gap-2"
+              phx-click={
+                JS.push("remove_from_bookmark",
+                  value: %{drop_id: @drop.id, user_id: @current_user.id}
+                )
+              }
+            >
+              <img src={~p"/images/remove_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
+              <span class="hidden md:inline text-sm">Remove from bookmark</span>
+            </div>
+            <div
+              :if={@current_user && !@bookmarked?}
+              class="flex gap-2"
+              phx-click={
+                JS.push("bookmark_drop",
+                  value: %{drop_id: @drop.id, user_id: @current_user.id}
+                )
+              }
+            >
+              <img src={~p"/images/add_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
+              <span class="hidden md:inline text-sm">Bookmark Drop</span>
+            </div>
+          </div>
+          <!-- Copy link button -->
           <div
             class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer"
             id={"single-drop-copy-link-#{@drop.id}"}
@@ -756,7 +788,7 @@ defmodule ElixirDropsWeb.DropComponents do
     >
       <!-- Sharing Section Header -->
       <div class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
-        Sharing
+        Sharing & Bookmark
       </div>
 
       <div
@@ -767,6 +799,35 @@ defmodule ElixirDropsWeb.DropComponents do
       >
         <.icon name="hero-link" class="h-5 w-5" />
         <span>Copy Drop link</span>
+      </div>
+      <div
+        :if={@user_id}
+        class="text-[#4f4f4f] flex items-center gap-x-2 px-2 py-2 rounded cursor-pointer"
+      >
+        <div
+          :if={!Bookmarks.drop_bookmarked?(@id, @user_id)}
+          id={"add-bookmark-#{@id}-#{@user_id}"}
+          data-user-id={@user_id}
+          data-drop-id={@id}
+          data-event-name="bookmark_drop"
+          class="flex gap-2"
+          phx-hook="Bookmark"
+        >
+          <img src={~p"/images/add_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
+          <span>Bookmark Drop</span>
+        </div>
+        <div
+          :if={Bookmarks.drop_bookmarked?(@id, @user_id)}
+          id={"remove-bookmark-#{@id}-#{@user_id}"}
+          data-user-id={@user_id}
+          data-drop-id={@id}
+          data-event-name="remove_from_bookmark"
+          class="flex gap-2"
+          phx-hook="Bookmark"
+        >
+          <img src={~p"/images/remove_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
+          <span>Remove from bookmark</span>
+        </div>
       </div>
       
     <!-- Markdown Section -->

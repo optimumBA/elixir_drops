@@ -6,19 +6,19 @@ defmodule ElixirDrops.Bookmarks do
   import Ecto.Query, warn: false
 
   alias ElixirDrops.Accounts.User
-  alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Bookmarks.Bookmark
+  alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
 
   require Logger
 
   @type attrs :: map()
+  @type bookmark :: Bookmark.t()
   @type changeset :: Ecto.Changeset.t()
   @type drop :: Drop.t()
   @type drop_id :: Ecto.UUID.t()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
-  @type bookmark :: Bookmark.t()
 
   @doc """
   Creates a bookmark for the given `drop_id` and `user_id`.
@@ -51,7 +51,8 @@ defmodule ElixirDrops.Bookmarks do
     |> Repo.all()
   end
 
-  def is_drop_bookmarked?(drop_id, user_id) do
+  @spec drop_bookmarked?(drop_id(), user_id()) :: boolean()
+  def drop_bookmarked?(drop_id, user_id) do
     case get_bookmark(drop_id, user_id) do
       nil -> false
       _bookmark -> true
@@ -62,15 +63,9 @@ defmodule ElixirDrops.Bookmarks do
   Deletes a bookmark identified by `drop_id` and `user_id`.
   Returns `{:ok, %Bookmark{}}` when deleted or `{:error, :not_found}` if no bookmark exists.
   """
-  @spec delete_bookmark(drop_id(), user_id()) ::
-          {:ok, bookmark()} | {:error, :not_found}
-  def delete_bookmark(drop_id, user_id) do
-    case get_bookmark(drop_id, user_id) do
-      nil ->
-        {:error, :not_found}
-
-      %Bookmark{} = bookmark ->
-        Repo.delete(bookmark)
-    end
+  @spec delete_bookmark(bookmark()) ::
+          {:ok, bookmark()} | {:error, changeset()}
+  def delete_bookmark(bookmark) do
+    Repo.delete(bookmark)
   end
 end

@@ -4,6 +4,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Search
+  alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsBatchCalculator
@@ -203,6 +204,14 @@ defmodule ElixirDropsWeb.DropLive.Index do
     else
       {:noreply, push_patch(socket, to: ~p"/")}
     end
+  end
+
+  def handle_event(event, %{"drop_id" => drop_id} = params, socket)
+      when event in ["remove_from_bookmark", "bookmark_drop"] do
+    {:noreply, socket} = BookmarkHelpers.handle_bookmark_event(event, params, socket)
+
+    drop = Drops.get_drop(%{drop_id: drop_id})
+    {:noreply, stream_insert(socket, :drops, drop)}
   end
 
   @impl Phoenix.LiveView
