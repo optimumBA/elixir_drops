@@ -43,10 +43,14 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       |> assign(:search_query, search_query)
       |> assign(:searching, search_query != "")
       |> update_search_filters(search_query)
-      |> DropsListHelper.assign_drops()
       |> apply_action(socket.assigns.live_action, params)
 
-    {:noreply, socket}
+    updated_socket =
+      if params["bookmarks_user_id"],
+        do: show_bookmarked_drops(socket),
+        else: DropsListHelper.assign_drops(socket)
+
+    {:noreply, updated_socket}
   end
 
   defp update_search_filters(socket, search_query) do
@@ -184,21 +188,21 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     end
   end
 
-  def handle_event("get_bookmarks", _params, %{assigns: %{current_user: user}} = socket) do
+  def handle_event(event, params, socket)
+      when event in ["remove_from_bookmark", "bookmark_drop"],
+      do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
+
+  defp show_bookmarked_drops(%{assigns: %{current_user: user}} = socket) do
     bookmarked_drops =
       user.id
       |> Bookmarks.get_bookmarks_for_user()
       |> Enum.map(fn bookmark -> bookmark.drop end)
 
-    {:noreply,
-     socket
-     |> assign(:bookmark_tab?, true)
-     |> stream(:drops, bookmarked_drops, reset: true)}
+    socket
+    |> assign(:bookmark_tab?, true)
+    |> assign(:end_of_timeline?, true)
+    |> stream(:drops, bookmarked_drops, reset: true)
   end
-
-  def handle_event(event, params, socket)
-      when event in ["remove_from_bookmark", "bookmark_drop"],
-      do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
     filters = %{

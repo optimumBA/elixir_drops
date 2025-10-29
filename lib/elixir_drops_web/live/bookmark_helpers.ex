@@ -19,7 +19,12 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
     case Bookmarks.delete_bookmark(bookmark) do
       {:ok, _bookmark} ->
         drop = Drops.get_drop(%{drop_id: drop_id})
-        {:noreply, Phoenix.LiveView.stream_insert(socket, :drops, drop)}
+
+        bookmark_tab? = Map.get(socket.assigns, :bookmark_tab?)
+
+        if bookmark_tab?,
+          do: {:noreply, Phoenix.LiveView.stream_delete(socket, :drops, drop)},
+          else: {:noreply, Phoenix.LiveView.stream_insert(socket, :drops, drop)}
 
       {:error, _changeset} ->
         {:noreply, socket}
