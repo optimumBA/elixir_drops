@@ -781,16 +781,18 @@ defmodule ElixirDropsWeb.DropComponents do
   defp drop_card_menu(assigns) do
     ~H"""
     <div
-      class="drop-card-menu text-sm absolute right-2 top-[7.5rem] md:top-[8.5rem] py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] hidden"
+      class="drop-card-menu text-sm absolute right-2 bottom-[4rem] py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] hidden"
       id={"drop-card-menu-#{@id}"}
       phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
       onclick="event.stopPropagation()"
     >
       <!-- Sharing Section Header -->
-      <div class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
+      <div :if={!@user_id} class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
+        Sharing
+      </div>
+      <div :if={@user_id} class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
         Sharing & Bookmark
       </div>
-
       <div
         id={"card-copy-link-menu-#{@id}"}
         data-clipboard-text={url(~p"/d/#{@short_id}")}
