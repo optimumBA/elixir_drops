@@ -186,7 +186,11 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       {:ok, comment} =
         Comments.create_comment(drop, user, nil, %{body: "Delete me"})
 
-      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}?delete_comment_id=#{comment.id}")
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> element("#trigger-comment-deletion-#{comment.id}", "Delete comment")
+      |> render_click()
 
       view
       |> element("#confirm-comment-deletion-#{comment.id}", "Confirm")

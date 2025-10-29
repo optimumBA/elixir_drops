@@ -20,7 +20,7 @@ defmodule ElixirDropsWeb.Comment.CommentFormComponent do
           class="w-24 h-12 flex justify-center items-center rounded-lg mb-6 text-[#EAE8FD] bg-[#2F19EE]"
           phx-click={
             hide_modal("delete-comment-modal-#{@comment.id}-modal")
-            |> JS.push("delete_comment", value: %{comment_id: @comment.id, patch_url: @patch})
+            |> JS.push("delete_comment", value: %{comment_id: @comment.id})
           }
         >
           Confirm

@@ -13,7 +13,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   @impl Phoenix.LiveView
   def handle_params(
-        %{"short_id" => short_id} = params,
+        %{"short_id" => short_id},
         _url,
         socket
       ) do
@@ -21,7 +21,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply,
      socket
-     |> assign(:delete_comment_id, params["delete_comment_id"])
+     |> assign(:delete_comment_id, nil)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)}
   end
@@ -191,11 +191,36 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   def handle_event(
         "delete_comment",
-        %{"comment_id" => comment_id, "patch_url" => patch_url},
+        %{"comment_id" => comment_id},
         socket
       ) do
-    {1, nil} = Comments.delete_comment(comment_id)
-    {:noreply, push_patch(socket, to: patch_url)}
+    comment = Comments.get_comment!(comment_id)
+    Comments.delete_comment(comment_id)
+    updated_socket = assign(socket, :delete_comment_id, nil)
+
+    if comment.parent_id do
+      top_level_comment = get_top_level_comment(comment)
+      {:noreply, stream_insert(updated_socket, :comments, top_level_comment)}
+    else
+      {:noreply, stream_delete(updated_socket, :comments, comment)}
+    end
+  end
+
+  def handle_event(
+        "cancel_comment_deletion",
+        %{"comment_id" => comment_id},
+        socket
+      ) do
+    comment = Comments.get_comment!(comment_id)
+
+    updated_socket = assign(socket, :delete_comment_id, nil)
+
+    top_level_comment =
+      if comment.parent_id,
+        do: get_top_level_comment(comment),
+        else: comment
+
+    {:noreply, stream_insert(updated_socket, :comments, top_level_comment)}
   end
 
   def handle_event(
@@ -215,10 +240,26 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments)}
   end
 
+  def handle_event(
+        "assign_comment_id_to_be_deleted",
+        %{"delete_comment_id" => comment_id},
+        socket
+      ) do
+    comment =
+      comment_id
+      |> Comments.get_comment!()
+      |> get_top_level_comment()
+
+    {:noreply,
+     socket
+     |> assign(:delete_comment_id, comment_id)
+     |> stream_insert(:comments, comment)}
+  end
+
   defp get_top_level_comment(%{parent_id: nil} = comment), do: Comments.get_comment!(comment.id)
 
   defp get_top_level_comment(%{parent_id: parent_id}),
-    do: get_top_level_comment(Comments.get_comment!(parent_id))
+    do: Comments.get_comment!(parent_id)
 
   defp create_comment(socket, params, nil) do
     Comments.create_comment(
@@ -267,12 +308,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp assign_comments(socket, drop) do
     top_level_comment_count = Comments.count_drop_top_level_comments(drop.id)
 
-    limit =
-      if socket.assigns.delete_comment_id,
-        do: top_level_comment_count,
-        else: 10
-
-    comments = Comments.list_drop_comments(drop.id, limit: limit)
+    comments = Comments.list_drop_comments(drop.id)
 
     socket
     |> assign(:comment_count, drop.comment_count)

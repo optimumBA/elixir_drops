@@ -352,10 +352,11 @@ defmodule ElixirDropsWeb.CommentComponents do
         </button>
 
         <button
+          id={"trigger-comment-deletion-#{@comment.id}"}
           class="text-red-600 flex items-center gap-x-2"
           phx-click={
             JS.toggle(to: "#comment-actions-#{@comment.id}")
-            |> JS.patch("#{@current_url}?delete_comment_id=#{@comment.id}")
+            |> JS.push("assign_comment_id_to_be_deleted", value: %{delete_comment_id: @comment.id})
           }
           type="button"
         >
@@ -367,13 +368,15 @@ defmodule ElixirDropsWeb.CommentComponents do
         <.modal
           id={"delete-comment-modal-#{@comment.id}-modal"}
           show
-          on_cancel={JS.patch(@current_url)}
+          on_cancel={
+            JS.push("cancel_comment_deletion", value: %{comment_id: @comment.id})
+            |> JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
+          }
         >
           <.live_component
             comment={@comment}
             id={"delete-modal-#{@comment.id}"}
             module={CommentFormComponent}
-            patch={@current_url}
           />
         </.modal>
       </div>
