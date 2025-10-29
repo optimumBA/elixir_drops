@@ -48,6 +48,7 @@ defmodule ElixirDrops.Bookmarks do
   def get_bookmarks_for_user(user_id) do
     Bookmark
     |> where([b], b.user_id == ^user_id)
+    |> preload(drop: [:user])
     |> Repo.all()
   end
 

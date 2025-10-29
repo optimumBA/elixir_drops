@@ -291,6 +291,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :bookmark_tab?, :boolean
   attr :current_user, User, required: true
   attr :search_query, :string, default: ""
   attr :show_suggestions, :boolean, default: false
@@ -320,10 +321,21 @@ defmodule ElixirDropsWeb.DropComponents do
       <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
         <div class="flex items-center px-4 md:px-0">
           <ul class="flex items-center" id="secondary-nav-links">
-            <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center mr-8">
+            <li class={[
+              "min-h-full py-4 flex items-center mr-8",
+              !@bookmark_tab? && "border-b-2 border-b-[#887ce1]"
+            ]}>
               <.link href={~p"/profile"}>
                 My drops
               </.link>
+            </li>
+            <li class={[
+              "min-h-full py-4 flex items-center mr-8",
+              @bookmark_tab? && "border-b-2 border-b-[#887ce1]"
+            ]}>
+              <button phx-click={JS.push("get_bookmarks")}>
+                Bookmarks
+              </button>
             </li>
             <!-- User Profile Search Input -->
             <li class="min-h-full py-4 border-b-2 border-b-transparent hover:border-b-gray-300 flex items-center">

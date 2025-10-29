@@ -1,9 +1,11 @@
 defmodule ElixirDropsWeb.UserDropLive.Index do
   use ElixirDropsWeb, :live_view
 
+  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
+  alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.SearchHelper
@@ -18,6 +20,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
+     |> assign(:bookmark_tab?, false)
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:end_of_timeline?, false)
      |> assign(:page, 1)
@@ -180,6 +183,22 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       {:noreply, push_navigate(socket, to: ~p"/")}
     end
   end
+
+  def handle_event("get_bookmarks", _params, %{assigns: %{current_user: user}} = socket) do
+    bookmarked_drops =
+      user.id
+      |> Bookmarks.get_bookmarks_for_user()
+      |> Enum.map(fn bookmark -> bookmark.drop end)
+
+    {:noreply,
+     socket
+     |> assign(:bookmark_tab?, true)
+     |> stream(:drops, bookmarked_drops, reset: true)}
+  end
+
+  def handle_event(event, params, socket)
+      when event in ["remove_from_bookmark", "bookmark_drop"],
+      do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
     filters = %{
