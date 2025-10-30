@@ -103,12 +103,22 @@ defmodule ElixirDropsWeb.CommentComponents do
           JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
           |> JS.push("update_comment", value: %{comment_id: @comment.id})
         else
-          JS.push("new_comment",
-            value: %{
-              comment_type: @comment_type,
-              parent_id: if(@comment_type == :response, do: @parent.id, else: "nil")
-            }
-          )
+          if @comment_type == :response do
+            JS.push("new_comment",
+              value: %{
+                comment_type: :response,
+                parent_id: @parent.id
+              }
+            )
+            |> JS.toggle(to: "#reply-form-#{@parent.id}")
+          else
+            JS.push("new_comment",
+              value: %{
+                comment_type: :comment,
+                parent_id: "nil"
+              }
+            )
+          end
         end
       }
       phx-change={if @comment_type == :comment, do: "validate_comment", else: "validate_reply"}

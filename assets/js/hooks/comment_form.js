@@ -9,12 +9,6 @@ CommentFormHooks.CommentForm = {
       }
     })
 
-    this.handleEvent('hide_form', ({ form_id }) => {
-      const form = document.getElementById(`${form_id}`)
-      form.style.removeProperty('display')
-      form.classList.add('hidden')
-    })
-
     this.handleEvent('edit_comment', ({ comment_id }) => {
       const editForm = document.getElementById(
         `edit-comment-form-${comment_id}`
