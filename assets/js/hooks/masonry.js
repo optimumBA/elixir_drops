@@ -5,16 +5,6 @@ let MasonryHooks = {}
 
 MasonryHooks.Masonry = {
   mounted() {
-    this.masonry = null
-    this.isLayouting = false
-    this.layoutCompleteCallbacks = []
-
-    this.sendViewportDimensions()
-
-    setTimeout(() => {
-      this.initializeMasonry()
-    }, 100)
-
     this.handleResize = this.debounce(() => {
       this.sendViewportDimensions()
       if (this.masonry) {
@@ -23,6 +13,18 @@ MasonryHooks.Masonry = {
     }, 300)
 
     window.addEventListener('resize', this.handleResize)
+
+    this.handleEvent('load_masonry', ({}) => {
+      this.masonry = null
+      this.isLayouting = false
+      this.layoutCompleteCallbacks = []
+
+      this.sendViewportDimensions()
+
+      setTimeout(() => {
+        this.initializeMasonry()
+      }, 100)
+    })
   },
 
   updated() {
