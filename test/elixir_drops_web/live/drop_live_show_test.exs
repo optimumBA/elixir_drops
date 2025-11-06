@@ -23,6 +23,8 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       assert html =~ "Comments (0)"
 
+      assert has_element?(view, "button#submit-button-comment-form[disabled]")
+
       view
       |> form("#comment-form",
         comment: %{body: "This is my test comment"}
@@ -116,22 +118,19 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       {:ok, comment} =
         Comments.create_comment(drop, user, nil, %{body: "Some content"})
 
-      {:ok, reply_comment} =
-        Comments.create_comment(drop, user, comment, %{body: "Some reply to a comment"})
-
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
-      form_id = "reply-form-#{reply_comment.id}"
+      form_id = "reply-form-#{comment.id}"
 
       view
       |> form("##{form_id}",
-        comment: %{body: "24"},
+        comment: %{body: "Good"},
         form_id: "#{form_id}"
       )
       |> render_change()
 
       assert_push_event(view, "reply_char_count", %{
-        count: 2,
+        count: 4,
         form_id: _form_id
       })
     end
