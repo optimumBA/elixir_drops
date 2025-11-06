@@ -184,28 +184,19 @@ defmodule ElixirDropsWeb.CommentComponents do
               ]}
             >
               <button
-                :if={!@comment}
                 phx-click={
-                  if @comment_type == :comment,
-                    do: "cancel_new_comment",
-                    else: JS.hide(to: "##{@id}")
+                  if !@comment,
+                    do: JS.hide(to: "##{@id}"),
+                    else:
+                      JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
+                      |> JS.toggle_class("hidden", to: "##{@id}")
                 }
                 type="button"
                 class="hover:opacity-80"
               >
                 Cancel
               </button>
-              <button
-                :if={@comment}
-                phx-click={
-                  JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
-                  |> JS.toggle_class("hidden", to: "##{@id}")
-                }
-                type="button"
-                class="hover:opacity-80"
-              >
-                Cancel
-              </button>
+
               <button
                 id={"submit-button-#{@id}"}
                 class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"

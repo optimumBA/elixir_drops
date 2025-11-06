@@ -4,9 +4,7 @@ CommentFormHooks.CommentForm = {
   mounted() {
     this.handleEvent('cancel_comment', () => {
       const active = document.activeElement
-      if (active && typeof active.blur === 'function') {
-        active.blur()
-      }
+      active.blur()
     })
 
     this.handleEvent('edit_comment', ({ comment_id }) => {
