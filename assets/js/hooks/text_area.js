@@ -10,8 +10,6 @@ TextAreaHooks.TextArea = {
     this.el.addEventListener('input', this.resize)
     this.resize()
 
-    window.addEventListener('resize', this.resize)
-
     if ('ResizeObserver' in window) {
       this._resizeObserver = new ResizeObserver(() => this.resize())
       this._resizeObserver.observe(this.el)
@@ -24,7 +22,6 @@ TextAreaHooks.TextArea = {
 
   destroyed() {
     this.el.removeEventListener('input', this.resize)
-    window.removeEventListener('resize', this.resize)
     if (this._resizeObserver) {
       this._resizeObserver.disconnect()
       this._resizeObserver = null
