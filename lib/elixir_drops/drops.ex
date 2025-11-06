@@ -90,15 +90,7 @@ defmodule ElixirDrops.Drops do
       drop_query()
       |> where(^filter_query.(filters))
       |> limit(^limit)
-      |> select_merge([d], %{
-        comment_count:
-          subquery(
-            from(c in Comment,
-              where: c.drop_id == parent_as(:drop).id,
-              select: count(c.id)
-            )
-          )
-      })
+      |> merge_comment_count()
       |> preload([:user])
 
     result =
@@ -209,15 +201,7 @@ defmodule ElixirDrops.Drops do
     drop_query()
     |> where(^filter_query.(filters))
     |> preload([:user])
-    |> select_merge([d], %{
-      comment_count:
-        subquery(
-          from(c in Comment,
-            where: c.drop_id == parent_as(:drop).id,
-            select: count(c.id)
-          )
-        )
-    })
+    |> merge_comment_count()
     |> Repo.one()
   end
 
@@ -248,15 +232,7 @@ defmodule ElixirDrops.Drops do
       drop_query()
       |> where([d], d.short_id == ^short_id)
       |> preload([:user])
-      |> select_merge([d], %{
-        comment_count:
-          subquery(
-            from(c in Comment,
-              where: c.drop_id == parent_as(:drop).id,
-              select: count(c.id)
-            )
-          )
-      })
+      |> merge_comment_count()
       |> Repo.one()
 
     {:ok, result}
@@ -268,6 +244,18 @@ defmodule ElixirDrops.Drops do
     DBConnection.ConnectionError ->
       # Database connection issues - return error
       {:error, :db_connection_error}
+  end
+
+  defp merge_comment_count(query) do
+    select_merge(query, [d], %{
+      comment_count:
+        subquery(
+          from(c in Comment,
+            where: c.drop_id == parent_as(:drop).id,
+            select: count(c.id)
+          )
+        )
+    })
   end
 
   @doc """

@@ -24,7 +24,7 @@ CommentFormHooks.CommentForm = {
       const span = document.getElementById(`${form_id}-char-count`)
       span.textContent = count
       const submitButton = document.getElementById(`submit-button-${form_id}`)
-      if (count > 0) {
+      if (count > 0 && count <= 1000) {
         submitButton.disabled = false
       } else {
         submitButton.disabled = true
