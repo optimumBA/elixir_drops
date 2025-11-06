@@ -4,6 +4,14 @@ let DropBodyHooks = {}
 
 DropBodyHooks.DropBodyContainer = {
   mounted() {
+    this.createCopyButton()
+  },
+
+  updated() {
+    this.createCopyButton()
+  },
+
+  createCopyButton() {
     const container = this.el
 
     const createCopyPrompt = () => {
