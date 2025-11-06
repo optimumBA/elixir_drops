@@ -10,6 +10,7 @@ defmodule ElixirDropsWeb.DropComponents do
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
 
+  attr :current_url, :string
   attr :current_user, User
   attr :live_action, :atom, required: true
   attr :search_query, :string, default: ""
@@ -66,7 +67,7 @@ defmodule ElixirDropsWeb.DropComponents do
               </div>
             <% else %>
               <.link
-                href={~p"/auth/github"}
+                href={~p"/auth/github?return_to=#{@current_url}"}
                 class="font-semibold text-[#eae8fd] text-xs md:text-sm bg-blue_primary hover:opacity-80 px-2 md:px-5 py-2 rounded-lg flex items-center gap-x-2"
               >
                 <span><Icons.github_icon /></span>
