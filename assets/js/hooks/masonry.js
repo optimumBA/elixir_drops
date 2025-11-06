@@ -14,7 +14,7 @@ MasonryHooks.Masonry = {
 
     window.addEventListener('resize', this.handleResize)
 
-    this.handleEvent('load_masonry', ({}) => {
+    this.el.addEventListener('load_masonry', () => {
       this.masonry = null
       this.isLayouting = false
       this.layoutCompleteCallbacks = []

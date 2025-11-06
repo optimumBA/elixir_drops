@@ -70,10 +70,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:batch_size, batch_size)}
   end
 
-  def handle_event("load_masonry", _params, socket) do
-    {:noreply, push_event(socket, "load_masonry", %{})}
-  end
-
   def handle_event("load-more", %{"layout_complete" => true}, socket) do
     socket = assign(socket, :loading_more, true)
     DropsListHelper.load_more(socket, socket.assigns.batch_size)
