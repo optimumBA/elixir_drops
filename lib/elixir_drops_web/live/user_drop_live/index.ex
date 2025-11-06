@@ -193,10 +193,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
 
   defp show_bookmarked_drops(%{assigns: %{current_user: user}} = socket) do
-    bookmarked_drops =
-      user.id
-      |> Bookmarks.get_bookmarks_for_user()
-      |> Enum.map(fn bookmark -> bookmark.drop end)
+    bookmarked_drops = Bookmarks.get_bookmarked_drops(user.id)
 
     socket
     |> assign(:bookmark_tab?, true)

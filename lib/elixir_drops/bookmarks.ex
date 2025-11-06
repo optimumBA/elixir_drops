@@ -44,12 +44,13 @@ defmodule ElixirDrops.Bookmarks do
     |> Repo.one()
   end
 
-  @spec get_bookmarks_for_user(user_id()) :: [bookmark()]
-  def get_bookmarks_for_user(user_id) do
+  @spec get_bookmarked_drops(user_id()) :: [bookmark()]
+  def get_bookmarked_drops(user_id) do
     Bookmark
     |> where([b], b.user_id == ^user_id)
     |> preload(drop: [:user])
     |> Repo.all()
+    |> Enum.map(fn bookmark -> bookmark.drop end)
   end
 
   @spec drop_bookmarked?(drop_id(), user_id()) :: boolean()
