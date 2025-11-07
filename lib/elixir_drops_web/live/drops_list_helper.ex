@@ -59,6 +59,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
           phx-update="stream"
           phx-page-loading
           phx-hook={!@drops_empty? && "Masonry"}
+          phx-connected={JS.dispatch("load_masonry", to: "##{@id}")}
           class={[
             @drops_empty? && "grid gap-y-2 md:gap-y-5 px-6 md:px-8 lg:px-12",
             !@drops_empty? && "masonry-grid"

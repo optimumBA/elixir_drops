@@ -212,12 +212,6 @@ if config_env() == :prod do
     region: aws_region,
     secret_access_key: aws_secret_access_key
 
-  fly_api_token =
-    System.get_env("FLY_API_TOKEN") ||
-      raise """
-      environment variable FLY_API_TOKEN is missing.
-      """
-
   config :flame, :backend, FLAME.FlyBackend
 
   config :flame, FLAME.FlyBackend,
@@ -234,5 +228,5 @@ if config_env() == :prod do
       "WALLABY_AUTH_PASSWORD" => wallaby_auth_password
     },
     memory_mb: 1024,
-    token: fly_api_token
+    token: System.get_env("FLY_API_TOKEN")
 end
