@@ -218,8 +218,7 @@ blockquote *:last-child {
 }
 
 .drop-body :not(div:has(+ pre)),
-.drop-full-content :not(div:has(+ pre)),
-.comment-body :not(div:has(+ pre)) {
+.drop-full-content :not(div:has(+ pre)) {
   @apply mb-5;
 }
 

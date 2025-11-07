@@ -100,8 +100,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       id={@id}
       phx-submit={
         if @comment do
-          JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
-          |> JS.push("update_comment", value: %{comment_id: @comment.id})
+          JS.push("update_comment", value: %{comment_id: @comment.id})
         else
           if @comment_type == :response do
             JS.push("new_comment",
@@ -187,9 +186,7 @@ defmodule ElixirDropsWeb.CommentComponents do
                 phx-click={
                   if !@comment,
                     do: JS.hide(to: "##{@id}"),
-                    else:
-                      JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
-                      |> JS.toggle_class("hidden", to: "##{@id}")
+                    else: JS.toggle_class("hidden", to: "##{@id}")
                 }
                 type="button"
                 class="hover:opacity-80"
@@ -245,7 +242,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           class="w-11 h-11 rounded-full border border-gray-200 flex-shrink-0"
         />
       </div>
-      <div class="grow overflow-hidden">
+      <div class="grow min-w-0">
         <.comment_header
           comment={@comment}
           current_url={@current_url}
@@ -321,10 +318,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           :if={@current_user && @current_user.id == @comment.user_id}
           class="ml-auto"
           aria-label="Toggle comment actions"
-          phx-click={
-            JS.toggle(to: "#comment-actions-#{@comment.id}")
-            |> JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
-          }
+          phx-click={JS.toggle(to: "#comment-actions-#{@comment.id}")}
         >
           <.icon name="hero-ellipsis-horizontal" class="w-4 h-4" />
         </button>
@@ -336,10 +330,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           "grid items-center absolute top-8 right-4 z-10",
           "bg-white p-4 rounded-md shadow-md border-[.2px] border-gray-200 md:w-[30%] hidden"
         ]}
-        phx-click-away={
-          JS.hide(to: "#comment-actions-#{@comment.id}")
-          |> JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
-        }
+        phx-click-away={JS.hide(to: "#comment-actions-#{@comment.id}")}
       >
         <button
           id={"trigger-comment-edit-#{@comment.id}"}
@@ -369,10 +360,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         <.modal
           id={"delete-comment-modal-#{@comment.id}-modal"}
           show
-          on_cancel={
-            JS.push("cancel_comment_deletion", value: %{comment_id: @comment.id})
-            |> JS.toggle_class("min-h-[150px]", to: "#comment-container-#{@comment.id}")
-          }
+          on_cancel={JS.push("cancel_comment_deletion", value: %{comment_id: @comment.id})}
         >
           <.live_component
             comment={@comment}
@@ -388,7 +376,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   defp comment_body(assigns) do
     ~H"""
     <div
-      class="comment-body text-[.9rem] md:text-base/8 text-[#575757] leading-8 prose mt-2 break-words prose-pre:overflow-x-auto"
+      class="comment-body text-[.9rem] md:text-base/8 text-[#575757] leading-8 prose my-2 break-words prose-pre:overflow-x-auto"
       id={"comment-body-#{@comment.id}"}
       phx-hook="DropBodyContainer"
     >
