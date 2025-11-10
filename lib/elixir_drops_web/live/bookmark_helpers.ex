@@ -2,7 +2,6 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
   @moduledoc false
 
   alias ElixirDrops.Bookmarks
-  alias ElixirDrops.Drops
 
   @type event :: String.t()
   @type params :: map()
@@ -18,13 +17,14 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
 
     case Bookmarks.delete_bookmark(bookmark) do
       {:ok, _bookmark} ->
-        drop = Drops.get_drop(%{drop_id: drop_id})
-
         bookmark_tab? = Map.get(socket.assigns, :bookmark_tab?)
 
-        if bookmark_tab?,
-          do: {:noreply, Phoenix.LiveView.stream_delete(socket, :drops, drop)},
-          else: {:noreply, Phoenix.LiveView.stream_insert(socket, :drops, drop)}
+        if bookmark_tab? do
+          socket = Phoenix.LiveView.push_event(socket, "remove_element", %{drop_id: drop_id})
+          {:noreply, socket}
+        else
+          {:noreply, socket}
+        end
 
       {:error, _changeset} ->
         {:noreply, socket}
@@ -36,13 +36,8 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
         %{"drop_id" => drop_id, "user_id" => user_id},
         socket
       ) do
-    case Bookmarks.create_bookmark(drop_id, user_id) do
-      {:ok, _bookmark} ->
-        drop = Drops.get_drop(%{drop_id: drop_id})
-        {:noreply, Phoenix.LiveView.stream_insert(socket, :drops, drop)}
+    Bookmarks.create_bookmark(drop_id, user_id)
 
-      {:error, _changeset} ->
-        {:noreply, socket}
-    end
+    {:noreply, socket}
   end
 end

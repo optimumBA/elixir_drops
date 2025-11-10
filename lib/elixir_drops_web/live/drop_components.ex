@@ -333,7 +333,10 @@ defmodule ElixirDropsWeb.DropComponents do
               "min-h-full py-4 flex items-center mr-8",
               @bookmark_tab? && "border-b-2 border-b-[#887ce1]"
             ]}>
-              <button phx-click={JS.patch(~p"/profile?bookmarks_user_id=#{@current_user.id}")}>
+              <button phx-click={
+                JS.patch(~p"/profile?bookmarks_user_id=#{@current_user.id}")
+                |> JS.dispatch("load_masonry", to: "#user-drops")
+              }>
                 Bookmarks
               </button>
             </li>
@@ -819,24 +822,28 @@ defmodule ElixirDropsWeb.DropComponents do
         class="text-[#4f4f4f] flex items-center gap-x-2 px-2 py-2 rounded cursor-pointer"
       >
         <div
-          :if={!Bookmarks.drop_bookmarked?(@id, @user_id)}
           id={"add-bookmark-#{@id}-#{@user_id}"}
           data-user-id={@user_id}
           data-drop-id={@id}
           data-event-name="bookmark_drop"
-          class="flex gap-2"
+          class={[
+            "flex gap-2",
+            Bookmarks.drop_bookmarked?(@id, @user_id) && "hidden"
+          ]}
           phx-hook="Bookmark"
         >
           <img src={~p"/images/add_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
           <span>Bookmark Drop</span>
         </div>
         <div
-          :if={Bookmarks.drop_bookmarked?(@id, @user_id)}
           id={"remove-bookmark-#{@id}-#{@user_id}"}
           data-user-id={@user_id}
           data-drop-id={@id}
           data-event-name="remove_from_bookmark"
-          class="flex gap-2"
+          class={[
+            "flex gap-2",
+            !Bookmarks.drop_bookmarked?(@id, @user_id) && "hidden"
+          ]}
           phx-hook="Bookmark"
         >
           <img src={~p"/images/remove_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
