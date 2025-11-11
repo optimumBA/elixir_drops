@@ -141,9 +141,9 @@ defmodule ElixirDropsWeb.CommentComponents do
             "rounded-lg transition-colors duration-100"
           ]}
           input_field_class={[
-            "border-0 py-0 block w-full rounded-lg",
-            "text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-            "placeholder:italic placeholder:text-gray-400"
+            "border-0 py-0 block w-full",
+            "text-[#252525] focus:ring-0 sm:text-sm sm:leading-6",
+            "placeholder:italic placeholder:text-[#9D9D9D]"
           ]}
           field={@form[:body]}
           type="textarea"
@@ -170,6 +170,7 @@ defmodule ElixirDropsWeb.CommentComponents do
                 id={"submit-button-#{@id}"}
                 class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
                 type="submit"
+                onclick="event.stopPropagation()"
                 disabled
               >
                 <span>Comment</span>

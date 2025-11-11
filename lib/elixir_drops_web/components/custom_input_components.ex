@@ -7,6 +7,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
   use Phoenix.Component
 
   alias ElixirDropsWeb.CoreComponents
+  alias Phoenix.LiveView.JS
 
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
@@ -80,7 +81,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
 
   def custom_input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class={@class} phx-feedback-for={@id}>
+    <div class={@class} phx-feedback-for={@id} phx-click={JS.focus(to: "##{@id}")}>
       <.custom_label for={@id} class={@label_class}>{@label}</.custom_label>
       <textarea
         id={@id}
@@ -100,7 +101,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
 
   def custom_input(assigns) do
     ~H"""
-    <div class={@class} phx-feedback-for={@id}>
+    <div class={@class} phx-feedback-for={@id} phx-click={JS.focus(to: "##{@id}")}>
       <.custom_label for={@id}>{@label}</.custom_label>
       <input
         type={@type}
