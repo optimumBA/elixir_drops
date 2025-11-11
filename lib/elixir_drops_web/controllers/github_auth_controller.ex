@@ -83,10 +83,9 @@ defmodule ElixirDropsWeb.GithubAuthController do
     |> Enum.join(" ")
   end
 
-  defp store_return_to(conn, _opts) do
-    case conn.params["return_to"] do
-      nil -> conn
-      return_to -> put_session(conn, :user_return_to, return_to)
-    end
-  end
+  defp store_return_to(%{params: %{"return_to" => return_to}} = conn, _opts)
+       when is_binary(return_to),
+       do: put_session(conn, :user_return_to, return_to)
+
+  defp store_return_to(conn, _opts), do: conn
 end

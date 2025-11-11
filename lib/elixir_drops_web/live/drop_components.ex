@@ -191,7 +191,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <div class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer">
           <.icon name="hero-link" class="h-5 w-5" />
           <span class="inline text-sm">
-            {@comment_count} {if @comment_count > 0, do: "comments", else: "comment"}
+            {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}
           </span>
         </div>
         <!-- Right side: Action buttons -->

@@ -20,29 +20,6 @@ defmodule ElixirDrops.Comments do
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
-  defp replies_query do
-    from r in Comment, order_by: [desc: r.inserted_at]
-  end
-
-  defp preload_list do
-    [
-      :user,
-      parent: [:user],
-      replies:
-        {replies_query(),
-         [
-           :user,
-           parent: [:user],
-           replies:
-             {replies_query(),
-              [
-                :user,
-                parent: [:user]
-              ]}
-         ]}
-    ]
-  end
-
   @doc """
   Lists comments for a drop with pagination.
 
@@ -85,8 +62,9 @@ defmodule ElixirDrops.Comments do
   """
   @spec get_comment!(comment_id) :: comment()
   def get_comment!(id) do
-    comment = Repo.get!(Comment, id)
-    Repo.preload(comment, preload_list())
+    Comment
+    |> Repo.get!(id)
+    |> Repo.preload(preload_list())
   end
 
   @doc """
@@ -133,26 +111,6 @@ defmodule ElixirDrops.Comments do
     %Comment{}
     |> create_comment_changeset(drop, user, parent, attrs)
     |> Repo.insert()
-  end
-
-  defp create_comment_changeset(comment, drop, user, parent, attrs) do
-    comment
-    |> Comment.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:drop, drop)
-    |> Ecto.Changeset.put_assoc(:user, user)
-    |> verify_parent_comment(parent)
-  end
-
-  defp verify_parent_comment(changeset, nil), do: changeset
-
-  defp verify_parent_comment(changeset, parent) do
-    case is_nil(parent.parent_id) do
-      true ->
-        Ecto.Changeset.put_assoc(changeset, :parent, parent)
-
-      false ->
-        Ecto.Changeset.add_error(changeset, :parent_id, "replies cannot have replies")
-    end
   end
 
   @doc """
@@ -206,5 +164,44 @@ defmodule ElixirDrops.Comments do
   @spec change_comment(comment(), attrs()) :: changeset()
   def change_comment(%Comment{} = comment, attrs \\ %{}) do
     Comment.changeset(comment, attrs)
+  end
+
+  defp create_comment_changeset(comment, drop, user, parent, attrs) do
+    comment
+    |> Comment.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:drop, drop)
+    |> Ecto.Changeset.put_assoc(:user, user)
+    |> verify_parent_comment(parent)
+  end
+
+  defp verify_parent_comment(changeset, nil), do: changeset
+
+  defp verify_parent_comment(changeset, %{parent_id: nil} = parent),
+    do: Ecto.Changeset.put_assoc(changeset, :parent, parent)
+
+  defp verify_parent_comment(changeset, _parent),
+    do: Ecto.Changeset.add_error(changeset, :parent_id, "replies cannot have replies")
+
+  defp replies_query do
+    from r in Comment, order_by: [desc: r.inserted_at]
+  end
+
+  defp preload_list do
+    [
+      :user,
+      parent: [:user],
+      replies:
+        {replies_query(),
+         [
+           :user,
+           parent: [:user],
+           replies:
+             {replies_query(),
+              [
+                :user,
+                parent: [:user]
+              ]}
+         ]}
+    ]
   end
 end
