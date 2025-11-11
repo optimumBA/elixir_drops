@@ -10,8 +10,6 @@ defmodule ElixirDrops.Bookmarks do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
 
-  require Logger
-
   @type attrs :: map()
   @type bookmark :: Bookmark.t()
   @type changeset :: Ecto.Changeset.t()
@@ -25,10 +23,10 @@ defmodule ElixirDrops.Bookmarks do
 
   Returns `{:ok, %Bookmark{}}` on success or `{:error, %Ecto.Changeset{}}` on validation errors.
   """
-  @spec create_bookmark(drop_id(), user_id()) :: {:ok, bookmark()} | {:error, changeset()}
-  def create_bookmark(drop_id, user_id) do
+  @spec create_bookmark(attrs()) :: {:ok, bookmark()} | {:error, changeset()}
+  def create_bookmark(attrs \\ %{}) do
     %Bookmark{}
-    |> Bookmark.changeset(%{drop_id: drop_id, user_id: user_id})
+    |> Bookmark.changeset(attrs)
     |> Repo.insert()
   end
 

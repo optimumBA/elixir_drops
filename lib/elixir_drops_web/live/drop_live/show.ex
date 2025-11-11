@@ -117,8 +117,12 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_event("bookmark_drop", %{"drop_id" => drop_id, "user_id" => user_id}, socket) do
-    case Bookmarks.create_bookmark(drop_id, user_id) do
+  def handle_event(
+        "bookmark_drop",
+        %{"drop_id" => _drop_id, "user_id" => _user_id} = params,
+        socket
+      ) do
+    case Bookmarks.create_bookmark(params) do
       {:ok, _bookmark} ->
         {:noreply, assign(socket, :bookmarked?, true)}
 

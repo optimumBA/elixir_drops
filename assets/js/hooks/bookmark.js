@@ -5,7 +5,6 @@ BookmarkHooks.Bookmark = {
     const bookmarkButton = this.el
 
     bookmarkButton.addEventListener('click', (event) => {
-      event.preventDefault()
       event.stopPropagation()
 
       const dropId = bookmarkButton.dataset.dropId

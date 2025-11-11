@@ -115,6 +115,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       {:ok, _live, html} = live(conn, ~p"/")
 
+      # "drop-card-menu-btn-#{drop.id}"
+
       assert html =~ completed_drop.title
       assert html =~ skipped_drop.title
       assert html =~ user.github_username

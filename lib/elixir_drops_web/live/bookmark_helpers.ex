@@ -33,10 +33,10 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
 
   def handle_bookmark_event(
         "bookmark_drop",
-        %{"drop_id" => drop_id, "user_id" => user_id},
+        params,
         socket
       ) do
-    Bookmarks.create_bookmark(drop_id, user_id)
+    Bookmarks.create_bookmark(params)
 
     {:noreply, socket}
   end
