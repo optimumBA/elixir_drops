@@ -5,7 +5,6 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
-  alias ElixirDropsWeb.Comment.CommentFormComponent
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.DropComponents
 
@@ -14,11 +13,11 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   attr :comment_count, :integer, required: true
   attr :comment_form, Phoenix.HTML.Form, required: true
+  attr :comment_pending_deletion, Comment, default: nil
   attr :comment_offset, :integer, required: true
   attr :comments, :any, required: true
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
-  attr :delete_comment_id, :string, default: nil
   attr :new_comment_form, Phoenix.HTML.Form, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
   attr :top_level_comment_count, :integer, required: true
@@ -41,7 +40,7 @@ defmodule ElixirDropsWeb.CommentComponents do
             form={@new_comment_form}
             parent={nil}
             parent_id={nil}
-            id="new_comment_form"
+            id="new-comment-form"
             module={FormComponent}
           />
         </div>
@@ -65,7 +64,6 @@ defmodule ElixirDropsWeb.CommentComponents do
             comment_type={:comment}
             current_url={@current_url}
             current_user={@current_user}
-            delete_comment_id={@delete_comment_id}
             depth={0}
             parent={nil}
             reply_form={@reply_form}
@@ -88,6 +86,15 @@ defmodule ElixirDropsWeb.CommentComponents do
           See more responses
         </button>
       </div>
+      <div :if={@comment_pending_deletion}>
+        <.modal
+          id={"delete-comment-modal-#{@comment_pending_deletion.id}"}
+          show
+          on_cancel={JS.push("cancel_comment_deletion")}
+        >
+          <.delete_comment_component comment={@comment_pending_deletion} />
+        </.modal>
+      </div>
     </div>
     """
   end
@@ -97,7 +104,6 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :comment_type, :atom
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
-  attr :delete_comment_id, :string, default: nil
   attr :depth, :integer, required: true
   attr :parent, :any, default: nil
   attr :reply_form, Phoenix.HTML.Form, required: true
@@ -113,12 +119,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         />
       </div>
       <div class="grow min-w-0">
-        <.comment_header
-          comment={@comment}
-          current_url={@current_url}
-          current_user={@current_user}
-          delete_comment_id={@delete_comment_id}
-        />
+        <.comment_header comment={@comment} current_url={@current_url} current_user={@current_user} />
         <.comment_body comment={@comment} />
         <.comment_actions
           comment={@comment}
@@ -140,7 +141,6 @@ defmodule ElixirDropsWeb.CommentComponents do
             comment_form={@comment_form}
             current_url={@current_url}
             current_user={@current_user}
-            delete_comment_id={@delete_comment_id}
             depth={@depth}
             reply_form={@reply_form}
           />
@@ -153,7 +153,6 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :comment, Comment, required: true
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
-  attr :delete_comment_id, :string, default: nil
 
   defp comment_header(assigns) do
     ~H"""
@@ -218,26 +217,14 @@ defmodule ElixirDropsWeb.CommentComponents do
           class="text-red-600 flex items-center gap-x-2"
           phx-click={
             JS.toggle(to: "#comment-actions-#{@comment.id}")
-            |> JS.push("assign_comment_id_to_be_deleted", value: %{delete_comment_id: @comment.id})
+            |> JS.push("assign_comment_id_to_be_deleted",
+              value: %{comment_pending_deletion_id: @comment.id}
+            )
           }
           type="button"
         >
           <.icon name="hero-trash" class="w-4 h-4" /> Delete comment
         </button>
-      </div>
-
-      <div :if={@delete_comment_id == @comment.id} id={"delete-comment-modal-#{@comment.id}"}>
-        <.modal
-          id={"delete-comment-modal-#{@comment.id}-modal"}
-          show
-          on_cancel={JS.push("cancel_comment_deletion", value: %{comment_id: @comment.id})}
-        >
-          <.live_component
-            comment={@comment}
-            id={"delete-modal-#{@comment.id}"}
-            module={CommentFormComponent}
-          />
-        </.modal>
       </div>
     </div>
     """
@@ -336,7 +323,6 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :comment_form, Phoenix.HTML.Form, required: true
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
-  attr :delete_comment_id, :string, default: nil
   attr :depth, :integer, required: true
   attr :reply_form, Phoenix.HTML.Form, required: true
 
@@ -353,12 +339,38 @@ defmodule ElixirDropsWeb.CommentComponents do
           comment_type={:response}
           current_url={@current_url}
           current_user={@current_user}
-          delete_comment_id={@delete_comment_id}
           depth={@depth + 1}
           parent={Comments.get_comment!(reply.parent_id)}
           reply_form={@reply_form}
         />
       </div>
+    </div>
+    """
+  end
+
+  defp delete_comment_component(assigns) do
+    ~H"""
+    <div class="flex flex-col gap-2 roboto-medium">
+      <section class="text-[#252525] text-2xl">Delete Comment</section>
+      <section class="roboto-regular">Are you sure you want to delete this comment?</section>
+      <section class="flex gap-4 justify-end mt-4">
+        <button
+          class="w-24 h-12 flex justify-center items-center rounded-lg mb-6 text-[#4F4F4F] bg-[#EEEEEE]"
+          phx-click={JS.exec("data-cancel", to: "#delete-comment-modal-#{@comment.id}")}
+        >
+          Cancel
+        </button>
+        <button
+          id={"confirm-comment-deletion-#{@comment.id}"}
+          class="w-24 h-12 flex justify-center items-center rounded-lg mb-6 text-[#EAE8FD] bg-[#2F19EE]"
+          phx-click={
+            hide_modal("delete-comment-modal-#{@comment.id}")
+            |> JS.push("delete_comment", value: %{comment_id: @comment.id})
+          }
+        >
+          Confirm
+        </button>
+      </section>
     </div>
     """
   end

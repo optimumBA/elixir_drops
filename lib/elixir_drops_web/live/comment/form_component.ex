@@ -57,7 +57,7 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
                   Cancel
                 </button>
                 <button
-                  id={"submit_button_#{@id}"}
+                  id={"submit-button-#{@id}"}
                   class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
                   type="submit"
                   onclick="event.stopPropagation()"
@@ -84,7 +84,7 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
                   Cancel
                 </button>
                 <button
-                  id={"submit_button_#{@id}"}
+                  id={"submit-button-#{@id}"}
                   class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
                   type="submit"
                   disabled

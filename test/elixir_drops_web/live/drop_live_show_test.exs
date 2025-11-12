@@ -23,10 +23,10 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       assert html =~ "Comments (0)"
 
-      assert has_element?(view, "button#submit_button_new_comment_form[disabled]")
+      assert has_element?(view, "button#submit-button-new-comment-form[disabled]")
 
       view
-      |> form("#new_comment_form",
+      |> form("#new-comment-form",
         comment: %{body: "This is my test comment"}
       )
       |> render_submit()
@@ -41,7 +41,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
       view
-      |> form("#new_comment_form",
+      |> form("#new-comment-form",
         comment: %{body: ""}
       )
       |> render_submit()
@@ -104,7 +104,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       )
       |> render_change()
 
-      assert has_element?(view, "button#submit_button_edit-comment-form-#{comment.id}[disabled]")
+      assert has_element?(view, "button#submit-button-edit-comment-form-#{comment.id}[disabled]")
     end
 
     test "character count changes as the user types more text", %{
@@ -221,13 +221,13 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       unique = "Some unique draft text #{System.unique_integer()}"
 
       view
-      |> form("#new_comment_form",
+      |> form("#new-comment-form",
         comment: %{body: unique}
       )
       |> render_change()
 
       view
-      |> element("#new_comment_form button", "Cancel")
+      |> element("#new-comment-form button", "Cancel")
       |> render_click()
 
       refute render(view) =~ unique
