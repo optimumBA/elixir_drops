@@ -13,7 +13,7 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
         for={@form}
         id={@id}
         phx-submit={submit_form(@comment, @parent, @comment_type)}
-        phx-change={if @comment, do: "validate_existing_comment", else: "validate_comment"}
+        phx-change="validate_comment"
         phx-target={@myself}
         class={@class}
         phx-hook="CommentForm"
@@ -112,11 +112,6 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
   end
 
   @impl Phoenix.LiveComponent
-  def update(assigns, socket) do
-    {:ok, assign(socket, assigns)}
-  end
-
-  @impl Phoenix.LiveComponent
   def handle_event(
         "validate_comment",
         %{
@@ -124,28 +119,22 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
         },
         socket
       ) do
-    changeset = Comments.change_comment(%Comment{}, params)
     form_id = socket.assigns.id
     character_count = String.length(body)
 
-    {:noreply,
-     socket
-     |> assign(:form, to_form(changeset))
-     |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
-  end
+    case is_nil(socket.assigns.comment) do
+      true ->
+        changeset = Comments.change_comment(%Comment{}, params)
 
-  def handle_event(
-        "validate_existing_comment",
-        %{
-          "comment" => %{"body" => body}
-        },
-        socket
-      ) do
-    form_id = socket.assigns.id
-    character_count = String.length(body)
+        {:noreply,
+         socket
+         |> assign(:form, to_form(changeset))
+         |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
 
-    {:noreply,
-     push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})}
+      false ->
+        {:noreply,
+         push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})}
+    end
   end
 
   def handle_event(

@@ -3,7 +3,6 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   use ElixirDropsWeb, :html
 
-  alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.DropComponents
@@ -340,7 +339,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           current_url={@current_url}
           current_user={@current_user}
           depth={@depth + 1}
-          parent={Comments.get_comment!(reply.parent_id)}
+          parent={@comment}
           reply_form={@reply_form}
         />
       </div>
