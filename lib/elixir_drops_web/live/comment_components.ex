@@ -12,8 +12,8 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   attr :comment_count, :integer, required: true
   attr :comment_form, Phoenix.HTML.Form, required: true
-  attr :comment_pending_deletion, Comment, default: nil
   attr :comment_offset, :integer, required: true
+  attr :comment_pending_deletion, Comment, default: nil
   attr :comments, :any, required: true
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
@@ -33,13 +33,11 @@ defmodule ElixirDropsWeb.CommentComponents do
           <.live_component
             class=""
             comment={nil}
-            comment_id={nil}
             comment_type={:comment}
             field_id="comment-form-field"
             form={@new_comment_form}
-            parent={nil}
-            parent_id={nil}
             id="new-comment-form"
+            parent={nil}
             module={FormComponent}
           />
         </div>
@@ -292,26 +290,22 @@ defmodule ElixirDropsWeb.CommentComponents do
       <.live_component
         class="hidden"
         comment={nil}
-        comment_id={nil}
         comment_type={:response}
         form={@reply_form}
         field_id={"reply-form-field-#{@comment.id}"}
         id={"reply-form-#{@comment.id}"}
         parent={@comment}
-        parent_id={@comment.id}
         module={FormComponent}
       />
 
       <.live_component
         class="hidden"
         comment={@comment}
-        comment_id={@comment.id}
         comment_type={@comment_type}
         form={@form}
         field_id={"edit-comment-form-field-#{@comment.id}"}
         id={"edit-comment-form-#{@comment.id}"}
         parent={@parent}
-        parent_id={if @parent, do: @parent.id, else: nil}
         module={FormComponent}
       />
     </div>

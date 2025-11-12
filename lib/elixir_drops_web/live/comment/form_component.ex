@@ -10,13 +10,13 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
     ~H"""
     <div>
       <.form
+        class={@class}
         for={@form}
         id={@id}
-        phx-submit={submit_form(@comment, @parent, @comment_type)}
         phx-change="validate_comment"
-        phx-target={@myself}
-        class={@class}
         phx-hook="CommentForm"
+        phx-submit={submit_form(@comment, @parent, @comment_type)}
+        phx-target={@myself}
       >
         <div class="group">
           <.custom_input
@@ -142,8 +142,10 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
         %{"comment" => comment_params},
         socket
       ) do
-    parent_id = socket.assigns.parent_id
-    notify_parent({:new_comment, parent_id, comment_params})
+    comment_type = socket.assigns.comment_type
+    parent = socket.assigns.parent
+    parent_id = if parent, do: parent.id, else: nil
+    notify_parent({:new_comment, parent_id, comment_type, comment_params})
     {:noreply, socket}
   end
 

@@ -74,8 +74,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     updated_socket =
       socket
-      |> assign(:comment_pending_deletion, nil)
       |> assign(:comment_count, comment_count)
+      |> assign(:comment_pending_deletion, nil)
 
     case is_nil(comment.parent_id) do
       true ->
@@ -91,9 +91,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
         "cancel_comment_deletion",
         _params,
         socket
-      ) do
-    {:noreply, assign(socket, :comment_pending_deletion, nil)}
-  end
+      ),
+      do: {:noreply, assign(socket, :comment_pending_deletion, nil)}
 
   def handle_event(
         "load_more",
@@ -120,33 +119,28 @@ defmodule ElixirDropsWeb.DropLive.Show do
       do: {:noreply, assign(socket, :comment_pending_deletion, Comments.get_comment!(comment_id))}
 
   @impl Phoenix.LiveView
-  def handle_info({:new_comment, parent_id, comment_params}, socket) do
-    {socket, changeset} =
-      case create_comment(socket, comment_params, parent_id) do
-        {:ok, comment} ->
-          top_level_comment = get_top_level_comment(comment)
-          changeset = Comments.change_comment(%Comment{})
-          comment_count = socket.assigns.comment_count + 1
+  def handle_info({:new_comment, parent_id, comment_type, comment_params}, socket) do
+    case create_comment(socket, comment_params, parent_id) do
+      {:ok, comment} ->
+        top_level_comment = get_top_level_comment(comment)
+        changeset = Comments.change_comment(%Comment{})
+        comment_count = socket.assigns.comment_count + 1
 
-          socket =
-            socket
-            |> assign(:comment_count, comment_count)
-            |> stream_insert(:comments, top_level_comment, at: 0)
+        if is_nil(parent_id) and comment_type == :comment,
+          do:
+            send_update(FormComponent,
+              id: "new-comment-form",
+              form: to_form(changeset)
+            )
 
-          {socket, changeset}
+        {:noreply,
+         socket
+         |> assign(:comment_count, comment_count)
+         |> stream_insert(:comments, top_level_comment, at: 0)}
 
-        {:error, changeset} ->
-          {put_flash(socket, :error, "Failed to add your comment"), changeset}
-      end
-
-    if is_nil(parent_id),
-      do:
-        send_update(FormComponent,
-          id: "new-comment-form",
-          form: to_form(changeset)
-        )
-
-    {:noreply, socket}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to add your comment")}
+    end
   end
 
   @impl Phoenix.LiveView
