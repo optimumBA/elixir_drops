@@ -2,8 +2,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Comments
+  alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops
   alias ElixirDrops.StructuredData
+  alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.CommentComponents
   alias ElixirDropsWeb.DropComponents
 
@@ -123,7 +125,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
       case create_comment(socket, comment_params, parent_id) do
         {:ok, comment} ->
           top_level_comment = get_top_level_comment(comment)
-          changeset = Comments.change_comment(%Comments.Comment{})
+          changeset = Comments.change_comment(%Comment{})
           comment_count = socket.assigns.comment_count + 1
 
           socket =
@@ -139,7 +141,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     if is_nil(parent_id),
       do:
-        send_update(ElixirDropsWeb.Comment.FormComponent,
+        send_update(FormComponent,
           id: "new-comment-form",
           form: to_form(changeset)
         )
@@ -152,7 +154,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     case Comments.update_comment(comment, params) do
       {:ok, updated} ->
         top_level_comment = get_top_level_comment(updated)
-        changeset = Comments.change_comment(%Comments.Comment{})
+        changeset = Comments.change_comment(%Comment{})
 
         {:noreply,
          socket
@@ -204,7 +206,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Phoenix.HTML.html_escape()
       |> Phoenix.HTML.safe_to_string()
 
-    comment_changeset = Comments.change_comment(%Comments.Comment{})
+    comment_changeset = Comments.change_comment(%Comment{})
 
     socket
     |> assign(:comment_form, to_form(comment_changeset))
