@@ -111,17 +111,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   def handle_event(
-        "assign_comment_id_to_be_deleted",
+        "assign_comment_pending_deletion",
         %{"comment_pending_deletion_id" => comment_id},
         socket
-      ) do
-    comment =
-      comment_id
-      |> Comments.get_comment!()
-      |> get_top_level_comment()
-
-    {:noreply, assign(socket, :comment_pending_deletion, comment)}
-  end
+      ),
+      do: {:noreply, assign(socket, :comment_pending_deletion, Comments.get_comment!(comment_id))}
 
   @impl Phoenix.LiveView
   def handle_info({:new_comment, parent_id, comment_params}, socket) do

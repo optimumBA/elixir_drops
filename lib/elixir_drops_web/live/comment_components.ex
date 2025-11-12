@@ -216,7 +216,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           class="text-red-600 flex items-center gap-x-2"
           phx-click={
             JS.toggle(to: "#comment-actions-#{@comment.id}")
-            |> JS.push("assign_comment_id_to_be_deleted",
+            |> JS.push("assign_comment_pending_deletion",
               value: %{comment_pending_deletion_id: @comment.id}
             )
           }

@@ -161,7 +161,7 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
   def handle_event("cancel_new_comment", _params, socket) do
     changeset =
       Comments.change_comment(
-        %Comments.Comment{},
+        %Comment{},
         %{"body" => ""}
       )
 
