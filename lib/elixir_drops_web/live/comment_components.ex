@@ -6,6 +6,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDropsWeb.Comment.CommentFormComponent
+  alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.DropComponents
 
   @type assigns() :: map()
@@ -31,11 +32,17 @@ defmodule ElixirDropsWeb.CommentComponents do
           Comments ({@comment_count})
         </h3>
         <div :if={@current_user}>
-          <.comment_form
+          <.live_component
+            class=""
+            comment={nil}
+            comment_id={nil}
             comment_type={:comment}
             field_id="comment-form-field"
             form={@new_comment_form}
-            id="comment-form"
+            parent={nil}
+            parent_id={nil}
+            id="new_comment_form"
+            module={FormComponent}
           />
         </div>
         <div :if={!@current_user}>
@@ -82,144 +89,6 @@ defmodule ElixirDropsWeb.CommentComponents do
         </button>
       </div>
     </div>
-    """
-  end
-
-  attr :class, :string, default: nil
-  attr :comment, :any, default: nil
-  attr :comment_type, :atom
-  attr :field_id, :string, required: true
-  attr :form, Phoenix.HTML.Form, required: true
-  attr :id, :string, required: true
-  attr :parent, :any, default: nil
-
-  defp comment_form(assigns) do
-    ~H"""
-    <.form
-      for={@form}
-      id={@id}
-      phx-submit={
-        if @comment do
-          JS.push("update_comment", value: %{comment_id: @comment.id})
-        else
-          if @comment_type == :response do
-            JS.push("new_comment",
-              value: %{
-                comment_type: :response,
-                parent_id: @parent.id
-              }
-            )
-            |> JS.toggle(to: "#reply-form-#{@parent.id}")
-          else
-            JS.push("new_comment",
-              value: %{
-                comment_type: :comment,
-                parent_id: "nil"
-              }
-            )
-          end
-        end
-      }
-      phx-change={if @comment_type == :comment, do: "validate_comment", else: "validate_reply"}
-      class={@class}
-      phx-hook="CommentForm"
-    >
-      <input :if={@comment_type == :response} type="hidden" name="parent_id" value={@parent.id} />
-      <input
-        :if={@comment && @comment_type == :comment}
-        type="hidden"
-        name="comment_id"
-        value={@comment.id}
-      />
-      <input :if={!@comment && @comment_type == :comment} type="hidden" name="comment_id" value="nil" />
-      <input type="hidden" name="form_id" value={@id} />
-      <div class="group">
-        <.custom_input
-          id={@field_id}
-          class={[
-            "border-[1px] border-gray-200 focus-within:border-[#2F19EE] px-2 py-3 ",
-            "rounded-lg transition-colors duration-100"
-          ]}
-          input_field_class={[
-            "border-0 py-0 block w-full",
-            "text-[#252525] focus:ring-0 sm:text-sm sm:leading-6",
-            "placeholder:italic placeholder:text-[#9D9D9D]"
-          ]}
-          field={@form[:body]}
-          type="textarea"
-          placeholder={
-            if @comment_type == :comment,
-              do: "What are your thoughts?",
-              else: "Replying to #{@parent.user.name}"
-          }
-          aria-label={if @comment_type == :comment, do: "Add a comment", else: "Add a reply"}
-          phx-debounce="100"
-        >
-          <:extra_content>
-            <div
-              :if={!@comment and @comment_type == :comment}
-              class={[
-                "flex justify-end gap-x-4 mt-12 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-hover:pointer-events-auto",
-                "opacity-0"
-              ]}
-            >
-              <button phx-click="cancel_new_comment" type="button" class="hover:opacity-80">
-                Cancel
-              </button>
-              <button
-                id={"submit-button-#{@id}"}
-                class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
-                type="submit"
-                onclick="event.stopPropagation()"
-                disabled
-              >
-                <span>Comment</span>
-              </button>
-            </div>
-
-            <div
-              :if={@comment || @comment_type == :response}
-              class={[
-                "justify-end gap-x-4 mt-16 flex"
-              ]}
-            >
-              <button
-                phx-click={
-                  if !@comment,
-                    do: JS.hide(to: "##{@id}"),
-                    else: JS.toggle_class("hidden", to: "##{@id}")
-                }
-                type="button"
-                class="hover:opacity-80"
-              >
-                Cancel
-              </button>
-
-              <button
-                id={"submit-button-#{@id}"}
-                class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
-                type="submit"
-                disabled
-              >
-                <span :if={!@comment && @comment_type == :comment}>Comment</span>
-                <span :if={!@comment && @comment_type == :response}>Reply</span>
-                <span :if={@comment}>Save</span>
-              </button>
-            </div>
-          </:extra_content>
-        </.custom_input>
-      </div>
-
-      <div class="text-xs text-gray-500 flex justify-between items-center mt-2">
-        <p>
-          Supports basic Markdown<span class="hidden sm:inline-block">: **bold**, *italic*, and [links](url)</span>.
-        </p>
-        <p>
-          <span class="hidden sm:inline-block">Max 1000 characters</span>
-          (<span id={"#{@id}-char-count"}>0</span>/1000)
-        </p>
-      </div>
-    </.form>
     """
   end
 
@@ -434,23 +303,30 @@ defmodule ElixirDropsWeb.CommentComponents do
           Reply
         </button>
       </div>
-      <.comment_form
+      <.live_component
         class="hidden"
         comment={nil}
+        comment_id={nil}
         comment_type={:response}
-        field_id={"reply-form-field-#{@comment.id}"}
         form={@reply_form}
+        field_id={"reply-form-field-#{@comment.id}"}
         id={"reply-form-#{@comment.id}"}
         parent={@comment}
+        parent_id={@comment.id}
+        module={FormComponent}
       />
-      <.comment_form
+
+      <.live_component
         class="hidden"
         comment={@comment}
+        comment_id={@comment.id}
         comment_type={@comment_type}
-        field_id={"edit-comment-form-field-#{@comment.id}"}
         form={@form}
+        field_id={"edit-comment-form-field-#{@comment.id}"}
         id={"edit-comment-form-#{@comment.id}"}
         parent={@parent}
+        parent_id={if @parent, do: @parent.id, else: nil}
+        module={FormComponent}
       />
     </div>
     """

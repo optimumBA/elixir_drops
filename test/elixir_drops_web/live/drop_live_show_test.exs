@@ -23,10 +23,10 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       assert html =~ "Comments (0)"
 
-      assert has_element?(view, "button#submit-button-comment-form[disabled]")
+      assert has_element?(view, "button#submit_button_new_comment_form[disabled]")
 
       view
-      |> form("#comment-form",
+      |> form("#new_comment_form",
         comment: %{body: "This is my test comment"}
       )
       |> render_submit()
@@ -41,7 +41,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
       view
-      |> form("#comment-form",
+      |> form("#new_comment_form",
         comment: %{body: ""}
       )
       |> render_submit()
@@ -79,8 +79,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       view
       |> form("#edit-comment-form-#{comment.id}",
-        comment: %{body: "Updated body"},
-        comment_id: comment.id
+        comment: %{body: "Updated body"}
       )
       |> render_submit()
 
@@ -101,13 +100,11 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       view
       |> form("#edit-comment-form-#{comment.id}",
-        comment: %{body: ""},
-        comment_id: comment.id,
-        form_id: "edit-comment-form-#{comment.id}"
+        comment: %{body: ""}
       )
       |> render_change()
 
-      assert has_element?(view, "button#submit-button-edit-comment-form-#{comment.id}[disabled]")
+      assert has_element?(view, "button#submit_button_edit-comment-form-#{comment.id}[disabled]")
     end
 
     test "character count changes as the user types more text", %{
@@ -124,8 +121,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       view
       |> form("##{form_id}",
-        comment: %{body: "Good"},
-        form_id: "#{form_id}"
+        comment: %{body: "Good"}
       )
       |> render_change()
 
@@ -168,9 +164,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       view
       |> form("#reply-form-#{comment.id}",
-        comment: %{body: "A reply"},
-        parent_id: comment.id,
-        form_id: "reply-form-#{comment.id}"
+        comment: %{body: "A reply"}
       )
       |> render_submit()
 
@@ -227,15 +221,13 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       unique = "Some unique draft text #{System.unique_integer()}"
 
       view
-      |> form("#comment-form",
-        comment: %{body: unique},
-        comment_id: "nil",
-        form_id: "comment-form"
+      |> form("#new_comment_form",
+        comment: %{body: unique}
       )
       |> render_change()
 
       view
-      |> element("#comment-form button", "Cancel")
+      |> element("#new_comment_form button", "Cancel")
       |> render_click()
 
       refute render(view) =~ unique

@@ -28,106 +28,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   @impl Phoenix.LiveView
   def handle_event(
-        "new_comment",
-        %{"comment" => comment_params, "parent_id" => parent_id},
-        socket
-      ) do
-    parent_id = if parent_id == "nil", do: nil, else: parent_id
-
-    {socket, changeset} =
-      case create_comment(socket, comment_params, parent_id) do
-        {:ok, comment} ->
-          top_level_comment = get_top_level_comment(comment)
-          changeset = Comments.change_comment(%Comments.Comment{})
-          comment_count = socket.assigns.comment_count + 1
-
-          socket =
-            socket
-            |> assign(:comment_count, comment_count)
-            |> stream_insert(:comments, top_level_comment, at: 0)
-
-          {socket, changeset}
-
-        {:error, changeset} ->
-          {put_flash(socket, :error, "Failed to add your comment"), changeset}
-      end
-
-    updated_socket =
-      if parent_id,
-        do: socket,
-        else: assign(socket, :new_comment_form, to_form(changeset))
-
-    {:noreply, updated_socket}
-  end
-
-  def handle_event(
-        "update_comment",
-        %{"comment" => comment_params, "comment_id" => comment_id},
-        socket
-      ) do
-    edited_at = %{"edited_at" => DateTime.utc_now()}
-    comment_params = Map.merge(comment_params, edited_at)
-    comment = Comments.get_comment!(comment_id)
-
-    case Comments.update_comment(comment, comment_params) do
-      {:ok, updated} ->
-        top_level_comment = get_top_level_comment(updated)
-        changeset = Comments.change_comment(%Comments.Comment{})
-
-        {:noreply,
-         socket
-         |> assign(:comment_form, to_form(changeset))
-         |> stream_insert(:comments, top_level_comment)}
-
-      {:error, changeset} ->
-        {:noreply,
-         socket
-         |> assign(:comment_form, to_form(changeset))
-         |> put_flash(:error, "Failed to update comment")}
-    end
-  end
-
-  def handle_event(
-        "validate_comment",
-        %{
-          "comment" => %{"body" => body} = comment_params,
-          "comment_id" => comment_id,
-          "form_id" => form_id
-        },
-        socket
-      ) do
-    character_count = String.length(body)
-
-    socket =
-      if comment_id == "nil" do
-        changeset = Comments.change_comment(%Comments.Comment{}, comment_params)
-
-        assign(socket, :new_comment_form, to_form(changeset))
-      else
-        socket
-      end
-
-    {:noreply,
-     push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})}
-  end
-
-  def handle_event(
-        "validate_reply",
-        %{
-          "comment" => %{"body" => body},
-          "form_id" => form_id
-        },
-        socket
-      ) do
-    character_count = String.length(body)
-
-    {
-      :noreply,
-      push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})
-    }
-  end
-
-  def handle_event(
         "change_edit_comment_form",
         %{"comment_id" => comment_id},
         socket
@@ -149,22 +49,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream_insert(:comments, top_level_comment)
      |> push_event("edit_comment", %{comment_id: comment_id})
      |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
-  end
-
-  def handle_event("cancel_new_comment", _params, socket) do
-    changeset =
-      Comments.change_comment(
-        %Comments.Comment{},
-        %{"body" => ""}
-      )
-
-    {
-      :noreply,
-      socket
-      |> assign(:character_count, 0)
-      |> assign(:new_comment_form, to_form(changeset))
-      |> push_event("cancel_comment", %{})
-    }
   end
 
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
@@ -247,6 +131,56 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:delete_comment_id, comment_id)
      |> stream_insert(:comments, comment)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info({:new_comment, parent_id, comment_params}, socket) do
+    {socket, changeset} =
+      case create_comment(socket, comment_params, parent_id) do
+        {:ok, comment} ->
+          top_level_comment = get_top_level_comment(comment)
+          changeset = Comments.change_comment(%Comments.Comment{})
+          comment_count = socket.assigns.comment_count + 1
+
+          socket =
+            socket
+            |> assign(:comment_count, comment_count)
+            |> stream_insert(:comments, top_level_comment, at: 0)
+
+          {socket, changeset}
+
+        {:error, changeset} ->
+          {put_flash(socket, :error, "Failed to add your comment"), changeset}
+      end
+
+    if is_nil(parent_id),
+      do:
+        send_update(ElixirDropsWeb.Comment.FormComponent,
+          id: "new_comment_form",
+          form: to_form(changeset)
+        )
+
+    {:noreply, socket}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info({:update_comment, comment, params}, socket) do
+    case Comments.update_comment(comment, params) do
+      {:ok, updated} ->
+        top_level_comment = get_top_level_comment(updated)
+        changeset = Comments.change_comment(%Comments.Comment{})
+
+        {:noreply,
+         socket
+         |> assign(:comment_form, to_form(changeset))
+         |> stream_insert(:comments, top_level_comment)}
+
+      {:error, changeset} ->
+        {:noreply,
+         socket
+         |> assign(:comment_form, to_form(changeset))
+         |> put_flash(:error, "Failed to update comment")}
+    end
   end
 
   defp get_top_level_comment(%{parent_id: nil} = comment), do: Comments.get_comment!(comment.id)
