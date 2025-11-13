@@ -37,8 +37,8 @@ defmodule ElixirDropsWeb.CommentComponents do
             field_id="comment-form-field"
             form={@new_comment_form}
             id="new-comment-form"
-            parent={nil}
             module={FormComponent}
+            parent={nil}
           />
         </div>
         <div :if={!@current_user}>
@@ -291,22 +291,22 @@ defmodule ElixirDropsWeb.CommentComponents do
         class="hidden"
         comment={nil}
         comment_type={:response}
-        form={@reply_form}
         field_id={"reply-form-field-#{@comment.id}"}
+        form={@reply_form}
         id={"reply-form-#{@comment.id}"}
-        parent={@comment}
         module={FormComponent}
+        parent={@comment}
       />
 
       <.live_component
         class="hidden"
         comment={@comment}
         comment_type={@comment_type}
-        form={@form}
         field_id={"edit-comment-form-field-#{@comment.id}"}
+        form={@form}
         id={"edit-comment-form-#{@comment.id}"}
-        parent={@parent}
         module={FormComponent}
+        parent={@parent}
       />
     </div>
     """

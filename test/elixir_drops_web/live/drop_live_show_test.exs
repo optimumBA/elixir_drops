@@ -6,10 +6,11 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
   import Phoenix.LiveViewTest
 
   alias ElixirDrops.Comments
+  alias ElixirDrops.Drops.Drop
 
   defp create_drop_setup(%{conn: conn}) do
     user = user_fixture()
-    drop = drop_fixture(%ElixirDrops.Drops.Drop{}, user)
+    drop = drop_fixture(%Drop{}, user)
     conn = sign_in_user(conn, user)
 
     %{conn: conn, drop: drop, user: user}
@@ -53,7 +54,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
     test "comments display for non-logged-in users" do
       user = user_fixture()
-      drop = drop_fixture(%ElixirDrops.Drops.Drop{}, user)
+      drop = drop_fixture(%Drop{}, user)
 
       {:ok, _comment} =
         Comments.create_comment(

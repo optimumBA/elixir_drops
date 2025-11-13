@@ -11,7 +11,7 @@ defmodule ElixirDrops.CommentsTest do
 
   @invalid_attrs %{body: nil}
 
-  setup do
+  defp create_drop_setup(_attrs) do
     user = user_fixture()
     drop = drop_fixture(%Drop{}, user)
 
@@ -19,6 +19,8 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "list_drop_comments/2" do
+    setup [:create_drop_setup]
+
     test "returns all comments for a drop", %{drop: drop, user: user} do
       for _comment <- 1..2 do
         comment_fixture(drop, user)
@@ -93,6 +95,8 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "get_comment!/1" do
+    setup [:create_drop_setup]
+
     test "returns the comment with given id", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
 
@@ -120,6 +124,8 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "count_drop_comments/1" do
+    setup [:create_drop_setup]
+
     test "returns 0 for drop with no comments", %{drop: drop} do
       assert Comments.count_drop_comments(drop.id) == 0
     end
@@ -158,6 +164,8 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "count_drop_top_level_comments/1" do
+    setup [:create_drop_setup]
+
     test "excludes replies in the total count", %{drop: drop, user: user} do
       parent_comment = comment_fixture(drop, user)
       _reply = comment_fixture(drop, user, parent_comment)
@@ -167,6 +175,8 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "create_comment/4" do
+    setup [:create_drop_setup]
+
     test "creates a comment with valid data", %{drop: drop, user: user} do
       attrs = %{body: "**some** body"}
 
@@ -228,6 +238,8 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "update_comment/2" do
+    setup [:create_drop_setup]
+
     test "updates comment with valid data", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
       update_attrs = %{body: "some updated body"}
@@ -269,6 +281,8 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "delete_comment/1" do
+    setup [:create_drop_setup]
+
     test "permanently deletes a comment", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
       assert {1, nil} = Comments.delete_comment(comment.id)
@@ -287,6 +301,8 @@ defmodule ElixirDrops.CommentsTest do
   end
 
   describe "change_comment/2" do
+    setup [:create_drop_setup]
+
     test "returns a comment changeset with no changes", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
 
