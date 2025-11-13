@@ -74,9 +74,9 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
               >
                 <button
                   phx-click={
-                    if !@comment,
-                      do: JS.hide(to: "##{@id}"),
-                      else: JS.toggle_class("hidden", to: "##{@id}")
+                    if @comment,
+                      do: JS.toggle_class("hidden", to: "##{@id}"),
+                      else: JS.hide(to: "##{@id}")
                   }
                   type="button"
                   class="hover:opacity-80"
@@ -112,6 +112,19 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
   end
 
   @impl Phoenix.LiveComponent
+  def update(assigns, socket) do
+    form =
+      %Comment{}
+      |> Comments.change_comment()
+      |> to_form()
+
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign(:form, form)}
+  end
+
+  @impl Phoenix.LiveComponent
   def handle_event(
         "validate_comment",
         %{
@@ -122,18 +135,16 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
     form_id = socket.assigns.id
     character_count = String.length(body)
 
-    case is_nil(socket.assigns.comment) do
-      true ->
-        changeset = Comments.change_comment(%Comment{}, params)
+    if socket.assigns.comment do
+      {:noreply,
+       push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})}
+    else
+      changeset = Comments.change_comment(%Comment{}, params)
 
-        {:noreply,
-         socket
-         |> assign(:form, to_form(changeset))
-         |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
-
-      false ->
-        {:noreply,
-         push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})}
+      {:noreply,
+       socket
+       |> assign(:form, to_form(changeset))
+       |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
     end
   end
 
@@ -174,6 +185,27 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
       |> assign(:form, to_form(changeset))
       |> push_event("cancel_comment", %{})
     }
+  end
+
+  def handle_event(
+        "change_edit_comment_form",
+        %{"comment_id" => comment_id},
+        socket
+      ) do
+    comment = Comments.get_comment!(comment_id)
+    character_count = String.length(comment.body)
+    form_id = "edit-comment-form-#{comment_id}"
+
+    form =
+      comment
+      |> Comments.change_comment()
+      |> to_form()
+
+    {:noreply,
+     socket
+     |> assign(:form, form)
+     |> push_event("edit_comment", %{comment_id: comment_id})
+     |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
   end
 
   defp submit_form(%Comment{} = comment, _parent, _comment_type),

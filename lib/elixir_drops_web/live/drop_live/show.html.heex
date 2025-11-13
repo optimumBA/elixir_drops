@@ -13,22 +13,17 @@
     <DropComponents.drop comment_count={@comment_count} current_user={@current_user} drop={@drop} />
   </section>
 
-  <%= if @drop do %>
-    <section class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <CommentComponents.comment_section
-        comment_count={@comment_count}
-        comment_form={@comment_form}
-        comment_offset={@comment_offset}
-        comment_pending_deletion={@comment_pending_deletion}
-        comments={@streams.comments}
-        current_url={~p"/d/#{@drop.short_id}"}
-        current_user={@current_user}
-        new_comment_form={@new_comment_form}
-        reply_form={@reply_form}
-        top_level_comment_count={@top_level_comment_count}
-      />
-    </section>
-  <% end %>
+  <section :if={@drop} class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <CommentComponents.comment_section
+      comment_count={@comment_count}
+      comment_offset={@comment_offset}
+      comment_pending_deletion={@comment_pending_deletion}
+      comments={@streams.comments}
+      current_url={~p"/d/#{@drop.short_id}"}
+      current_user={@current_user}
+      top_level_comment_count={@top_level_comment_count}
+    />
+  </section>
 
   <DropComponents.copied_link_popup_message />
 </section>

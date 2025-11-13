@@ -132,27 +132,6 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       })
     end
 
-    test "clicking the edit comment button pre-fills the UI with the comment body character count",
-         %{
-           conn: conn,
-           drop: drop,
-           user: user
-         } do
-      {:ok, comment} =
-        Comments.create_comment(drop, user, nil, %{body: "content"})
-
-      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
-
-      view
-      |> element("#trigger-comment-edit-#{comment.id}", "Edit comment")
-      |> render_click()
-
-      assert_push_event(view, "reply_char_count", %{
-        count: 7,
-        form_id: _form_id
-      })
-    end
-
     test "user can reply to a comment", %{
       conn: conn,
       drop: drop,

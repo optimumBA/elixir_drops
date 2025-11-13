@@ -29,30 +29,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   @impl Phoenix.LiveView
-  def handle_event(
-        "change_edit_comment_form",
-        %{"comment_id" => comment_id},
-        socket
-      ) do
-    comment = Comments.get_comment!(comment_id)
-    character_count = String.length(comment.body)
-    form_id = "edit-comment-form-#{comment_id}"
-
-    form =
-      comment
-      |> Comments.change_comment()
-      |> to_form()
-
-    top_level_comment = get_top_level_comment(comment)
-
-    {:noreply,
-     socket
-     |> assign(:comment_form, form)
-     |> stream_insert(:comments, top_level_comment)
-     |> push_event("edit_comment", %{comment_id: comment_id})
-     |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
-  end
-
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
 
@@ -77,13 +53,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> assign(:comment_count, comment_count)
       |> assign(:comment_pending_deletion, nil)
 
-    case is_nil(comment.parent_id) do
-      true ->
-        {:noreply, stream_delete(updated_socket, :comments, comment)}
-
-      false ->
-        comment = get_top_level_comment(comment)
-        {:noreply, stream_insert(updated_socket, :comments, comment)}
+    if comment.parent_id do
+      comment = get_top_level_comment(comment)
+      {:noreply, stream_insert(updated_socket, :comments, comment)}
+    else
+      {:noreply, stream_delete(updated_socket, :comments, comment)}
     end
   end
 
@@ -146,20 +120,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @impl Phoenix.LiveView
   def handle_info({:update_comment, comment, params}, socket) do
     case Comments.update_comment(comment, params) do
-      {:ok, updated} ->
-        top_level_comment = get_top_level_comment(updated)
-        changeset = Comments.change_comment(%Comment{})
+      {:ok, comment} ->
+        {:noreply, stream_insert(socket, :comments, get_top_level_comment(comment))}
 
-        {:noreply,
-         socket
-         |> assign(:comment_form, to_form(changeset))
-         |> stream_insert(:comments, top_level_comment)}
-
-      {:error, changeset} ->
-        {:noreply,
-         socket
-         |> assign(:comment_form, to_form(changeset))
-         |> put_flash(:error, "Failed to update comment")}
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to update comment")}
     end
   end
 
@@ -200,14 +165,9 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Phoenix.HTML.html_escape()
       |> Phoenix.HTML.safe_to_string()
 
-    comment_changeset = Comments.change_comment(%Comment{})
-
     socket
-    |> assign(:comment_form, to_form(comment_changeset))
     |> assign(:drop, drop)
-    |> assign(:new_comment_form, to_form(comment_changeset))
     |> assign(:page_title, title)
-    |> assign(:reply_form, to_form(comment_changeset))
     |> assign_comments(drop)
     |> assign_seo_attributes()
   end
