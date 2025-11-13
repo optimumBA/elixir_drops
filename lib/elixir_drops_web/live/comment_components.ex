@@ -125,6 +125,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           id={"comment-replies-#{@comment.id}"}
         >
           <.comment_replies
+            :if={!@comment.parent_id}
             comment={@comment}
             current_url={@current_url}
             current_user={@current_user}
@@ -244,7 +245,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     <div class="comment-actions">
       <div class="flex items-center gap-x-6 text-xs md:text-sm text-gray-500 mb-4">
         <button
-          :if={Enum.count(@comment.replies) > 0}
+          :if={!@comment.parent_id && Enum.count(@comment.replies) > 0}
           class="flex items-center gap-2"
           phx-click={
             JS.toggle(to: "#comment-replies-#{@comment.id}")

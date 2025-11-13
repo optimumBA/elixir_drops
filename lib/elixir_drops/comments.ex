@@ -194,13 +194,7 @@ defmodule ElixirDrops.Comments do
         {replies_query(),
          [
            :user,
-           parent: [:user],
-           replies:
-             {replies_query(),
-              [
-                :user,
-                parent: [:user]
-              ]}
+           parent: [:user]
          ]}
     ]
   end

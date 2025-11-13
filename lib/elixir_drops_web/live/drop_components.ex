@@ -188,8 +188,8 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
       <!-- Action row below author's name -->
       <div class="flex items-center justify-between py-4 border-b border-gray-200">
-        <div class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer">
-          <.icon name="hero-link" class="h-5 w-5" />
+        <div class="flex items-center gap-2 text-[#8E8E8E] cursor-pointer">
+          <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-5 h-5" />
           <span class="inline text-sm">
             {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}
           </span>
@@ -198,7 +198,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <div class="flex items-center gap-4">
           <!-- Copy link button -->
           <div
-            class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer"
+            class="flex items-center gap-2 text-[#8E8E8E] hover:text-[#5947F1] cursor-pointer"
             id={"single-drop-copy-link-#{@drop.id}"}
             data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
             phx-hook="CopyToClipboard"
