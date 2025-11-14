@@ -20,19 +20,6 @@ MasonryHooks.Masonry = {
       this.masonry.layout()
     })
 
-    this.handleEvent('load_masonry', ({ drop_id }) => {
-      this.masonry = null
-      this.isLayouting = false
-      this.layoutCompleteCallbacks = []
-      this.trackedItems = new Set()
-
-      this.sendViewportDimensions()
-
-      setTimeout(() => {
-        this.initializeMasonry()
-      }, 100)
-    })
-
     this.el.addEventListener('load_masonry', () => {
       this.masonry = null
       this.isLayouting = false
