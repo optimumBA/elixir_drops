@@ -50,7 +50,6 @@ defmodule ElixirDrops.BookmarksTest do
       drop: drop,
       user: user
     } do
-      attrs = %{drop_id: drop.id, user_id: user.id}
       assert {:ok, %Bookmark{} = created} = Bookmarks.create_bookmark(attrs)
 
       assert %Bookmark{} = fetched = Bookmarks.get_bookmark(drop.id, user.id)

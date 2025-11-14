@@ -1,7 +1,6 @@
 defmodule ElixirDropsWeb.UserDropLive.Index do
   use ElixirDropsWeb, :live_view
 
-  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
@@ -9,6 +8,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.SearchHelper
+  alias ElixirDropsWeb.UserDropLive.BookmarksComponent
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
   @impl Phoenix.LiveView
@@ -38,19 +38,17 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def handle_params(params, _url, socket) do
     search_query = params["q"] || ""
 
-    socket =
-      socket
-      |> assign(:search_query, search_query)
-      |> assign(:searching, search_query != "")
-      |> update_search_filters(search_query)
-      |> apply_action(socket.assigns.live_action, params)
-
-    updated_socket =
-      if params["bookmarks_user_id"],
-        do: show_bookmarked_drops(socket),
-        else: DropsListHelper.assign_drops(socket)
-
-    {:noreply, updated_socket}
+    if params["bookmarks_user_id"] do
+      {:noreply, assign(socket, :bookmark_tab?, true)}
+    else
+      {:noreply,
+       socket
+       |> assign(:search_query, search_query)
+       |> assign(:searching, search_query != "")
+       |> update_search_filters(search_query)
+       |> DropsListHelper.assign_drops()
+       |> apply_action(socket.assigns.live_action, params)}
+    end
   end
 
   defp update_search_filters(socket, search_query) do
@@ -191,15 +189,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def handle_event(event, params, socket)
       when event in ["remove_from_bookmark", "bookmark_drop"],
       do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
-
-  defp show_bookmarked_drops(%{assigns: %{current_user: user}} = socket) do
-    bookmarked_drops = Bookmarks.get_bookmarked_drops(user.id)
-
-    socket
-    |> assign(:bookmark_tab?, true)
-    |> assign(:end_of_timeline?, true)
-    |> stream(:drops, bookmarked_drops, reset: true)
-  end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
     filters = %{

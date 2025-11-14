@@ -30,6 +30,7 @@
     />
 
     <DropsListHelper.drops_list
+      :if={!@bookmark_tab?}
       batch_size={@batch_size}
       current_user={@current_user}
       drops={@streams.drops}
@@ -41,6 +42,19 @@
       search_query={@search_query}
       searching={@searching}
       show_user_drops?={true}
+    />
+
+    <.live_component
+      :if={@bookmark_tab?}
+      batch_size={@batch_size}
+      current_user={@current_user}
+      loading_more={@loading_more}
+      page={@page}
+      search_query={@search_query}
+      searching={@searching}
+      show_user_drops?={true}
+      id="bookmarked-drops"
+      module={BookmarksComponent}
     />
 
     <DropComponents.create_drop_button_mobile
