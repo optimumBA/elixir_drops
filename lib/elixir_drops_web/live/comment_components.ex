@@ -65,6 +65,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       </div>
       <div class="flex flex-col items-center mx-auto mt-4 mb-8">
         <button
+          id="load-more-comments"
           class={[
             "text-[#2F19EE] text-sm px-4 py-2 border border-[#2F19EE] rounded-md hover:opacity-70",
             @top_level_comment_count <= @comment_offset && "hidden"

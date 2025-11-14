@@ -49,6 +49,7 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
                 ]}
               >
                 <button
+                  id={"#{@id}-cancel-btn"}
                   phx-click="cancel_new_comment"
                   phx-target={@myself}
                   type="button"

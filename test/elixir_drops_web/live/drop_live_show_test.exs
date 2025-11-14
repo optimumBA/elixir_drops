@@ -20,7 +20,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
   describe "/d/short_id" do
     setup [:create_drop_setup]
 
-    test "valid body adds a comment", %{conn: conn, drop: drop, user: user} do
+    test "a user who has logged in can add comments", %{conn: conn, drop: drop, user: user} do
       {:ok, view, html} = live(conn, ~p"/d/#{drop.short_id}")
 
       assert html =~ "Comments (0)"
@@ -39,18 +39,13 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert updated_html =~ user.name
     end
 
-    test "invalid body adds an error message to the page", %{conn: conn, drop: drop} do
+    test "a user who has not logged in cannot add comments", %{drop: drop} do
+      conn = build_conn()
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
-      view
-      |> form("#new-comment-form",
-        comment: %{body: ""}
-      )
-      |> render_submit()
-
-      updated_html = render(view)
-      assert updated_html =~ "Failed to add your comment"
-      assert updated_html =~ "Comments (0)"
+      refute view
+             |> element("#new-comment-form")
+             |> has_element?()
     end
 
     test "comments display for non-logged-in users" do
@@ -73,7 +68,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert html =~ "Sign in with GitHub"
     end
 
-    test "user can edit a comment and see edited flag", %{conn: conn, drop: drop, user: user} do
+    test "edited comments show 'edited' flag", %{conn: conn, drop: drop, user: user} do
       {:ok, comment} =
         Comments.create_comment(drop, user, nil, %{body: "Initial body"})
 
@@ -133,7 +128,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       })
     end
 
-    test "user can reply to a comment", %{
+    test "users can reply to a comment", %{
       conn: conn,
       drop: drop,
       user: user
@@ -152,7 +147,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert render(view) =~ "A reply"
     end
 
-    test "deletes comment and removes it from the UI", %{
+    test "users can delete a comment", %{
       conn: conn,
       drop: drop,
       user: user
@@ -161,6 +156,8 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
         Comments.create_comment(drop, user, nil, %{body: "Delete me"})
 
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert render(view) =~ "Delete me"
 
       view
       |> element("#trigger-comment-deletion-#{comment.id}", "Delete comment")
@@ -173,7 +170,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       refute render(view) =~ "Delete me"
     end
 
-    test "loads more comments when clicking \'see more responses\' button", %{
+    test "user can load more comments", %{
       conn: conn,
       drop: drop,
       user: user
@@ -187,7 +184,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       refute html =~ "Comment 15"
 
       view
-      |> element("button", "See more responses")
+      |> element("#load-more-comments")
       |> render_click()
 
       assert render(view) =~ "Comment 15"
@@ -208,7 +205,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       |> render_change()
 
       view
-      |> element("#new-comment-form button", "Cancel")
+      |> element("#new-comment-form-cancel-btn")
       |> render_click()
 
       refute render(view) =~ unique
