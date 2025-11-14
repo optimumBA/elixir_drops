@@ -188,7 +188,7 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
       <!-- Action row below author's name -->
       <div class="flex items-center justify-between py-4 border-b border-gray-200">
-        <div class="flex items-center gap-2 text-[#8E8E8E] cursor-pointer">
+        <div class="flex items-center gap-2 text-[#8E8E8E]">
           <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-5 h-5" />
           <span class="inline text-sm">
             {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}

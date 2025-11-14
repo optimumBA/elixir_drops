@@ -53,6 +53,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       <div id="comments" phx-update="stream" class="last:mb-10">
         <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 py-2">
           <.comment
+            author?={if @current_user, do: @current_user.id == comment.user_id, else: false}
             comment={comment}
             comment_type={:comment}
             current_url={@current_url}
@@ -91,6 +92,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 
+  attr :author?, :boolean, required: true
   attr :comment, Comment, required: true
   attr :comment_type, :atom
   attr :current_url, :string, required: true
@@ -109,9 +111,15 @@ defmodule ElixirDropsWeb.CommentComponents do
         />
       </div>
       <div class="grow min-w-0">
-        <.comment_header comment={@comment} current_url={@current_url} current_user={@current_user} />
+        <.comment_header
+          author?={@author?}
+          comment={@comment}
+          current_url={@current_url}
+          current_user={@current_user}
+        />
         <.comment_body comment={@comment} />
         <.comment_actions
+          author?={@author?}
           comment={@comment}
           comment_type={@comment_type}
           current_user={@current_user}
@@ -137,6 +145,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 
+  attr :author?, :boolean, required: true
   attr :comment, Comment, required: true
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
@@ -155,7 +164,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           <span class="hidden sm:inline-block w-1 h-1 rounded-full bg-gray-500"></span>
           <span class="text-sm">{Timex.format!(@comment.inserted_at, "{relative}", :relative)}</span>
           <span
-            :if={@current_user && @current_user.id == @comment.user_id && !@comment.parent_id}
+            :if={@current_user && @author?}
             class="bg-[#eeeeee] text-[#575757] text-xs inline-block px-2 py-1 rounded-md"
           >
             You
@@ -171,7 +180,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         </p>
 
         <button
-          :if={@current_user && @current_user.id == @comment.user_id}
+          :if={@current_user && @author?}
           class="ml-auto"
           aria-label="Toggle comment actions"
           phx-click={JS.toggle(to: "#comment-actions-#{@comment.id}")}
@@ -235,6 +244,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     """
   end
 
+  attr :author?, :boolean, required: true
   attr :comment, Comment, required: true
   attr :comment_type, :atom
   attr :current_user, :any, required: true
@@ -290,7 +300,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       />
 
       <.live_component
-        :if={@current_user && @current_user.id && @comment.user.id}
+        :if={@current_user && @author?}
         class="hidden"
         comment={@comment}
         comment_type={@comment_type}
@@ -316,6 +326,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     >
       <div :for={reply <- @comment.replies}>
         <.comment
+          author?={if @current_user, do: @current_user.id == reply.user_id, else: false}
           comment={reply}
           comment_type={:response}
           current_url={@current_url}

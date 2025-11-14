@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
   use ElixirDropsWeb.ConnCase, async: true
 
   import ElixirDrops.AccountsFixtures
+  import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
   import Phoenix.LiveViewTest
 
@@ -211,6 +212,55 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       |> render_click()
 
       refute render(view) =~ unique
+    end
+
+    test "mounts the edit form if the user is the comment author", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      comment = comment_fixture(drop, user, nil)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view
+             |> element("#edit-comment-form-#{comment.id}")
+             |> has_element?()
+    end
+
+    test "does not mount the edit form if the user is not the comment author", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      comment = comment_fixture(drop, user, nil)
+      another_user = user_fixture()
+      conn = sign_in_user(conn, another_user)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      refute view
+             |> element("#edit-comment-form-#{comment.id}")
+             |> has_element?()
+    end
+
+    test "mounts the reply form for top-level comments only", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      top_level_comment = comment_fixture(drop, user, nil)
+      reply_comment = comment_fixture(drop, user, top_level_comment)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view
+             |> element("#reply-form-#{top_level_comment.id}")
+             |> has_element?()
+
+      refute view
+             |> element("#reply-form-#{reply_comment.id}")
+             |> has_element?()
     end
   end
 end
