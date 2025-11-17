@@ -15,10 +15,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def mount(_params, _session, socket) do
     if connected?(socket), do: Drops.subscribe()
 
-    # user = ElixirDrops.Accounts.get_user!("6c2da68f-5200-43f5-9fb7-24b9b5408fc9")
-
-    # socket = assign(socket, :current_user, user)
-
     user_id = socket.assigns.current_user.id
 
     {:ok,
