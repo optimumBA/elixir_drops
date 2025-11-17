@@ -147,6 +147,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
     drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
 
+    dbg(Enum.count(drops))
     last_drop = List.last(drops)
 
     socket
@@ -171,6 +172,8 @@ defmodule ElixirDropsWeb.DropsListHelper do
       filters
       |> Map.merge(socket.assigns.drop_filters)
       |> Drops.list_drops(batch_size)
+
+    dbg(Enum.count(drops))
 
     last_drop = List.last(drops)
 
