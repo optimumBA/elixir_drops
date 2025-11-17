@@ -83,10 +83,21 @@ defmodule ElixirDrops.Drops do
   end
 
   defp safe_list_drops(filters, limit) do
+    search_filters =
+      case Map.get(filters, :search) do
+        nil ->
+          %{}
+
+        search_query ->
+          %{search: search_query}
+      end
+
+    filters = Map.delete(filters, :search)
     filter_query = apply_filters()
 
     query =
       drop_query()
+      |> where(^filter_query.(search_filters))
       |> where(^filter_query.(filters))
       |> limit(^limit)
       |> preload([:user])
