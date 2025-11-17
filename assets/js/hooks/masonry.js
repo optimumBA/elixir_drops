@@ -5,17 +5,6 @@ let MasonryHooks = {}
 
 MasonryHooks.Masonry = {
   mounted() {
-    console.log('Nothing really')
-    this.masonry = null
-    this.isLayouting = false
-    this.layoutCompleteCallbacks = []
-
-    this.sendViewportDimensions()
-
-    setTimeout(() => {
-      this.initializeMasonry()
-    }, 100)
-
     this.handleResize = this.debounce(() => {
       this.sendViewportDimensions()
       if (this.masonry) {
@@ -24,22 +13,44 @@ MasonryHooks.Masonry = {
     }, 300)
 
     window.addEventListener('resize', this.handleResize)
+
+    this.el.addEventListener('load_masonry', () => {
+      this.masonry = null
+      this.isLayouting = false
+      this.layoutCompleteCallbacks = []
+      this.trackedItems = new Set()
+
+      this.sendViewportDimensions()
+
+      setTimeout(() => {
+        this.initializeMasonry()
+      }, 100)
+    })
   },
 
   updated() {
-    // Delay to ensure DOM is fully updated
     if (this.masonry) {
-      // Destroy and reinitialize for major updates (like stream resets)
       const items = this.el.querySelectorAll('.masonry-item')
+
       if (items.length > 0) {
-        setTimeout(() => {
-          this.layoutWithImageLoading()
-        }, 150)
+        const newItems = []
+        items.forEach((item) => {
+          if (!this.trackedItems.has(item.id)) {
+            newItems.push(item)
+            this.trackedItems.add(item.id)
+          }
+        })
+
+        if (newItems.length > 0) {
+          setTimeout(() => {
+            this.appendNewItems(newItems)
+          }, 150)
+        }
       }
     } else {
       setTimeout(() => {
         this.initializeMasonry()
-      }, 150)
+      }, 100)
     }
   },
 
@@ -75,16 +86,40 @@ MasonryHooks.Masonry = {
       }
     })
 
+    const items = this.el.querySelectorAll('.masonry-item')
+    items.forEach((item) => {
+      this.trackedItems.add(item.id)
+    })
+
     this.layoutWithImageLoading()
+  },
+
+  appendNewItems(newItems) {
+    this.isLayouting = true
+
+    if (this.masonry && newItems.length > 0) {
+      this.masonry.appended(newItems)
+
+      imagesLoaded(this.el, () => {
+        if (this.masonry) {
+          this.masonry.layout()
+
+          setTimeout(() => {
+            newItems.forEach((item) => {
+              const dropCard = item.querySelector('.drop-card')
+              if (!dropCard.classList.contains('animation-complete')) {
+                dropCard.classList.add('animation-complete')
+              }
+            })
+          }, 500)
+        }
+        this.isLayouting = false
+      })
+    }
   },
 
   layoutWithImageLoading() {
     this.isLayouting = true
-
-    // First reload items to pick up any new DOM elements
-    if (this.masonry) {
-      this.masonry.reloadItems()
-    }
 
     imagesLoaded(this.el, () => {
       if (this.masonry) {
