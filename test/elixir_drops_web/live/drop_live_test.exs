@@ -1032,7 +1032,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       |> render_submit()
 
       # Check that URL was updated (this triggers a handle_params call)
-      assert_patch(live, ~p"/?q=test")
+      assert_redirect(live, ~p"/?q=test")
     end
 
     test "navbar search suggestions work independently from main search", %{

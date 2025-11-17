@@ -14,14 +14,6 @@ MasonryHooks.Masonry = {
 
     window.addEventListener('resize', this.handleResize)
 
-    this.handleEvent('masonry_on_search_query_reload', () => {
-      this.shouldResetMasonry = true
-    })
-
-    this.handleEvent('restore_for_search_query', () => {
-      this.shouldResetMasonry = null
-    })
-
     this.el.addEventListener('load_masonry', () => {
       this.masonry = null
       this.isLayouting = false
@@ -37,13 +29,8 @@ MasonryHooks.Masonry = {
   },
 
   updated() {
-    if (this.shouldResetMasonry) return this.resetMasonry()
-
     if (this.masonry) {
       const items = this.el.querySelectorAll('.masonry-item')
-      console.log(items.length)
-
-      console.log(this.trackedItems)
 
       if (items.length > 0) {
         const newItems = []
@@ -53,8 +40,6 @@ MasonryHooks.Masonry = {
             this.trackedItems.add(item.id)
           }
         })
-
-        console.log(`New items: ${newItems.length}`)
 
         if (newItems.length > 0) {
           setTimeout(() => {
@@ -152,19 +137,6 @@ MasonryHooks.Masonry = {
         }, 500)
       }
     })
-  },
-
-  resetMasonry() {
-    this.masonry = null
-    this.isLayouting = false
-    this.layoutCompleteCallbacks = []
-    this.trackedItems = new Set()
-
-    this.sendViewportDimensions()
-
-    setTimeout(() => {
-      this.initializeMasonry()
-    }, 100)
   },
 
   waitForLayoutComplete() {
