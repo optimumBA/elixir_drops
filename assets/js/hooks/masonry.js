@@ -5,7 +5,7 @@ let MasonryHooks = {}
 
 MasonryHooks.Masonry = {
   mounted() {
-    console.log("Nothing really")
+    console.log('Nothing really')
     this.masonry = null
     this.isLayouting = false
     this.layoutCompleteCallbacks = []
