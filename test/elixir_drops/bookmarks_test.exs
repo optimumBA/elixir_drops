@@ -66,11 +66,17 @@ defmodule ElixirDrops.BookmarksTest do
   describe "get_bookmarked_drops/1" do
     test "returns empty list when user has no bookmarks" do
       user = user_fixture()
-      assert [] == Bookmarks.get_bookmarked_drops(user.id)
+      filters = %{user_id: user.id}
+
+      assert [] ==
+               filters
+               |> Bookmarks.get_bookmarks()
+               |> Bookmarks.get_bookmarked_drops()
     end
 
     test "returns drops bookmarked by the user" do
       user = user_fixture()
+      filters = %{user_id: user.id}
       drops = create_multiple_drops(user, 2)
 
       Enum.each(drops, fn drop ->
@@ -78,7 +84,11 @@ defmodule ElixirDrops.BookmarksTest do
         assert {:ok, _} = Bookmarks.create_bookmark(attrs)
       end)
 
-      bookmarked_drops = Bookmarks.get_bookmarked_drops(user.id)
+      bookmarked_drops =
+        filters
+        |> Bookmarks.get_bookmarks()
+        |> Bookmarks.get_bookmarked_drops()
+
       assert length(bookmarked_drops) == 2
 
       drop_ids = Enum.map(bookmarked_drops, & &1.id)

@@ -15,6 +15,7 @@ defmodule ElixirDrops.Bookmarks do
   @type changeset :: Ecto.Changeset.t()
   @type drop :: Drop.t()
   @type drop_id :: Ecto.UUID.t()
+  @type filters :: map()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
@@ -42,13 +43,53 @@ defmodule ElixirDrops.Bookmarks do
     |> Repo.one()
   end
 
-  @spec get_bookmarked_drops(user_id()) :: [bookmark()]
-  def get_bookmarked_drops(user_id) do
-    Bookmark
-    |> where([b], b.user_id == ^user_id)
-    |> preload(drop: [:user])
-    |> Repo.all()
-    |> Enum.map(fn bookmark -> bookmark.drop end)
+  @spec get_bookmarks(filters(), integer()) :: [bookmark()]
+  def get_bookmarks(filters, limit \\ 10) do
+    case safe_list_bookmarks(filters, limit) do
+      {:ok, results} -> results
+      {:error, _reason} -> []
+    end
+  end
+
+  defp safe_list_bookmarks(filters, limit) do
+    search_filters =
+      case Map.get(filters, :search) do
+        nil ->
+          %{}
+
+        search_query ->
+          %{search: search_query}
+      end
+
+    other_filters = Map.delete(filters, :search)
+    filter_query = apply_filters()
+
+    query =
+      bookmark_query()
+      |> where(^filter_query.(search_filters))
+      |> where(^filter_query.(other_filters))
+      |> limit(^limit)
+      |> preload(drop: [:user])
+
+    result =
+      query
+      |> apply_search_ordering(filters[:search])
+      |> Repo.all()
+
+    {:ok, result}
+  rescue
+    DBConnection.OwnershipError ->
+      # Database sandbox not ready yet - return error
+      {:error, :db_ownership_error}
+
+    DBConnection.ConnectionError ->
+      # Database connection issues - return error
+      {:error, :db_connection_error}
+  end
+
+  @spec get_bookmarked_drops([bookmark()]) :: [drop()]
+  def get_bookmarked_drops(bookmarks) do
+    Enum.map(bookmarks, & &1.drop)
   end
 
   @spec drop_bookmarked?(drop_id(), user_id()) :: boolean()
@@ -67,5 +108,49 @@ defmodule ElixirDrops.Bookmarks do
           {:ok, bookmark()} | {:error, changeset()}
   def delete_bookmark(bookmark) do
     Repo.delete(bookmark)
+  end
+
+  defp bookmark_query do
+    from bookmark in Bookmark, as: :bookmark
+  end
+
+  defp apply_search_ordering(query, search_query)
+       when is_binary(search_query) and search_query != "" do
+    query
+    |> select_merge([drop: drop], %{
+      relevance_rank:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
+    })
+    |> order_by(
+      [drop: drop],
+      {:desc,
+       fragment(
+         "ts_rank(?, websearch_to_tsquery('english', ?))",
+         drop.search_vector,
+         ^search_query
+       )}
+    )
+  end
+
+  defp apply_search_ordering(query, _no_search) do
+    order_by(query, [b], {:desc, b.inserted_at})
+  end
+
+  defp apply_filters do
+    fn filters ->
+      Enum.reduce(filters, dynamic(true), &apply_filter/2)
+    end
+  end
+
+  defp apply_filter({:older_than, bookmark}, dynamic) do
+    dynamic([bookmark: bookmark], ^dynamic and bookmark.inserted_at < ^bookmark.inserted_at)
+  end
+
+  defp apply_filter({:user_id, user_id}, dynamic) do
+    dynamic([bookmark: bookmark], ^dynamic and bookmark.user_id == ^user_id)
   end
 end
