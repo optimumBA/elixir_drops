@@ -95,16 +95,13 @@ defmodule ElixirDrops.Drops do
     filters = Map.delete(filters, :search)
     filter_query = apply_filters()
 
-    query =
+    result =
       drop_query()
       |> where(^filter_query.(search_filters))
       |> where(^filter_query.(filters))
       |> limit(^limit)
       |> preload([:user])
-
-    result =
-      query
-      |> apply_search_ordering(filters[:search])
+      |> order_by([d], {:desc, d.inserted_at})
       |> Repo.all()
 
     {:ok, result}
@@ -120,32 +117,6 @@ defmodule ElixirDrops.Drops do
 
   defp drop_query do
     from drop in Drop, as: :drop
-  end
-
-  defp apply_search_ordering(query, search_query)
-       when is_binary(search_query) and search_query != "" do
-    query
-    |> select_merge([drop: drop], %{
-      relevance_rank:
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        )
-    })
-    |> order_by(
-      [drop: drop],
-      {:desc,
-       fragment(
-         "ts_rank(?, websearch_to_tsquery('english', ?))",
-         drop.search_vector,
-         ^search_query
-       )}
-    )
-  end
-
-  defp apply_search_ordering(query, _no_search) do
-    order_by(query, [d], {:desc, d.inserted_at})
   end
 
   defp apply_filters do

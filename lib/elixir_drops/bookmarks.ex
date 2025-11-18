@@ -61,19 +61,16 @@ defmodule ElixirDrops.Bookmarks do
           %{search: search_query}
       end
 
-    other_filters = Map.delete(filters, :search)
+    filters = Map.delete(filters, :search)
     filter_query = apply_filters()
 
-    query =
+    result =
       bookmark_query()
       |> where(^filter_query.(search_filters))
-      |> where(^filter_query.(other_filters))
+      |> where(^filter_query.(filters))
       |> limit(^limit)
       |> preload(drop: [:user])
-
-    result =
-      query
-      |> apply_search_ordering(filters[:search])
+      |> order_by([b], {:desc, b.inserted_at})
       |> Repo.all()
 
     {:ok, result}
@@ -112,32 +109,6 @@ defmodule ElixirDrops.Bookmarks do
 
   defp bookmark_query do
     from bookmark in Bookmark, as: :bookmark
-  end
-
-  defp apply_search_ordering(query, search_query)
-       when is_binary(search_query) and search_query != "" do
-    query
-    |> select_merge([drop: drop], %{
-      relevance_rank:
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        )
-    })
-    |> order_by(
-      [drop: drop],
-      {:desc,
-       fragment(
-         "ts_rank(?, websearch_to_tsquery('english', ?))",
-         drop.search_vector,
-         ^search_query
-       )}
-    )
-  end
-
-  defp apply_search_ordering(query, _no_search) do
-    order_by(query, [b], {:desc, b.inserted_at})
   end
 
   defp apply_filters do
