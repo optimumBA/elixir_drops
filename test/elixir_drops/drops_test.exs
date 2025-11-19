@@ -55,6 +55,34 @@ defmodule ElixirDrops.DropsTest do
       assert Ecto.assoc_loaded?(user_drop.user)
     end
 
+    test "if searching, orders drops by the relevance rank" do
+      user_2 =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "github_username",
+          name: "some_name"
+        })
+
+      drop_fixture(%Drop{}, user_2, %{
+        title: "Phoenix liveview for form submissions",
+        body: "I was diving into liveview this week"
+      })
+
+      drop_fixture(%Drop{}, user_2, %{
+        title: "Phoenix LiveView for form submissions because LiveView is Good",
+        body: "LiveView to manage state"
+      })
+
+      drops = Drops.list_drops(%{search: "LiveView"})
+
+      drop_1 = Enum.at(drops, 0)
+      drop_2 = Enum.at(drops, 1)
+
+      assert drop_1.relevance_rank > drop_2.relevance_rank
+    end
+
     test "returns empty list when a user has no drops" do
       non_existing_user_id = Ecto.UUID.generate()
 
