@@ -179,8 +179,8 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
     socket
     |> Phoenix.LiveView.stream(:drops, drops)
-    |> assign(:end_of_timeline?, Enum.count(drops) < batch_size)
     |> assign(:drop_filters, filters)
+    |> assign(:end_of_timeline?, Enum.count(drops) < batch_size)
   end
 
   @spec maybe_insert_drops(socket(), filters(), drop(), opts()) :: socket()

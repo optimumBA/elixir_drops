@@ -191,7 +191,6 @@ defmodule ElixirDrops.Drops do
 
   defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
        when is_binary(search_query) and search_query != "" do
-    # Filter drops with relevance rank less than the cursor
     dynamic(
       [drop: drop],
       ^dynamic and

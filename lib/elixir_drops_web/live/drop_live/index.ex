@@ -53,8 +53,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
     filters =
       if search_query != "" do
         current_filters
-        |> Map.put(:search, search_query)
         |> Map.put(:relevance_rank, {1, search_query})
+        |> Map.put(:search, search_query)
       else
         Map.delete(current_filters, :search)
       end
