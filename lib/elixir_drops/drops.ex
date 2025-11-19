@@ -118,6 +118,10 @@ defmodule ElixirDrops.Drops do
       {:error, :db_connection_error}
   end
 
+  defp drop_query do
+    from drop in Drop, as: :drop
+  end
+
   defp apply_search_ordering(query, search_query)
        when is_binary(search_query) and search_query != "" do
     query
@@ -142,10 +146,6 @@ defmodule ElixirDrops.Drops do
 
   defp apply_search_ordering(query, _no_search) do
     order_by(query, [d], {:desc, d.inserted_at})
-  end
-
-  defp drop_query do
-    from drop in Drop, as: :drop
   end
 
   defp apply_filters do
