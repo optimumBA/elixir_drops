@@ -20,7 +20,15 @@ defmodule ElixirDrops.Bookmarks do
   @type user_id :: Ecto.UUID.t()
 
   @doc """
-  Creates a bookmark for the given `drop_id` and `user_id`.
+  Creates a bookmark.
+
+  ## Examples
+
+    iex> create_bookmark(%{
+    ...>   drop_id: "056a0e76-2e3c-4c00-9efa-46ebb34cd19a",
+    ...>   user_id: "f2b5c006-6848-427b-89c0-629c3ba8a3de"
+    ...> })
+    {:ok, %Bookmark{}}
 
   Returns `{:ok, %Bookmark{}}` on success or `{:error, %Ecto.Changeset{}}` on validation errors.
   """
@@ -32,7 +40,7 @@ defmodule ElixirDrops.Bookmarks do
   end
 
   @doc """
-  Reads (fetches) a bookmark by `drop_id` and `user_id`.
+  Fetches a bookmark by `drop_id` and `user_id`.
 
   Returns `%Bookmark{}` if found, otherwise `nil`.
   """
@@ -97,10 +105,6 @@ defmodule ElixirDrops.Bookmarks do
     end
   end
 
-  @doc """
-  Deletes a bookmark identified by `drop_id` and `user_id`.
-  Returns `{:ok, %Bookmark{}}` when deleted or `{:error, :not_found}` if no bookmark exists.
-  """
   @spec delete_bookmark(bookmark()) ::
           {:ok, bookmark()} | {:error, changeset()}
   def delete_bookmark(bookmark) do

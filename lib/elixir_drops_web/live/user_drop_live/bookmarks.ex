@@ -20,7 +20,6 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
         page={@page}
         search_query={@search_query}
         searching={@searching}
-        show_user_drops?={true}
       />
     </div>
     """
@@ -47,7 +46,6 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
      |> assign(:search_query, "")
      |> assign(:page, 1)
      |> assign(:searching, searching)
-     |> assign(:show_user_drops?, true)
      |> assign(:drops_empty?, true)
      |> assign_drops()}
   end

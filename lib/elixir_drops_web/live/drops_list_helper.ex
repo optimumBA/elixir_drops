@@ -25,7 +25,6 @@ defmodule ElixirDropsWeb.DropsListHelper do
   attr :page, :integer
   attr :search_query, :string, default: ""
   attr :searching, :boolean, default: false
-  attr :show_user_drops?, :boolean, default: false
 
   @spec drops_list(assigns()) :: rendered()
   def drops_list(assigns) do
@@ -66,15 +65,15 @@ defmodule ElixirDropsWeb.DropsListHelper do
           ]}
         >
           <div
-            :if={@show_user_drops?}
+            :if={@drops_empty?}
             id="drops-empty"
-            class="drops-empty only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+            class="only:grid text-[#656565] text-lg min-h-[60svh] items-center justify-center"
           >
             <div class="flex flex-col items-center justify-center">
               <p>You haven't created any drop yet.</p>
               <.link
                 navigate={~p"/drops/new"}
-                class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 md:hidden py-2 mt-2 rounded-lg flex items-center gap-x-2"
+                class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 py-2 mt-2 rounded-lg flex items-center gap-x-2"
               >
                 <span><.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" /></span>
                 <span> Create Drop</span>

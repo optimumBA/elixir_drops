@@ -16,7 +16,6 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :search_query, :string, default: ""
   attr :show_suggestions, :boolean, default: false
   attr :search_suggestions, :list, default: []
-  attr :show_user_drops?, :boolean, default: false
 
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
