@@ -6,6 +6,7 @@ defmodule ElixirDrops.Drops do
   import Ecto.Query, warn: false
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Bookmarks.Bookmark
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
@@ -74,15 +75,15 @@ defmodule ElixirDrops.Drops do
       [%Drop{}, ...]
 
   """
-  @spec list_drops(filters(), limit()) :: [drop()]
-  def list_drops(filters \\ %{}, limit \\ 10) do
-    case safe_list_drops(filters, limit) do
+  @spec list_drops(filters(), filters(), limit()) :: [drop()]
+  def list_drops(filters \\ %{}, bookmark_filters, limit \\ 10) do
+    case safe_list_drops(filters, bookmark_filters, limit) do
       {:ok, results} -> results
       {:error, _reason} -> []
     end
   end
 
-  defp safe_list_drops(filters, limit) do
+  defp safe_list_drops(filters, bookmark_filters, limit) do
     search_filters =
       case Map.get(filters, :search) do
         nil ->
@@ -105,6 +106,7 @@ defmodule ElixirDrops.Drops do
     result =
       query
       |> apply_search_ordering(filters[:search])
+      |> add_bookmark_field(bookmark_filters[:user_id])
       |> Repo.all()
 
     {:ok, result}
@@ -146,6 +148,19 @@ defmodule ElixirDrops.Drops do
 
   defp apply_search_ordering(query, _no_search) do
     order_by(query, [d], {:desc, d.inserted_at})
+  end
+
+  defp add_bookmark_field(query, nil), do: query
+
+  defp add_bookmark_field(query, user_id) do
+    select_merge(query, [d], %{
+      bookmarked?:
+        exists(
+          from(b in Bookmark,
+            where: b.drop_id == parent_as(:drop).id and b.user_id == ^user_id
+          )
+        )
+    })
   end
 
   defp apply_filters do

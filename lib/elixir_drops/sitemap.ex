@@ -43,7 +43,7 @@ defmodule ElixirDrops.Sitemap do
   end
 
   defp generate_full_sitemap(sitemap_path) do
-    drops = Drops.list_drops(%{}, 10_000)
+    drops = Drops.list_drops(%{}, %{}, 10_000)
     sitemap_content = generate_sitemap_content(drops)
 
     case File.write(sitemap_path, sitemap_content) do

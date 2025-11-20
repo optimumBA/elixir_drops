@@ -25,7 +25,7 @@ defmodule ElixirDrops.DropsSearchTest do
         })
 
       # Test search filtering
-      search_results = Drops.list_drops(%{user_id: user.id, search: "phoenix"})
+      search_results = Drops.list_drops(%{user_id: user.id, search: "phoenix"}, %{})
 
       # Should only return the matching drop
       assert length(search_results) == 1
@@ -33,7 +33,7 @@ defmodule ElixirDrops.DropsSearchTest do
       assert hd(search_results).title == "Phoenix Tutorial"
 
       # Test that both drops exist without search
-      all_drops = Drops.list_drops(%{user_id: user.id})
+      all_drops = Drops.list_drops(%{user_id: user.id}, %{})
       assert length(all_drops) == 2
     end
 
@@ -48,7 +48,7 @@ defmodule ElixirDrops.DropsSearchTest do
 
       # Test different cases
       for query <- ["phoenix", "Phoenix", "PHOENIX"] do
-        results = Drops.list_drops(%{user_id: user.id, search: query})
+        results = Drops.list_drops(%{user_id: user.id, search: query}, %{})
         assert length(results) == 1
         assert hd(results).id == drop.id
       end
@@ -65,14 +65,14 @@ defmodule ElixirDrops.DropsSearchTest do
         drop_fixture(%Drop{}, user, %{title: "Random Drop", body: "Not related"})
 
       # Test search filtering
-      search_results = Drops.list_drops(%{user_id: user.id, search: "phoenix"})
+      search_results = Drops.list_drops(%{user_id: user.id, search: "phoenix"}, %{})
 
       # Should only return the matching drop
       assert length(search_results) == 1
       assert hd(search_results).title == "Phoenix Tutorial"
 
       # Test that both drops exist without search
-      all_drops = Drops.list_drops(%{user_id: user.id})
+      all_drops = Drops.list_drops(%{user_id: user.id}, %{})
       assert length(all_drops) == 2
     end
   end

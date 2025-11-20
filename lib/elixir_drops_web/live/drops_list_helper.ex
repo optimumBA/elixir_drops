@@ -144,10 +144,10 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @spec assign_drops(socket()) :: socket()
   def assign_drops(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
-    drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
-    socket = assign_drop_cursor(socket.assigns.search_query, drops, socket)
+    drops = get_drops(socket, batch_size)
 
-    socket
+    socket.assigns.search_query
+    |> assign_drop_cursor(drops, socket)
     |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: batch_size)
     |> assign(:drops_empty?, Enum.empty?(drops))
     |> assign(:end_of_timeline?, false)
@@ -159,7 +159,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
     search_query = socket.assigns.search_query
     drop_filters = socket.assigns.drop_filters
     batch_size = Map.get(socket.assigns, :batch_size, 15)
-    drops = Drops.list_drops(drop_filters, batch_size)
+    drops = get_drops(socket, batch_size)
 
     filters =
       case Enum.empty?(drops) do
@@ -191,11 +191,13 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
   def maybe_insert_drops(socket, filters, _first_or_last_drop, opts) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
+    current_user = socket.assigns.current_user
+    user_id = if current_user, do: current_user.id, else: nil
 
     drops =
       filters
       |> Map.merge(socket.assigns.drop_filters)
-      |> Drops.list_drops(batch_size)
+      |> Drops.list_drops(%{user_id: user_id}, batch_size)
 
     last_drop = List.last(drops)
 
@@ -249,5 +251,11 @@ defmodule ElixirDropsWeb.DropsListHelper do
   defp assign_drop_cursor(_search_query, drops, socket) do
     last_drop = List.last(drops)
     assign(socket, :last_drop, last_drop)
+  end
+
+  defp get_drops(socket, batch_size) do
+    current_user = socket.assigns.current_user
+    user_id = if current_user, do: current_user.id, else: nil
+    Drops.list_drops(socket.assigns.drop_filters, %{user_id: user_id}, batch_size)
   end
 end

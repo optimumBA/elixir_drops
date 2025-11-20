@@ -4,7 +4,6 @@ defmodule ElixirDropsWeb.DropComponents do
   use ElixirDropsWeb, :html
 
   alias ElixirDrops.Accounts.User
-  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.Icons
 
@@ -139,6 +138,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
       <.drop_card_menu
         author?={@drop.user_id == @user_id}
+        bookmarked?={@drop.bookmarked?}
         id={@drop.id}
         short_id={@drop.short_id}
         user_id={@user_id}
@@ -824,7 +824,7 @@ defmodule ElixirDropsWeb.DropComponents do
           data-event-name="bookmark_drop"
           class={[
             "flex gap-2",
-            Bookmarks.drop_bookmarked?(@id, @user_id) && "hidden"
+            @bookmarked? && "hidden"
           ]}
           phx-hook="Bookmark"
         >
@@ -838,7 +838,7 @@ defmodule ElixirDropsWeb.DropComponents do
           data-event-name="remove_from_bookmark"
           class={[
             "flex gap-2",
-            !Bookmarks.drop_bookmarked?(@id, @user_id) && "hidden"
+            !@bookmarked? && "hidden"
           ]}
           phx-hook="Bookmark"
         >

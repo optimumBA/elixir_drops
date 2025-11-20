@@ -94,7 +94,7 @@ defmodule ElixirDrops.Bookmarks do
 
   @spec get_bookmarked_drops([bookmark()]) :: [drop()]
   def get_bookmarked_drops(bookmarks) do
-    Enum.map(bookmarks, & &1.drop)
+    Enum.map(bookmarks, &Map.put(&1.drop, :bookmarked?, true))
   end
 
   @spec drop_bookmarked?(drop_id(), user_id()) :: boolean()
