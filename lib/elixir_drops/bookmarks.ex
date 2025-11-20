@@ -97,14 +97,6 @@ defmodule ElixirDrops.Bookmarks do
     Enum.map(bookmarks, &Map.put(&1.drop, :bookmarked?, true))
   end
 
-  @spec drop_bookmarked?(drop_id(), user_id()) :: boolean()
-  def drop_bookmarked?(drop_id, user_id) do
-    case get_bookmark(drop_id, user_id) do
-      nil -> false
-      _bookmark -> true
-    end
-  end
-
   @spec delete_bookmark(bookmark()) ::
           {:ok, bookmark()} | {:error, changeset()}
   def delete_bookmark(bookmark) do

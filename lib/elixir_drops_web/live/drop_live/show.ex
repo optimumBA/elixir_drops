@@ -34,7 +34,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     socket =
       if user,
-        do: assign(socket, :bookmarked?, Bookmarks.drop_bookmarked?(drop.id, user.id)),
+        do: assign(socket, :bookmarked?, drop_bookmarked?(drop.id, user.id)),
         else: assign(socket, :bookmarked?, false)
 
     socket
@@ -128,6 +128,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
       {:error, _changeset} ->
         {:noreply, socket}
+    end
+  end
+
+  defp drop_bookmarked?(drop_id, user_id) do
+    case Bookmarks.get_bookmark(drop_id, user_id) do
+      nil -> false
+      _bookmark -> true
     end
   end
 end

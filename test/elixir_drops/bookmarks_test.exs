@@ -98,23 +98,6 @@ defmodule ElixirDrops.BookmarksTest do
     end
   end
 
-  describe "drop_bookmarked?/2" do
-    setup [:create_user_and_drop]
-
-    test "returns true if the user bookmarked the drop, false otherwise", %{
-      attrs: attrs,
-      drop: drop,
-      user: user
-    } do
-      another_user = user_fixture()
-
-      refute Bookmarks.drop_bookmarked?(drop.id, user.id)
-      assert {:ok, _} = Bookmarks.create_bookmark(attrs)
-      assert Bookmarks.drop_bookmarked?(drop.id, user.id)
-      refute Bookmarks.drop_bookmarked?(drop.id, another_user.id)
-    end
-  end
-
   describe "delete_bookmark/1" do
     setup [:create_user_and_drop]
 
