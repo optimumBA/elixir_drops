@@ -30,23 +30,22 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
         _params,
         %{
           "batch_size" => batch_size,
-          "current_user" => current_user,
-          "searching" => searching
+          "current_user" => current_user
         } = _session,
         socket
       ) do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{user_id: current_user.id})
-     |> assign(:loading_more, false)
-     |> assign(:bookmark_tab?, true)
      |> assign(:batch_size, batch_size)
+     |> assign(:bookmark_tab?, true)
      |> assign(:current_user, current_user)
-     |> assign(:search_query, "")
-     |> assign(:page, 1)
-     |> assign(:searching, searching)
+     |> assign(:drop_filters, %{user_id: current_user.id})
      |> assign(:drops_empty?, true)
+     |> assign(:loading_more, false)
+     |> assign(:page, 1)
+     |> assign(:search_query, "")
+     |> assign(:searching, false)
      |> assign_drops()}
   end
 

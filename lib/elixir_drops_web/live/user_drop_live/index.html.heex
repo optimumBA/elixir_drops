@@ -46,10 +46,7 @@
       {live_render(@socket, Bookmarks,
         session: %{
           "batch_size" => @batch_size,
-          "current_user" => @current_user,
-          "loading_more" => @loading_more,
-          "page" => @page,
-          "searching" => @searching
+          "current_user" => @current_user
         },
         id: "bookmarks_liveview",
         sticky: true
