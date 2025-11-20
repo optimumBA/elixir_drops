@@ -92,16 +92,19 @@ defmodule ElixirDrops.Drops do
           %{search: search_query}
       end
 
-    filters = Map.delete(filters, :search)
+    other_filters = Map.delete(filters, :search)
     filter_query = apply_filters()
 
-    result =
+    query =
       drop_query()
       |> where(^filter_query.(search_filters))
-      |> where(^filter_query.(filters))
+      |> where(^filter_query.(other_filters))
       |> limit(^limit)
       |> preload([:user])
-      |> order_by([d], {:desc, d.inserted_at})
+
+    result =
+      query
+      |> apply_search_ordering(filters[:search])
       |> Repo.all()
 
     {:ok, result}
@@ -117,6 +120,32 @@ defmodule ElixirDrops.Drops do
 
   defp drop_query do
     from drop in Drop, as: :drop
+  end
+
+  defp apply_search_ordering(query, search_query)
+       when is_binary(search_query) and search_query != "" do
+    query
+    |> select_merge([drop: drop], %{
+      relevance_rank:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
+    })
+    |> order_by(
+      [drop: drop],
+      desc:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
+    )
+  end
+
+  defp apply_search_ordering(query, _no_search) do
+    order_by(query, [d], {:desc, d.inserted_at})
   end
 
   defp apply_filters do
@@ -159,6 +188,19 @@ defmodule ElixirDrops.Drops do
   end
 
   defp apply_filter({:search, _}, dynamic), do: dynamic
+
+  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
+       when is_binary(search_query) and search_query != "" do
+    dynamic(
+      [drop: drop],
+      ^dynamic and
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        ) < ^rank
+    )
+  end
 
   defp apply_filter(_other, dynamic), do: dynamic
 
