@@ -1,6 +1,7 @@
 defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   use ElixirDropsWeb, :live_view
 
+  alias ElixirDrops.Accounts
   alias ElixirDrops.Bookmarks
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.DropsListHelper
@@ -30,17 +31,19 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
         _params,
         %{
           "batch_size" => batch_size,
-          "current_user" => current_user
+          "user_id" => user_id
         } = _session,
         socket
       ) do
+    user = Accounts.get_user!(user_id)
+
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:batch_size, batch_size)
      |> assign(:bookmark_tab?, true)
-     |> assign(:current_user, current_user)
-     |> assign(:drop_filters, %{user_id: current_user.id})
+     |> assign(:current_user, user)
+     |> assign(:drop_filters, %{user_id: user.id})
      |> assign(:drops_empty?, true)
      |> assign(:loading_more, false)
      |> assign(:page, 1)
