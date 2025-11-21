@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
   @moduledoc false
 
   alias ElixirDrops.Bookmarks
+  alias Phoenix.LiveView
 
   @type event :: String.t()
   @type params :: map()
@@ -20,10 +21,13 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
         bookmark_tab? = Map.get(socket.assigns, :bookmark_tab?)
 
         if bookmark_tab? do
-          socket = Phoenix.LiveView.push_event(socket, "remove_element", %{drop_id: drop_id})
-          {:noreply, socket}
+          {:noreply, LiveView.push_event(socket, "remove_element", %{drop_id: drop_id})}
         else
-          {:noreply, socket}
+          {:noreply,
+           LiveView.push_event(socket, "show_add_bookmark_btn", %{
+             add_bookmark_container_id: "add-bookmark-#{drop_id}-#{user_id}",
+             remove_bookmark_container_id: "remove-bookmark-#{drop_id}-#{user_id}"
+           })}
         end
 
       {:error, _changeset} ->
@@ -33,11 +37,19 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
 
   def handle_bookmark_event(
         "bookmark_drop",
-        params,
+        %{"drop_id" => drop_id, "user_id" => user_id} = params,
         socket
       ) do
-    Bookmarks.create_bookmark(params)
+    case Bookmarks.create_bookmark(params) do
+      {:ok, _bookmark} ->
+        {:noreply,
+         LiveView.push_event(socket, "show_remove_bookmark_btn", %{
+           add_bookmark_container_id: "add-bookmark-#{drop_id}-#{user_id}",
+           remove_bookmark_container_id: "remove-bookmark-#{drop_id}-#{user_id}"
+         })}
 
-    {:noreply, socket}
+      {:error, _changeset} ->
+        {:noreply, socket}
+    end
   end
 end

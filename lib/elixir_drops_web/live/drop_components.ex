@@ -191,6 +191,7 @@ defmodule ElixirDropsWeb.DropComponents do
           <div class="flex items-center gap-2 text-[#4f4f4f] cursor-pointer">
             <div
               :if={@current_user && @bookmarked?}
+              id={"remove-bookmark-button-#{@drop.id}"}
               class="flex gap-2"
               phx-click={
                 JS.push("remove_from_bookmark",
@@ -199,10 +200,11 @@ defmodule ElixirDropsWeb.DropComponents do
               }
             >
               <img src={~p"/images/remove_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
-              <span class="hidden md:inline text-sm">Remove from bookmark</span>
+              <span class="hidden md:inline text-sm">Remove Bookmark</span>
             </div>
             <div
               :if={@current_user && !@bookmarked?}
+              id={"bookmark-button-#{@drop.id}"}
               class="flex gap-2"
               phx-click={
                 JS.push("bookmark_drop",
@@ -843,7 +845,7 @@ defmodule ElixirDropsWeb.DropComponents do
           phx-hook="Bookmark"
         >
           <img src={~p"/images/remove_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
-          <span>Remove from bookmark</span>
+          <span>Remove Bookmark</span>
         </div>
       </div>
       
