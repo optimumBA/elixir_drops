@@ -2,6 +2,7 @@ defmodule ElixirDrops.BookmarksTest do
   use ElixirDrops.DataCase, async: true
 
   import ElixirDrops.AccountsFixtures
+  import ElixirDrops.BookmarksFixtures
   import ElixirDrops.DropsFixtures
 
   alias ElixirDrops.Bookmarks
@@ -17,13 +18,9 @@ defmodule ElixirDrops.BookmarksTest do
   end
 
   describe "create_bookmark/1" do
-    setup [:create_user_and_drop]
+    test "with valid data creates a bookmark for a drop and user" do
+      %{attrs: attrs, drop: drop, user: user} = create_user_and_drop(%{})
 
-    test "with valid data creates a bookmark for a drop and user", %{
-      attrs: attrs,
-      drop: drop,
-      user: user
-    } do
       assert {:ok, %Bookmark{} = bookmark} =
                Bookmarks.create_bookmark(attrs)
 
@@ -31,9 +28,13 @@ defmodule ElixirDrops.BookmarksTest do
       assert bookmark.user_id == user.id
     end
 
-    test "returns an error changeset when bookmarking the same drop twice", %{
-      attrs: attrs
-    } do
+    test "with invalid data returns an error changeset" do
+      assert {:error, %Ecto.Changeset{}} =
+               Bookmarks.create_bookmark(%{drop_id: nil, user_id: nil})
+    end
+
+    test "returns an error changeset when bookmarking the same drop twice" do
+      %{attrs: attrs} = create_user_and_drop(%{})
       assert {:ok, %Bookmark{}} = Bookmarks.create_bookmark(attrs)
       assert {:error, changeset} = Bookmarks.create_bookmark(attrs)
 
@@ -50,12 +51,11 @@ defmodule ElixirDrops.BookmarksTest do
       drop: drop,
       user: user
     } do
-      assert {:ok, %Bookmark{} = created} = Bookmarks.create_bookmark(attrs)
-
-      assert %Bookmark{} = fetched = Bookmarks.get_bookmark(drop.id, user.id)
-      assert fetched.id == created.id
-      assert fetched.drop_id == drop.id
-      assert fetched.user_id == user.id
+      created_bookmark = bookmark_fixture(attrs)
+      assert %Bookmark{} = fetched_bookmark = Bookmarks.get_bookmark(drop.id, user.id)
+      assert fetched_bookmark.id == created_bookmark.id
+      assert fetched_bookmark.drop_id == drop.id
+      assert fetched_bookmark.user_id == user.id
     end
 
     test "returns nil when no bookmark exists for the pair", %{user: user, drop: drop} do
@@ -64,37 +64,29 @@ defmodule ElixirDrops.BookmarksTest do
   end
 
   describe "get_bookmarked_drops/1" do
-    test "returns empty list when user has no bookmarks" do
-      user = user_fixture()
-      filters = %{user_id: user.id}
-
-      assert [] ==
-               filters
-               |> Bookmarks.get_bookmarks()
-               |> Bookmarks.get_bookmarked_drops()
-    end
-
     test "returns drops bookmarked by the user" do
       user = user_fixture()
-      filters = %{user_id: user.id}
-      drops = create_multiple_drops(user, 2)
-
-      Enum.each(drops, fn drop ->
-        attrs = %{drop_id: drop.id, user_id: user.id}
-        assert {:ok, _} = Bookmarks.create_bookmark(attrs)
-      end)
+      bookmarks = create_multiple_bookmarks(user, 2)
 
       bookmarked_drops =
-        filters
+        %{user_id: user.id}
         |> Bookmarks.get_bookmarks()
         |> Bookmarks.get_bookmarked_drops()
 
-      assert length(bookmarked_drops) == 2
-
       drop_ids = Enum.map(bookmarked_drops, & &1.id)
-      Enum.each(drops, fn d -> assert d.id in drop_ids end)
 
+      assert length(bookmarked_drops) == 2
+      Enum.each(bookmarks, fn bookmark -> assert bookmark.drop_id in drop_ids end)
       assert Enum.all?(bookmarked_drops, &Ecto.assoc_loaded?(&1.user))
+    end
+
+    test "returns empty list when user has no bookmarks" do
+      user = user_fixture()
+
+      assert [] ==
+               %{user_id: user.id}
+               |> Bookmarks.get_bookmarks()
+               |> Bookmarks.get_bookmarked_drops()
     end
   end
 
@@ -106,7 +98,7 @@ defmodule ElixirDrops.BookmarksTest do
       drop: drop,
       user: user
     } do
-      assert {:ok, %Bookmark{} = bookmark} = Bookmarks.create_bookmark(attrs)
+      bookmark = bookmark_fixture(attrs)
       assert {:ok, %Bookmark{}} = Bookmarks.delete_bookmark(bookmark)
       refute Bookmarks.get_bookmark(drop.id, user.id)
     end

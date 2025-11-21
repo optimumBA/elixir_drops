@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   use ElixirDropsWeb.ConnCase, async: true
 
   import ElixirDrops.AccountsFixtures
+  import ElixirDrops.BookmarksFixtures
   import ElixirDrops.DropsFixtures
   import ElixirDrops.SearchFixtures
   import Mox
@@ -229,6 +230,35 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       assert html =~ "100%"
       assert html =~ "http://example.com/new-screenshot.png"
+    end
+  end
+
+  describe "/profile/?bookmarks_user_id" do
+    setup [:create_drops_setup]
+
+    test "shows bookmarked drops with infinite scroll", %{conn: conn, user: user} do
+      _bookmarks = create_multiple_bookmarks(user, 35)
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile/?bookmarks_user_id=#{user.id}")
+
+      assert bookmark_view = find_live_child(live, "bookmarks_liveview")
+
+      assert html =~ "Drop title 35"
+      assert html =~ "Drop title 26"
+      refute html =~ "Drop title 1"
+
+      # Load more should show Drop title 20 but still not Drop title 5
+      assert html_2 = render_hook(bookmark_view, "load-more", %{})
+      assert html_2 =~ "Drop title 20"
+      assert html_2 =~ "Drop title 6"
+      refute html_2 =~ "Drop title 5"
+
+      # Another load-more should show Drop title 5 and Drop title 1 (oldest)
+      assert html_3 = render_hook(bookmark_view, "load-more", %{})
+      assert html_3 =~ "Drop title 5"
+      # Should now have the oldest drop
+      assert html_3 =~ "Drop title 1"
     end
   end
 
