@@ -117,7 +117,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  @impl Phoenix.LiveView
   def handle_info({:update_comment, comment, params}, socket) do
     case Comments.update_comment(comment, params) do
       {:ok, comment} ->

@@ -121,8 +121,8 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
 
     {:ok,
      socket
-     |> assign(assigns)
-     |> assign(:form, form)}
+     |> assign(:form, form)
+     |> assign(assigns)}
   end
 
   @impl Phoenix.LiveComponent
