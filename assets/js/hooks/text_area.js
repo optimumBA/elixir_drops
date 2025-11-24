@@ -17,7 +17,7 @@ TextAreaHooks.TextArea = {
   },
 
   updated() {
-    this.resize && this.resize()
+    this.resize()
   },
 
   destroyed() {
