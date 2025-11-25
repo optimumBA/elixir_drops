@@ -136,17 +136,16 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
     form_id = socket.assigns.id
     character_count = String.length(body)
 
-    if socket.assigns.comment do
-      {:noreply,
-       push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})}
-    else
-      changeset = Comments.change_comment(%Comment{}, params)
+    socket =
+      if socket.assigns.comment do
+        socket
+      else
+        changeset = Comments.change_comment(%Comment{}, params)
+        assign(socket, :form, to_form(changeset))
+      end
 
-      {:noreply,
-       socket
-       |> assign(:form, to_form(changeset))
-       |> push_event("reply_char_count", %{count: character_count, form_id: form_id})}
-    end
+    {:noreply,
+     push_event(socket, "reply_char_count", %{count: character_count, form_id: form_id})}
   end
 
   def handle_event(

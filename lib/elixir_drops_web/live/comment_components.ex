@@ -53,7 +53,7 @@ defmodule ElixirDropsWeb.CommentComponents do
       <div id="comments" phx-update="stream" class="last:mb-10">
         <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 py-2">
           <.comment
-            author?={if @current_user, do: @current_user.id == comment.user_id, else: false}
+            author?={@current_user && @current_user.id == comment.user_id}
             comment={comment}
             comment_type={:comment}
             current_url={@current_url}
@@ -274,7 +274,7 @@ defmodule ElixirDropsWeb.CommentComponents do
             </span>
             <span id={"hide-text-#{@comment.id}"} class="hidden">Hide</span>
             <span>
-              {if Enum.count(@comment.replies) < 2, do: "reply", else: "replies"}
+              {if Enum.count(@comment.replies) == 1, do: "reply", else: "replies"}
             </span>
           </div>
         </button>
@@ -327,7 +327,7 @@ defmodule ElixirDropsWeb.CommentComponents do
     >
       <div :for={reply <- @comment.replies}>
         <.comment
-          author?={if @current_user, do: @current_user.id == reply.user_id, else: false}
+          author?={@current_user && @current_user.id == reply.user_id}
           comment={reply}
           comment_type={:response}
           current_url={@current_url}

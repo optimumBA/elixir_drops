@@ -14,11 +14,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
   @impl Phoenix.LiveView
-  def handle_params(
-        %{"short_id" => short_id},
-        _url,
-        socket
-      ) do
+  def handle_params(%{"short_id" => short_id}, _url, socket) do
     drop = Drops.get_drop_by_short_id(short_id)
 
     {:noreply,
