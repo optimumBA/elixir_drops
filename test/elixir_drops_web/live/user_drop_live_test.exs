@@ -260,6 +260,25 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       # Should now have the oldest drop
       assert html_3 =~ "Drop title 1"
     end
+
+    test "returns only relevant bookmarks when searching", %{conn: conn, user: user} do
+      matching_drop =
+        drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "Learning Phoenix"})
+
+      bookmark_fixture(%{drop_id: matching_drop.id, user_id: user.id})
+
+      non_matching_drop =
+        drop_fixture(%Drop{}, user, %{title: "Random Drop", body: "Not related"})
+
+      bookmark_fixture(%{drop_id: non_matching_drop.id, user_id: user.id})
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile/?bookmarks_user_id=#{user.id}&bq=phoenix")
+
+      html = render(live)
+      assert html =~ "Phoenix Tutorial"
+      refute html =~ "Random Drop"
+    end
   end
 
   describe "/drop/new" do

@@ -115,35 +115,19 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
       when event in ["remove_from_bookmark", "bookmark_drop"],
       do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
 
-  defp maybe_insert_drops(socket) do
-    search_query = socket.assigns.search_query
-    drop_filters = socket.assigns.drop_filters
-    batch_size = Map.get(socket.assigns, :batch_size, 15)
-
-    bookmarks =
-      Bookmarks.get_bookmarks(
-        socket.assigns.drop_filters,
-        batch_size
-      )
-
-    drops = Bookmarks.get_bookmarked_drops(bookmarks)
-
-    relevance_rank =
-      if Enum.empty?(drops) do
-        {0, search_query}
-      else
-        last_bookmark = List.last(bookmarks)
-
-        {last_bookmark.relevance_rank, search_query}
-      end
+  defp update_search_filters(socket, search_query) do
+    current_filters = socket.assigns.drop_filters
 
     filters =
-      Map.put(drop_filters, :relevance_rank, relevance_rank)
+      if search_query != "" do
+        current_filters
+        |> Map.put(:relevance_rank, {1, search_query})
+        |> Map.put(:search, search_query)
+      else
+        Map.delete(current_filters, :search)
+      end
 
-    socket
-    |> Phoenix.LiveView.stream(:drops, drops)
-    |> assign(:drop_filters, filters)
-    |> assign(:end_of_timeline?, Enum.count(drops) < batch_size)
+    assign(socket, :drop_filters, filters)
   end
 
   defp assign_drops(socket) do
@@ -213,6 +197,37 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     |> push_event("load-more-complete", %{})
   end
 
+  defp maybe_insert_drops(socket) do
+    search_query = socket.assigns.search_query
+    drop_filters = socket.assigns.drop_filters
+    batch_size = Map.get(socket.assigns, :batch_size, 15)
+
+    bookmarks =
+      Bookmarks.get_bookmarks(
+        socket.assigns.drop_filters,
+        batch_size
+      )
+
+    drops = Bookmarks.get_bookmarked_drops(bookmarks)
+
+    relevance_rank =
+      if Enum.empty?(drops) do
+        {0, search_query}
+      else
+        last_bookmark = List.last(bookmarks)
+
+        {last_bookmark.relevance_rank, search_query}
+      end
+
+    filters =
+      Map.put(drop_filters, :relevance_rank, relevance_rank)
+
+    socket
+    |> Phoenix.LiveView.stream(:drops, drops)
+    |> assign(:drop_filters, filters)
+    |> assign(:end_of_timeline?, Enum.count(drops) < batch_size)
+  end
+
   defp maybe_insert_drops(socket, _filters, _first_or_last_bookmark, _opts \\ [])
 
   defp maybe_insert_drops(socket, _filters, nil, _opts) do
@@ -235,18 +250,5 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     |> Phoenix.LiveView.stream(:drops, drops, opts)
     |> assign(:end_of_timeline?, Enum.count(drops) < batch_size)
     |> assign(:last_bookmark, last_bookmark)
-  end
-
-  defp update_search_filters(socket, search_query) do
-    current_filters = socket.assigns.drop_filters
-
-    filters =
-      if search_query != "" do
-        Map.put(current_filters, :search, search_query)
-      else
-        Map.delete(current_filters, :search)
-      end
-
-    assign(socket, :drop_filters, filters)
   end
 end

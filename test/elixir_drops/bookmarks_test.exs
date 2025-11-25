@@ -63,6 +63,42 @@ defmodule ElixirDrops.BookmarksTest do
     end
   end
 
+  describe "get_bookmarks/2" do
+    test "if searching, orders bookmarks by the relevance rank" do
+      user =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "github_username",
+          name: "some_name"
+        })
+
+      drop_1 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Phoenix liveview for form submissions",
+          body: "I was diving into liveview this week"
+        })
+
+      bookmark_fixture(%{drop_id: drop_1.id, user_id: user.id})
+
+      drop_2 =
+        drop_fixture(%Drop{}, user, %{
+          title: "Phoenix LiveView for form submissions because LiveView is Good",
+          body: "LiveView to manage state"
+        })
+
+      bookmark_fixture(%{drop_id: drop_2.id, user_id: user.id})
+
+      bookmarks = Bookmarks.get_bookmarks(%{user_id: user.id, search: "LiveView"})
+
+      first_bookmark = Enum.at(bookmarks, 0)
+      second_bookmark = Enum.at(bookmarks, 1)
+
+      assert first_bookmark.relevance_rank > second_bookmark.relevance_rank
+    end
+  end
+
   describe "get_bookmarked_drops/1" do
     test "returns drops bookmarked by the user" do
       user = user_fixture()

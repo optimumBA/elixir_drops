@@ -103,6 +103,13 @@ defmodule ElixirDrops.Bookmarks do
       {:error, :db_connection_error}
   end
 
+  defp bookmark_query do
+    from bookmark in Bookmark,
+      as: :bookmark,
+      join: drop in assoc(bookmark, :drop),
+      as: :drop
+  end
+
   defp apply_search_ordering(query, search_query)
        when is_binary(search_query) and search_query != "" do
     query
@@ -126,14 +133,7 @@ defmodule ElixirDrops.Bookmarks do
   end
 
   defp apply_search_ordering(query, _no_search) do
-    order_by(query, [d], {:desc, d.inserted_at})
-  end
-
-  defp bookmark_query do
-    from bookmark in Bookmark,
-      as: :bookmark,
-      join: drop in assoc(bookmark, :drop),
-      as: :drop
+    order_by(query, [b], {:desc, b.inserted_at})
   end
 
   defp apply_filters do
@@ -154,7 +154,7 @@ defmodule ElixirDrops.Bookmarks do
     # Use PostgreSQL websearch_to_tsquery for better search experience
     # websearch_to_tsquery handles phrases, AND/OR operators naturally
     dynamic(
-      [bookmark: bookmark, drop: drop],
+      [drop: drop],
       ^dynamic and
         fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^query)
     )

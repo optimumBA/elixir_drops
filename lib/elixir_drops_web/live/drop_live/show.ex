@@ -32,12 +32,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Phoenix.HTML.html_escape()
       |> Phoenix.HTML.safe_to_string()
 
-    socket =
+    bookmarked? =
       if user,
-        do: assign(socket, :bookmarked?, drop_bookmarked?(drop.id, user.id)),
-        else: assign(socket, :bookmarked?, false)
+        do: drop_bookmarked?(drop.id, user.id),
+        else: false
 
     socket
+    |> assign(:bookmarked?, bookmarked?)
     |> assign(:drop, drop)
     |> assign(:page_title, title)
     |> assign_seo_attributes()
