@@ -340,7 +340,12 @@ defmodule ElixirDropsWeb.DropComponents do
             </li>
             <!-- User Profile Search Input -->
             <li class="min-h-full py-4 border-b-2 border-b-transparent hover:border-b-gray-300 flex items-center">
-              <div id="profile-search-input" class="relative" phx-hook="SearchSuggestions">
+              <div
+                :if={!@bookmark_tab?}
+                id="profile-search-input"
+                class="relative"
+                phx-hook="SearchSuggestions"
+              >
                 <form
                   phx-submit={JS.push("search_submit") |> JS.hide(to: "#profile-search-dropdown")}
                   class="relative flex items-center"
@@ -353,6 +358,86 @@ defmodule ElixirDropsWeb.DropComponents do
                     name="query"
                     value={@search_query}
                     placeholder="Search drops"
+                    phx-change="load_suggestions"
+                    class={[
+                      "pl-10 pr-4 py-2 bg-transparent border-0",
+                      "focus:outline-none focus:ring-0 placeholder-gray-500 text-sm",
+                      "min-w-[200px]"
+                    ]}
+                  />
+                </form>
+                <!-- Search Suggestions Dropdown -->
+                <div
+                  :if={@show_profile_suggestions and length(@profile_search_suggestions) > 0}
+                  id="profile-search-dropdown"
+                  class={[
+                    "absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50",
+                    "max-h-80 overflow-y-auto min-w-[200px]"
+                  ]}
+                >
+                  <div class="py-2">
+                    <div
+                      :for={suggestion <- @profile_search_suggestions}
+                      class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
+                      tabindex="0"
+                      phx-click={
+                        JS.push("search_submit", value: %{query: suggestion.query})
+                        |> JS.hide(to: "#profile-search-dropdown")
+                      }
+                    >
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <.icon
+                            :if={suggestion.type == :history}
+                            name="hero-clock"
+                            class="h-4 w-4 text-gray-400"
+                          />
+                          <.icon
+                            :if={suggestion.type == :popular}
+                            name="hero-magnifying-glass"
+                            class="h-4 w-4 text-gray-400"
+                          />
+                          <span class="text-sm text-gray-900">{suggestion.query}</span>
+                        </div>
+                        <button
+                          :if={suggestion.type == :history}
+                          type="button"
+                          tabindex="0"
+                          phx-click={
+                            JS.push("delete_search_history", value: %{id: suggestion.id})
+                            |> JS.show(to: "#profile-search-dropdown")
+                          }
+                          class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <.icon name="hero-trash" class="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                :if={@bookmark_tab?}
+                id="profile-search-input"
+                class="relative"
+                phx-hook="SearchSuggestions"
+              >
+                <form
+                  phx-submit={
+                    JS.push("search_submit", target: "#bookmarks_liveview")
+                    |> JS.hide(to: "#profile-search-dropdown")
+                  }
+                  class="relative flex items-center"
+                >
+                  <.icon name="hero-magnifying-glass" class="absolute left-3 h-4 w-4 text-gray-500" />
+                  <label for="profile-search-query" class="sr-only">Search your drops</label>
+                  <input
+                    id="profile-search-query"
+                    type="text"
+                    name="query"
+                    value={@search_query}
+                    placeholder="Search bookmarks"
                     phx-change="load_suggestions"
                     class={[
                       "pl-10 pr-4 py-2 bg-transparent border-0",

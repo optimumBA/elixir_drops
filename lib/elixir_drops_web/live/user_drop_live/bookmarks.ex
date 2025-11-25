@@ -5,6 +5,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   alias ElixirDrops.Bookmarks
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
   def render(assigns) do
@@ -31,10 +32,15 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
         _params,
         %{
           "batch_size" => batch_size,
-          "user_id" => user_id
+          "user_id" => user_id,
+          "bookmark_search_query" => bookmark_search_query
         } = _session,
         socket
       ) do
+    send(socket.parent_pid, {:update_input_field, bookmark_search_query})
+
+    dbg(bookmark_search_query)
+
     user = Accounts.get_user!(user_id)
 
     {:ok,
@@ -47,9 +53,9 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
      |> assign(:drops_empty?, true)
      |> assign(:loading_more, false)
      |> assign(:page, 1)
-     |> assign(:search_query, "")
+     |> assign(:search_query, bookmark_search_query)
      |> assign(:searching, false)
-     |> assign_drops()}
+     |> assign_drops(bookmark_search_query)}
   end
 
   @impl Phoenix.LiveView
@@ -77,11 +83,57 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     {:noreply, assign(socket, :loading_more, false)}
   end
 
+  def handle_event("search_submit", %{"query" => query}, socket) do
+    trimmed_query =
+      query
+      |> to_string()
+      |> String.trim()
+
+    # Track search history and popular searches
+    SearchHelper.track_search(query, socket, %{})
+
+    socket =
+      socket
+      |> assign(:search_query, query)
+      |> assign(:show_profile_suggestions, false)
+      |> assign(:profile_search_suggestions, [])
+
+    # Stay on profile page with search query
+    if trimmed_query != "" do
+      {:noreply,
+       push_navigate(socket,
+         to: ~p"/profile?bookmarks_user_id=#{socket.assigns.current_user.id}&bq=#{trimmed_query}"
+       )}
+    else
+      {:noreply, push_navigate(socket, to: ~p"/profile")}
+    end
+  end
+
   def handle_event(event, params, socket)
       when event in ["remove_from_bookmark", "bookmark_drop"],
       do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
 
-  defp assign_drops(socket) do
+  defp assign_drops(socket, search_query) when search_query != "" do
+    batch_size = Map.get(socket.assigns, :batch_size, 15)
+
+    bookmarks =
+      Bookmarks.get_bookmarks(
+        socket.assigns.drop_filters,
+        batch_size
+      )
+
+    drops = Bookmarks.get_bookmarked_drops(bookmarks)
+    last_bookmark = List.last(bookmarks)
+
+    socket
+    |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: batch_size)
+    |> assign(:drops_empty?, Enum.empty?(drops))
+    |> assign(:end_of_timeline?, false)
+    |> assign(:last_bookmark, last_bookmark)
+    |> assign(:loading_more, false)
+  end
+
+  defp assign_drops(socket, _search_query) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
 
     bookmarks =

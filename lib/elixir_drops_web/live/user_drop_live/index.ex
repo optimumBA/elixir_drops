@@ -21,6 +21,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:bookmark_tab?, false)
+     |> assign(:bookmark_search_query, "")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:end_of_timeline?, false)
      |> assign(:page, 1)
@@ -37,9 +38,13 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
     search_query = params["q"] || ""
+    bookmark_search_query = params["bq"] || ""
 
     if params["bookmarks_user_id"] do
-      {:noreply, assign(socket, :bookmark_tab?, true)}
+      {:noreply,
+       socket
+       |> assign(:bookmark_tab?, true)
+       |> assign(:bookmark_search_query, bookmark_search_query)}
     else
       {:noreply,
        socket
@@ -286,6 +291,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     else
       {:noreply, socket}
     end
+  end
+
+  def handle_info({:update_input_field, query}, socket) do
+    dbg(query)
+    {:noreply, assign(socket, :search_query, query)}
   end
 
   def handle_info(_message, socket) do

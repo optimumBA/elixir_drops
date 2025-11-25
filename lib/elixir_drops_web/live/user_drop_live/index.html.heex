@@ -28,25 +28,27 @@
       profile_search_suggestions={@profile_search_suggestions}
     />
 
-    <DropsListHelper.drops_list
-      :if={!@bookmark_tab?}
-      batch_size={@batch_size}
-      current_user={@current_user}
-      drops={@streams.drops}
-      drops_empty?={@drops_empty?}
-      end_of_timeline?={@end_of_timeline?}
-      id="user-drops"
-      loading_more={@loading_more}
-      page={@page}
-      search_query={@search_query}
-      searching={@searching}
-    />
+    <div :if={!@bookmark_tab?}>
+      <DropsListHelper.drops_list
+        batch_size={@batch_size}
+        current_user={@current_user}
+        drops={@streams.drops}
+        drops_empty?={@drops_empty?}
+        end_of_timeline?={@end_of_timeline?}
+        id="user-drops"
+        loading_more={@loading_more}
+        page={@page}
+        search_query={@search_query}
+        searching={@searching}
+      />
+    </div>
 
     <div :if={@bookmark_tab?}>
       {live_render(@socket, Bookmarks,
         session: %{
           "batch_size" => @batch_size,
-          "user_id" => @current_user.id
+          "user_id" => @current_user.id,
+          "bookmark_search_query" => @bookmark_search_query,
         },
         id: "bookmarks_liveview"
       )}
