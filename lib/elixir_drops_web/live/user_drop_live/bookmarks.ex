@@ -107,7 +107,10 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
          to: ~p"/profile?bookmarks_user_id=#{socket.assigns.current_user.id}&bq=#{trimmed_query}"
        )}
     else
-      {:noreply, push_navigate(socket, to: ~p"/profile")}
+      {:noreply,
+       push_navigate(socket,
+         to: ~p"/profile?bookmarks_user_id=#{socket.assigns.current_user.id}"
+       )}
     end
   end
 

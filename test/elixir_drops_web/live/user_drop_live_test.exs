@@ -261,6 +261,40 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html_3 =~ "Drop title 1"
     end
 
+    test "bookmark search navigates to /profile?bookmarks_user_id=id&q=query if search query is not empty",
+         %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile?bookmarks_user_id=#{user.id}")
+      assert bookmark_view = find_live_child(live, "bookmarks_liveview")
+      # Check if profile-search-input exists in HTML
+      assert html =~ "profile-search-input"
+      form_element = element(live, "#profile-search-input form")
+      assert form_element
+
+      render_hook(bookmark_view, :search_submit, %{query: "phoenix"})
+
+      # Should navigate to profile page with query using push_navigate
+      # Note: spaces in query params are encoded as +
+      assert_redirect(bookmark_view, "/profile?bookmarks_user_id=#{user.id}&bq=phoenix")
+    end
+
+    test "bookmark search navigates to /profile?bookmarks_user_id=id if the search query is empty",
+         %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile?bookmarks_user_id=#{user.id}")
+      assert bookmark_view = find_live_child(live, "bookmarks_liveview")
+      # Check if profile-search-input exists in HTML
+      assert html =~ "profile-search-input"
+      form_element = element(live, "#profile-search-input form")
+      assert form_element
+
+      render_hook(bookmark_view, :search_submit, %{query: ""})
+
+      # Should navigate to profile page with query using push_navigate
+      # Note: spaces in query params are encoded as +
+      assert_redirect(bookmark_view, "/profile?bookmarks_user_id=#{user.id}")
+    end
+
     test "returns only relevant bookmarks when searching", %{conn: conn, user: user} do
       matching_drop =
         drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "Learning Phoenix"})
