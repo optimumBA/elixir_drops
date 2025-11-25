@@ -144,10 +144,10 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @spec assign_drops(socket()) :: socket()
   def assign_drops(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
-    drops = get_drops(socket, batch_size)
+    drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
 
-    socket.assigns.search_query
-    |> assign_drop_cursor(drops, socket)
+    socket
+    |> assign_drop_cursor(drops, socket.assigns.search_query)
     |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: batch_size)
     |> assign(:drops_empty?, Enum.empty?(drops))
     |> assign(:end_of_timeline?, false)
@@ -161,20 +161,17 @@ defmodule ElixirDropsWeb.DropsListHelper do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
     drops = get_drops(socket, batch_size)
 
-    filters =
-      case Enum.empty?(drops) do
-        true ->
-          Map.merge(drop_filters, %{
-            relevance_rank: {0, search_query}
-          })
+    relevance_rank =
+      if Enum.empty?(drops) do
+        {0, search_query}
+      else
+        last_drop = List.last(drops)
 
-        false ->
-          last_drop = List.last(drops)
-
-          Map.merge(drop_filters, %{
-            relevance_rank: {last_drop.relevance_rank, search_query}
-          })
+        {last_drop.relevance_rank, search_query}
       end
+
+    filters =
+      Map.put(drop_filters, :relevance_rank, relevance_rank)
 
     socket
     |> Phoenix.LiveView.stream(:drops, drops)
@@ -237,18 +234,21 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> Phoenix.LiveView.push_event("load-more-complete", %{})
   end
 
-  defp assign_drop_cursor(search_query, drops, socket) when search_query != "" and drops != [] do
+  defp assign_drop_cursor(socket, drops, search_query)
+       when search_query != "" and drops != [] do
     last_drop = List.last(drops)
 
     filters =
-      Map.merge(socket.assigns.drop_filters, %{
-        relevance_rank: {last_drop.relevance_rank, search_query}
-      })
+      Map.put(
+        socket.assigns.drop_filters,
+        :relevance_rank,
+        {last_drop.relevance_rank, search_query}
+      )
 
     assign(socket, :drop_filters, filters)
   end
 
-  defp assign_drop_cursor(_search_query, drops, socket) do
+  defp assign_drop_cursor(socket, drops, _search_query) do
     last_drop = List.last(drops)
     assign(socket, :last_drop, last_drop)
   end
