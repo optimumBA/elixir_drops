@@ -17,6 +17,9 @@ defmodule ElixirDrops.Bookmarks.Bookmark do
     belongs_to :drop, Drop
     belongs_to :user, User
 
+    # Virtual field for search relevance ranking
+    field :relevance_rank, :float, virtual: true
+
     timestamps()
   end
 

@@ -461,7 +461,10 @@ defmodule ElixirDropsWeb.DropComponents do
                       class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
                       tabindex="0"
                       phx-click={
-                        JS.push("search_submit", value: %{query: suggestion.query})
+                        JS.push("search_submit",
+                          target: "#bookmarks_liveview",
+                          value: %{query: suggestion.query}
+                        )
                         |> JS.hide(to: "#profile-search-dropdown")
                       }
                     >

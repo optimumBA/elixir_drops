@@ -294,7 +294,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_info({:update_input_field, query}, socket) do
-    dbg(query)
     {:noreply, assign(socket, :search_query, query)}
   end
 

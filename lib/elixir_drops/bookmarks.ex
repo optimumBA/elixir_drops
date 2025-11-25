@@ -59,6 +59,17 @@ defmodule ElixirDrops.Bookmarks do
     end
   end
 
+  @spec delete_bookmark(bookmark()) ::
+          {:ok, bookmark()} | {:error, changeset()}
+  def delete_bookmark(bookmark) do
+    Repo.delete(bookmark)
+  end
+
+  @spec get_bookmarked_drops([bookmark()]) :: [drop()]
+  def get_bookmarked_drops(bookmarks) do
+    Enum.map(bookmarks, &Map.put(&1.drop, :bookmarked?, true))
+  end
+
   defp safe_list_bookmarks(filters, limit) do
     search_filters =
       case Map.get(filters, :search) do
@@ -69,16 +80,16 @@ defmodule ElixirDrops.Bookmarks do
           %{search: search_query}
       end
 
-    filters = Map.delete(filters, :search)
+    other_filters = Map.delete(filters, :search)
     filter_query = apply_filters()
 
     result =
       bookmark_query()
       |> where(^filter_query.(search_filters))
-      |> where(^filter_query.(filters))
+      |> where(^filter_query.(other_filters))
       |> limit(^limit)
       |> preload(drop: [:user])
-      |> order_by([b], {:desc, b.inserted_at})
+      |> apply_search_ordering(filters[:search])
       |> Repo.all()
 
     {:ok, result}
@@ -92,19 +103,37 @@ defmodule ElixirDrops.Bookmarks do
       {:error, :db_connection_error}
   end
 
-  @spec get_bookmarked_drops([bookmark()]) :: [drop()]
-  def get_bookmarked_drops(bookmarks) do
-    Enum.map(bookmarks, &Map.put(&1.drop, :bookmarked?, true))
+  defp apply_search_ordering(query, search_query)
+       when is_binary(search_query) and search_query != "" do
+    query
+    |> select_merge([drop: drop], %{
+      relevance_rank:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
+    })
+    |> order_by(
+      [drop: drop],
+      desc:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
+    )
   end
 
-  @spec delete_bookmark(bookmark()) ::
-          {:ok, bookmark()} | {:error, changeset()}
-  def delete_bookmark(bookmark) do
-    Repo.delete(bookmark)
+  defp apply_search_ordering(query, _no_search) do
+    order_by(query, [d], {:desc, d.inserted_at})
   end
 
   defp bookmark_query do
-    from bookmark in Bookmark, as: :bookmark
+    from bookmark in Bookmark,
+      as: :bookmark,
+      join: drop in assoc(bookmark, :drop),
+      as: :drop
   end
 
   defp apply_filters do
@@ -119,5 +148,30 @@ defmodule ElixirDrops.Bookmarks do
 
   defp apply_filter({:user_id, user_id}, dynamic) do
     dynamic([bookmark: bookmark], ^dynamic and bookmark.user_id == ^user_id)
+  end
+
+  defp apply_filter({:search, query}, dynamic) when is_binary(query) and query != "" do
+    # Use PostgreSQL websearch_to_tsquery for better search experience
+    # websearch_to_tsquery handles phrases, AND/OR operators naturally
+    dynamic(
+      [bookmark: bookmark, drop: drop],
+      ^dynamic and
+        fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^query)
+    )
+  end
+
+  defp apply_filter({:search, _}, dynamic), do: dynamic
+
+  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
+       when is_binary(search_query) and search_query != "" do
+    dynamic(
+      [drop: drop],
+      ^dynamic and
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        ) < ^rank
+    )
   end
 end
