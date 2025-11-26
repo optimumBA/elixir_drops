@@ -7,9 +7,6 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.SearchHelper
 
-  @type rendered :: Phoenix.LiveView.Rendered.t()
-  @type socket :: Phoenix.LiveView.Socket.t()
-
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
@@ -40,7 +37,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
         } = _session,
         socket
       ) do
-    send(socket.parent_pid, {:update_input_field, bookmark_search_query})
+    send(socket.parent_pid, {:update_search_query, bookmark_search_query})
 
     user = Accounts.get_user!(user_id)
 

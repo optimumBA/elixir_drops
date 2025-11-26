@@ -28,20 +28,19 @@
       profile_search_suggestions={@profile_search_suggestions}
     />
 
-    <div :if={!@bookmark_tab?}>
-      <DropsListHelper.drops_list
-        batch_size={@batch_size}
-        current_user={@current_user}
-        drops={@streams.drops}
-        drops_empty?={@drops_empty?}
-        end_of_timeline?={@end_of_timeline?}
-        id="user-drops"
-        loading_more={@loading_more}
-        page={@page}
-        search_query={@search_query}
-        searching={@searching}
-      />
-    </div>
+    <DropsListHelper.drops_list
+      :if={!@bookmark_tab?}
+      batch_size={@batch_size}
+      current_user={@current_user}
+      drops={@streams.drops}
+      drops_empty?={@drops_empty?}
+      end_of_timeline?={@end_of_timeline?}
+      id="user-drops"
+      loading_more={@loading_more}
+      page={@page}
+      search_query={@search_query}
+      searching={@searching}
+    />
 
     <div :if={@bookmark_tab?}>
       {live_render(@socket, Bookmarks,

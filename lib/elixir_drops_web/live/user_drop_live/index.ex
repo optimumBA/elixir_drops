@@ -280,7 +280,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     end
   end
 
-  def handle_info({:update_input_field, query}, socket) do
+  def handle_info({:update_search_query, query}, socket) do
     {:noreply, assign(socket, :search_query, query)}
   end
 
