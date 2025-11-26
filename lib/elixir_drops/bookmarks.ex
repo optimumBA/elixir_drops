@@ -5,7 +5,6 @@ defmodule ElixirDrops.Bookmarks do
 
   import Ecto.Query
 
-  alias ElixirDrops.Accounts.User
   alias ElixirDrops.Bookmarks.Bookmark
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
@@ -16,7 +15,6 @@ defmodule ElixirDrops.Bookmarks do
   @type drop :: Drop.t()
   @type drop_id :: Ecto.UUID.t()
   @type filters :: map()
-  @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
   @doc """

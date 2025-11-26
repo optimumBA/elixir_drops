@@ -76,7 +76,7 @@ defmodule ElixirDrops.Drops do
 
   """
   @spec list_drops(filters(), filters(), limit()) :: [drop()]
-  def list_drops(filters \\ %{}, bookmark_filters, limit \\ 10) do
+  def list_drops(filters, bookmark_filters, limit \\ 10) do
     case safe_list_drops(filters, bookmark_filters, limit) do
       {:ok, results} -> results
       {:error, _reason} -> []

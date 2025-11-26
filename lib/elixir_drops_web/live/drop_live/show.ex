@@ -120,7 +120,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   def handle_event(
         "bookmark_drop",
-        %{"drop_id" => _drop_id, "user_id" => _user_id} = params,
+        params,
         socket
       ) do
     case Bookmarks.create_bookmark(params) do
