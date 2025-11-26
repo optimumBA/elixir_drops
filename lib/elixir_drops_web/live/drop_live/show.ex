@@ -19,7 +19,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply,
      socket
-     |> assign(:comment_pending_deletion, nil)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)}
   end
@@ -44,25 +43,15 @@ defmodule ElixirDropsWeb.DropLive.Show do
     Comments.delete_comment(comment_id)
     comment_count = Comments.count_drop_comments(drop.id)
 
-    updated_socket =
-      socket
-      |> assign(:comment_count, comment_count)
-      |> assign(:comment_pending_deletion, nil)
+    socket = assign(socket, :comment_count, comment_count)
 
     if comment.parent_id do
       comment = get_top_level_comment(comment)
-      {:noreply, stream_insert(updated_socket, :comments, comment)}
+      {:noreply, stream_insert(socket, :comments, comment)}
     else
-      {:noreply, stream_delete(updated_socket, :comments, comment)}
+      {:noreply, stream_delete(socket, :comments, comment)}
     end
   end
-
-  def handle_event(
-        "cancel_comment_deletion",
-        _params,
-        socket
-      ),
-      do: {:noreply, assign(socket, :comment_pending_deletion, nil)}
 
   def handle_event(
         "load_more",
@@ -80,13 +69,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign(:comment_offset, offset + 10)
      |> stream(:comments, comments)}
   end
-
-  def handle_event(
-        "assign_comment_pending_deletion",
-        %{"comment_pending_deletion_id" => comment_id},
-        socket
-      ),
-      do: {:noreply, assign(socket, :comment_pending_deletion, Comments.get_comment!(comment_id))}
 
   @impl Phoenix.LiveView
   def handle_info({:new_comment, parent_id, comment_type, comment_params}, socket) do

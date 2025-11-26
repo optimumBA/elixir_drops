@@ -159,13 +159,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       assert render(view) =~ "Delete me"
 
-      view
-      |> element("#trigger-comment-deletion-#{comment.id}", "Delete comment")
-      |> render_click()
-
-      view
-      |> element("#confirm-comment-deletion-#{comment.id}", "Confirm")
-      |> render_click()
+      render_hook(view, :delete_comment, %{comment_id: comment.id})
 
       refute render(view) =~ "Delete me"
     end

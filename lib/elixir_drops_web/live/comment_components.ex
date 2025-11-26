@@ -12,7 +12,6 @@ defmodule ElixirDropsWeb.CommentComponents do
 
   attr :comment_count, :integer, required: true
   attr :comment_offset, :integer, required: true
-  attr :comment_pending_deletion, Comment, default: nil
   attr :comments, :any, required: true
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
@@ -80,15 +79,10 @@ defmodule ElixirDropsWeb.CommentComponents do
           See more responses
         </button>
       </div>
-      <div :if={@comment_pending_deletion}>
-        <.modal
-          id={"delete-comment-modal-#{@comment_pending_deletion.id}"}
-          show
-          on_cancel={JS.push("cancel_comment_deletion")}
-        >
-          <.delete_comment_component comment={@comment_pending_deletion} />
-        </.modal>
-      </div>
+
+      <.modal id="delete-comment-modal">
+        <.delete_comment_component />
+      </.modal>
     </div>
     """
   end
@@ -217,9 +211,10 @@ defmodule ElixirDropsWeb.CommentComponents do
           class="text-red-600 flex items-center gap-x-2"
           phx-click={
             JS.toggle(to: "#comment-actions-#{@comment.id}")
-            |> JS.push("assign_comment_pending_deletion",
-              value: %{comment_pending_deletion_id: @comment.id}
+            |> JS.set_attribute({"data-comment-id-pending-deletion", "#{@comment.id}"},
+              to: "#confirm-comment-deletion"
             )
+            |> show_modal("delete-comment-modal")
           }
           type="button"
         >
@@ -348,17 +343,18 @@ defmodule ElixirDropsWeb.CommentComponents do
       <section class="flex gap-4 justify-end mt-4">
         <button
           class="w-24 h-12 flex justify-center items-center rounded-lg mb-6 text-[#4F4F4F] bg-[#EEEEEE]"
-          phx-click={JS.exec("data-cancel", to: "#delete-comment-modal-#{@comment.id}")}
+          phx-click={JS.exec("data-cancel", to: "#delete-comment-modal")}
         >
           Cancel
         </button>
         <button
-          id={"confirm-comment-deletion-#{@comment.id}"}
+          id="confirm-comment-deletion"
           class="w-24 h-12 flex justify-center items-center rounded-lg mb-6 text-[#EAE8FD] bg-[#2F19EE]"
           phx-click={
-            hide_modal("delete-comment-modal-#{@comment.id}")
-            |> JS.push("delete_comment", value: %{comment_id: @comment.id})
+            hide_modal("delete-comment-modal")
+            |> JS.dispatch("delete_comment", to: "#confirm-comment-deletion")
           }
+          phx-hook="CommentModal"
         >
           Confirm
         </button>
