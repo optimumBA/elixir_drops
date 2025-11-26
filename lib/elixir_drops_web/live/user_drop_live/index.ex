@@ -50,23 +50,10 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
        socket
        |> assign(:search_query, search_query)
        |> assign(:searching, search_query != "")
-       |> update_search_filters(search_query)
+       |> SearchHelper.update_search_filters(search_query)
        |> DropsListHelper.assign_drops()
        |> apply_action(socket.assigns.live_action, params)}
     end
-  end
-
-  defp update_search_filters(socket, search_query) do
-    current_filters = socket.assigns.drop_filters
-
-    filters =
-      if search_query != "" do
-        Map.put(current_filters, :search, search_query)
-      else
-        Map.delete(current_filters, :search)
-      end
-
-    assign(socket, :drop_filters, filters)
   end
 
   @impl Phoenix.LiveView

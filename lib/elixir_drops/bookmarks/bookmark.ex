@@ -14,11 +14,11 @@ defmodule ElixirDrops.Bookmarks.Bookmark do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "bookmarks" do
-    belongs_to :drop, Drop
-    belongs_to :user, User
-
     # Virtual field for search relevance ranking
     field :relevance_rank, :float, virtual: true
+
+    belongs_to :drop, Drop
+    belongs_to :user, User
 
     timestamps()
   end

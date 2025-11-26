@@ -140,4 +140,21 @@ defmodule ElixirDropsWeb.SearchHelper do
     |> assign(:show_profile_suggestions, false)
     |> assign(:profile_search_suggestions, initial_suggestions)
   end
+
+  @spec update_search_filters(Phoenix.LiveView.Socket.t(), String.t()) ::
+          Phoenix.LiveView.Socket.t()
+  def update_search_filters(socket, search_query) do
+    current_filters = socket.assigns.drop_filters
+
+    filters =
+      if search_query != "" do
+        current_filters
+        |> Map.put(:relevance_rank, {1, search_query})
+        |> Map.put(:search, search_query)
+      else
+        Map.delete(current_filters, :search)
+      end
+
+    assign(socket, :drop_filters, filters)
+  end
 end

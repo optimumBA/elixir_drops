@@ -56,7 +56,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
      |> assign(:page, 1)
      |> assign(:search_query, bookmark_search_query)
      |> assign(:searching, false)
-     |> update_search_filters(bookmark_search_query)
+     |> SearchHelper.update_search_filters(bookmark_search_query)
      |> assign_drops()}
   end
 
@@ -117,21 +117,6 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   def handle_event(event, params, socket)
       when event in ["remove_from_bookmark", "bookmark_drop"],
       do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
-
-  defp update_search_filters(socket, search_query) do
-    current_filters = socket.assigns.drop_filters
-
-    filters =
-      if search_query != "" do
-        current_filters
-        |> Map.put(:relevance_rank, {1, search_query})
-        |> Map.put(:search, search_query)
-      else
-        Map.delete(current_filters, :search)
-      end
-
-    assign(socket, :drop_filters, filters)
-  end
 
   defp assign_drops(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
