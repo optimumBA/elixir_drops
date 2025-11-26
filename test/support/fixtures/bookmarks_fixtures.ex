@@ -50,11 +50,7 @@ defmodule ElixirDrops.BookmarksFixtures do
     end
   end
 
-  @doc """
-  Updated a bookmark inserted_at time
-  """
-  @spec update_bookmark_inserted_at(bookmark(), integer()) :: bookmark()
-  def update_bookmark_inserted_at(bookmark, seconds_offset) do
+  defp update_bookmark_inserted_at(bookmark, seconds_offset) do
     {:ok, updated_bookmark} =
       bookmark
       |> Ecto.Changeset.change(%{inserted_at: time_before_or_after(seconds_offset)})

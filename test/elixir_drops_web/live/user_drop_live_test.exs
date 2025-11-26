@@ -248,16 +248,13 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ "Drop title 26"
       refute html =~ "Drop title 1"
 
-      # Load more should show Drop title 20 but still not Drop title 5
       assert html_2 = render_hook(bookmark_view, "load-more", %{})
       assert html_2 =~ "Drop title 20"
       assert html_2 =~ "Drop title 6"
       refute html_2 =~ "Drop title 5"
 
-      # Another load-more should show Drop title 5 and Drop title 1 (oldest)
       assert html_3 = render_hook(bookmark_view, "load-more", %{})
       assert html_3 =~ "Drop title 5"
-      # Should now have the oldest drop
       assert html_3 =~ "Drop title 1"
     end
 
@@ -266,15 +263,12 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user)
       {:ok, live, html} = live(conn, ~p"/profile?bookmarks_user_id=#{user.id}")
       assert bookmark_view = find_live_child(live, "bookmarks_liveview")
-      # Check if profile-search-input exists in HTML
       assert html =~ "profile-search-input"
       form_element = element(live, "#profile-search-input form")
       assert form_element
 
       render_hook(bookmark_view, :search_submit, %{query: "phoenix"})
 
-      # Should navigate to profile page with query using push_navigate
-      # Note: spaces in query params are encoded as +
       assert_redirect(bookmark_view, "/profile?bookmarks_user_id=#{user.id}&bq=phoenix")
     end
 
@@ -283,14 +277,12 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user)
       {:ok, live, html} = live(conn, ~p"/profile?bookmarks_user_id=#{user.id}")
       assert bookmark_view = find_live_child(live, "bookmarks_liveview")
-      # Check if profile-search-input exists in HTML
       assert html =~ "profile-search-input"
       form_element = element(live, "#profile-search-input form")
       assert form_element
 
       render_hook(bookmark_view, :search_submit, %{query: ""})
 
-      # Should navigate to profile page with query using push_navigate
       # Note: spaces in query params are encoded as +
       assert_redirect(bookmark_view, "/profile?bookmarks_user_id=#{user.id}")
     end

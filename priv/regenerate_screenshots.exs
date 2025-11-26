@@ -1,7 +1,7 @@
 alias ElixirDrops.Drops
 alias ElixirDrops.Workers.ScreenshotGeneratorWorker
 
-drops = Drops.list_drops(%{}, %{}, 10000)
+drops = Drops.list_drops(%{}, 10000)
 
 check_for_code_block = fn body ->
   pattern = ~r/```(?:\w+\n)?(.+?)```/s
