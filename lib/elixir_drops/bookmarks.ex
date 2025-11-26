@@ -1,6 +1,6 @@
 defmodule ElixirDrops.Bookmarks do
   @moduledoc """
-  The Drops context.
+  The Bookmarks context.
   """
 
   import Ecto.Query

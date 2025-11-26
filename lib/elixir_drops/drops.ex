@@ -75,15 +75,15 @@ defmodule ElixirDrops.Drops do
       [%Drop{}, ...]
 
   """
-  @spec list_drops(filters(), filters(), limit()) :: [drop()]
-  def list_drops(filters, bookmark_filters, limit \\ 10) do
-    case safe_list_drops(filters, bookmark_filters, limit) do
+  @spec list_drops(filters(), limit()) :: [drop()]
+  def list_drops(filters \\ %{}, limit \\ 10) do
+    case safe_list_drops(filters, limit) do
       {:ok, results} -> results
       {:error, _reason} -> []
     end
   end
 
-  defp safe_list_drops(filters, bookmark_filters, limit) do
+  defp safe_list_drops(filters, limit) do
     search_filters =
       case Map.get(filters, :search) do
         nil ->
@@ -106,7 +106,7 @@ defmodule ElixirDrops.Drops do
     result =
       query
       |> apply_search_ordering(filters[:search])
-      |> add_bookmark_field(bookmark_filters[:user_id])
+      |> add_bookmark_field(filters[:bookmarks_user_id])
       |> Repo.all()
 
     {:ok, result}

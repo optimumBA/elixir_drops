@@ -35,7 +35,7 @@ defmodule ElixirDropsWeb.SearchHelper do
 
   defp track_search_for_user(query, user, filters) do
     # Get current drops count for results tracking
-    drops_count = length(Drops.list_drops(filters, %{}, 100))
+    drops_count = length(Drops.list_drops(filters, 100))
 
     Task.start(fn ->
       Search.create_search_history(%{

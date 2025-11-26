@@ -24,7 +24,7 @@ defmodule ElixirDrops.DropsTest do
 
       %{drop: drop} = create_drops_setup(%{})
 
-      all_drops = Drops.list_drops(%{}, %{})
+      all_drops = Drops.list_drops()
       # The new drop should be in the list
       assert drop.id in Enum.map(all_drops, & &1.id)
 
@@ -49,7 +49,7 @@ defmodule ElixirDrops.DropsTest do
 
       drop_fixture(%Drop{}, user_2, %{title: "Drop 2", body: "Body for drop 2"})
 
-      assert [user_drop] = Drops.list_drops(%{user_id: user.id}, %{})
+      assert [user_drop] = Drops.list_drops(%{user_id: user.id})
 
       assert drop.id == user_drop.id
       assert Ecto.assoc_loaded?(user_drop.user)
@@ -75,7 +75,7 @@ defmodule ElixirDrops.DropsTest do
         body: "LiveView to manage state"
       })
 
-      drops = Drops.list_drops(%{search: "LiveView"}, %{})
+      drops = Drops.list_drops(%{search: "LiveView"})
 
       drop_1 = Enum.at(drops, 0)
       drop_2 = Enum.at(drops, 1)
@@ -86,7 +86,7 @@ defmodule ElixirDrops.DropsTest do
     test "returns empty list when a user has no drops" do
       non_existing_user_id = Ecto.UUID.generate()
 
-      assert [] = Drops.list_drops(%{user_id: non_existing_user_id}, %{})
+      assert [] = Drops.list_drops(%{user_id: non_existing_user_id})
     end
 
     test "can filter drops older than a given drop sorted by inserted_at" do
@@ -95,7 +95,7 @@ defmodule ElixirDrops.DropsTest do
       [drop_1, drop_2, drop_3, _drop_4] =
         create_multiple_drops(user, 4)
 
-      older_drops = Drops.list_drops(%{older_than: drop_3}, %{})
+      older_drops = Drops.list_drops(%{older_than: drop_3})
 
       # Should have drop_2 and drop_1 in the results (plus any seeded data)
       assert Enum.any?(older_drops, &(&1.id == drop_2.id))
@@ -119,7 +119,7 @@ defmodule ElixirDrops.DropsTest do
       drop_1 = drop_fixture(%Drop{}, user, %{title: "Future 1", inserted_at: future_time})
 
       # Get drops older than our future drop
-      older_drops = Drops.list_drops(%{older_than: drop_1}, %{})
+      older_drops = Drops.list_drops(%{older_than: drop_1})
 
       # None of the older drops should have a timestamp >= our future drop
       refute Enum.any?(older_drops, fn d ->
@@ -133,7 +133,7 @@ defmodule ElixirDrops.DropsTest do
       [_drop_1, drop_2, drop_3, drop_4] =
         create_multiple_drops(user, 4)
 
-      assert [newer_drop_1, newer_drop_2] = Drops.list_drops(%{newer_than: drop_2}, %{})
+      assert [newer_drop_1, newer_drop_2] = Drops.list_drops(%{newer_than: drop_2})
       assert newer_drop_1.id == drop_4.id
       assert newer_drop_2.id == drop_3.id
       assert Ecto.assoc_loaded?(newer_drop_1.user)
@@ -147,7 +147,7 @@ defmodule ElixirDrops.DropsTest do
         create_multiple_drops(user, 2)
 
       assert %{newer_than: drop_2}
-             |> Drops.list_drops(%{})
+             |> Drops.list_drops()
              |> Enum.empty?()
     end
 
@@ -169,7 +169,7 @@ defmodule ElixirDrops.DropsTest do
       create_multiple_drops(user_2, 3)
 
       assert [older_user_drop_1, older_user_drop_2] =
-               Drops.list_drops(%{user_id: user.id, older_than: drop_3}, %{})
+               Drops.list_drops(%{user_id: user.id, older_than: drop_3})
 
       assert older_user_drop_1.id == drop_2.id
       assert older_user_drop_1.user_id == user.id
@@ -195,13 +195,13 @@ defmodule ElixirDrops.DropsTest do
 
       [_drop_2, drop_3] = create_multiple_drops(user_2, 2)
 
-      assert [] == Drops.list_drops(%{user_id: user_2.id, newer_than: drop_3}, %{})
+      assert [] == Drops.list_drops(%{user_id: user_2.id, newer_than: drop_3})
     end
 
     test "defaults to listing all drops if a non-existent filter is passed" do
       %{drop: drop} = create_drops_setup(%{})
 
-      all_drops = Drops.list_drops(%{unknown_filter: "unknown_filter"}, %{})
+      all_drops = Drops.list_drops(%{unknown_filter: "unknown_filter"})
       # The new drop should be in the list when an unknown filter is passed
       assert drop.id in Enum.map(all_drops, & &1.id)
 

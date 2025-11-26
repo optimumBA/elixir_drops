@@ -18,7 +18,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
      |> assign(:page_title, "ElixirDrops")
@@ -30,7 +29,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:loading_more, false)
      |> assign(:search_query, "")
      |> assign(:searching, false)
-     |> assign(:drops_empty?, true)}
+     |> assign(:drops_empty?, true)
+     |> assign_drop_filters()}
   end
 
   @impl Phoenix.LiveView
@@ -230,4 +230,17 @@ defmodule ElixirDropsWeb.DropLive.Index do
       ) do
     {:noreply, socket}
   end
+
+  defp assign_drop_filters(%{assigns: %{current_user: nil}} = socket),
+    do:
+      assign(socket, :drop_filters, %{
+        screenshot_status: [:completed, :skipped]
+      })
+
+  defp assign_drop_filters(%{assigns: %{current_user: user}} = socket),
+    do:
+      assign(socket, :drop_filters, %{
+        bookmarks_user_id: user.id,
+        screenshot_status: [:completed, :skipped]
+      })
 end

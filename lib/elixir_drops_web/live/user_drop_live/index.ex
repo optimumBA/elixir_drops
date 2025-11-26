@@ -22,7 +22,10 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:bookmark_tab?, false)
      |> assign(:bookmark_search_query, "")
-     |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
+     |> assign(:drop_filters, %{
+       user_id: user_id,
+       bookmarks_user_id: user_id
+     })
      |> assign(:end_of_timeline?, false)
      |> assign(:page, 1)
      |> assign(:viewport_width, nil)
