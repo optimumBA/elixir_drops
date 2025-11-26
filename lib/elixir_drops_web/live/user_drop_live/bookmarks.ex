@@ -32,9 +32,8 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   def mount(
         _params,
         %{
-          "batch_size" => batch_size,
-          "user_id" => user_id,
-          "bookmark_search_query" => bookmark_search_query
+          "bookmark_search_query" => bookmark_search_query,
+          "user_id" => user_id
         } = _session,
         socket
       ) do
@@ -46,7 +45,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:batch_size, batch_size)
+     |> assign(:batch_size, 15)
      |> assign(:bookmark_tab?, true)
      |> assign(:current_user, user)
      |> assign(:drop_filters, %{user_id: user.id})
@@ -65,9 +64,9 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
 
     {:noreply,
      socket
-     |> assign(:viewport_width, width)
+     |> assign(:batch_size, batch_size)
      |> assign(:viewport_height, height)
-     |> assign(:batch_size, batch_size)}
+     |> assign(:viewport_width, width)}
   end
 
   def handle_event("load-more", %{"layout_complete" => true}, socket) do

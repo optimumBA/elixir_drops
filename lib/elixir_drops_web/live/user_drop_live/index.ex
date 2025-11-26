@@ -20,21 +20,21 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:bookmark_tab?, false)
+     |> assign(:batch_size, 15)
      |> assign(:bookmark_search_query, "")
+     |> assign(:bookmark_tab?, false)
      |> assign(:drop_filters, %{
        user_id: user_id,
        bookmarks_user_id: user_id
      })
+     |> assign(:drops_empty?, true)
      |> assign(:end_of_timeline?, false)
-     |> assign(:page, 1)
-     |> assign(:viewport_width, nil)
-     |> assign(:viewport_height, nil)
-     |> assign(:batch_size, 15)
      |> assign(:initial_load, true)
      |> assign(:loading_more, false)
+     |> assign(:page, 1)
+     |> assign(:viewport_height, nil)
+     |> assign(:viewport_width, nil)
      |> assign(:search_query, "")
-     |> assign(:drops_empty?, true)
      |> SearchHelper.initialize_profile_search_assigns(user_id)}
   end
 
@@ -46,8 +46,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     if params["bookmarks_user_id"] do
       {:noreply,
        socket
-       |> assign(:bookmark_tab?, true)
-       |> assign(:bookmark_search_query, bookmark_search_query)}
+       |> assign(:bookmark_search_query, bookmark_search_query)
+       |> assign(:bookmark_tab?, true)}
     else
       {:noreply,
        socket
@@ -65,9 +65,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     {:noreply,
      socket
-     |> assign(:viewport_width, width)
+     |> assign(:batch_size, batch_size)
      |> assign(:viewport_height, height)
-     |> assign(:batch_size, batch_size)}
+     |> assign(:viewport_width, width)}
   end
 
   def handle_event("load-more", %{"layout_complete" => true}, socket) do
