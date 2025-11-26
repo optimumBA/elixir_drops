@@ -16,6 +16,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @type socket :: Phoenix.LiveView.Socket.t()
 
   attr :batch_size, :integer, default: 10
+  attr :bookmark_tab?, :boolean, default: false
   attr :current_user, :any
   attr :drops, :list, required: true
   attr :drops_empty?, :boolean, required: true
@@ -65,7 +66,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
           ]}
         >
           <div
-            :if={@drops_empty?}
+            :if={@drops_empty? && !@bookmark_tab?}
             id="drops-empty"
             class="only:grid text-[#656565] text-lg min-h-[60svh] items-center justify-center"
           >
@@ -78,6 +79,16 @@ defmodule ElixirDropsWeb.DropsListHelper do
                 <span><.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" /></span>
                 <span> Create Drop</span>
               </.link>
+            </div>
+          </div>
+
+          <div
+            :if={@drops_empty? && @bookmark_tab?}
+            id="drops-empty"
+            class="only:grid text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+          >
+            <div class="flex flex-col items-center justify-center">
+              <p>You haven't created any bookmarks yet.</p>
             </div>
           </div>
           <div

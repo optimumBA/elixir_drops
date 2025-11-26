@@ -13,6 +13,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     <div>
       <DropsListHelper.drops_list
         batch_size={@batch_size}
+        bookmark_tab?={@bookmark_tab?}
         current_user={@current_user}
         drops={@streams.drops}
         drops_empty?={@drops_empty?}
@@ -37,7 +38,8 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
         } = _session,
         socket
       ) do
-    send(socket.parent_pid, {:update_search_query, bookmark_search_query})
+    if bookmark_search_query != "",
+      do: send(socket.parent_pid, {:update_search_query, bookmark_search_query})
 
     user = Accounts.get_user!(user_id)
 
@@ -52,7 +54,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
      |> assign(:loading_more, false)
      |> assign(:page, 1)
      |> assign(:search_query, bookmark_search_query)
-     |> assign(:searching, false)
+     |> assign(:searching, bookmark_search_query != "")
      |> SearchHelper.update_search_filters(bookmark_search_query)
      |> assign_drops()}
   end
