@@ -98,16 +98,15 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
       |> assign(:show_profile_suggestions, false)
       |> assign(:profile_search_suggestions, [])
 
-    # Stay on profile page with search query
     if trimmed_query != "" do
       {:noreply,
        push_navigate(socket,
-         to: ~p"/profile?bookmarks_user_id=#{socket.assigns.current_user.id}&bq=#{trimmed_query}"
+         to: ~p"/profile?buid=#{socket.assigns.current_user.id}&bq=#{trimmed_query}"
        )}
     else
       {:noreply,
        push_navigate(socket,
-         to: ~p"/profile?bookmarks_user_id=#{socket.assigns.current_user.id}"
+         to: ~p"/profile?buid=#{socket.assigns.current_user.id}"
        )}
     end
   end
@@ -159,13 +158,10 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   defp load_more(%{assigns: %{end_of_timeline?: true}} = socket, _batch_size),
     do: {:noreply, socket}
 
-  defp load_more(socket, _batch_size) do
-    socket = assign_drops_with_cursor(socket.assigns.search_query, socket)
+  defp load_more(socket, _batch_size),
+    do: {:noreply, assign_drops_with_cursor(socket, socket.assigns.search_query)}
 
-    {:noreply, socket}
-  end
-
-  defp assign_drops_with_cursor(search_query, socket) when search_query != "" do
+  defp assign_drops_with_cursor(socket, search_query) when search_query != "" do
     socket
     |> assign(:loading_more, false)
     |> assign(:page, socket.assigns.page + 1)
@@ -173,7 +169,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     |> Phoenix.LiveView.push_event("load-more-complete", %{})
   end
 
-  defp assign_drops_with_cursor(_search_query, socket) do
+  defp assign_drops_with_cursor(socket, _search_query) do
     filters = %{older_than: socket.assigns.last_bookmark}
 
     socket

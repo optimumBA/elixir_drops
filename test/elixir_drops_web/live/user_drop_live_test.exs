@@ -233,14 +233,14 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
   end
 
-  describe "/profile/?bookmarks_user_id" do
+  describe "/profile/?buid" do
     setup [:create_drops_setup]
 
     test "shows bookmarked drops with infinite scroll", %{conn: conn, user: user} do
       _bookmarks = create_multiple_bookmarks(user, 35)
 
       conn = sign_in_user(conn, user)
-      {:ok, live, html} = live(conn, ~p"/profile/?bookmarks_user_id=#{user.id}")
+      {:ok, live, html} = live(conn, ~p"/profile/?buid=#{user.id}")
 
       assert bookmark_view = find_live_child(live, "bookmarks_liveview")
 
@@ -258,10 +258,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html_3 =~ "Drop title 1"
     end
 
-    test "bookmark search navigates to /profile?bookmarks_user_id=id&q=query if search query is not empty",
+    test "bookmark search navigates to /profile?buid=id&q=query if search query is not empty",
          %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
-      {:ok, live, html} = live(conn, ~p"/profile?bookmarks_user_id=#{user.id}")
+      {:ok, live, html} = live(conn, ~p"/profile?buid=#{user.id}")
       assert bookmark_view = find_live_child(live, "bookmarks_liveview")
       assert html =~ "profile-search-input"
       form_element = element(live, "#profile-search-input form")
@@ -269,13 +269,13 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       render_hook(bookmark_view, :search_submit, %{query: "phoenix"})
 
-      assert_redirect(bookmark_view, "/profile?bookmarks_user_id=#{user.id}&bq=phoenix")
+      assert_redirect(bookmark_view, "/profile?buid=#{user.id}&bq=phoenix")
     end
 
-    test "bookmark search navigates to /profile?bookmarks_user_id=id if the search query is empty",
+    test "bookmark search navigates to /profile?buid=id if the search query is empty",
          %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
-      {:ok, live, html} = live(conn, ~p"/profile?bookmarks_user_id=#{user.id}")
+      {:ok, live, html} = live(conn, ~p"/profile?buid=#{user.id}")
       assert bookmark_view = find_live_child(live, "bookmarks_liveview")
       assert html =~ "profile-search-input"
       form_element = element(live, "#profile-search-input form")
@@ -284,7 +284,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       render_hook(bookmark_view, :search_submit, %{query: ""})
 
       # Note: spaces in query params are encoded as +
-      assert_redirect(bookmark_view, "/profile?bookmarks_user_id=#{user.id}")
+      assert_redirect(bookmark_view, "/profile?buid=#{user.id}")
     end
 
     test "returns only relevant bookmarks when searching", %{conn: conn, user: user} do
@@ -299,7 +299,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       bookmark_fixture(%{drop_id: non_matching_drop.id, user_id: user.id})
 
       conn = sign_in_user(conn, user)
-      {:ok, live, _html} = live(conn, ~p"/profile/?bookmarks_user_id=#{user.id}&bq=phoenix")
+      {:ok, live, _html} = live(conn, ~p"/profile/?buid=#{user.id}&bq=phoenix")
 
       html = render(live)
       assert html =~ "Phoenix Tutorial"

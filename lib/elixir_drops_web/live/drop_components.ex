@@ -334,7 +334,7 @@ defmodule ElixirDropsWeb.DropComponents do
               "min-h-full py-4 flex items-center mr-8",
               @bookmark_tab? && "border-b-2 border-b-[#887ce1]"
             ]}>
-              <button phx-click={JS.navigate(~p"/profile?bookmarks_user_id=#{@current_user.id}")}>
+              <button phx-click={JS.navigate(~p"/profile?buid=#{@current_user.id}")}>
                 Bookmarks
               </button>
             </li>

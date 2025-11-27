@@ -43,7 +43,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     search_query = params["q"] || ""
     bookmark_search_query = params["bq"] || ""
 
-    if params["bookmarks_user_id"] do
+    if params["buid"] do
       {:noreply,
        socket
        |> assign(:bookmark_search_query, bookmark_search_query)
@@ -283,9 +283,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     end
   end
 
-  def handle_info({:update_search_query, query}, socket) do
-    {:noreply, assign(socket, :search_query, query)}
-  end
+  def handle_info({:update_search_query, query}, socket),
+    do: {:noreply, assign(socket, :search_query, query)}
 
   def handle_info(_message, socket) do
     {:noreply, socket}
