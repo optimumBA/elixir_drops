@@ -84,11 +84,22 @@ defmodule ElixirDrops.Drops do
   end
 
   defp safe_list_drops(filters, limit) do
+    search_filters =
+      case Map.get(filters, :search) do
+        nil ->
+          %{}
+
+        search_query ->
+          %{search: search_query}
+      end
+
+    other_filters = Map.delete(filters, :search)
     filter_query = apply_filters()
 
     query =
       drop_query()
-      |> where(^filter_query.(filters))
+      |> where(^filter_query.(search_filters))
+      |> where(^filter_query.(other_filters))
       |> limit(^limit)
       |> merge_comment_count()
       |> preload([:user])
@@ -126,12 +137,12 @@ defmodule ElixirDrops.Drops do
     })
     |> order_by(
       [drop: drop],
-      {:desc,
-       fragment(
-         "ts_rank(?, websearch_to_tsquery('english', ?))",
-         drop.search_vector,
-         ^search_query
-       )}
+      desc:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
     )
   end
 
@@ -179,6 +190,19 @@ defmodule ElixirDrops.Drops do
   end
 
   defp apply_filter({:search, _}, dynamic), do: dynamic
+
+  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
+       when is_binary(search_query) and search_query != "" do
+    dynamic(
+      [drop: drop],
+      ^dynamic and
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        ) < ^rank
+    )
+  end
 
   defp apply_filter(_other, dynamic), do: dynamic
 
