@@ -59,12 +59,12 @@ defmodule ElixirDrops.AccountsTest do
 
     test "validates github_id uniqueness" do
       # Create a user with a specific github_id
-      _user = user_fixture(%{github_id: 1_456_872})
+      user = user_fixture(%{github_id: 1_456_872})
 
       new_user = %{
-        avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+        avatar: "https://avatars.githubusercontent.com/u/#{user.github_id}?v=4",
         email: "new@gmail.com",
-        github_id: 1_456_872,
+        github_id: user.github_id,
         github_username: "new_username",
         name: "username"
       }

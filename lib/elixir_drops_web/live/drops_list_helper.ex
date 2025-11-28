@@ -147,14 +147,37 @@ defmodule ElixirDropsWeb.DropsListHelper do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
     drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
 
-    last_drop = List.last(drops)
-
     socket
+    |> assign_drop_cursor(drops, socket.assigns.search_query)
     |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: batch_size)
     |> assign(:drops_empty?, Enum.empty?(drops))
     |> assign(:end_of_timeline?, false)
-    |> assign(:last_drop, last_drop)
     |> assign(:loading_more, false)
+  end
+
+  @spec maybe_insert_drops(socket()) :: socket()
+  def maybe_insert_drops(socket) do
+    search_query = socket.assigns.search_query
+    drop_filters = socket.assigns.drop_filters
+    batch_size = Map.get(socket.assigns, :batch_size, 15)
+    drops = Drops.list_drops(drop_filters, batch_size)
+
+    relevance_rank =
+      if Enum.empty?(drops) do
+        {0, search_query}
+      else
+        last_drop = List.last(drops)
+
+        {last_drop.relevance_rank, search_query}
+      end
+
+    filters =
+      Map.put(drop_filters, :relevance_rank, relevance_rank)
+
+    socket
+    |> Phoenix.LiveView.stream(:drops, drops)
+    |> assign(:drop_filters, filters)
+    |> assign(:end_of_timeline?, Enum.count(drops) < batch_size)
   end
 
   @spec maybe_insert_drops(socket(), filters(), drop(), opts()) :: socket()
@@ -186,16 +209,43 @@ defmodule ElixirDropsWeb.DropsListHelper do
   def load_more(%{assigns: %{end_of_timeline?: true}} = socket, _batch_size),
     do: {:noreply, socket}
 
-  def load_more(socket, _batch_size) do
+  def load_more(socket, _batch_size),
+    do: {:noreply, assign_drops_with_cursor(socket, socket.assigns.search_query)}
+
+  defp assign_drops_with_cursor(socket, search_query) when search_query != "" do
+    socket
+    |> assign(:loading_more, false)
+    |> assign(:page, socket.assigns.page + 1)
+    |> maybe_insert_drops()
+    |> Phoenix.LiveView.push_event("load-more-complete", %{})
+  end
+
+  defp assign_drops_with_cursor(socket, _search_query) do
     filters = %{older_than: socket.assigns.last_drop}
 
-    socket =
-      socket
-      |> assign(:loading_more, false)
-      |> assign(:page, socket.assigns.page + 1)
-      |> maybe_insert_drops(filters, socket.assigns.last_drop)
-      |> Phoenix.LiveView.push_event("load-more-complete", %{})
+    socket
+    |> assign(:loading_more, false)
+    |> assign(:page, socket.assigns.page + 1)
+    |> maybe_insert_drops(filters, socket.assigns.last_drop)
+    |> Phoenix.LiveView.push_event("load-more-complete", %{})
+  end
 
-    {:noreply, socket}
+  defp assign_drop_cursor(socket, drops, search_query)
+       when search_query != "" and drops != [] do
+    last_drop = List.last(drops)
+
+    filters =
+      Map.put(
+        socket.assigns.drop_filters,
+        :relevance_rank,
+        {last_drop.relevance_rank, search_query}
+      )
+
+    assign(socket, :drop_filters, filters)
+  end
+
+  defp assign_drop_cursor(socket, drops, _search_query) do
+    last_drop = List.last(drops)
+    assign(socket, :last_drop, last_drop)
   end
 end

@@ -83,6 +83,22 @@
   }
 }
 
+.roboto-regular {
+  font-family: 'Roboto', sans-serif;
+  font-optical-sizing: none;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: 'wdth' 100;
+}
+
+.roboto-medium {
+  font-family: 'Roboto', sans-serif;
+  font-optical-sizing: none;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings: 'wdth' 100;
+}
+
 .content-grid > :not(.breakout, .full-width),
 .full-width > :not(.breakout, .full-width) {
   grid-column: content;
@@ -143,30 +159,35 @@ blockquote *:last-child {
 }
 
 /* Markdown Body */
+.comment-body hr,
 .drop-body hr,
 .drop-full-content hr,
 .drop-preview hr {
   @apply block my-2;
 }
 
+.comment-body a,
 .drop-body a,
 .drop-full-content a,
 .drop-preview a {
   @apply text-[#5947F1] underline;
 }
 
+.comment-body ol,
 .drop-body ol,
 .drop-full-content ol,
 .drop-preview ol {
   list-style: decimal inside;
 }
 
+.comment-body ul,
 .drop-body ul,
 .drop-full-content ul,
 .drop-preview ul {
   list-style: disc inside;
 }
 
+.comment-body li,
 .drop-body li,
 .drop-full-content li,
 .drop-preview li {
@@ -174,6 +195,7 @@ blockquote *:last-child {
   margin-bottom: 1rem;
 }
 
+.comment-body h1,
 .drop-body h1,
 .drop-full-content h1,
 .drop-preview h1 {
@@ -181,6 +203,7 @@ blockquote *:last-child {
   line-height: 1.25;
 }
 
+.comment-body h2,
 .drop-body h2,
 .drop-full-content h2,
 .drop-preview h2 {
@@ -188,7 +211,7 @@ blockquote *:last-child {
   line-height: 1.3;
 }
 
-.drop-body h3,
+.comment-body h3 .drop-body h3,
 .drop-full-content h3,
 .drop-preview h3 {
   font-size: 1.6rem;
@@ -196,6 +219,7 @@ blockquote *:last-child {
   line-height: 1.35;
 }
 
+.comment-body h4,
 .drop-body h4,
 .drop-full-content h4,
 .drop-preview h4 {
@@ -204,6 +228,7 @@ blockquote *:last-child {
   line-height: 1.5;
 }
 
+.comment-body h5,
 .drop-body h5,
 .drop-full-content h5,
 .drop-preview h5 {
@@ -212,6 +237,7 @@ blockquote *:last-child {
   line-height: 1.4;
 }
 
+.comment-body h6,
 .drop-body h6,
 .drop-full-content h6,
 .drop-preview h6 {
@@ -225,21 +251,61 @@ blockquote *:last-child {
   @apply mb-5;
 }
 
+.comment-body div:has(+ pre),
 .drop-body div:has(+ pre),
 .drop-full-content div:has(+ pre) {
   @apply mb-0;
 }
 
 /* Code Blocks */
+.comment-body pre,
 .drop-body pre,
 .drop-full-content pre {
   @apply rounded-b-xl;
+}
+
+.comment-body pre {
+  scrollbar-width: none;
+  overflow: auto;
+}
+
+.comment-body pre:hover {
+  scrollbar-width: thin;
+  scrollbar-color: white transparent;
+}
+
+.comment-body pre::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.comment-body pre:hover::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.comment-body pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.comment-body pre::-webkit-scrollbar-thumb {
+  background: white;
+  border-radius: 4px;
+}
+
+.comment-body pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.comment-body pre::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 .drop-preview pre {
   @apply rounded-xl;
 }
 
+.comment-body pre,
 .drop-body pre,
 .drop-full-content pre,
 .drop-preview pre {

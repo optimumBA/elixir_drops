@@ -2,6 +2,7 @@ defmodule ElixirDrops.DropsTest do
   use ElixirDrops.DataCase, async: true
 
   import ElixirDrops.AccountsFixtures
+  import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
 
   alias ElixirDrops.Drops
@@ -19,12 +20,17 @@ defmodule ElixirDrops.DropsTest do
   end
 
   describe "list_drops/2" do
-    test "returns a list of all drops when no filter is passed" do
+    test "returns a list of all drops with comment count when no filter is passed" do
       # Verify we can create and list drops properly
 
       %{drop: drop} = create_drops_setup(%{})
 
       all_drops = Drops.list_drops()
+
+      Enum.map(all_drops, fn drop ->
+        assert Map.get(drop, :comment_count)
+      end)
+
       # The new drop should be in the list
       assert drop.id in Enum.map(all_drops, & &1.id)
 
@@ -53,6 +59,34 @@ defmodule ElixirDrops.DropsTest do
 
       assert drop.id == user_drop.id
       assert Ecto.assoc_loaded?(user_drop.user)
+    end
+
+    test "if searching, orders drops by the relevance rank" do
+      user_2 =
+        user_fixture(%{
+          avatar: "https://avatars.githubusercontent.com/u/1456872?v=4",
+          email: "user2@mail.com",
+          github_id: 12_345,
+          github_username: "github_username",
+          name: "some_name"
+        })
+
+      drop_fixture(%Drop{}, user_2, %{
+        title: "Phoenix liveview for form submissions",
+        body: "I was diving into liveview this week"
+      })
+
+      drop_fixture(%Drop{}, user_2, %{
+        title: "Phoenix LiveView for form submissions because LiveView is Good",
+        body: "LiveView to manage state"
+      })
+
+      drops = Drops.list_drops(%{search: "LiveView"})
+
+      drop_1 = Enum.at(drops, 0)
+      drop_2 = Enum.at(drops, 1)
+
+      assert drop_1.relevance_rank > drop_2.relevance_rank
     end
 
     test "returns empty list when a user has no drops" do
@@ -252,6 +286,14 @@ defmodule ElixirDrops.DropsTest do
 
       refute Drops.get_drop(%{drop_id: non_existent_id})
     end
+
+    test "returns the correct comment_count for the drop", %{drop: drop, user: user} do
+      _comment = comment_fixture(drop, user, nil)
+
+      assert %Drop{} = drop = Drops.get_drop(%{drop_id: drop.id})
+
+      assert drop.comment_count == 1
+    end
   end
 
   describe "get_drop_by_short_id/1" do
@@ -265,6 +307,14 @@ defmodule ElixirDrops.DropsTest do
     test "returns nil if the drop does not exist" do
       non_existent_short_id = ShortIdGenerator.generate()
       refute Drops.get_drop_by_short_id(non_existent_short_id)
+    end
+
+    test "returns the correct comment_count for the drop", %{drop: drop, user: user} do
+      _comment = comment_fixture(drop, user, nil)
+
+      assert %Drop{} = drop = Drops.get_drop_by_short_id(drop.short_id)
+
+      assert drop.comment_count == 1
     end
   end
 

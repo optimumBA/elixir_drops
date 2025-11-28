@@ -10,6 +10,7 @@ defmodule ElixirDropsWeb.DropComponents do
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
 
+  attr :current_url, :string
   attr :current_user, User
   attr :live_action, :atom, required: true
   attr :search_query, :string, default: ""
@@ -66,7 +67,7 @@ defmodule ElixirDropsWeb.DropComponents do
               </div>
             <% else %>
               <.link
-                href={~p"/auth/github"}
+                href={~p"/auth/github?return_to=#{@current_url}"}
                 class="font-semibold text-[#eae8fd] text-xs md:text-sm bg-blue_primary hover:opacity-80 px-2 md:px-5 py-2 rounded-lg flex items-center gap-x-2"
               >
                 <span><Icons.github_icon /></span>
@@ -119,6 +120,13 @@ defmodule ElixirDropsWeb.DropComponents do
             <p class="text-[#868686] text-xs before:content-['•'] before:mr-1">
               <.created_at drop={@drop} />
             </p>
+
+            <div class="flex items-center gap-2 text-[#868686] text-xs before:content-['•'] before:mr-1">
+              <div class="w-5 h-5">
+                <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-full h-full object-cover" />
+              </div>
+              <div>{@drop.comment_count}</div>
+            </div>
           </div>
 
           <%= if @show_card_menu? do %>
@@ -150,6 +158,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :comment_count, :integer
   attr :current_user, User, default: nil
   attr :drop, Drop, required: true
 
@@ -177,15 +186,19 @@ defmodule ElixirDropsWeb.DropComponents do
           </p>
         </div>
       </div>
-      
-    <!-- Action row below author's name -->
-      <div class="flex items-center justify-end py-4 border-b border-gray-200">
+      <!-- Action row below author's name -->
+      <div class="flex items-center justify-between py-4 border-b border-gray-200">
+        <div class="flex items-center gap-2 text-[#8E8E8E]">
+          <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-5 h-5" />
+          <span class="inline text-sm">
+            {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}
+          </span>
+        </div>
         <!-- Right side: Action buttons -->
         <div class="flex items-center gap-4">
-          
-    <!-- Copy link button -->
+          <!-- Copy link button -->
           <div
-            class="flex items-center gap-2 text-[#4f4f4f] hover:text-[#5947F1] cursor-pointer"
+            class="flex items-center gap-2 text-[#8E8E8E] hover:text-[#5947F1] cursor-pointer"
             id={"single-drop-copy-link-#{@drop.id}"}
             data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
             phx-hook="CopyToClipboard"
@@ -193,8 +206,7 @@ defmodule ElixirDropsWeb.DropComponents do
             <.icon name="hero-link" class="h-5 w-5" />
             <span class="hidden md:inline text-sm">Copy link</span>
           </div>
-          
-    <!-- Three dots menu button -->
+          <!-- Three dots menu button -->
           <button
             class="text-[#797979] hover:text-[#5947F1] p-2"
             id={"action-row-menu-btn-#{@drop.id}"}
@@ -625,9 +637,10 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp copy_prompt(assigns) do
+  @spec copy_prompt(assigns()) :: rendered()
+  def copy_prompt(assigns) do
     ~H"""
-    <template id="copy-prompt-template">
+    <template class="copy-prompt-template">
       <div class="copy-prompt">
         <svg
           width="20"

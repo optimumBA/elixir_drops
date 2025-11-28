@@ -24,6 +24,8 @@ import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 import topbar from '../vendor/topbar'
+import CommentFormHooks from './hooks/comment_form'
+import CommentModalHooks from './hooks/comment_modal'
 import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
@@ -32,9 +34,12 @@ import MasonryHooks from './hooks/masonry'
 import MobileSearchOverlayHooks from './hooks/mobile_search_overlay'
 import ScreenshotProgressHooks from './hooks/screenshot_progress'
 import SearchSuggestionsHooks from './hooks/search_suggestions'
+import TextAreaHooks from './hooks/text_area'
 import WelcomeMessageHooks from './hooks/welcome_message'
 
 let Hooks = {
+  ...CommentFormHooks,
+  ...CommentModalHooks,
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
   ...DropsContainerHooks,
@@ -43,6 +48,7 @@ let Hooks = {
   ...MobileSearchOverlayHooks,
   ...ScreenshotProgressHooks,
   ...SearchSuggestionsHooks,
+  ...TextAreaHooks,
   ...WelcomeMessageHooks,
 }
 

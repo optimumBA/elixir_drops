@@ -6,6 +6,7 @@ defmodule ElixirDrops.Drops do
   import Ecto.Query, warn: false
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
@@ -83,12 +84,24 @@ defmodule ElixirDrops.Drops do
   end
 
   defp safe_list_drops(filters, limit) do
+    search_filters =
+      case Map.get(filters, :search) do
+        nil ->
+          %{}
+
+        search_query ->
+          %{search: search_query}
+      end
+
+    other_filters = Map.delete(filters, :search)
     filter_query = apply_filters()
 
     query =
       drop_query()
-      |> where(^filter_query.(filters))
+      |> where(^filter_query.(search_filters))
+      |> where(^filter_query.(other_filters))
       |> limit(^limit)
+      |> merge_comment_count()
       |> preload([:user])
 
     result =
@@ -124,12 +137,12 @@ defmodule ElixirDrops.Drops do
     })
     |> order_by(
       [drop: drop],
-      {:desc,
-       fragment(
-         "ts_rank(?, websearch_to_tsquery('english', ?))",
-         drop.search_vector,
-         ^search_query
-       )}
+      desc:
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        )
     )
   end
 
@@ -178,6 +191,19 @@ defmodule ElixirDrops.Drops do
 
   defp apply_filter({:search, _}, dynamic), do: dynamic
 
+  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
+       when is_binary(search_query) and search_query != "" do
+    dynamic(
+      [drop: drop],
+      ^dynamic and
+        fragment(
+          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          drop.search_vector,
+          ^search_query
+        ) < ^rank
+    )
+  end
+
   defp apply_filter(_other, dynamic), do: dynamic
 
   @doc """
@@ -199,6 +225,7 @@ defmodule ElixirDrops.Drops do
     drop_query()
     |> where(^filter_query.(filters))
     |> preload([:user])
+    |> merge_comment_count()
     |> Repo.one()
   end
 
@@ -226,9 +253,10 @@ defmodule ElixirDrops.Drops do
 
   defp safe_get_drop_by_short_id(short_id) do
     result =
-      Drop
+      drop_query()
       |> where([d], d.short_id == ^short_id)
       |> preload([:user])
+      |> merge_comment_count()
       |> Repo.one()
 
     {:ok, result}
@@ -240,6 +268,18 @@ defmodule ElixirDrops.Drops do
     DBConnection.ConnectionError ->
       # Database connection issues - return error
       {:error, :db_connection_error}
+  end
+
+  defp merge_comment_count(query) do
+    select_merge(query, [d], %{
+      comment_count:
+        subquery(
+          from(c in Comment,
+            where: c.drop_id == parent_as(:drop).id,
+            select: count(c.id)
+          )
+        )
+    })
   end
 
   @doc """
