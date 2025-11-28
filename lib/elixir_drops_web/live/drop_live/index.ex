@@ -52,7 +52,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
     filters =
       if search_query != "" do
-        Map.put(current_filters, :search, search_query)
+        current_filters
+        |> Map.put(:relevance_rank, {1, search_query})
+        |> Map.put(:search, search_query)
       else
         Map.delete(current_filters, :search)
       end
@@ -184,7 +186,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply, assign(socket, :show_suggestions, false)}
   end
 
-  # Override navbar search submit to use push_patch instead of push_navigate for homepage
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
     # Track search history and popular searches
@@ -197,9 +198,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
       |> assign(:show_suggestions, false)
       |> assign(:search_suggestions, [])
 
-    # Since we're already on the homepage, use push_patch for better UX
+    # Use push_navigate to force a masonry refresh
     if trimmed_query != "" do
-      {:noreply, push_patch(socket, to: ~p"/?q=#{trimmed_query}")}
+      {:noreply, push_navigate(socket, to: ~p"/?q=#{trimmed_query}")}
     else
       {:noreply, push_patch(socket, to: ~p"/")}
     end
