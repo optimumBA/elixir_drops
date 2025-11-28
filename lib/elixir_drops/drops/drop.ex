@@ -17,6 +17,7 @@ defmodule ElixirDrops.Drops.Drop do
   schema "drops" do
     field :body, :string
     field :bookmarked?, :boolean, virtual: true
+    field :comment_count, :integer, virtual: true
     embeds_one :screenshot, Screenshot, on_replace: :update
     field :search_vector, :string, load_in_query: false
     field :short_id, :string

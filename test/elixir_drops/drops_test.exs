@@ -2,6 +2,7 @@ defmodule ElixirDrops.DropsTest do
   use ElixirDrops.DataCase, async: true
 
   import ElixirDrops.AccountsFixtures
+  import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
 
   alias ElixirDrops.Drops
@@ -19,12 +20,17 @@ defmodule ElixirDrops.DropsTest do
   end
 
   describe "list_drops/2" do
-    test "returns a list of all drops when no filter is passed" do
+    test "returns a list of all drops with comment count when no filter is passed" do
       # Verify we can create and list drops properly
 
       %{drop: drop} = create_drops_setup(%{})
 
       all_drops = Drops.list_drops()
+
+      Enum.map(all_drops, fn drop ->
+        assert Map.get(drop, :comment_count)
+      end)
+
       # The new drop should be in the list
       assert drop.id in Enum.map(all_drops, & &1.id)
 
@@ -280,6 +286,14 @@ defmodule ElixirDrops.DropsTest do
 
       refute Drops.get_drop(%{drop_id: non_existent_id})
     end
+
+    test "returns the correct comment_count for the drop", %{drop: drop, user: user} do
+      _comment = comment_fixture(drop, user, nil)
+
+      assert %Drop{} = drop = Drops.get_drop(%{drop_id: drop.id})
+
+      assert drop.comment_count == 1
+    end
   end
 
   describe "get_drop_by_short_id/1" do
@@ -293,6 +307,14 @@ defmodule ElixirDrops.DropsTest do
     test "returns nil if the drop does not exist" do
       non_existent_short_id = ShortIdGenerator.generate()
       refute Drops.get_drop_by_short_id(non_existent_short_id)
+    end
+
+    test "returns the correct comment_count for the drop", %{drop: drop, user: user} do
+      _comment = comment_fixture(drop, user, nil)
+
+      assert %Drop{} = drop = Drops.get_drop_by_short_id(drop.short_id)
+
+      assert drop.comment_count == 1
     end
   end
 
