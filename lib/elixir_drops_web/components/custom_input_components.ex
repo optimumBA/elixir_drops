@@ -7,6 +7,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
   use Phoenix.Component
 
   alias ElixirDropsWeb.CoreComponents
+  alias Phoenix.LiveView.JS
 
   @type assigns :: map()
   @type rendered :: Phoenix.LiveView.Rendered.t()
@@ -37,30 +38,34 @@ defmodule ElixirDropsWeb.CustomInputComponents do
       <.custom_input field={@form[:email]} type="email" />
       <.custom_input name="my-input" errors={["oh no!"]} />
   """
-  attr :id, :any, default: nil
-  attr :name, :any
-  attr :label, :string, default: nil
-  attr :value, :any
-
-  attr :type, :string,
-    default: "text",
-    values: ~w(checkbox color date datetime-local email file month number password
-               range search select tel text textarea time url week)
+  attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
+  attr :class, :any, default: nil, doc: "classes for input container"
+  attr :errors, :list, default: []
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
 
-  attr :errors, :list, default: []
-  attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
-  attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
-  attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
-  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :id, :any, default: nil
+  attr :input_field_class, :any, default: nil, doc: "classes for input field"
+  attr :label, :string, default: nil
   attr :label_class, :string, default: nil, doc: "classes for input label"
-  attr :input_field_class, :string, default: nil, doc: "classes for input field"
+  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :name, :any
+  attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
+  attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
 
   attr :rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
                 multiple pattern placeholder readonly required rows size step)
+
+  attr :type, :string,
+    default: "text",
+    values: ~w(checkbox color date datetime-local email file month number password
+                             range search select tel text textarea time url week)
+
+  attr :value, :any
+
+  slot :extra_content, required: false
 
   @spec custom_input(assigns()) :: rendered()
   def custom_input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
@@ -76,17 +81,19 @@ defmodule ElixirDropsWeb.CustomInputComponents do
 
   def custom_input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div>
+    <div class={@class} phx-feedback-for={@id} phx-click={JS.focus(to: "##{@id}")}>
       <.custom_label for={@id} class={@label_class}>{@label}</.custom_label>
       <textarea
         id={@id}
         name={@name}
         class={[
-          "focus:ring-0 sm:text-sm sm:leading-6",
+          "focus:ring-0 sm:text-sm sm:leading-6 resize-none overflow-hidden",
           @input_field_class
         ]}
+        phx-hook="TextArea"
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
+      {render_slot(@extra_content)}
       <.custom_error :for={msg <- @errors}>{msg}</.custom_error>
     </div>
     """
@@ -94,7 +101,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
 
   def custom_input(assigns) do
     ~H"""
-    <div>
+    <div class={@class} phx-feedback-for={@id} phx-click={JS.focus(to: "##{@id}")}>
       <.custom_label for={@id}>{@label}</.custom_label>
       <input
         type={@type}
@@ -107,6 +114,7 @@ defmodule ElixirDropsWeb.CustomInputComponents do
         ]}
         {@rest}
       />
+      {render_slot(@extra_content)}
       <.custom_error :for={msg <- @errors}>{msg}</.custom_error>
     </div>
     """

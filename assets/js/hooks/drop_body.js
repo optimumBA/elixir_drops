@@ -4,11 +4,19 @@ let DropBodyHooks = {}
 
 DropBodyHooks.DropBodyContainer = {
   mounted() {
+    this.createCopyButton()
+  },
+
+  updated() {
+    this.createCopyButton()
+  },
+
+  createCopyButton() {
     const container = this.el
 
     const createCopyPrompt = () => {
       const copyPromptTemplateEl = document.querySelector(
-        '#copy-prompt-template'
+        '.copy-prompt-template'
       )
       const copyPrompt = document.importNode(copyPromptTemplateEl.content, true)
 

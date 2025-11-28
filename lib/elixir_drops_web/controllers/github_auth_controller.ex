@@ -13,6 +13,7 @@ defmodule ElixirDropsWeb.GithubAuthController do
 
   use ElixirDropsWeb, :controller
 
+  plug :store_return_to when action in [:request]
   plug Ueberauth
 
   import Plug.Conn
@@ -81,4 +82,10 @@ defmodule ElixirDropsWeb.GithubAuthController do
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" ")
   end
+
+  defp store_return_to(%{params: %{"return_to" => return_to}} = conn, _opts)
+       when is_binary(return_to),
+       do: put_session(conn, :user_return_to, return_to)
+
+  defp store_return_to(conn, _opts), do: conn
 end

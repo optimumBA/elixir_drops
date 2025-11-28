@@ -6,6 +6,7 @@ defmodule ElixirDrops.Drops do
   import Ecto.Query, warn: false
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
@@ -89,6 +90,7 @@ defmodule ElixirDrops.Drops do
       drop_query()
       |> where(^filter_query.(filters))
       |> limit(^limit)
+      |> merge_comment_count()
       |> preload([:user])
 
     result =
@@ -199,6 +201,7 @@ defmodule ElixirDrops.Drops do
     drop_query()
     |> where(^filter_query.(filters))
     |> preload([:user])
+    |> merge_comment_count()
     |> Repo.one()
   end
 
@@ -226,9 +229,10 @@ defmodule ElixirDrops.Drops do
 
   defp safe_get_drop_by_short_id(short_id) do
     result =
-      Drop
+      drop_query()
       |> where([d], d.short_id == ^short_id)
       |> preload([:user])
+      |> merge_comment_count()
       |> Repo.one()
 
     {:ok, result}
@@ -240,6 +244,18 @@ defmodule ElixirDrops.Drops do
     DBConnection.ConnectionError ->
       # Database connection issues - return error
       {:error, :db_connection_error}
+  end
+
+  defp merge_comment_count(query) do
+    select_merge(query, [d], %{
+      comment_count:
+        subquery(
+          from(c in Comment,
+            where: c.drop_id == parent_as(:drop).id,
+            select: count(c.id)
+          )
+        )
+    })
   end
 
   @doc """
