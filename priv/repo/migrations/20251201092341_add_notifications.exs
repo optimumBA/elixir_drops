@@ -1,0 +1,16 @@
+defmodule ElixirDrops.Repo.Migrations.AddNotifications do
+  use Ecto.Migration
+
+  def change do
+    create table(:notifications, primary_key: false) do
+      add :id, :binary_id, primary_key: true
+      add :actor_id, references(:users, on_delete: :delete_all, type: :binary_id), null: false
+      add :drop_id, references(:drops, on_delete: :delete_all, type: :binary_id), null: false
+      add :recipient_id, references(:users, on_delete: :delete_all, type: :binary_id), null: false
+      add :read, :boolean, null: false
+      add :type, :string, null: false
+
+      timestamps()
+    end
+  end
+end
