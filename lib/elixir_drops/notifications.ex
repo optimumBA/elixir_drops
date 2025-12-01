@@ -49,6 +49,7 @@ defmodule ElixirDrops.Notifications do
 
     Notification
     |> where([n], n.recipient_id == ^user_id)
+    |> where([n], n.read == false)
     |> order_by([n], desc: n.inserted_at)
     |> limit(^limit)
     |> offset(^offset)

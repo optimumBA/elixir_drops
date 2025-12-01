@@ -741,16 +741,10 @@ defmodule ElixirDropsWeb.DropComponents do
   defp view_notifications_button(assigns) do
     ~H"""
     <.link
-      class={[
-        "flex shrink-0",
-        !@current_user && ""
-      ]}
+      :if={@current_user}
+      href={~p"/notifications"}
+      class="flex shrink-0"
       id="view-notifications-button"
-      phx-click={
-        if @current_user,
-          do: JS.navigate(~p"/notifications"),
-          else: show_popup("signin-popup-message")
-      }
     >
       <div class="relative group w-5 h-5">
         <img

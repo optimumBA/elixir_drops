@@ -91,7 +91,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
               form: to_form(changeset)
             )
 
-        dispatch_notifications(socket, parent_id, top_level_comment.user)
+        create_notifications(socket, parent_id, top_level_comment.user)
 
         {:noreply,
          socket
@@ -129,7 +129,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply, assign(socket, :notification_count, count + 1)}
   end
 
-  defp dispatch_notifications(socket, parent_id, reply_recipient) do
+  defp create_notifications(socket, parent_id, reply_recipient) do
     actor = socket.assigns.current_user
     drop = socket.assigns.drop
     recipient = socket.assigns.drop.user
