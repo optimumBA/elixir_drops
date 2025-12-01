@@ -31,8 +31,7 @@ defmodule ElixirDropsWeb.Router do
   end
 
   scope "/", ElixirDropsWeb do
-    # pipe_through [:browser, :require_authenticated_user]
-    pipe_through [:browser]
+    pipe_through [:browser, :require_authenticated_user]
 
     live_session :require_authenticated_user,
       on_mount:
@@ -41,7 +40,7 @@ defmodule ElixirDropsWeb.Router do
             if(Application.compile_env(:elixir_drops, :sql_sandbox),
               do: {ElixirDropsWeb.LiveAcceptance, :default}
             ),
-            # {ElixirDropsWeb.UserAuth, :ensure_authenticated},
+            {ElixirDropsWeb.UserAuth, :ensure_authenticated},
             {ElixirDropsWeb.UserAuth, :assign_current_user},
             {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
           ],

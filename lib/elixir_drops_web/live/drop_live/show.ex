@@ -87,18 +87,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
               form: to_form(changeset)
             )
 
-        actor = socket.assigns.current_user
-        drop = socket.assigns.drop
-        recipient = socket.assigns.drop.user
-
-        send(self(), {:notification, actor, recipient, drop, %{type: :comment_on_post}})
-
-        if parent_id,
-          do:
-            send(
-              self(),
-              {:notification, actor, top_level_comment.user, drop, %{type: :reply_to_comment}}
-            )
+        dispatch_notifications(socket, parent_id, top_level_comment.user)
 
         {:noreply,
          socket
@@ -129,6 +118,23 @@ defmodule ElixirDropsWeb.DropLive.Show do
       {:error, _changeset} ->
         {:noreply, socket}
     end
+  end
+
+  defp dispatch_notifications(socket, parent_id, reply_recipient) do
+    actor = socket.assigns.current_user
+    drop = socket.assigns.drop
+    recipient = socket.assigns.drop.user
+
+    send(self(), {:notification, actor, recipient, drop, %{type: :comment_on_post}})
+
+    if parent_id,
+      do:
+        send(
+          self(),
+          {:notification, actor, reply_recipient, drop, %{type: :reply_to_comment}}
+        )
+
+    :ok
   end
 
   defp get_top_level_comment(%{parent_id: nil} = comment), do: Comments.get_comment!(comment.id)

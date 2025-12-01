@@ -13,9 +13,9 @@ defmodule ElixirDrops.Notifications do
 
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
+  @type drop :: Drop.t()
   @type notification :: Notification.t()
   @type notification_id :: Ecto.UUID.t()
-  @type drop :: Drop.t()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
