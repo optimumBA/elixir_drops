@@ -48,6 +48,7 @@ defmodule ElixirDropsWeb.DropComponents do
             </button>
             <!-- Create Drop Button - Always visible -->
             <.create_drop_button current_user={@current_user} live_action={@live_action} />
+            <.view_notifications_button current_user={@current_user} />
 
             <%= if @current_user do %>
               <div
@@ -729,6 +730,26 @@ defmodule ElixirDropsWeb.DropComponents do
     >
       <span><.icon name="hero-plus" /></span>
       <span>Create Drop</span>
+    </.link>
+    """
+  end
+
+  defp view_notifications_button(assigns) do
+    ~H"""
+    <.link
+      class={[
+        "flex shrink-0",
+        !@current_user && ""
+      ]}
+      id="view-notifications-button"
+      phx-click={
+        if @current_user,
+          do: JS.navigate(~p"/notifications"),
+          else: show_popup("signin-popup-message")
+      }
+    >
+      <img src={~p"/images/default_notification.svg"} class="w-5 h-5" alt="notification icon" />
+      <span></span>
     </.link>
     """
   end

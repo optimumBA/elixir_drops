@@ -4,6 +4,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops
+  alias ElixirDrops.Notifications
+  alias ElixirDrops.Notifications.NotificationsBroadcast
   alias ElixirDrops.StructuredData
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.CommentComponents
@@ -85,6 +87,19 @@ defmodule ElixirDropsWeb.DropLive.Show do
               form: to_form(changeset)
             )
 
+        actor = socket.assigns.current_user
+        drop = socket.assigns.drop
+        recipient = socket.assigns.drop.user
+
+        send(self(), {:notification, actor, recipient, drop, %{type: :comment_on_post}})
+
+        if parent_id,
+          do:
+            send(
+              self(),
+              {:notification, actor, top_level_comment.user, drop, %{type: :reply_to_comment}}
+            )
+
         {:noreply,
          socket
          |> assign(:comment_count, comment_count)
@@ -102,6 +117,17 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Failed to update comment")}
+    end
+  end
+
+  def handle_info({:notification, actor, recipient, drop, attrs}, socket) do
+    case Notifications.create_notification(actor, recipient, drop, attrs) do
+      {:ok, notification} ->
+        NotificationsBroadcast.broadcast_notification_creation(notification)
+        {:noreply, socket}
+
+      {:error, _changeset} ->
+        {:noreply, socket}
     end
   end
 

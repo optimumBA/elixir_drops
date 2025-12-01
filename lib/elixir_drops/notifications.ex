@@ -8,6 +8,7 @@ defmodule ElixirDrops.Notifications do
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Notifications.Notification
+  alias ElixirDrops.Notifications.NotificationsBroadcast
   alias ElixirDrops.Repo
 
   @type attrs :: map()
@@ -30,6 +31,12 @@ defmodule ElixirDrops.Notifications do
       [%Notification{}, ...]
 
   """
+
+  @spec subscribe(user_id()) :: :ok
+  def subscribe(user_id) do
+    NotificationsBroadcast.subscribe(user_id)
+  end
+
   @spec list_user_notifications(user_id, keyword()) :: [notification()]
   def list_user_notifications(user_id, opts \\ []) do
     limit = Keyword.get(opts, :limit, 10)
