@@ -752,8 +752,22 @@ defmodule ElixirDropsWeb.DropComponents do
           else: show_popup("signin-popup-message")
       }
     >
-      <div class="relative">
-        <img src={~p"/images/default_notification.svg"} class="w-5 h-5" alt="notification icon" />
+      <div class="relative group w-5 h-5">
+        <img
+          src={~p"/images/default_notification.svg"}
+          class="group-hover:hidden group-active:hidden object-cover"
+          alt="notification icon"
+        />
+        <img
+          src={~p"/images/hover_notification.svg"}
+          class="hidden group-active:hidden group-hover:block object-cover"
+          alt="notification icon"
+        />
+        <img
+          src={~p"/images/active_notification.svg"}
+          class="hidden group-active:block object-cover"
+          alt="notification icon"
+        />
         <section
           :if={@notification_count > 0}
           class="text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px] flex justify-center"

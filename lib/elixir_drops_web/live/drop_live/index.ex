@@ -3,7 +3,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
-  alias ElixirDrops.Notifications.NotificationsBroadcast
+  alias ElixirDrops.Notifications
   alias ElixirDrops.Search
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
@@ -16,7 +16,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     if connected?(socket) do
       Drops.subscribe()
       user = socket.assigns.current_user
-      if user, do: NotificationsBroadcast.subscribe(user.id)
+      if user, do: Notifications.subscribe(user.id)
     end
 
     {:ok,
@@ -34,7 +34,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:loading_more, false)
      |> assign(:search_query, "")
      |> assign(:searching, false)
-     |> assign(:drops_empty?, true)}
+     |> assign(:drops_empty?, true)
+     |> assign_notification_count()}
   end
 
   @impl Phoenix.LiveView
@@ -241,4 +242,15 @@ defmodule ElixirDropsWeb.DropLive.Index do
       ) do
     {:noreply, socket}
   end
+
+  def handle_info({:new_notification, _notification}, socket) do
+    count = socket.assigns.notification_count
+    {:noreply, assign(socket, :notification_count, count + 1)}
+  end
+
+  defp assign_notification_count(%{assigns: %{current_user: nil}} = socket),
+    do: assign(socket, :notification_count, 0)
+
+  defp assign_notification_count(%{assigns: %{current_user: user}} = socket),
+    do: assign(socket, :notification_count, Notifications.count_user_notifications(user.id))
 end

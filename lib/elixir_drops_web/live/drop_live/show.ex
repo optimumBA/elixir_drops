@@ -5,7 +5,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops
   alias ElixirDrops.Notifications
-  alias ElixirDrops.Notifications.NotificationsBroadcast
   alias ElixirDrops.StructuredData
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.CommentComponents
@@ -19,13 +18,14 @@ defmodule ElixirDropsWeb.DropLive.Show do
   def handle_params(%{"short_id" => short_id}, _url, socket) do
     user = socket.assigns.current_user
 
-    if connected?(socket) && user, do: NotificationsBroadcast.subscribe(user.id)
+    if connected?(socket) && user, do: Notifications.subscribe(user.id)
 
     drop = Drops.get_drop_by_short_id(short_id)
 
     {:noreply,
      socket
      |> assign(:show_user_drops?, false)
+     |> assign_notification_count()
      |> assign_drop(drop)}
   end
 
@@ -116,7 +116,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   def handle_info({:notification, actor, recipient, drop, attrs}, socket) do
     case Notifications.create_notification(actor, recipient, drop, attrs) do
       {:ok, notification} ->
-        NotificationsBroadcast.broadcast_notification_creation(notification)
+        Notifications.dispatch_notification(notification)
         {:noreply, socket}
 
       {:error, _changeset} ->
@@ -188,7 +188,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> assign(:drop, drop)
     |> assign(:page_title, title)
     |> assign_comments(drop)
-    |> assign_notifications()
     |> assign_seo_attributes()
   end
 
@@ -204,17 +203,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> stream(:comments, comments, reset: true)
   end
 
-  defp assign_notifications(%{assigns: %{current_user: nil}} = socket),
+  defp assign_notification_count(%{assigns: %{current_user: nil}} = socket),
     do: assign(socket, :notification_count, 0)
 
-  defp assign_notifications(%{assigns: %{current_user: user}} = socket) do
-    notifications = Notifications.list_user_notifications(user.id)
-    count = Notifications.count_user_notifications(user.id)
-
-    socket
-    |> assign(:notification_count, count)
-    |> stream(:notifications, notifications, reset: true)
-  end
+  defp assign_notification_count(%{assigns: %{current_user: user}} = socket),
+    do: assign(socket, :notification_count, Notifications.count_user_notifications(user.id))
 
   defp assign_seo_attributes(socket) do
     %{drop: drop} = socket.assigns

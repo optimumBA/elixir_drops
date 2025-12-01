@@ -37,6 +37,11 @@ defmodule ElixirDrops.Notifications do
     NotificationsBroadcast.subscribe(user_id)
   end
 
+  @spec dispatch_notification(notification()) :: :ok
+  def dispatch_notification(notification) do
+    NotificationsBroadcast.broadcast_notification_creation(notification)
+  end
+
   @spec list_user_notifications(user_id, keyword()) :: [notification()]
   def list_user_notifications(user_id, opts \\ []) do
     limit = Keyword.get(opts, :limit, 10)

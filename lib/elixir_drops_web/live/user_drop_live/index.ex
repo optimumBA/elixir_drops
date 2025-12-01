@@ -4,6 +4,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.DropsBroadcast
+  alias ElixirDrops.Notifications
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.SearchHelper
@@ -11,9 +12,12 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Drops.subscribe()
-
     user_id = socket.assigns.current_user.id
+
+    if connected?(socket) do
+      Drops.subscribe()
+      Notifications.subscribe(user_id)
+    end
 
     {:ok,
      socket
@@ -28,6 +32,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:loading_more, false)
      |> assign(:search_query, "")
      |> assign(:drops_empty?, true)
+     |> assign(:notification_count, Notifications.count_user_notifications(user_id))
      |> SearchHelper.initialize_profile_search_assigns(user_id)}
   end
 
@@ -277,6 +282,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     else
       {:noreply, socket}
     end
+  end
+
+  def handle_info({:new_notification, _notification}, socket) do
+    count = socket.assigns.notification_count
+    {:noreply, assign(socket, :notification_count, count + 1)}
   end
 
   def handle_info(_message, socket) do
