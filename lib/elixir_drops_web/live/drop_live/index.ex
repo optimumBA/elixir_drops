@@ -3,6 +3,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.DropsBroadcast
+  alias ElixirDrops.Notifications.NotificationsBroadcast
   alias ElixirDrops.Search
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
@@ -12,7 +13,11 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Drops.subscribe()
+    if connected?(socket) do
+      Drops.subscribe()
+      user = socket.assigns.current_user
+      if user, do: NotificationsBroadcast.subscribe(user.id)
+    end
 
     {:ok,
      socket

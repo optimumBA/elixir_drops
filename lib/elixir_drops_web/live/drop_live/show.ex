@@ -17,6 +17,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   @impl Phoenix.LiveView
   def handle_params(%{"short_id" => short_id}, _url, socket) do
+    user = socket.assigns.current_user
+
+    if connected?(socket) && user, do: NotificationsBroadcast.subscribe(user.id)
+
     drop = Drops.get_drop_by_short_id(short_id)
 
     {:noreply,
@@ -120,12 +124,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
+  def handle_info({:new_notification, _notification}, socket) do
+    count = socket.assigns.notification_count
+    {:noreply, assign(socket, :notification_count, count + 1)}
+  end
+
   defp dispatch_notifications(socket, parent_id, reply_recipient) do
     actor = socket.assigns.current_user
     drop = socket.assigns.drop
     recipient = socket.assigns.drop.user
 
-    send(self(), {:notification, actor, recipient, drop, %{type: :comment_on_post}})
+    if recipient != reply_recipient,
+      do: send(self(), {:notification, actor, recipient, drop, %{type: :comment_on_post}})
 
     if parent_id,
       do:
@@ -178,6 +188,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> assign(:drop, drop)
     |> assign(:page_title, title)
     |> assign_comments(drop)
+    |> assign_notifications()
     |> assign_seo_attributes()
   end
 
@@ -191,6 +202,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> assign(:comment_offset, 10)
     |> assign(:top_level_comment_count, top_level_comment_count)
     |> stream(:comments, comments, reset: true)
+  end
+
+  defp assign_notifications(%{assigns: %{current_user: nil}} = socket),
+    do: assign(socket, :notification_count, 0)
+
+  defp assign_notifications(%{assigns: %{current_user: user}} = socket) do
+    notifications = Notifications.list_user_notifications(user.id)
+    count = Notifications.count_user_notifications(user.id)
+
+    socket
+    |> assign(:notification_count, count)
+    |> stream(:notifications, notifications, reset: true)
   end
 
   defp assign_seo_attributes(socket) do

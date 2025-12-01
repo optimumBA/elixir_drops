@@ -13,6 +13,7 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :current_url, :string
   attr :current_user, User
   attr :live_action, :atom, required: true
+  attr :notification_count, :integer, default: 0
   attr :search_query, :string, default: ""
   attr :show_suggestions, :boolean, default: false
   attr :search_suggestions, :list, default: []
@@ -48,7 +49,10 @@ defmodule ElixirDropsWeb.DropComponents do
             </button>
             <!-- Create Drop Button - Always visible -->
             <.create_drop_button current_user={@current_user} live_action={@live_action} />
-            <.view_notifications_button current_user={@current_user} />
+            <.view_notifications_button
+              current_user={@current_user}
+              notification_count={@notification_count}
+            />
 
             <%= if @current_user do %>
               <div
@@ -748,7 +752,15 @@ defmodule ElixirDropsWeb.DropComponents do
           else: show_popup("signin-popup-message")
       }
     >
-      <img src={~p"/images/default_notification.svg"} class="w-5 h-5" alt="notification icon" />
+      <div class="relative">
+        <img src={~p"/images/default_notification.svg"} class="w-5 h-5" alt="notification icon" />
+        <section
+          :if={@notification_count > 0}
+          class="text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px] flex justify-center"
+        >
+          <p>{@notification_count}</p>
+        </section>
+      </div>
       <span></span>
     </.link>
     """

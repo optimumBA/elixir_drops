@@ -183,6 +183,15 @@ defmodule ElixirDrops.Notifications do
     |> Ecto.Changeset.put_assoc(:actor, actor)
     |> Ecto.Changeset.put_assoc(:recipient, recipient)
     |> Ecto.Changeset.put_assoc(:drop, drop)
+    |> validate_actor_not_recipient(actor, recipient)
+  end
+
+  defp validate_actor_not_recipient(changeset, actor, recipient) do
+    if actor.id == recipient.id do
+      Ecto.Changeset.add_error(changeset, :recipient, "cannot be the same as the actor")
+    else
+      changeset
+    end
   end
 
   defp preload_list do
