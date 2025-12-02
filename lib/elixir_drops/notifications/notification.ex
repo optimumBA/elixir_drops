@@ -5,7 +5,7 @@ defmodule ElixirDrops.Notifications.Notification do
   import Ecto.Changeset
 
   alias ElixirDrops.Accounts.User
-  alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Comments.Comment
 
   @type t :: %__MODULE__{}
 
@@ -16,7 +16,7 @@ defmodule ElixirDrops.Notifications.Notification do
     field :type, Ecto.Enum, values: [:comment_on_post, :reply_to_comment]
 
     belongs_to :actor, User
-    belongs_to :drop, Drop
+    belongs_to :comment, Comment
     belongs_to :recipient, User
 
     timestamps()

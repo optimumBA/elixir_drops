@@ -91,7 +91,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
               form: to_form(changeset)
             )
 
-        create_notifications(socket, parent_id, top_level_comment.user)
+        create_notifications(socket, parent_id, comment, top_level_comment.user)
 
         {:noreply,
          socket
@@ -113,8 +113,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_info({:notification, actor, recipient, drop, attrs}, socket) do
-    case Notifications.create_notification(actor, recipient, drop, attrs) do
+  def handle_info({:notification, actor, recipient, comment, attrs}, socket) do
+    case Notifications.create_notification(actor, recipient, comment, attrs) do
       {:ok, notification} ->
         Notifications.dispatch_notification(notification)
         {:noreply, socket}
@@ -129,19 +129,18 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply, assign(socket, :notification_count, count + 1)}
   end
 
-  defp create_notifications(socket, parent_id, reply_recipient) do
+  defp create_notifications(socket, parent_id, comment, reply_recipient) do
     actor = socket.assigns.current_user
-    drop = socket.assigns.drop
     recipient = socket.assigns.drop.user
 
     if recipient != reply_recipient,
-      do: send(self(), {:notification, actor, recipient, drop, %{type: :comment_on_post}})
+      do: send(self(), {:notification, actor, recipient, comment, %{type: :comment_on_post}})
 
     if parent_id,
       do:
         send(
           self(),
-          {:notification, actor, reply_recipient, drop, %{type: :reply_to_comment}}
+          {:notification, actor, reply_recipient, comment, %{type: :reply_to_comment}}
         )
 
     :ok

@@ -6,14 +6,14 @@ defmodule ElixirDrops.Notifications do
   import Ecto.Query, warn: false
 
   alias ElixirDrops.Accounts.User
-  alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Notifications.Notification
   alias ElixirDrops.Notifications.NotificationsBroadcast
   alias ElixirDrops.Repo
 
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
-  @type drop :: Drop.t()
+  @type comment :: Comment.t()
   @type notification :: Notification.t()
   @type notification_id :: Ecto.UUID.t()
   @type user :: User.t()
@@ -99,18 +99,18 @@ defmodule ElixirDrops.Notifications do
 
   ## Examples
 
-      iex> create_notification(%User{}, %User{}, %Drop{}, %{type: :comment_on_post})
+      iex> create_notification(%User{}, %User{}, %Comment{}, %{type: :comment_on_post})
       {:ok, %Notification{}}
 
-      iex> create_notification(%User{}, %User{}, %Drop{}, %{type: nil})
+      iex> create_notification(%User{}, %User{}, %Comment{}, %{type: nil})
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec create_notification(user(), user(), drop(), attrs()) ::
+  @spec create_notification(user(), user(), comment(), attrs()) ::
           {:ok, notification()} | {:error, changeset()}
-  def create_notification(%User{} = actor, %User{} = recipient, %Drop{} = drop, attrs) do
+  def create_notification(%User{} = actor, %User{} = recipient, %Comment{} = comment, attrs) do
     %Notification{}
-    |> create_notification_changeset(actor, recipient, drop, attrs)
+    |> create_notification_changeset(actor, recipient, comment, attrs)
     |> Repo.insert()
   end
 
@@ -183,12 +183,12 @@ defmodule ElixirDrops.Notifications do
     Notification.changeset(notification, attrs)
   end
 
-  defp create_notification_changeset(notification, actor, recipient, drop, attrs) do
+  defp create_notification_changeset(notification, actor, recipient, comment, attrs) do
     notification
     |> Notification.changeset(attrs)
     |> Ecto.Changeset.put_assoc(:actor, actor)
     |> Ecto.Changeset.put_assoc(:recipient, recipient)
-    |> Ecto.Changeset.put_assoc(:drop, drop)
+    |> Ecto.Changeset.put_assoc(:comment, comment)
     |> validate_actor_not_recipient(actor, recipient)
   end
 
@@ -201,6 +201,6 @@ defmodule ElixirDrops.Notifications do
   end
 
   defp preload_list do
-    [:actor, :recipient, :drop]
+    [:actor, :recipient, comment: [:drop]]
   end
 end
