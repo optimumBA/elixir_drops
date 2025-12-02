@@ -32,8 +32,8 @@ defmodule ElixirDropsWeb.NotificationLive.Index do
             class="text-[#5947F1] hover:underline hover:cursor-pointer"
             href={
               navigate_to_comment_page(
-                @notification_type,
-                @comment
+                @comment,
+                @comment.parent_id
               )
             }
           >
@@ -48,11 +48,11 @@ defmodule ElixirDropsWeb.NotificationLive.Index do
     """
   end
 
-  defp navigate_to_comment_page(:comment_on_post, comment),
+  defp navigate_to_comment_page(comment, nil),
     do: ~p"/d/#{comment.drop.short_id}/#comment-#{comment.id}"
 
-  defp navigate_to_comment_page(:reply_to_comment, comment),
-    do: ~p"/d/#{comment.drop.short_id}/?parent_id=#{comment.parent_id}&comment_id=#{comment.id}"
+  defp navigate_to_comment_page(comment, parent_id),
+    do: ~p"/d/#{comment.drop.short_id}/?parent_id=#{parent_id}&comment_id=#{comment.id}"
 
   defp add_body(:comment_on_post), do: "commented on your post"
   defp add_body(:reply_to_comment), do: "replied to your comment on"
