@@ -15,7 +15,19 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
   @impl Phoenix.LiveView
-  def handle_params(%{"short_id" => short_id}, _url, socket) do
+  def handle_params(%{"short_id" => short_id} = params, _url, socket) do
+    parent_id = params["parent_id"]
+
+    socket =
+      if parent_id do
+        push_event(socket, "show_replies", %{
+          parent_id: parent_id,
+          comment_id: params["comment_id"]
+        })
+      else
+        socket
+      end
+
     user = socket.assigns.current_user
 
     if connected?(socket) && user, do: Notifications.subscribe(user.id)

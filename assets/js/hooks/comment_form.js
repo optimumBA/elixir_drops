@@ -7,6 +7,18 @@ CommentFormHooks.CommentForm = {
       active.blur()
     })
 
+    this.handleEvent('show_replies', ({ parent_id, comment_id }) => {
+      const replyContainer = document.getElementById(
+        `comment-replies-${parent_id}`
+      )
+      replyContainer.classList.remove('hidden')
+      replyContainer.classList.add('block')
+
+      document
+        .getElementById(`comment-${comment_id}`)
+        .scrollIntoView({ behaviour: 'smooth' })
+    })
+
     this.handleEvent('edit_comment', ({ comment_id }) => {
       const editForm = document.getElementById(
         `edit-comment-form-${comment_id}`

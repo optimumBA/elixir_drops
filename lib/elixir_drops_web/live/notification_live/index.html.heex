@@ -29,8 +29,7 @@
       >
         <.notification_card
           actor={notification.actor}
-          drop_link={~p"/d/#{notification.comment.drop.short_id}/#comment-#{notification.comment.id}"}
-          drop_title={notification.comment.drop.title}
+          comment={notification.comment}
           id={notification.id}
           notification_type={notification.type}
           time_created={notification.inserted_at}

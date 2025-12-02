@@ -28,12 +28,17 @@ defmodule ElixirDropsWeb.NotificationLive.Index do
       <section class="flex flex-col gap-3 roboto-regular">
         <p class="text-sm leading-5 text-[#252525]">
           {@actor.name} {add_body(@notification_type)} -
-          <span
+          <a
             class="text-[#5947F1] hover:underline hover:cursor-pointer"
-            phx-click={JS.navigate(@drop_link)}
+            href={
+              navigate_to_comment_page(
+                @notification_type,
+                @comment
+              )
+            }
           >
-            {@drop_title}
-          </span>
+            {@comment.drop.title}
+          </a>
         </p>
         <p class="text-xs text-[#8E8E8E] leading-4">
           {Timex.format!(@time_created, "{relative}", :relative)}
@@ -42,6 +47,12 @@ defmodule ElixirDropsWeb.NotificationLive.Index do
     </div>
     """
   end
+
+  defp navigate_to_comment_page(:comment_on_post, comment),
+    do: ~p"/d/#{comment.drop.short_id}/#comment-#{comment.id}"
+
+  defp navigate_to_comment_page(:reply_to_comment, comment),
+    do: ~p"/d/#{comment.drop.short_id}/?parent_id=#{comment.parent_id}&comment_id=#{comment.id}"
 
   defp add_body(:comment_on_post), do: "commented on your post"
   defp add_body(:reply_to_comment), do: "replied to your comment on"
