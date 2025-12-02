@@ -8,6 +8,41 @@ defmodule ElixirDropsWeb.NotificationLive.Index do
     user_id = socket.assigns.current_user.id
     notifications = Notifications.list_user_notifications(user_id)
 
-    {:ok, stream(socket, :notifications, notifications, reset: true), layout: false}
+    {:ok,
+     socket
+     |> assign(:notifications_empty?, Enum.empty?(notifications))
+     |> stream(:notifications, notifications, reset: true), layout: false}
   end
+
+  defp notification_card(assigns) do
+    ~H"""
+    <div class="w-[94%] mx-auto flex gap-4">
+      <section class="shrink-0 pt-1 md:pt-0">
+        <img
+          src={@actor.avatar || "/images/default-avatar.svg"}
+          alt={@actor.name}
+          class="w-11 h-11 rounded-full"
+        />
+      </section>
+
+      <section class="flex flex-col gap-3 roboto-regular">
+        <p class="text-sm leading-5 text-[#252525]">
+          {@actor.name} {add_body(@notification_type)} -
+          <span
+            class="text-[#5947F1] hover:underline hover:cursor-pointer"
+            phx-click={JS.navigate(@drop_link)}
+          >
+            {@drop_title}
+          </span>
+        </p>
+        <p class="text-xs text-[#8E8E8E] leading-4">
+          {Timex.format!(@time_created, "{relative}", :relative)}
+        </p>
+      </section>
+    </div>
+    """
+  end
+
+  defp add_body(:comment_on_post), do: "commented on your post"
+  defp add_body(:reply_to_comment), do: "replied to your comment on"
 end

@@ -10,12 +10,32 @@
     </div>
   </section>
   <section>
-    <div></div>
-    <div class="flex items-center justify-center">
+    <div :if={@notifications_empty?} class="flex items-center justify-center">
       <section class="flex flex-col gap-2">
         <div><img src={~p"/images/notification.svg"} alt="showing the notifications" /></div>
         <div>No new notifications at the moment</div>
       </section>
+    </div>
+    <div
+      :if={!@notifications_empty?}
+      id="notifications"
+      phx-update="stream"
+      class="last:mb-10 border-b-[0.5px] border-[#CBCBCB]"
+    >
+      <div
+        :for={{dom_id, notification} <- @streams.notifications}
+        id={dom_id}
+        class="border-t-[0.5px] border-[#CBCBCB] py-4"
+      >
+        <.notification_card
+          actor={notification.actor}
+          drop_link={~p"/d/#{notification.drop.short_id}"}
+          drop_title={notification.drop.title}
+          id={notification.id}
+          notification_type={notification.type}
+          time_created={notification.inserted_at}
+        />
+      </div>
     </div>
   </section>
 </div>
