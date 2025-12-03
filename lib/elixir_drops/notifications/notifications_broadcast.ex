@@ -40,7 +40,7 @@ defmodule ElixirDrops.Notifications.NotificationsBroadcast do
     Phoenix.PubSub.broadcast(
       ElixirDrops.PubSub,
       "notifications-#{notification.recipient_id}",
-      :new_notification
+      {:new_notification, notification}
     )
   end
 end

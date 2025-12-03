@@ -967,7 +967,7 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   defp navigate_to_comment_page(comment, nil),
-    do: ~p"/d/#{comment.drop.short_id}/#comment-#{comment.id}"
+    do: ~p"/d/#{comment.drop.short_id}/?comment_id=#{comment.id}"
 
   defp navigate_to_comment_page(comment, parent_id),
     do: ~p"/d/#{comment.drop.short_id}/?comment_parent_id=#{parent_id}&comment_id=#{comment.id}"

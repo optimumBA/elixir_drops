@@ -17,12 +17,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   @impl Phoenix.LiveView
   def handle_params(%{"short_id" => short_id} = params, _url, socket) do
-    parent_id = params["comment_parent_id"]
+    comment_id = params["comment_id"]
+    parent_id = params["comment_parent_id"] || ""
 
     socket =
-      if parent_id do
-        push_event(socket, "show_replies", %{
-          comment_id: params["comment_id"],
+      if comment_id do
+        push_event(socket, "show_comment", %{
+          comment_id: comment_id,
           parent_id: parent_id
         })
       else
@@ -128,8 +129,15 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_info(:new_notification, %{assigns: %{notification_count: count}} = socket),
-    do: {:noreply, assign(socket, :notification_count, count + 1)}
+  def handle_info(
+        {:new_notification, notification},
+        %{assigns: %{notification_count: count}} = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:notification_count, count + 1)
+     |> stream_insert(:notifications, notification, at: 0)}
+  end
 
   defp create_notifications(actor, drop_author, reply?, comment, comment_author) do
     if drop_author != comment_author,
