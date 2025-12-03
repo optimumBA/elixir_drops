@@ -136,10 +136,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_info(:new_notification, socket) do
-    count = socket.assigns.notification_count
-    {:noreply, assign(socket, :notification_count, count + 1)}
-  end
+  def handle_info(:new_notification, %{assigns: %{notification_count: count}} = socket),
+    do: {:noreply, assign(socket, :notification_count, count + 1)}
 
   defp create_notifications(socket, parent_id, comment, reply_recipient) do
     actor = socket.assigns.current_user
