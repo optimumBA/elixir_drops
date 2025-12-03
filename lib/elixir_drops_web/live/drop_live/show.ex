@@ -9,6 +9,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.CommentComponents
   alias ElixirDropsWeb.DropComponents
+  alias ElixirDropsWeb.NotificationHelpers
 
   @consecutive_whitespace_regex ~r/\s+/
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
@@ -38,7 +39,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)
-     |> assign_notification_count()}
+     |> NotificationHelpers.assign_notifications()}
   end
 
   @impl Phoenix.LiveView
@@ -204,12 +205,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> assign(:top_level_comment_count, top_level_comment_count)
     |> stream(:comments, comments, reset: true)
   end
-
-  defp assign_notification_count(%{assigns: %{current_user: nil}} = socket),
-    do: assign(socket, :notification_count, 0)
-
-  defp assign_notification_count(%{assigns: %{current_user: user}} = socket),
-    do: assign(socket, :notification_count, Notifications.count_user_notifications(user.id))
 
   defp assign_seo_attributes(socket) do
     %{drop: drop} = socket.assigns

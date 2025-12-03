@@ -9,6 +9,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
@@ -35,7 +36,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:search_query, "")
      |> assign(:searching, false)
      |> assign(:drops_empty?, true)
-     |> assign_notification_count()}
+     |> NotificationHelpers.assign_notifications()}
   end
 
   @impl Phoenix.LiveView
@@ -245,10 +246,4 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   def handle_info(:new_notification, %{assigns: %{notification_count: count}} = socket),
     do: {:noreply, assign(socket, :notification_count, count + 1)}
-
-  defp assign_notification_count(%{assigns: %{current_user: nil}} = socket),
-    do: assign(socket, :notification_count, 0)
-
-  defp assign_notification_count(%{assigns: %{current_user: user}} = socket),
-    do: assign(socket, :notification_count, Notifications.count_user_notifications(user.id))
 end

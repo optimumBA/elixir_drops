@@ -47,7 +47,6 @@ defmodule ElixirDropsWeb.Router do
           & &1
         ) do
       live "/profile", UserDropLive.Index, :index
-      live "/notifications", NotificationLive.Index, :index
 
       live "/drops/:short_id/edit", UserDropLive.Index, :edit
       live "/drops/new", UserDropLive.Index, :new

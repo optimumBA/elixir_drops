@@ -7,6 +7,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDrops.Notifications
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
@@ -33,6 +34,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:search_query, "")
      |> assign(:drops_empty?, true)
      |> assign(:notification_count, Notifications.count_user_notifications(user_id))
+     |> NotificationHelpers.assign_notifications()
      |> SearchHelper.initialize_profile_search_assigns(user_id)}
   end
 
