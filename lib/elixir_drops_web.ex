@@ -38,9 +38,7 @@ defmodule ElixirDropsWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: ElixirDropsWeb.Layouts]
+      use Phoenix.Controller, formats: [:html, :json]
 
       import ElixirDropsWeb.Gettext
       import Plug.Conn
@@ -51,8 +49,7 @@ defmodule ElixirDropsWeb do
 
   def live_view do
     quote do
-      use Phoenix.LiveView,
-        layout: {ElixirDropsWeb.Layouts, :app}
+      use Phoenix.LiveView
 
       unquote(html_helpers())
     end
@@ -89,7 +86,8 @@ defmodule ElixirDropsWeb do
       import ElixirDropsWeb.Gettext
       import ElixirDropsWeb.SeoMetaTagsComponent
 
-      # Shortcut for generating JS commands
+      # Common modules used in templates
+      alias ElixirDropsWeb.Layouts
       alias Phoenix.LiveView.JS
 
       # Routes generation with the ~p sigil

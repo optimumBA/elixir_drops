@@ -15,8 +15,6 @@ defmodule ElixirDrops.Application do
         always: {Phoenix.PubSub, name: ElixirDrops.PubSub},
         parent:
           {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
-        # Start the Finch HTTP client for sending emails
-        parent: {Finch, name: ElixirDrops.Finch},
         # Start a worker by calling: ElixirDrops.Worker.start_link(arg)
         # {ElixirDrops.Worker, arg},
         # Start to serve requests, typically the last entry

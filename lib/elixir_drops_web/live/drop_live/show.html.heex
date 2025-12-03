@@ -1,41 +1,47 @@
-<section class="drops-container relative h-full w-full">
-  <DropComponents.navbar
-    current_url={~p"/d/#{@drop.short_id}"}
-    current_user={@current_user}
-    live_action={@live_action}
-    show_user_drops?={@show_user_drops?}
+<Layouts.app flash={@flash}>
+  <section class="drops-container relative h-full w-full">
+    <DropComponents.navbar
+      current_url={~p"/d/#{@drop.short_id}"}
+      current_user={@current_user}
+      live_action={@live_action}
+      show_user_drops?={@show_user_drops?}
+      search_query={@navbar_search_query}
+      show_suggestions={@show_suggestions}
+      search_suggestions={@search_suggestions}
+    />
+
+    <section class="pt-10 py-4">
+      <DropComponents.drop
+        comment_count={@comment_count}
+        current_user={@current_user}
+        drop={@drop}
+      />
+    </section>
+
+    <section :if={@drop} class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <CommentComponents.comment_section
+        comment_count={@comment_count}
+        comment_offset={@comment_offset}
+        comments={@streams.comments}
+        current_url={~p"/d/#{@drop.short_id}"}
+        current_user={@current_user}
+        top_level_comment_count={@top_level_comment_count}
+      />
+    </section>
+
+    <DropComponents.copied_link_popup_message />
+  </section>
+
+  <DropComponents.signin_popup_message />
+  <!-- Mobile Search Overlay -->
+  <DropComponents.search_overlay_mobile
     search_query={@navbar_search_query}
     show_suggestions={@show_suggestions}
     search_suggestions={@search_suggestions}
+    current_user={@current_user}
   />
 
-  <section class="pt-10 py-4">
-    <DropComponents.drop comment_count={@comment_count} current_user={@current_user} drop={@drop} />
-  </section>
-
-  <section :if={@drop} class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-    <CommentComponents.comment_section
-      comment_count={@comment_count}
-      comment_offset={@comment_offset}
-      comments={@streams.comments}
-      current_url={~p"/d/#{@drop.short_id}"}
-      current_user={@current_user}
-      top_level_comment_count={@top_level_comment_count}
-    />
-  </section>
-
-  <DropComponents.copied_link_popup_message />
-</section>
-
-<DropComponents.signin_popup_message />
-<!-- Mobile Search Overlay -->
-<DropComponents.search_overlay_mobile
-  search_query={@navbar_search_query}
-  show_suggestions={@show_suggestions}
-  search_suggestions={@search_suggestions}
-  current_user={@current_user}
-/>
-
-<script type="application/ld+json">
-  <%= raw(StructuredData.generate_drop_json_ld(@drop)) %>
-</script>
+  <script type="application/ld+json">
+    <%= raw(StructuredData.generate_drop_json_ld(@drop)) %>
+  </script>
+</Layouts.app>
