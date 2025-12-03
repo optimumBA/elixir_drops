@@ -1,19 +1,30 @@
 <div class="flex flex-col mx-auto py-4 gap-6">
-  <section class="flex justify-between w-[90%] mx-auto border border-red-400">
+  <section class="flex justify-between w-[90%] mx-auto">
     <div class="flex gap-4 items-center">
-      <p><img src={~p"/images/back_btn.svg"} alt="Back button" /></p>
+      <a href={~p"/"}>
+        <img src={~p"/images/back_btn.svg"} alt="Back button" />
+      </a>
+
       <p class="roboto-medium">Notifications</p>
     </div>
-    <div class="flex gap-2 items-center">
+    <div :if={!@notifications_empty?} class="flex gap-2 items-center">
       <p class="roboto-regular text-xs text-[#4F4F4F]">Mark all as read</p>
       <p><img src={~p"/images/mark.svg"} alt="Mark as read" /></p>
     </div>
   </section>
   <section>
-    <div :if={@notifications_empty?} class="flex items-center justify-center">
-      <section class="flex flex-col gap-2">
-        <div><img src={~p"/images/notification.svg"} alt="showing the notifications" /></div>
-        <div>No new notifications at the moment</div>
+    <div :if={@notifications_empty?} class="flex items-center justify-center h-[90vh]">
+      <section class="flex flex-col w-[70%]">
+        <div>
+          <img
+            src={~p"/images/notification.svg"}
+            class="w-full h-full object-cover"
+            alt="showing the notifications"
+          />
+        </div>
+        <div class="roboto-regular text-center text-[#8E8E8E] leading-7">
+          No new notifications at the moment
+        </div>
       </section>
     </div>
     <div

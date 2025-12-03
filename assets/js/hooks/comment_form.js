@@ -16,7 +16,7 @@ CommentFormHooks.CommentForm = {
 
       document
         .getElementById(`comment-${comment_id}`)
-        .scrollIntoView({ behaviour: 'instant', block: 'end' })
+        .scrollIntoView({ behaviour: 'instant', block: 'center' })
     })
 
     this.handleEvent('edit_comment', ({ comment_id }) => {
