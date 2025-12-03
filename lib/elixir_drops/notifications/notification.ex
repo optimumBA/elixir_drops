@@ -2,6 +2,7 @@ defmodule ElixirDrops.Notifications.Notification do
   @moduledoc false
 
   use Ecto.Schema
+
   import Ecto.Changeset
 
   alias ElixirDrops.Accounts.User

@@ -16,7 +16,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   @impl Phoenix.LiveView
   def handle_params(%{"short_id" => short_id} = params, _url, socket) do
-    parent_id = params["parent_id"]
+    parent_id = params["comment_parent_id"]
 
     socket =
       if parent_id do
@@ -136,7 +136,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_info({:new_notification, _notification}, socket) do
+  def handle_info(:new_notification, socket) do
     count = socket.assigns.notification_count
     {:noreply, assign(socket, :notification_count, count + 1)}
   end

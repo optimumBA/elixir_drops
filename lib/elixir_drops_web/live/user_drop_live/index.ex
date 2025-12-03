@@ -284,7 +284,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     end
   end
 
-  def handle_info({:new_notification, _notification}, socket) do
+  def handle_info(:new_notification, socket) do
     count = socket.assigns.notification_count
     {:noreply, assign(socket, :notification_count, count + 1)}
   end

@@ -25,21 +25,13 @@ defmodule ElixirDrops.Notifications.NotificationsBroadcast do
   @doc """
   Broadcasts a message indicating that a new comment has been created.
 
-  The message is broadcast on the `@topic` using Phoenix PubSub. Other processes that subscribe to this topic will receive the broadcast message.
-
   ## Parameters
 
-    - `notification`: The notification data to be broadcast, typically a map or struct representing the newly created notification.
+    - `notification`: The notification data to be broadcast.
 
   ## Examples
 
-      iex> broadcast_notification_creation(%{
-      ...>   id: 1,
-      ...>   title: "New Drop",
-      ...>   body: "This is a new drop.",
-      ...>   user_id: 1,
-      ...>   short_id: "abc123"
-      ...> })
+      iex> broadcast_notification_creation(notification)
       :ok
 
   """
@@ -48,10 +40,7 @@ defmodule ElixirDrops.Notifications.NotificationsBroadcast do
     Phoenix.PubSub.broadcast(
       ElixirDrops.PubSub,
       "notifications-#{notification.recipient_id}",
-      {
-        :new_notification,
-        notification
-      }
+      :new_notification
     )
   end
 end

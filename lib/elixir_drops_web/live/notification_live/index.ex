@@ -52,7 +52,7 @@ defmodule ElixirDropsWeb.NotificationLive.Index do
     do: ~p"/d/#{comment.drop.short_id}/#comment-#{comment.id}"
 
   defp navigate_to_comment_page(comment, parent_id),
-    do: ~p"/d/#{comment.drop.short_id}/?parent_id=#{parent_id}&comment_id=#{comment.id}"
+    do: ~p"/d/#{comment.drop.short_id}/?comment_parent_id=#{parent_id}&comment_id=#{comment.id}"
 
   defp add_body(:comment_on_post), do: "commented on your post"
   defp add_body(:reply_to_comment), do: "replied to your comment on"
