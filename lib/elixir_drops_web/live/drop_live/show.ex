@@ -21,8 +21,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
     socket =
       if parent_id do
         push_event(socket, "show_replies", %{
-          parent_id: parent_id,
-          comment_id: params["comment_id"]
+          comment_id: params["comment_id"],
+          parent_id: parent_id
         })
       else
         socket
@@ -37,8 +37,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply,
      socket
      |> assign(:show_user_drops?, false)
-     |> assign_notification_count()
-     |> assign_drop(drop)}
+     |> assign_drop(drop)
+     |> assign_notification_count()}
   end
 
   @impl Phoenix.LiveView
@@ -103,7 +103,9 @@ defmodule ElixirDropsWeb.DropLive.Show do
               form: to_form(changeset)
             )
 
-        create_notifications(socket, parent_id, comment, top_level_comment.user)
+        %{assigns: %{current_user: user, drop: %{user: drop_author}}} = socket
+        reply? = if parent_id, do: true, else: false
+        create_notifications(user, drop_author, reply?, comment, top_level_comment.user)
 
         {:noreply,
          socket
@@ -125,35 +127,26 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_info({:notification, actor, recipient, comment, attrs}, socket) do
-    case Notifications.create_notification(actor, recipient, comment, attrs) do
-      {:ok, notification} ->
-        Notifications.dispatch_notification(notification)
-        {:noreply, socket}
-
-      {:error, _changeset} ->
-        {:noreply, socket}
-    end
-  end
-
   def handle_info(:new_notification, %{assigns: %{notification_count: count}} = socket),
     do: {:noreply, assign(socket, :notification_count, count + 1)}
 
-  defp create_notifications(socket, parent_id, comment, reply_recipient) do
-    actor = socket.assigns.current_user
-    recipient = socket.assigns.drop.user
+  defp create_notifications(actor, drop_author, reply?, comment, comment_author) do
+    if drop_author != comment_author,
+      do: create_notification(actor, drop_author, comment, %{type: :comment_on_post})
 
-    if recipient != reply_recipient,
-      do: send(self(), {:notification, actor, recipient, comment, %{type: :comment_on_post}})
+    if reply?,
+      do: create_notification(actor, comment_author, comment, %{type: :reply_to_comment}),
+      else: :ok
+  end
 
-    if parent_id,
-      do:
-        send(
-          self(),
-          {:notification, actor, reply_recipient, comment, %{type: :reply_to_comment}}
-        )
+  defp create_notification(actor, recipient, comment, attrs) do
+    case Notifications.create_notification(actor, recipient, comment, attrs) do
+      {:ok, notification} ->
+        Notifications.dispatch_notification(notification)
 
-    :ok
+      {:error, _changeset} ->
+        :ok
+    end
   end
 
   defp get_top_level_comment(%{parent_id: nil} = comment), do: Comments.get_comment!(comment.id)

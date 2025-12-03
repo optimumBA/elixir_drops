@@ -7,7 +7,7 @@ CommentFormHooks.CommentForm = {
       active.blur()
     })
 
-    this.handleEvent('show_replies', ({ parent_id, comment_id }) => {
+    this.handleEvent('show_replies', ({ comment_id, parent_id }) => {
       const replyContainer = document.getElementById(
         `comment-replies-${parent_id}`
       )
