@@ -8,6 +8,7 @@ defmodule ElixirDrops.Bookmarks do
   alias ElixirDrops.Bookmarks.Bookmark
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
+  alias ElixirDrops.TextSearchHelpers
 
   @type attrs :: map()
   @type bookmark :: Bookmark.t()
@@ -51,10 +52,25 @@ defmodule ElixirDrops.Bookmarks do
 
   @spec get_bookmarks(filters(), integer()) :: [bookmark()]
   def get_bookmarks(filters, limit \\ 10) do
-    case safe_list_bookmarks(filters, limit) do
-      {:ok, results} -> results
-      {:error, _reason} -> []
-    end
+    search_filters =
+      case Map.get(filters, :search) do
+        nil ->
+          %{}
+
+        search_query ->
+          %{search: search_query}
+      end
+
+    other_filters = Map.delete(filters, :search)
+    filter_query = apply_filters()
+
+    bookmark_query()
+    |> where(^filter_query.(search_filters))
+    |> where(^filter_query.(other_filters))
+    |> limit(^limit)
+    |> preload(drop: [:user])
+    |> apply_search_ordering(filters[:search])
+    |> Repo.all()
   end
 
   @spec delete_bookmark(bookmark()) ::
@@ -68,39 +84,6 @@ defmodule ElixirDrops.Bookmarks do
     Enum.map(bookmarks, &Map.put(&1.drop, :bookmarked?, true))
   end
 
-  defp safe_list_bookmarks(filters, limit) do
-    search_filters =
-      case Map.get(filters, :search) do
-        nil ->
-          %{}
-
-        search_query ->
-          %{search: search_query}
-      end
-
-    other_filters = Map.delete(filters, :search)
-    filter_query = apply_filters()
-
-    result =
-      bookmark_query()
-      |> where(^filter_query.(search_filters))
-      |> where(^filter_query.(other_filters))
-      |> limit(^limit)
-      |> preload(drop: [:user])
-      |> apply_search_ordering(filters[:search])
-      |> Repo.all()
-
-    {:ok, result}
-  rescue
-    DBConnection.OwnershipError ->
-      # Database sandbox not ready yet - return error
-      {:error, :db_ownership_error}
-
-    DBConnection.ConnectionError ->
-      # Database connection issues - return error
-      {:error, :db_connection_error}
-  end
-
   defp bookmark_query do
     from bookmark in Bookmark,
       as: :bookmark,
@@ -108,31 +91,8 @@ defmodule ElixirDrops.Bookmarks do
       as: :drop
   end
 
-  defp apply_search_ordering(query, search_query)
-       when is_binary(search_query) and search_query != "" do
-    query
-    |> select_merge([drop: drop], %{
-      relevance_rank:
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        )
-    })
-    |> order_by(
-      [drop: drop],
-      desc:
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        )
-    )
-  end
-
-  defp apply_search_ordering(query, _no_search) do
-    order_by(query, [b], {:desc, b.inserted_at})
-  end
+  defp apply_search_ordering(query, search_query),
+    do: TextSearchHelpers.apply_search_ordering(query, search_query)
 
   defp apply_filters do
     fn filters ->
@@ -148,28 +108,9 @@ defmodule ElixirDrops.Bookmarks do
     dynamic([bookmark: bookmark], ^dynamic and bookmark.user_id == ^user_id)
   end
 
-  defp apply_filter({:search, query}, dynamic) when is_binary(query) and query != "" do
-    # Use PostgreSQL websearch_to_tsquery for better search experience
-    # websearch_to_tsquery handles phrases, AND/OR operators naturally
-    dynamic(
-      [drop: drop],
-      ^dynamic and
-        fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^query)
-    )
-  end
+  defp apply_filter({:search, query}, dynamic),
+    do: TextSearchHelpers.apply_filter({:search, query}, dynamic)
 
-  defp apply_filter({:search, _}, dynamic), do: dynamic
-
-  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
-       when is_binary(search_query) and search_query != "" do
-    dynamic(
-      [drop: drop],
-      ^dynamic and
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        ) < ^rank
-    )
-  end
+  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic),
+    do: TextSearchHelpers.apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
 end

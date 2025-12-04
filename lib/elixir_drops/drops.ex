@@ -13,6 +13,7 @@ defmodule ElixirDrops.Drops do
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.MarkdownCache
   alias ElixirDrops.Repo
+  alias ElixirDrops.TextSearchHelpers
 
   require Logger
 
@@ -126,31 +127,8 @@ defmodule ElixirDrops.Drops do
     from drop in Drop, as: :drop
   end
 
-  defp apply_search_ordering(query, search_query)
-       when is_binary(search_query) and search_query != "" do
-    query
-    |> select_merge([drop: drop], %{
-      relevance_rank:
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        )
-    })
-    |> order_by(
-      [drop: drop],
-      desc:
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        )
-    )
-  end
-
-  defp apply_search_ordering(query, _no_search) do
-    order_by(query, [d], {:desc, d.inserted_at})
-  end
+  defp apply_search_ordering(query, search_query),
+    do: TextSearchHelpers.apply_search_ordering(query, search_query)
 
   defp add_bookmark_field(query, nil), do: query
 
@@ -195,29 +173,11 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
 
-  defp apply_filter({:search, query}, dynamic) when is_binary(query) and query != "" do
-    # Use PostgreSQL websearch_to_tsquery for better search experience
-    # websearch_to_tsquery handles phrases, AND/OR operators naturally
-    dynamic(
-      [drop: drop],
-      ^dynamic and fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^query)
-    )
-  end
+  defp apply_filter({:search, query}, dynamic),
+    do: TextSearchHelpers.apply_filter({:search, query}, dynamic)
 
-  defp apply_filter({:search, _}, dynamic), do: dynamic
-
-  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
-       when is_binary(search_query) and search_query != "" do
-    dynamic(
-      [drop: drop],
-      ^dynamic and
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        ) < ^rank
-    )
-  end
+  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic),
+    do: TextSearchHelpers.apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
 
   defp apply_filter(_other, dynamic), do: dynamic
 
