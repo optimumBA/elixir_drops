@@ -21,7 +21,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   def comment_section(assigns) do
     ~H"""
     <div>
-      <div class="comments-section mt-8 border-y py-8">
+      <div class="mt-8 border-y border-gray-200 py-8">
         <h3 class="text-lg font-semibold mb-6 text-gray-700">
           Comments ({@comment_count})
         </h3>

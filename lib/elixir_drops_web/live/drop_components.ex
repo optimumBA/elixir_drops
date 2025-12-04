@@ -833,7 +833,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       id="notifications-container"
-      class="w-full h-screen bg-[#FFFFFF] flex flex-col py-4 gap-6 absolute top-0 right-0 sm:top-16 z-[100] notification-shadow overflow-y-auto hidden sm:w-[26rem] sm:h-[55vh] sm:right-[20%] sm:border-[0.5px] sm:border-[#CBCBCB] sm:rounded-xl"
+      class="w-full h-screen bg-[#FFFFFF] flex flex-col py-4 absolute top-0 right-0 sm:top-16 z-[100] notification-shadow overflow-y-auto hidden sm:w-[26rem] sm:h-[55vh] sm:right-[20%] sm:border-[0.5px] sm:border-[#CBCBCB] sm:rounded-xl"
     >
       <section class="w-[90%] mx-auto flex justify-between">
         <div class="flex items-center gap-4">
@@ -846,13 +846,14 @@ defmodule ElixirDropsWeb.DropComponents do
             <img src={~p"/images/back_btn.svg"} alt="Back button" />
           </div>
 
-          <p class="roboto-medium">Notifications</p>
+          <p class="roboto-medium text-[#252525] leading-7 tracking-[0.5%]">Notifications</p>
         </div>
         <div :if={!@notifications_empty?} class="flex items-center gap-2">
           <p class="roboto-regular text-xs text-[#4F4F4F]">Mark all as read</p>
           <p><img src={~p"/images/mark.svg"} alt="Mark as read" /></p>
         </div>
       </section>
+      <section class="border-b-[0.5px] border-[#CBCBCB] mt-4"></section>
       <section>
         <div :if={@notifications_empty?} class="flex items-center justify-center h-[80vh] sm:h-[40vh]">
           <section class="flex flex-col w-[70%]">
@@ -872,12 +873,12 @@ defmodule ElixirDropsWeb.DropComponents do
           :if={!@notifications_empty?}
           id="notifications"
           phx-update="stream"
-          class="last:mb-10 border-b-[0.5px] border-[#CBCBCB]"
+          class="last:mb-10 border-[#CBCBCB]"
         >
           <div
             :for={{dom_id, notification} <- @notifications}
             id={dom_id}
-            class="border-t-[0.5px] border-[#CBCBCB] py-4"
+            class="w-[94%] mx-auto border-b-[0.5px] border-[#CBCBCB] py-4"
           >
             <.notification_card
               actor={notification.actor}
@@ -895,7 +896,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   defp notification_card(assigns) do
     ~H"""
-    <div class="w-[94%] mx-auto flex gap-4">
+    <div class="flex gap-4">
       <section class="shrink-0 pt-1 md:pt-0">
         <img
           src={@actor.avatar || "/images/default-avatar.svg"}
