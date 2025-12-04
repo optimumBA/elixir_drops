@@ -26,11 +26,7 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
         if bookmark_tab? do
           {:noreply, push_event(socket, "remove_element", %{drop_id: drop_id})}
         else
-          {:noreply,
-           push_event(socket, "show_add_bookmark_btn", %{
-             add_bookmark_container_id: "add-bookmark-#{drop_id}-#{user_id}",
-             remove_bookmark_container_id: "remove-bookmark-#{drop_id}-#{user_id}"
-           })}
+          {:noreply, socket}
         end
 
       {:error, _changeset} ->
@@ -40,19 +36,11 @@ defmodule ElixirDropsWeb.BookmarkHelpers do
 
   def handle_bookmark_event(
         "bookmark_drop",
-        %{"drop_id" => drop_id, "user_id" => user_id} = params,
+        params,
         socket
       ) do
-    case Bookmarks.create_bookmark(params) do
-      {:ok, _bookmark} ->
-        {:noreply,
-         push_event(socket, "show_remove_bookmark_btn", %{
-           add_bookmark_container_id: "add-bookmark-#{drop_id}-#{user_id}",
-           remove_bookmark_container_id: "remove-bookmark-#{drop_id}-#{user_id}"
-         })}
+    Bookmarks.create_bookmark(params)
 
-      {:error, _changeset} ->
-        {:noreply, socket}
-    end
+    {:noreply, socket}
   end
 end

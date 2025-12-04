@@ -11,38 +11,23 @@ BookmarkHooks.Bookmark = {
       const eventName = bookmarkButton.dataset.eventName
       const userId = bookmarkButton.dataset.userId
 
-      this.pushEvent(eventName, { drop_id: dropId, user_id: userId })
-    })
+      const addBookmarkContainer = document.getElementById(
+        `add-bookmark-${dropId}-${userId}`
+      )
+      const removeBookmarkContainer = document.getElementById(
+        `remove-bookmark-${dropId}-${userId}`
+      )
 
-    this.handleEvent(
-      'show_add_bookmark_btn',
-      ({ add_bookmark_container_id, remove_bookmark_container_id }) => {
-        const addBookmarkContainer = document.getElementById(
-          add_bookmark_container_id
-        )
-        const removeBookmarkContainer = document.getElementById(
-          remove_bookmark_container_id
-        )
-
+      if (eventName == 'bookmark_drop') {
+        addBookmarkContainer.classList.add('hidden')
+        removeBookmarkContainer.classList.remove('hidden')
+      } else {
         addBookmarkContainer.classList.remove('hidden')
         removeBookmarkContainer.classList.add('hidden')
       }
-    )
 
-    this.handleEvent(
-      'show_remove_bookmark_btn',
-      ({ add_bookmark_container_id, remove_bookmark_container_id }) => {
-        const addBookmarkContainer = document.getElementById(
-          add_bookmark_container_id
-        )
-        const removeBookmarkContainer = document.getElementById(
-          remove_bookmark_container_id
-        )
-
-        removeBookmarkContainer.classList.remove('hidden')
-        addBookmarkContainer.classList.add('hidden')
-      }
-    )
+      this.pushEvent(eventName, { drop_id: dropId, user_id: userId })
+    })
   },
 }
 
