@@ -740,7 +740,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   defp view_notifications_button(assigns) do
     ~H"""
-    <section :if={@current_user}>
+    <section :if={@current_user} class="hover:cursor-pointer">
       <div
         phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#rest-of-the-page")}
         class="flex shrink-0 sm:hidden"
@@ -833,24 +833,26 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       id="notifications-container"
-      class="w-full h-screen bg-[#FFFFFF] flex flex-col py-4 absolute top-0 right-0 sm:top-16 z-[100] notification-shadow overflow-y-auto hidden sm:w-[26rem] sm:h-[55vh] sm:right-[20%] sm:border-[0.5px] sm:border-[#CBCBCB] sm:rounded-xl"
+      class="w-full pb-40 h-screen bg-[#FFFFFF] flex flex-col py-4 absolute top-0 right-0 sm:top-16 z-[100] notification-shadow overflow-y-auto hidden sm:w-[26rem] sm:h-[55vh] sm:right-[20%] sm:border-[0.5px] sm:border-[#CBCBCB] sm:rounded-xl"
     >
       <section class="w-[90%] mx-auto flex justify-between">
-        <div class="flex items-center gap-4">
+        <div class="flex justify-between gap-2 items-stretch">
           <div
             phx-click={
               JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#rest-of-the-page")
             }
-            class="sm:hidden"
+            class="w-[25%] shrink-0 flex items-center hover:cursor-pointer sm:hidden"
           >
             <img src={~p"/images/back_btn.svg"} alt="Back button" />
           </div>
 
-          <p class="roboto-medium text-[#252525] leading-7 tracking-[0.5%]">Notifications</p>
+          <div class="roboto-medium text-[#252525] leading-7 tracking-[0.5%]">
+            Notifications
+          </div>
         </div>
-        <div :if={!@notifications_empty?} class="flex items-center gap-2">
-          <p class="roboto-regular text-xs text-[#4F4F4F]">Mark all as read</p>
-          <p><img src={~p"/images/mark.svg"} alt="Mark as read" /></p>
+        <div :if={!@notifications_empty?} class="flex items-center gap-2 hover:cursor-pointer">
+          <p class="roboto-regular text-sm text-[#4F4F4F] leading-4">Mark all as read</p>
+          <p><img src={~p"/images/mark.svg"} alt="Mark as read" class="w-4 h-4" /></p>
         </div>
       </section>
       <section class="border-b-[0.5px] border-[#CBCBCB] mt-4"></section>
