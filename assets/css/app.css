@@ -1,11 +1,41 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-
-/* This file is for your main application CSS */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
+@import 'tailwindcss';
 @import './components/masonry.css';
+
+/* Content sources for Tailwind v4 */
+@source "../css";
+@source "../js";
+@source "../../lib/elixir_drops_web";
+
+/* A Tailwind plugin that makes "hero-#{ICON}" classes available.
+   The heroicons installation itself is managed by your mix.exs */
+@plugin "../vendor/heroicons";
+
+/* This file is for your main application CSS */
+
+/* Custom theme configuration */
+@theme {
+  /* Custom fonts */
+  --font-jetBrains: 'JetBrains Mono', monospace;
+  --font-roboto: 'Roboto', sans-serif;
+
+  /* Custom colors */
+  --color-blue_primary: #2f19ee;
+  --color-purple_primary: #efe8f9;
+  --color-purple_seconday: #eae8fd;
+}
+
+/* Add variants based on LiveView classes */
+@custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
+@custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
+
+/* Make LiveView wrapper divs transparent for layout */
+[data-phx-session],
+[data-phx-teleported-src] {
+  display: contents;
+}
 
 /* Reusable classes for composition */
 .content-grid {
@@ -438,6 +468,10 @@ blockquote *:last-child {
   display: block;
   word-wrap: break-word;
   line-height: 1.6;
+}
+
+.remove-outline:focus {
+  outline-style: none;
 }
 
 .notification-shadow {

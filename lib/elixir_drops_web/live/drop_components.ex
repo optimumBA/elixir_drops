@@ -1191,7 +1191,7 @@ defmodule ElixirDropsWeb.DropComponents do
           phx-change="load_navbar_suggestions"
           class={[
             "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
-            "border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
+            "remove-outline border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
             "placeholder-gray-500 text-sm"
           ]}
         />

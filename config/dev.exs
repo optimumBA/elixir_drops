@@ -55,10 +55,11 @@ config :elixir_drops, ElixirDropsWeb.Endpoint,
 # Watch static and templates for browser reloading.
 config :elixir_drops, ElixirDropsWeb.Endpoint,
   live_reload: [
+    web_console_logger: true,
     patterns: [
       ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/elixir_drops_web/(controllers|live|components)/.*(ex|heex)$"
+      ~r"lib/elixir_drops_web/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
     ]
   ]
 
@@ -69,7 +70,7 @@ config :elixir_drops, dev_routes: true
 config :elixir_drops, dev_auth_bypass: true
 
 # Do not include metadata nor timestamps in development logs
-config :logger, :console, format: "[$level] $message\n"
+config :logger, :default_formatter, format: "[$level] $message\n"
 
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
@@ -81,6 +82,7 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view,
   # Include HEEx debug annotations as HTML comments in rendered markup
   debug_heex_annotations: true,
+  debug_attributes: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
 
