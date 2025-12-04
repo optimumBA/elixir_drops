@@ -108,7 +108,7 @@ defmodule ElixirDrops.Drops do
 
     result =
       query
-      |> apply_search_ordering(filters[:search])
+      |> TextSearchHelpers.apply_search_ordering(filters[:search])
       |> add_bookmark_field(filters[:bookmarks_user_id])
       |> Repo.all()
 
@@ -126,9 +126,6 @@ defmodule ElixirDrops.Drops do
   defp drop_query do
     from drop in Drop, as: :drop
   end
-
-  defp apply_search_ordering(query, search_query),
-    do: TextSearchHelpers.apply_search_ordering(query, search_query)
 
   defp add_bookmark_field(query, nil), do: query
 

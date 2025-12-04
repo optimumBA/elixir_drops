@@ -69,7 +69,7 @@ defmodule ElixirDrops.Bookmarks do
     |> where(^filter_query.(other_filters))
     |> limit(^limit)
     |> preload(drop: [:user])
-    |> apply_search_ordering(filters[:search])
+    |> TextSearchHelpers.apply_search_ordering(filters[:search])
     |> Repo.all()
   end
 
@@ -90,9 +90,6 @@ defmodule ElixirDrops.Bookmarks do
       join: drop in assoc(bookmark, :drop),
       as: :drop
   end
-
-  defp apply_search_ordering(query, search_query),
-    do: TextSearchHelpers.apply_search_ordering(query, search_query)
 
   defp apply_filters do
     fn filters ->

@@ -88,7 +88,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
             class="only:grid text-[#656565] text-lg min-h-[60svh] items-center justify-center"
           >
             <div class="flex flex-col items-center justify-center">
-              <p>You haven't created any bookmarks yet.</p>
+              <p>You haven't bookmarked any drop yet.</p>
             </div>
           </div>
           <div
