@@ -228,7 +228,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      socket
      |> stream(:notifications, [], reset: true)
      |> assign(:notification_count, 0)
-     |> assign(:notifications_empty?, Enum.empty?(notifications))}
+     |> assign(:notifications_empty?, true)}
   end
 
   @impl Phoenix.LiveView

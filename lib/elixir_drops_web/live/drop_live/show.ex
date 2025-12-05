@@ -102,7 +102,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> stream(:notifications, [], reset: true)
      |> assign(:notification_count, 0)
-     |> assign(:notifications_empty?, Enum.empty?(notifications))}
+     |> assign(:notifications_empty?, true)}
   end
 
   def handle_event("load-more-notifications", _params, socket),
