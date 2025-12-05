@@ -825,8 +825,9 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  attr :notifications_empty?, :boolean, required: true
+  attr :end_of_notifications_timeline?, :boolean, required: true
   attr :notifications, :list, required: true
+  attr :notifications_empty?, :boolean, required: true
   attr :notifications_page, :integer, required: true
 
   @spec notification_component(assigns()) :: rendered()

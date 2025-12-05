@@ -38,6 +38,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
     {:noreply,
      socket
+     |> assign(:end_of_notifications_timeline?, false)
+     |> assign(:notifications_page, 1)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)
      |> NotificationHelpers.assign_notifications()}
@@ -89,6 +91,9 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign(:comment_offset, offset + 10)
      |> stream(:comments, comments)}
   end
+
+  def handle_event("load-more-notifications", _params, socket),
+    do: NotificationHelpers.load_more(socket)
 
   @impl Phoenix.LiveView
   def handle_info({:new_comment, parent_id, comment_type, comment_params}, socket) do

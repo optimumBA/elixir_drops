@@ -24,18 +24,17 @@ defmodule ElixirDropsWeb.DropLive.Index do
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
-     |> assign(:end_of_timeline?, false)
      |> assign(:end_of_notifications_timeline?, false)
+     |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
+     |> assign(:notifications_page, 1)
      |> assign(:page_title, "ElixirDrops")
      |> assign(:page, 1)
-     |> assign(:notifications_page, 1)
      |> assign(:viewport_width, nil)
      |> assign(:viewport_height, nil)
      |> assign(:batch_size, 15)
      |> assign(:initial_load, true)
      |> assign(:loading_more, false)
-     |> assign(:loading_more_notifications, false)
      |> assign(:search_query, "")
      |> assign(:searching, false)
      |> assign(:drops_empty?, true)
@@ -97,14 +96,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply, assign(socket, :loading_more, false)}
   end
 
-  def handle_event("load-more-notifications", params, socket) do
-    socket = assign(socket, :loading_more_notifications, true)
-    NotificationHelpers.load_more(socket)
-  end
-
-  def handle_event("load-more-notifications-complete", _params, socket) do
-    {:noreply, assign(socket, :loading_more_notifications, false)}
-  end
+  def handle_event("load-more-notifications", _params, socket),
+    do: NotificationHelpers.load_more(socket)
 
   def handle_event("refresh-drops", _params, socket) do
     {:noreply,

@@ -1,9 +1,12 @@
 <Layouts.app flash={@flash}>
   <section class="drops-container relative h-full w-full">
+
     <DropComponents.notification_component
-      notifications={@streams.notifications}
-      notifications_empty?={@notifications_empty?}
-    />
+    end_of_notifications_timeline?={@end_of_notifications_timeline?}
+    notifications={@streams.notifications}
+    notifications_empty?={@notifications_empty?}
+    notifications_page={@notifications_page}
+  />
 
     <section id="rest-of-the-page">
       <DropComponents.navbar

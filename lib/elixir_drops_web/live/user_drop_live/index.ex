@@ -24,6 +24,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
+     |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:page, 1)
      |> assign(:viewport_width, nil)
@@ -34,6 +35,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:search_query, "")
      |> assign(:drops_empty?, true)
      |> assign(:notification_count, Notifications.count_user_notifications(user_id))
+     |> assign(:notifications_page, 1)
      |> NotificationHelpers.assign_notifications()
      |> SearchHelper.initialize_profile_search_assigns(user_id)}
   end
@@ -90,6 +92,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def handle_event("load-more-complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
   end
+
+  def handle_event("load-more-notifications", _params, socket),
+    do: NotificationHelpers.load_more(socket)
 
   def handle_event("search_submit", %{"query" => query}, socket) do
     trimmed_query =

@@ -2,7 +2,6 @@
   <section class="relative h-full w-full" id="drops-container" phx-hook="DropsContainer">
     <DropComponents.notification_component
       end_of_notifications_timeline?={@end_of_notifications_timeline?}
-      loading_more_notifications={@loading_more_notifications}
       notifications={@streams.notifications}
       notifications_empty?={@notifications_empty?}
       notifications_page={@notifications_page}

@@ -82,14 +82,6 @@ InfiniteScrollHooks.InfiniteScrollNotifications = {
     this.observer = null
 
     this.connectObserver()
-
-    this.handleEvent('load-more-notifications-complete', () => {
-      this.pending = false
-
-      setTimeout(() => {
-        this.connectObserver()
-      }, 500)
-    })
   },
 
   updated() {
@@ -134,10 +126,7 @@ InfiniteScrollHooks.InfiniteScrollNotifications = {
   async loadMore() {
     if (this.pending) return
 
-    if (this.el.dataset.endOfTimeline === 'true') return
-
-    this.pending = true
-    this.disconnectObserver()
+    if (this.el.dataset.endOfTimeline === 'true') this.disconnectObserver()
 
     this.pushEvent('load-more-notifications')
   },
