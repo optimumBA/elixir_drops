@@ -49,7 +49,7 @@ defmodule ElixirDropsWeb.DropComponents do
             </button>
             <!-- Create Drop Button - Always visible -->
             <.create_drop_button current_user={@current_user} live_action={@live_action} />
-            <.view_notifications_button
+            <.view_notifications_component
               current_user={@current_user}
               notification_count={@notification_count}
             />
@@ -738,7 +738,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  defp view_notifications_button(assigns) do
+  defp view_notifications_component(assigns) do
     ~H"""
     <section :if={@current_user} class="hover:cursor-pointer">
       <div
