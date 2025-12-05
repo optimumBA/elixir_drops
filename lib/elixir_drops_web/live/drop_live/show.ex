@@ -154,6 +154,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply,
      socket
      |> assign(:notification_count, count + 1)
+     |> assign(:notifications_empty?, false)
      |> stream_insert(:notifications, notification, at: 0)}
   end
 
