@@ -19,19 +19,6 @@ defmodule ElixirDrops.Notifications do
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
-  @doc """
-  Lists notifications for a user with pagination.
-
-  ## Examples
-
-      iex> list_user_notifications("550e8400-e29b-41d4-a716-446655440000")
-      [%Notification{}, ...]
-
-      iex> list_user_notifications("550e8400-e29b-41d4-a716-446655440000", limit: 5, offset: 10)
-      [%Notification{}, ...]
-
-  """
-
   @spec subscribe(user_id()) :: :ok
   def subscribe(user_id) do
     NotificationsBroadcast.subscribe(user_id)
@@ -42,40 +29,38 @@ defmodule ElixirDrops.Notifications do
     NotificationsBroadcast.broadcast_notification_creation(notification)
   end
 
-  @spec list_user_notifications(user_id, keyword()) :: [notification()]
-  def list_user_notifications(user_id, opts \\ []) do
-    limit = Keyword.get(opts, :limit, 10)
-    offset = Keyword.get(opts, :offset, 0)
+  @spec list_notifications(map(), integer()) :: [notification()]
+  def list_notifications(filters, limit \\ 10) do
+    filter_query = apply_filters()
 
-    Notification
-    |> where([n], n.recipient_id == ^user_id)
+    notifications_query()
+    |> where(^filter_query.(filters))
     |> where([n], n.read == false)
     |> order_by([n], desc: n.inserted_at)
     |> limit(^limit)
-    |> offset(^offset)
     |> preload(^preload_list())
     |> Repo.all()
   end
 
-  @doc """
-  Gets a single notification.
+  defp notifications_query do
+    from notification in Notification, as: :notification
+  end
 
-  Raises `Ecto.NoResultsError` if the notification does not exist.
+  defp apply_filters do
+    fn filters ->
+      Enum.reduce(filters, dynamic(true), &apply_filter/2)
+    end
+  end
 
-  ## Examples
+  defp apply_filter({:user_id, user_id}, dynamic) do
+    dynamic([notification: notification], ^dynamic and notification.recipient_id == ^user_id)
+  end
 
-      iex> get_notification!("550e8400-e29b-41d4-a716-446655440000")
-      %Notification{}
-
-      iex> get_notification!("non_existent_id")
-      ** (Ecto.NoResultsError)
-
-  """
-  @spec get_notification!(notification_id) :: notification()
-  def get_notification!(id) do
-    Notification
-    |> Repo.get!(id)
-    |> Repo.preload(preload_list())
+  defp apply_filter({:older_than, notification}, dynamic) do
+    dynamic(
+      [notification: notification],
+      ^dynamic and notification.inserted_at < ^notification.inserted_at
+    )
   end
 
   @doc """
