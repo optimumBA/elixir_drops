@@ -27,7 +27,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:new_drops?, false)
-     |> assign(:notifications_page, 1)
      |> assign(:page_title, "ElixirDrops")
      |> assign(:page, 1)
      |> assign(:viewport_width, nil)

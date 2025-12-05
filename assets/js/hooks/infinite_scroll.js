@@ -78,16 +78,15 @@ InfiniteScrollHooks.InfiniteScroll = {
 
 InfiniteScrollHooks.InfiniteScrollNotifications = {
   mounted() {
-    this.pending = false
     this.observer = null
 
     this.connectObserver()
-  },
 
-  updated() {
-    if (!this.pending) {
-      this.connectObserver()
-    }
+    this.handleEvent('load-more-notifications-complete', () => {
+      setTimeout(() => {
+        this.connectObserver()
+      }, 500)
+    })
   },
 
   destroyed() {
@@ -95,15 +94,11 @@ InfiniteScrollHooks.InfiniteScrollNotifications = {
   },
 
   connectObserver() {
-    if (this.pending) return
-
-    this.disconnectObserver()
-
     this.observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries
 
-        if (entry.isIntersecting && !this.pending) {
+        if (entry.isIntersecting) {
           this.loadMore()
         }
       },
@@ -124,9 +119,7 @@ InfiniteScrollHooks.InfiniteScrollNotifications = {
   },
 
   async loadMore() {
-    if (this.pending) return
-
-    if (this.el.dataset.endOfTimeline === 'true') this.disconnectObserver()
+    this.disconnectObserver()
 
     this.pushEvent('load-more-notifications')
   },

@@ -48,8 +48,8 @@ defmodule ElixirDropsWeb.NotificationHelpers do
 
     {:noreply,
      socket
-     |> assign(:notifications_page, socket.assigns.notifications_page + 1)
-     |> maybe_insert_notifications(filters, socket.assigns.last_notification)}
+     |> maybe_insert_notifications(filters, socket.assigns.last_notification)
+     |> Phoenix.LiveView.push_event("load-more-notifications-complete", %{})}
   end
 
   @spec maybe_insert_notifications(socket(), filters(), notification(), opts()) :: socket()

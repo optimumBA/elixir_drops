@@ -828,7 +828,6 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :end_of_notifications_timeline?, :boolean, required: true
   attr :notifications, :list, required: true
   attr :notifications_empty?, :boolean, required: true
-  attr :notifications_page, :integer, required: true
 
   @spec notification_component(assigns()) :: rendered()
   def notification_component(assigns) do
@@ -893,10 +892,6 @@ defmodule ElixirDropsWeb.DropComponents do
             />
           </div>
           <div
-            data-end-of-timeline={
-              if assigns[:end_of_notifications_timeline?], do: "true", else: "false"
-            }
-            data-page={@notifications_page}
             id="notifications-infinite-scroll-marker"
             phx-hook="InfiniteScrollNotifications"
             class="h-3 w-full"

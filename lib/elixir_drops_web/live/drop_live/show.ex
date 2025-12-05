@@ -39,7 +39,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
     {:noreply,
      socket
      |> assign(:end_of_notifications_timeline?, false)
-     |> assign(:notifications_page, 1)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)
      |> NotificationHelpers.assign_notifications()}
