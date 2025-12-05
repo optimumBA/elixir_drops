@@ -91,6 +91,20 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments)}
   end
 
+  def handle_event(
+        "soft_delete_notifications",
+        _params,
+        %{assigns: %{current_user: user}} = socket
+      ) do
+    {_integer, nil} = Notifications.soft_delete_user_notifications(user.id)
+
+    {:noreply,
+     socket
+     |> stream(:notifications, [], reset: true)
+     |> assign(:notification_count, 0)
+     |> assign(:notifications_empty?, Enum.empty?(notifications))}
+  end
+
   def handle_event("load-more-notifications", _params, socket),
     do: NotificationHelpers.load_more(socket)
 

@@ -851,7 +851,11 @@ defmodule ElixirDropsWeb.DropComponents do
             Notifications
           </div>
         </div>
-        <div :if={!@notifications_empty?} class="flex items-center gap-2 hover:cursor-pointer">
+        <div
+          :if={!@notifications_empty?}
+          phx-click={JS.push("soft_delete_notifications")}
+          class="flex items-center gap-2 hover:cursor-pointer"
+        >
           <p class="roboto-regular text-sm text-[#4F4F4F] leading-4">Mark all as read</p>
           <p><img src={~p"/images/mark.svg"} alt="Mark as read" class="w-4 h-4" /></p>
         </div>

@@ -42,27 +42,6 @@ defmodule ElixirDrops.Notifications do
     |> Repo.all()
   end
 
-  defp notifications_query do
-    from notification in Notification, as: :notification
-  end
-
-  defp apply_filters do
-    fn filters ->
-      Enum.reduce(filters, dynamic(true), &apply_filter/2)
-    end
-  end
-
-  defp apply_filter({:user_id, user_id}, dynamic) do
-    dynamic([notification: notification], ^dynamic and notification.recipient_id == ^user_id)
-  end
-
-  defp apply_filter({:older_than, notification}, dynamic) do
-    dynamic(
-      [notification: notification],
-      ^dynamic and notification.inserted_at < ^notification.inserted_at
-    )
-  end
-
   @doc """
   Counts notifications for a user.
 
@@ -75,7 +54,7 @@ defmodule ElixirDrops.Notifications do
   @spec count_user_notifications(user_id) :: non_neg_integer()
   def count_user_notifications(user_id) do
     Notification
-    |> where([n], n.recipient_id == ^user_id)
+    |> where([n], n.recipient_id == ^user_id and n.read == false)
     |> Repo.aggregate(:count)
   end
 
@@ -100,72 +79,40 @@ defmodule ElixirDrops.Notifications do
   end
 
   @doc """
-  Updates a notification.
+  Soft deletes all notifications for a user.
 
   ## Examples
 
-      iex> update_notification(%Notification{}, %{type: :reply_to_comment})
-      {:ok, %Notification{}}
-
-      iex> update_notification(%Notification{}, %{type: nil})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  @spec update_notification(notification(), attrs()) ::
-          {:ok, notification()} | {:error, changeset()}
-  def update_notification(%Notification{} = notification, attrs) do
-    notification
-    |> Notification.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
-  Deletes a notification.
-
-  ## Examples
-
-      iex> delete_notification(notification_id)
-      {1, nil}
-
-      iex> delete_notification(notification_id)
-      {0, nil}
-
-  """
-  @spec delete_notification(notification_id()) :: {integer(), nil}
-  def delete_notification(notification_id) do
-    Notification
-    |> where([n], n.id == ^notification_id)
-    |> Repo.delete_all()
-  end
-
-  @doc """
-  Deletes all notifications for a user.
-
-  ## Examples
-
-      iex> delete_user_notifications("550e8400-e29b-41d4-a716-446655440000")
+      iex> soft_delete_user_notifications("550e8400-e29b-41d4-a716-446655440000")
       {5, nil}
 
   """
-  @spec delete_user_notifications(user_id()) :: {integer(), nil}
-  def delete_user_notifications(user_id) do
+  @spec soft_delete_user_notifications(user_id()) :: {non_neg_integer(), nil}
+  def soft_delete_user_notifications(user_id) do
     Notification
     |> where([n], n.recipient_id == ^user_id)
-    |> Repo.delete_all()
+    |> Repo.update_all(set: [read: true])
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking notification changes.
+  defp notifications_query do
+    from notification in Notification, as: :notification
+  end
 
-  ## Examples
+  defp apply_filters do
+    fn filters ->
+      Enum.reduce(filters, dynamic(true), &apply_filter/2)
+    end
+  end
 
-      iex> change_notification(%Notification{})
-      %Ecto.Changeset{data: %Notification{}}
+  defp apply_filter({:user_id, user_id}, dynamic) do
+    dynamic([notification: notification], ^dynamic and notification.recipient_id == ^user_id)
+  end
 
-  """
-  @spec change_notification(notification(), attrs()) :: changeset()
-  def change_notification(%Notification{} = notification, attrs \\ %{}) do
-    Notification.changeset(notification, attrs)
+  defp apply_filter({:older_than, notification}, dynamic) do
+    dynamic(
+      [notification: notification],
+      ^dynamic and notification.inserted_at < ^notification.inserted_at
+    )
   end
 
   defp create_notification_changeset(notification, actor, recipient, comment, attrs) do
