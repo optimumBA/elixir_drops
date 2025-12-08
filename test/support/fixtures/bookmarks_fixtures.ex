@@ -6,11 +6,11 @@ defmodule ElixirDrops.BookmarksFixtures do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
+  import ElixirDrops.PaginationHelpers
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Bookmarks
   alias ElixirDrops.Bookmarks.Bookmark
-  alias ElixirDrops.Repo
 
   @type attrs :: map()
   @type bookmark :: Bookmark.t()
@@ -46,23 +46,7 @@ defmodule ElixirDrops.BookmarksFixtures do
 
       bookmarks
       |> Enum.at(bookmark_num - 1)
-      |> update_bookmark_inserted_at(offset_time)
+      |> update_inserted_at(offset_time)
     end
-  end
-
-  defp update_bookmark_inserted_at(bookmark, seconds_offset) do
-    {:ok, updated_bookmark} =
-      bookmark
-      |> Ecto.Changeset.change(%{inserted_at: time_before_or_after(seconds_offset)})
-      |> Repo.update()
-
-    updated_bookmark
-  end
-
-  defp time_before_or_after(seconds_offset) do
-    DateTime.utc_now()
-    |> DateTime.add(seconds_offset)
-    |> DateTime.to_naive()
-    |> NaiveDateTime.truncate(:second)
   end
 end
