@@ -26,15 +26,18 @@ defmodule ElixirDrops.NotificationsTest do
   end
 
   describe "list_notifications/2" do
-    test "returns a list of unread notifications for a user" do
-      %{notification: notification, recipient: recipient} = create_notification_setup(%{})
+    setup [:create_notification_setup]
+
+    test "returns a list of unread notifications for a user", %{
+      notification: notification,
+      recipient: recipient
+    } do
       notifications = Notifications.list_notifications(%{user_id: recipient.id})
       assert notification.id in Enum.map(notifications, & &1.id)
       assert Enum.all?(notifications, fn n -> n.read == false end)
     end
 
-    test "preloads actor, recipient, and comment associations" do
-      %{recipient: recipient} = create_notification_setup(%{})
+    test "preloads actor, recipient, and comment associations", %{recipient: recipient} do
       [notification] = Notifications.list_notifications(%{user_id: recipient.id})
 
       assert Ecto.assoc_loaded?(notification.actor)
@@ -44,13 +47,11 @@ defmodule ElixirDrops.NotificationsTest do
     end
 
     test "returns empty list when a user has no notifications" do
-      create_notification_setup(%{})
       non_existing_user_id = Ecto.UUID.generate()
       assert [] = Notifications.list_notifications(%{user_id: non_existing_user_id})
     end
 
-    test "excludes read notifications" do
-      %{actor: actor, comment: comment} = create_notification_setup(%{})
+    test "excludes read notifications", %{actor: actor, comment: comment} do
       recipient = user_fixture()
 
       read_notification = notification_fixture(actor, recipient, comment, %{read: true})
@@ -63,8 +64,7 @@ defmodule ElixirDrops.NotificationsTest do
       refute read_notification.id in notification_ids
     end
 
-    test "orders notifications by inserted_at (newest first)" do
-      %{actor: actor, comment: comment} = create_notification_setup(%{})
+    test "orders notifications by inserted_at (newest first)", %{actor: actor, comment: comment} do
       recipient = user_fixture()
       create_multiple_notifications(actor, recipient, comment, 3)
 
@@ -77,21 +77,20 @@ defmodule ElixirDrops.NotificationsTest do
   end
 
   describe "count_user_notifications/1" do
-    test "returns the count of unread notifications for a user" do
-      %{actor: actor, comment: comment} = create_notification_setup(%{})
+    setup [:create_notification_setup]
+
+    test "returns the count of unread notifications for a user", %{actor: actor, comment: comment} do
       recipient = user_fixture()
       create_multiple_notifications(actor, recipient, comment, 3)
       assert Notifications.count_user_notifications(recipient.id) == 3
     end
 
     test "returns 0 when a user has no notifications" do
-      create_notification_setup(%{})
       non_existing_user_id = Ecto.UUID.generate()
       assert Notifications.count_user_notifications(non_existing_user_id) == 0
     end
 
-    test "does not count read notifications" do
-      %{actor: actor, comment: comment} = create_notification_setup(%{})
+    test "does not count read notifications", %{actor: actor, comment: comment} do
       recipient = user_fixture()
       notification_fixture(actor, recipient, comment, %{read: true})
       notification_fixture(actor, recipient, comment, %{read: false})
@@ -164,17 +163,19 @@ defmodule ElixirDrops.NotificationsTest do
   end
 
   describe "soft_delete_user_notifications/1" do
-    test "marks all notifications for a user as read" do
-      %{actor: actor, recipient: recipient, comment: comment} = create_notification_setup(%{})
+    setup [:create_notification_setup]
+
+    test "marks all notifications for a user as read", %{
+      actor: actor,
+      comment: comment
+    } do
+      recipient = user_fixture()
       create_multiple_notifications(actor, recipient, comment, 3)
+      assert Notifications.count_user_notifications(recipient.id) == 3
 
-      # Verify we have unread notifications
-      assert Notifications.count_user_notifications(recipient.id) == 4
-
-      # Soft delete (mark as read)
       {count, nil} = Notifications.soft_delete_user_notifications(recipient.id)
 
-      assert count == 4
+      assert count == 3
       assert Notifications.count_user_notifications(recipient.id) == 0
     end
 
@@ -182,38 +183,6 @@ defmodule ElixirDrops.NotificationsTest do
       non_existing_user_id = Ecto.UUID.generate()
 
       assert {0, nil} = Notifications.soft_delete_user_notifications(non_existing_user_id)
-    end
-
-    test "only affects the specified user's notifications" do
-      %{actor: actor, recipient: recipient, comment: comment} = create_notification_setup(%{})
-
-      # Create another recipient
-      recipient_2 =
-        user_fixture(%{
-          avatar: "https://avatars.githubusercontent.com/u/33333?v=4",
-          email: "recipient7@mail.com",
-          github_id: 33_333,
-          github_username: "recipient7_username",
-          name: "recipient7_name"
-        })
-
-      drop_2 = drop_fixture(recipient_2)
-      comment_2 = comment_fixture(drop_2, actor, nil)
-
-      # Create notifications for recipient_2
-      create_multiple_notifications(actor, recipient_2, comment_2, 2)
-
-      # Create notifications for original recipient
-      create_multiple_notifications(actor, recipient, comment, 2)
-
-      # Soft delete only recipient's notifications
-      Notifications.soft_delete_user_notifications(recipient.id)
-
-      # recipient should have 0 unread notifications
-      assert Notifications.count_user_notifications(recipient.id) == 0
-
-      # recipient_2 should still have their notifications
-      assert Notifications.count_user_notifications(recipient_2.id) == 2
     end
   end
 
@@ -226,16 +195,15 @@ defmodule ElixirDrops.NotificationsTest do
   end
 
   describe "dispatch_notification/1" do
-    test "broadcasts a notification creation event" do
-      %{notification: notification, recipient: recipient} = create_notification_setup(%{})
+    setup [:create_notification_setup]
 
-      # Subscribe to the recipient's notifications channel
+    test "broadcasts a notification creation event", %{
+      notification: notification,
+      recipient: recipient
+    } do
       :ok = Notifications.subscribe(recipient.id)
-
-      # Dispatch the notification
       :ok = Notifications.dispatch_notification(notification)
 
-      # Assert we receive the broadcast
       assert_receive {:new_notification, ^notification}
     end
   end

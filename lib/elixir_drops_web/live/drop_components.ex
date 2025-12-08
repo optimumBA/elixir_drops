@@ -742,7 +742,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <section :if={@current_user} class="hover:cursor-pointer">
       <div
-        phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#rest-of-the-page")}
+        phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#main-page-body")}
         class="flex shrink-0 sm:hidden"
       >
         <div class="relative group w-5 h-5">
@@ -839,9 +839,7 @@ defmodule ElixirDropsWeb.DropComponents do
       <section class="w-[90%] mx-auto flex justify-between">
         <div class="flex justify-between gap-2 items-stretch">
           <div
-            phx-click={
-              JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#rest-of-the-page")
-            }
+            phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#main-page-body")}
             class="w-[25%] shrink-0 flex items-center hover:cursor-pointer sm:hidden"
           >
             <img src={~p"/images/back_btn.svg"} alt="Back button" />
