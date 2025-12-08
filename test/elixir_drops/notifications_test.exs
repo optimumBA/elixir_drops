@@ -28,9 +28,7 @@ defmodule ElixirDrops.NotificationsTest do
   describe "list_notifications/2" do
     test "returns a list of unread notifications for a user" do
       %{notification: notification, recipient: recipient} = create_notification_setup(%{})
-
       notifications = Notifications.list_notifications(%{user_id: recipient.id})
-
       assert notification.id in Enum.map(notifications, & &1.id)
       assert Enum.all?(notifications, fn n -> n.read == false end)
     end
@@ -48,32 +46,26 @@ defmodule ElixirDrops.NotificationsTest do
     test "returns empty list when a user has no notifications" do
       create_notification_setup(%{})
       non_existing_user_id = Ecto.UUID.generate()
-
       assert [] = Notifications.list_notifications(%{user_id: non_existing_user_id})
     end
 
     test "excludes read notifications" do
-      actor = user_fixture()
+      %{actor: actor, comment: comment} = create_notification_setup(%{})
       recipient = user_fixture()
-      drop = drop_fixture(recipient)
-      comment = comment_fixture(drop, actor, nil)
 
-      # Create a read notification
-      _read_notification = notification_fixture(actor, recipient, comment, %{read: true})
-
-      # Create an unread notification
+      read_notification = notification_fixture(actor, recipient, comment, %{read: true})
       unread_notification = notification_fixture(actor, recipient, comment, %{read: false})
 
       notifications = Notifications.list_notifications(%{user_id: recipient.id})
       assert length(notifications) == 1
-      assert unread_notification not in Enum.map(notifications, & &1.id)
+      notification_ids = Enum.map(notifications, & &1.id)
+      assert unread_notification.id in notification_ids
+      refute read_notification.id in notification_ids
     end
 
     test "orders notifications by inserted_at (newest first)" do
-      actor = user_fixture()
+      %{actor: actor, comment: comment} = create_notification_setup(%{})
       recipient = user_fixture()
-      drop = drop_fixture(recipient)
-      comment = comment_fixture(drop, actor, nil)
       create_multiple_notifications(actor, recipient, comment, 3)
 
       [notification_1, notification_2, notification_3] =
@@ -86,9 +78,10 @@ defmodule ElixirDrops.NotificationsTest do
 
   describe "count_user_notifications/1" do
     test "returns the count of unread notifications for a user" do
-      %{actor: actor, recipient: recipient, comment: comment} = create_notification_setup(%{})
+      %{actor: actor, comment: comment} = create_notification_setup(%{})
+      recipient = user_fixture()
       create_multiple_notifications(actor, recipient, comment, 3)
-      assert Notifications.count_user_notifications(recipient.id) == 4
+      assert Notifications.count_user_notifications(recipient.id) == 3
     end
 
     test "returns 0 when a user has no notifications" do
@@ -98,16 +91,8 @@ defmodule ElixirDrops.NotificationsTest do
     end
 
     test "does not count read notifications" do
-      actor = user_fixture()
-
-      recipient =
-        user_fixture(%{
-          name: "recipient_name"
-        })
-
-      drop = drop_fixture(recipient)
-      comment = comment_fixture(drop, actor, nil)
-
+      %{actor: actor, comment: comment} = create_notification_setup(%{})
+      recipient = user_fixture()
       notification_fixture(actor, recipient, comment, %{read: true})
       notification_fixture(actor, recipient, comment, %{read: false})
 
@@ -116,18 +101,14 @@ defmodule ElixirDrops.NotificationsTest do
   end
 
   describe "create_notification/4" do
-    test "creates a notification given valid data" do
-      actor = user_fixture()
+    setup [:create_notification_setup]
 
-      recipient =
-        user_fixture(%{
-          name: "recipient_name"
-        })
-
-      drop = drop_fixture(recipient)
-      comment = comment_fixture(drop, actor, nil)
-
-      attrs = %{type: :comment_on_post}
+    test "creates a notification given valid data", %{
+      actor: actor,
+      comment: comment,
+      recipient: recipient
+    } do
+      attrs = %{type: :comment_on_post, read: false}
 
       assert {:ok, %Notification{} = notification} =
                Notifications.create_notification(actor, recipient, comment, attrs)
@@ -139,11 +120,29 @@ defmodule ElixirDrops.NotificationsTest do
       assert notification.comment_id == comment.id
     end
 
-    test "returns an error changeset if actor is the same as recipient" do
-      actor = user_fixture()
-      drop = drop_fixture(actor)
-      comment = comment_fixture(drop, actor, nil)
+    test "creates a reply_to_comment notification", %{
+      actor: actor,
+      drop: drop,
+      recipient: recipient
+    } do
+      comment = comment_fixture(drop, recipient, nil)
+      reply_comment = comment_fixture(drop, actor, comment)
+      attrs = %{type: :reply_to_comment, read: false}
 
+      assert {:ok, %Notification{} = notification} =
+               Notifications.create_notification(actor, recipient, reply_comment, attrs)
+
+      assert notification.type == :reply_to_comment
+      assert notification.read == false
+      assert notification.actor_id == actor.id
+      assert notification.recipient_id == recipient.id
+      assert notification.comment_id == reply_comment.id
+    end
+
+    test "returns an error changeset if actor is the same as recipient", %{
+      actor: actor,
+      comment: comment
+    } do
       attrs = %{type: :comment_on_post}
 
       assert {:error, %Ecto.Changeset{} = changeset} =
@@ -152,21 +151,11 @@ defmodule ElixirDrops.NotificationsTest do
       assert %{recipient: ["cannot be the same as the actor"]} = errors_on(changeset)
     end
 
-    test "returns an error changeset if type is invalid" do
-      actor = user_fixture()
-
-      recipient =
-        user_fixture(%{
-          avatar: "https://avatars.githubusercontent.com/u/44444?v=4",
-          email: "recipient6@mail.com",
-          github_id: 44_444,
-          github_username: "recipient6_username",
-          name: "recipient6_name"
-        })
-
-      drop = drop_fixture(recipient)
-      comment = comment_fixture(drop, actor, nil)
-
+    test "returns an error changeset if type is invalid", %{
+      actor: actor,
+      comment: comment,
+      recipient: recipient
+    } do
       attrs = %{type: nil, read: false}
 
       assert {:error, %Ecto.Changeset{}} =
@@ -177,8 +166,6 @@ defmodule ElixirDrops.NotificationsTest do
   describe "soft_delete_user_notifications/1" do
     test "marks all notifications for a user as read" do
       %{actor: actor, recipient: recipient, comment: comment} = create_notification_setup(%{})
-
-      # Create additional unread notifications
       create_multiple_notifications(actor, recipient, comment, 3)
 
       # Verify we have unread notifications

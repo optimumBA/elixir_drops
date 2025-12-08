@@ -33,7 +33,7 @@ defmodule ElixirDrops.NotificationsFixtures do
   end
 
   @doc """
-  Creates multiple notifications for testing pagination and filtering.
+  Creates multiple notifications.
   """
   @spec create_multiple_notifications(user(), user(), comment(), integer()) ::
           list(notification())
@@ -41,11 +41,14 @@ defmodule ElixirDrops.NotificationsFixtures do
     for n <- 1..number_of_notifications do
       offset_time = 120 * n
 
-      update_inserted_at(
+      notification =
         notification_fixture(actor, recipient, comment, %{
           type: :comment_on_post,
           read: false
-        }),
+        })
+
+      update_inserted_at(
+        notification,
         offset_time
       )
     end

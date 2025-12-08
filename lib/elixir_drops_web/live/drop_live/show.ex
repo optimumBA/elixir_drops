@@ -124,8 +124,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
             )
 
         %{assigns: %{current_user: user, drop: %{user: drop_author}}} = socket
-        reply? = if parent_id, do: true, else: false
-        create_notifications(user, drop_author, reply?, comment, top_level_comment.user)
+        create_notifications(user, drop_author, comment, top_level_comment.user)
 
         {:noreply,
          socket
@@ -158,12 +157,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream_insert(:notifications, notification, at: 0)}
   end
 
-  defp create_notifications(actor, drop_author, reply?, comment, comment_author) do
-    if drop_author != comment_author,
+  defp create_notifications(actor, drop_author, comment, top_level_comment_author) do
+    if drop_author != top_level_comment_author,
       do: create_notification(actor, drop_author, comment, %{type: :comment_on_post})
 
-    if reply?,
-      do: create_notification(actor, comment_author, comment, %{type: :reply_to_comment}),
+    if comment.parent_id,
+      do:
+        create_notification(actor, top_level_comment_author, comment, %{type: :reply_to_comment}),
       else: :ok
   end
 
