@@ -39,6 +39,100 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert updated_html =~ user.name
     end
 
+    test "adding a comment sends a notification to the drop author", %{
+      conn: conn
+    } do
+      drop_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> form("#new-comment-form",
+        comment: %{body: "This is my test comment"}
+      )
+      |> render_submit()
+
+      conn = sign_in_user(conn, drop_author)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view
+             |> element("#notifications-count")
+             |> render() =~ "1"
+    end
+
+    test "adding a reply_comment sends a notification to both the drop author and the parent_comment author",
+         %{
+           conn: conn
+         } do
+      drop_author = user_fixture()
+      parent_comment_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+
+      {:ok, parent_comment} =
+        Comments.create_comment(drop, parent_comment_author, nil, %{body: "Top level"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> form("#reply-form-#{parent_comment.id}",
+        comment: %{body: "A reply"}
+      )
+      |> render_submit()
+
+      conn = sign_in_user(conn, drop_author)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view
+             |> element("#notifications-container")
+             |> render() =~ "some_name commented on your post -"
+
+      conn = sign_in_user(conn, parent_comment_author)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view
+             |> element("#notifications-container")
+             |> render() =~ "some_name replied to your comment on -"
+    end
+
+    test "adding a reply_comment sends only one notification to the drop author, albeit they are the parent_comment author",
+         %{
+           conn: conn
+         } do
+      drop_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+
+      {:ok, parent_comment} =
+        Comments.create_comment(drop, drop_author, nil, %{body: "Top level"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> form("#reply-form-#{parent_comment.id}",
+        comment: %{body: "A reply"}
+      )
+      |> render_submit()
+
+      conn = sign_in_user(conn, drop_author)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view
+             |> element("#notifications-count")
+             |> render() =~ "1"
+
+      refute view
+             |> element("#notifications-container")
+             |> render() =~ "some_name commented on your post -"
+
+      assert view
+             |> element("#notifications-container")
+             |> render() =~ "some_name replied to your comment on -"
+    end
+
     test "a user who has not logged in cannot add comments", %{drop: drop} do
       conn = build_conn()
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
