@@ -851,6 +851,7 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
         <div
           :if={!@notifications_empty?}
+          id="mark-notifications-as-read"
           phx-click={JS.push("soft_delete_notifications")}
           class="flex items-center gap-2 hover:cursor-pointer"
         >

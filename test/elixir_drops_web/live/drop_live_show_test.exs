@@ -55,9 +55,9 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       conn = sign_in_user(conn, drop_author)
 
-      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, view_2, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
-      assert view
+      assert view_2
              |> element("#notifications-count")
              |> render() =~ "1"
     end
@@ -81,19 +81,19 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       )
       |> render_submit()
 
-      conn = sign_in_user(conn, drop_author)
+      conn_2 = sign_in_user(conn, drop_author)
 
-      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, view_2, _html} = live(conn_2, ~p"/d/#{drop.short_id}")
 
-      assert view
+      assert view_2
              |> element("#notifications-container")
              |> render() =~ "some_name commented on your post -"
 
-      conn = sign_in_user(conn, parent_comment_author)
+      conn_3 = sign_in_user(conn, parent_comment_author)
 
-      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, view_3, _html} = live(conn_3, ~p"/d/#{drop.short_id}")
 
-      assert view
+      assert view_3
              |> element("#notifications-container")
              |> render() =~ "some_name replied to your comment on -"
     end
@@ -118,19 +118,51 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       conn = sign_in_user(conn, drop_author)
 
-      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, view_2, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
-      assert view
+      assert view_2
              |> element("#notifications-count")
              |> render() =~ "1"
 
-      refute view
+      refute view_2
              |> element("#notifications-container")
              |> render() =~ "some_name commented on your post -"
 
-      assert view
+      assert view_2
              |> element("#notifications-container")
              |> render() =~ "some_name replied to your comment on -"
+    end
+
+    test "user can mark notifications as read",
+         %{
+           conn: conn
+         } do
+      drop_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> form("#new-comment-form",
+        comment: %{body: "This is my test comment"}
+      )
+      |> render_submit()
+
+      conn = sign_in_user(conn, drop_author)
+
+      {:ok, view_2, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view_2
+             |> element("#notifications-count")
+             |> render() =~ "1"
+
+      view_2
+      |> element("#mark-notifications-as-read")
+      |> render_click()
+
+      refute view_2
+             |> element("#notifications-count")
+             |> has_element?()
     end
 
     test "a user who has not logged in cannot add comments", %{drop: drop} do
