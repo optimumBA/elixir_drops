@@ -37,13 +37,13 @@ defmodule ElixirDropsWeb.NotificationHelpers do
     |> assign(:notification_filters, filters)
   end
 
-  @spec load_more(socket(), pos_integer()) :: {:noreply, socket()}
-  def load_more(socket, batch_size \\ 10)
+  @spec load_more(socket()) :: {:noreply, socket()}
+  def load_more(socket)
 
-  def load_more(%{assigns: %{end_of_notifications_timeline?: true}} = socket, _batch_size),
+  def load_more(%{assigns: %{end_of_notifications_timeline?: true}} = socket),
     do: {:noreply, socket}
 
-  def load_more(socket, _batch_size) do
+  def load_more(socket) do
     filters = %{older_than: socket.assigns.last_notification}
 
     {:noreply,
@@ -53,13 +53,13 @@ defmodule ElixirDropsWeb.NotificationHelpers do
   end
 
   @spec maybe_insert_notifications(socket(), filters(), notification(), opts()) :: socket()
-  def maybe_insert_notifications(socket, _filters, _first_or_last_notification, _opts \\ [])
+  def maybe_insert_notifications(socket, _filters, _last_notification, _opts \\ [])
 
   def maybe_insert_notifications(socket, _filters, nil, _opts) do
     assign(socket, :end_of_notifications_timeline?, true)
   end
 
-  def maybe_insert_notifications(socket, filters, _first_or_last_notification, opts) do
+  def maybe_insert_notifications(socket, filters, _last_notification, opts) do
     notifications =
       filters
       |> Map.merge(socket.assigns.notification_filters)
