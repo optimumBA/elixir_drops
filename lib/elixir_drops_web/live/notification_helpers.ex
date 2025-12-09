@@ -7,13 +7,9 @@ defmodule ElixirDropsWeb.NotificationHelpers do
   import Phoenix.LiveView, only: [stream: 4]
 
   alias ElixirDrops.Notifications
-  alias ElixirDrops.Notifications.Notification
 
   @notification_batch_size 10
 
-  @type filters :: map()
-  @type notification :: Notification.t()
-  @type opts :: Keyword.t()
   @type socket :: Phoenix.LiveView.Socket.t()
 
   @spec assign_notifications(socket()) :: socket()
@@ -52,14 +48,13 @@ defmodule ElixirDropsWeb.NotificationHelpers do
      |> Phoenix.LiveView.push_event("load-more-notifications-complete", %{})}
   end
 
-  @spec maybe_insert_notifications(socket(), filters(), notification(), opts()) :: socket()
-  def maybe_insert_notifications(socket, _filters, _last_notification, _opts \\ [])
+  defp maybe_insert_notifications(socket, _filters, _last_notification, _opts \\ [])
 
-  def maybe_insert_notifications(socket, _filters, nil, _opts) do
+  defp maybe_insert_notifications(socket, _filters, nil, _opts) do
     assign(socket, :end_of_notifications_timeline?, true)
   end
 
-  def maybe_insert_notifications(socket, filters, _last_notification, opts) do
+  defp maybe_insert_notifications(socket, filters, _last_notification, opts) do
     notifications =
       filters
       |> Map.merge(socket.assigns.notification_filters)

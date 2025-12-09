@@ -74,6 +74,20 @@ defmodule ElixirDrops.NotificationsTest do
       assert NaiveDateTime.compare(notification_1.inserted_at, notification_2.inserted_at) == :gt
       assert NaiveDateTime.compare(notification_2.inserted_at, notification_3.inserted_at) == :gt
     end
+
+    test "gets notifications older than another notification", %{actor: actor, comment: comment} do
+      recipient = user_fixture()
+      create_multiple_notifications(actor, recipient, comment, 3)
+
+      [notification_1] =
+        Notifications.list_notifications(%{user_id: recipient.id}, 1)
+
+      [notification_2, notification_3] =
+        Notifications.list_notifications(%{user_id: recipient.id, older_than: notification_1})
+
+      assert NaiveDateTime.compare(notification_1.inserted_at, notification_2.inserted_at) == :gt
+      assert NaiveDateTime.compare(notification_1.inserted_at, notification_3.inserted_at) == :gt
+    end
   end
 
   describe "count_user_notifications/1" do

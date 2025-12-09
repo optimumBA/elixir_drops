@@ -791,7 +791,7 @@ defmodule ElixirDropsWeb.DropComponents do
             :if={@notification_count > 0}
             class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px]"
           >
-            <p>{@notification_count}</p>
+            <p id="notifications-count-large">{@notification_count}</p>
           </section>
         </div>
       </div>
