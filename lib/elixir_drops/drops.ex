@@ -170,8 +170,8 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
 
-  defp apply_filter({:search, query}, dynamic),
-    do: TextSearchHelpers.apply_filter({:search, query}, dynamic)
+  defp apply_filter({:search, search_query}, dynamic),
+    do: TextSearchHelpers.apply_filter({:search, search_query}, dynamic)
 
   defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic),
     do: TextSearchHelpers.apply_filter({:relevance_rank, {rank, search_query}}, dynamic)

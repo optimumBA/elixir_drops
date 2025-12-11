@@ -37,13 +37,14 @@ defmodule ElixirDrops.TextSearchHelpers do
   end
 
   @spec apply_filter({:search, search_query()}, dynamic_expression()) :: dynamic_expression()
-  def apply_filter({:search, query}, dynamic) when is_binary(query) and query != "" do
+  def apply_filter({:search, search_query}, dynamic)
+      when is_binary(search_query) and search_query != "" do
     # Use PostgreSQL websearch_to_tsquery for better search experience
     # websearch_to_tsquery handles phrases, AND/OR operators naturally
     dynamic(
       [drop: drop],
       ^dynamic and
-        fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^query)
+        fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^search_query)
     )
   end
 
