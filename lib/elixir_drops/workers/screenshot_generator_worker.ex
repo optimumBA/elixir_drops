@@ -5,7 +5,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   use ElixirDropsWeb, :verified_routes
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
   alias ElixirDrops.ScreenshotGeneratorWorkerHelper
@@ -165,7 +164,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   end
 
   defp broadcast_drop_screenshot_completion(drop, progress, status, metadata) do
-    DropsBroadcast.broadcast_drop_screenshot_completion(drop, progress, status, metadata)
+    Drops.broadcast_drop_screenshot_completion(drop, progress, status, metadata)
   end
 
   defp enqueue_sitemap_generation(drop) do
