@@ -12,7 +12,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
     if connected?(socket), do: Drops.subscribe()
-
+    # you are
     user_id = socket.assigns.current_user.id
 
     {:ok,
