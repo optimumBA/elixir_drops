@@ -5,8 +5,8 @@
       current_user={@current_user}
       live_action={@live_action}
       search_query={@navbar_search_query}
-      show_suggestions={@show_suggestions}
       search_suggestions={@search_suggestions}
+      show_suggestions={@show_suggestions}
       show_user_drops?={true}
     />
 
@@ -23,11 +23,11 @@
     <section :if={@live_action == :index} class="text-[#252525] relative user-drops">
       <DropComponents.user_drops_header
         current_user={@current_user}
+        profile_search_suggestions={@profile_search_suggestions}
         search_query={@search_query}
-        show_suggestions={@show_profile_suggestions}
         search_suggestions={@profile_search_suggestions}
         show_profile_suggestions={@show_profile_suggestions}
-        profile_search_suggestions={@profile_search_suggestions}
+        show_suggestions={@show_profile_suggestions}
       />
 
       <DropsListHelper.drops_list
@@ -56,9 +56,9 @@
   </section>
   <!-- Mobile Search Overlay -->
   <DropComponents.search_overlay_mobile
-    search_query={@search_query}
-    show_suggestions={@show_profile_suggestions}
-    search_suggestions={@profile_search_suggestions}
     current_user={@current_user}
+    search_query={@search_query}
+    search_suggestions={@profile_search_suggestions}
+    show_suggestions={@show_profile_suggestions}
   />
 </Layouts.app>

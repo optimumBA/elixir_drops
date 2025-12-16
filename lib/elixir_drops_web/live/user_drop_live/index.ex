@@ -18,16 +18,15 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
-     |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
-     |> assign(:end_of_timeline?, false)
-     |> assign(:page, 1)
-     |> assign(:viewport_width, nil)
-     |> assign(:viewport_height, nil)
      |> assign(:batch_size, 15)
-     |> assign(:initial_load, true)
-     |> assign(:loading_more, false)
-     |> assign(:search_query, "")
+     |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:drops_empty?, true)
+     |> assign(:end_of_timeline?, false)
+     |> assign(:loading_more, false)
+     |> assign(:page, 1)
+     |> assign(:search_query, "")
+     |> assign(:viewport_height, nil)
+     |> assign(:viewport_width, nil)
      |> SearchHelper.initialize_profile_search_assigns(user_id)}
   end
 
@@ -65,9 +64,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     {:noreply,
      socket
-     |> assign(:viewport_width, width)
+     |> assign(:batch_size, batch_size)
      |> assign(:viewport_height, height)
-     |> assign(:batch_size, batch_size)}
+     |> assign(:viewport_width, width)}
   end
 
   def handle_event("load-more", %{"layout_complete" => true}, socket) do
@@ -95,9 +94,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     socket =
       socket
+      |> assign(:profile_search_suggestions, [])
       |> assign(:search_query, trimmed_query)
       |> assign(:show_profile_suggestions, false)
-      |> assign(:profile_search_suggestions, [])
 
     # Stay on profile page with search query
     if trimmed_query != "" do
@@ -114,9 +113,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def handle_event("clear_search", _params, socket) do
     {:noreply,
      socket
+     |> assign(:profile_search_suggestions, [])
      |> assign(:search_query, "")
      |> assign(:show_profile_suggestions, false)
-     |> assign(:profile_search_suggestions, [])
      |> push_patch(to: ~p"/profile")}
   end
 
@@ -170,8 +169,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     socket =
       socket
       |> assign(:navbar_search_query, trimmed_query)
-      |> assign(:show_suggestions, false)
       |> assign(:search_suggestions, [])
+      |> assign(:show_suggestions, false)
 
     # Navigate to homepage with search query
     if trimmed_query != "" do
