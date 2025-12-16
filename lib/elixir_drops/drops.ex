@@ -19,16 +19,13 @@ defmodule ElixirDrops.Drops do
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
   @type drop :: Drop.t()
-  @type drop_id :: Ecto.UUID.t()
   @type filters :: map()
   @type limit :: integer()
   @type metadata :: map()
-  @type page :: integer()
   @type progress :: integer()
   @type short_id :: String.t()
   @type status :: atom()
   @type user :: User.t()
-  @type user_id :: Ecto.UUID.t()
 
   @doc """
   Subscribes to drops events.

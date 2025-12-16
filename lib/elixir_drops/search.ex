@@ -3,9 +3,9 @@ defmodule ElixirDrops.Search do
   The Search context.
   """
 
-  import Ecto.Query, warn: false
-  alias ElixirDrops.Repo
+  import Ecto.Query
 
+  alias ElixirDrops.Repo
   alias ElixirDrops.Search.PopularSearch
   alias ElixirDrops.Search.SearchHistory
 
@@ -287,10 +287,10 @@ defmodule ElixirDrops.Search do
 
       iex> create_or_increment_popular_search("phoenix")
       {:ok, %PopularSearch{query: "phoenix", count: 1}}
-      
+
       iex> create_or_increment_popular_search("phoenix")
       {:ok, %PopularSearch{query: "phoenix", count: 2}}
-      
+
   """
   @spec create_or_increment_popular_search(binary()) ::
           {:ok, PopularSearch.t()} | {:error, term()}
