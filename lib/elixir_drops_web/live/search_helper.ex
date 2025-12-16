@@ -134,10 +134,10 @@ defmodule ElixirDropsWeb.SearchHelper do
 
     socket
     |> assign(:navbar_search_query, "")
+    |> assign(:profile_search_suggestions, initial_suggestions)
     |> assign(:searching, false)
-    |> assign(:show_suggestions, false)
     |> assign(:search_suggestions, initial_suggestions)
     |> assign(:show_profile_suggestions, false)
-    |> assign(:profile_search_suggestions, initial_suggestions)
+    |> assign(:show_suggestions, false)
   end
 end

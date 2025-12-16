@@ -14,8 +14,8 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :current_user, User
   attr :live_action, :atom, required: true
   attr :search_query, :string, default: ""
-  attr :show_suggestions, :boolean, default: false
   attr :search_suggestions, :list, default: []
+  attr :show_suggestions, :boolean, default: false
   attr :show_user_drops?, :boolean, default: false
 
   @spec navbar(assigns()) :: rendered()
@@ -31,10 +31,10 @@ defmodule ElixirDropsWeb.DropComponents do
         <!-- Desktop Search -->
         <div class="hidden lg:flex flex-1 max-w-md mx-8">
           <.search_input_desktop
-            search_query={@search_query}
-            show_suggestions={@show_suggestions}
-            search_suggestions={@search_suggestions}
             current_user={@current_user}
+            search_query={@search_query}
+            search_suggestions={@search_suggestions}
+            show_suggestions={@show_suggestions}
           />
         </div>
         <div>
@@ -232,8 +232,8 @@ defmodule ElixirDropsWeb.DropComponents do
     <!-- Three-dots dropdown menu -->
       <.drop_page_menu
         id={@drop.id}
-        short_id={@drop.short_id}
         author?={@current_user && @current_user.id == @drop.user_id}
+        short_id={@drop.short_id}
       />
 
       <.copy_prompt />
@@ -272,11 +272,11 @@ defmodule ElixirDropsWeb.DropComponents do
   end
 
   attr :current_user, User, required: true
+  attr :profile_search_suggestions, :list, default: []
   attr :search_query, :string, default: ""
-  attr :show_suggestions, :boolean, default: false
   attr :search_suggestions, :list, default: []
   attr :show_profile_suggestions, :boolean, default: false
-  attr :profile_search_suggestions, :list, default: []
+  attr :show_suggestions, :boolean, default: false
 
   @spec user_drops_header(assigns()) :: rendered()
   def user_drops_header(assigns) do
@@ -991,10 +991,10 @@ defmodule ElixirDropsWeb.DropComponents do
     |> String.trim()
   end
 
-  attr :search_query, :string, required: true
-  attr :show_suggestions, :boolean, required: true
-  attr :search_suggestions, :list, required: true
   attr :current_user, User
+  attr :search_query, :string, required: true
+  attr :search_suggestions, :list, required: true
+  attr :show_suggestions, :boolean, required: true
 
   @spec search_input_desktop(assigns()) :: rendered()
   def search_input_desktop(assigns) do
@@ -1084,10 +1084,10 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
-  attr :search_query, :string, required: true
-  attr :show_suggestions, :boolean, required: true
-  attr :search_suggestions, :list, required: true
   attr :current_user, User
+  attr :search_query, :string, required: true
+  attr :search_suggestions, :list, required: true
+  attr :show_suggestions, :boolean, required: true
 
   @spec search_overlay_mobile(assigns()) :: rendered()
   def search_overlay_mobile(assigns) do
