@@ -21,7 +21,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
      |> assign(:drops_empty?, true)
      |> assign(:end_of_timeline?, false)
-     |> assign(:initial_load, true)
      |> assign(:loading_more, false)
      |> assign(:new_drops?, false)
      |> assign(:page_title, "ElixirDrops")
