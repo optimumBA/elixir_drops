@@ -218,17 +218,16 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   def handle_event(
-        "soft_delete_notifications",
+        "mark_notifications_as_read",
         _params,
         %{assigns: %{current_user: user}} = socket
       ) do
-    {_integer, nil} = Notifications.soft_delete_user_notifications(user.id)
+    {_integer, nil} = Notifications.mark_all_as_read(user.id)
 
     {:noreply,
      socket
      |> stream(:notifications, [], reset: true)
-     |> assign(:notification_count, 0)
-     |> assign(:notifications_empty?, true)}
+     |> assign(:notification_count, 0)}
   end
 
   @impl Phoenix.LiveView
@@ -269,7 +268,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply,
      socket
      |> assign(:notification_count, count + 1)
-     |> assign(:notifications_empty?, false)
      |> stream_insert(:notifications, notification, at: 0)}
   end
 end

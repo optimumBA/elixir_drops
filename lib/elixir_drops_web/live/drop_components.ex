@@ -827,7 +827,7 @@ defmodule ElixirDropsWeb.DropComponents do
 
   attr :end_of_notifications_timeline?, :boolean, required: true
   attr :notifications, :list, required: true
-  attr :notifications_empty?, :boolean, required: true
+  attr :notification_count, :integer, required: true
 
   @spec notification_component(assigns()) :: rendered()
   def notification_component(assigns) do
@@ -850,9 +850,9 @@ defmodule ElixirDropsWeb.DropComponents do
           </div>
         </div>
         <div
-          :if={!@notifications_empty?}
+          :if={@notification_count > 0}
           id="mark-notifications-as-read"
-          phx-click={JS.push("soft_delete_notifications")}
+          phx-click={JS.push("mark_notifications_as_read")}
           class="flex items-center gap-2 hover:cursor-pointer"
         >
           <p class="roboto-regular text-sm text-[#4F4F4F] leading-4">Mark all as read</p>
@@ -861,7 +861,10 @@ defmodule ElixirDropsWeb.DropComponents do
       </section>
       <section class="border-b-[0.5px] border-[#CBCBCB] mt-4"></section>
       <section>
-        <div :if={@notifications_empty?} class="flex items-center justify-center h-[80vh] sm:h-[40vh]">
+        <div
+          :if={@notification_count == 0}
+          class="flex items-center justify-center h-[80vh] sm:h-[40vh]"
+        >
           <section class="flex flex-col w-[70%]">
             <div>
               <img
@@ -876,7 +879,7 @@ defmodule ElixirDropsWeb.DropComponents do
           </section>
         </div>
         <div
-          :if={!@notifications_empty?}
+          :if={@notification_count > 0}
           id="notifications"
           phx-update="stream"
           class="last:mb-10 border-[#CBCBCB]"

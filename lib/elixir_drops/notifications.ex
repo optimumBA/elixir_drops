@@ -119,12 +119,12 @@ defmodule ElixirDrops.Notifications do
 
   ## Examples
 
-      iex> soft_delete_user_notifications("550e8400-e29b-41d4-a716-446655440000")
+      iex> mark_all_as_read("550e8400-e29b-41d4-a716-446655440000")
       {5, nil}
 
   """
-  @spec soft_delete_user_notifications(user_id()) :: {non_neg_integer(), nil}
-  def soft_delete_user_notifications(user_id) do
+  @spec mark_all_as_read(user_id()) :: {non_neg_integer(), nil}
+  def mark_all_as_read(user_id) do
     Notification
     |> where([n], n.recipient_id == ^user_id)
     |> Repo.update_all(set: [read: true])

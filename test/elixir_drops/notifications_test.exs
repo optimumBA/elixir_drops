@@ -176,7 +176,7 @@ defmodule ElixirDrops.NotificationsTest do
     end
   end
 
-  describe "soft_delete_user_notifications/1" do
+  describe "mark_all_as_read/1" do
     setup [:create_notification_setup]
 
     test "marks all notifications for a user as read", %{
@@ -187,7 +187,7 @@ defmodule ElixirDrops.NotificationsTest do
       create_multiple_notifications(actor, recipient, comment, 3)
       assert Notifications.count_user_notifications(recipient.id) == 3
 
-      {count, nil} = Notifications.soft_delete_user_notifications(recipient.id)
+      {count, nil} = Notifications.mark_all_as_read(recipient.id)
 
       assert count == 3
       assert Notifications.count_user_notifications(recipient.id) == 0
@@ -196,7 +196,7 @@ defmodule ElixirDrops.NotificationsTest do
     test "returns {0, nil} when user has no notifications" do
       non_existing_user_id = Ecto.UUID.generate()
 
-      assert {0, nil} = Notifications.soft_delete_user_notifications(non_existing_user_id)
+      assert {0, nil} = Notifications.mark_all_as_read(non_existing_user_id)
     end
   end
 

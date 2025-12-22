@@ -17,7 +17,6 @@ defmodule ElixirDropsWeb.NotificationHelpers do
     socket
     |> stream(:notifications, [], reset: true)
     |> assign(:notification_count, 0)
-    |> assign(:notifications_empty?, true)
   end
 
   def assign_notifications(%{assigns: %{current_user: user}} = socket) do
@@ -29,7 +28,6 @@ defmodule ElixirDropsWeb.NotificationHelpers do
     |> assign(:last_notification, last_notification)
     |> stream(:notifications, notifications, reset: true)
     |> assign(:notification_count, Notifications.count_user_notifications(user.id))
-    |> assign(:notifications_empty?, Enum.empty?(notifications))
     |> assign(:notification_filters, filters)
   end
 
