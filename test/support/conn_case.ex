@@ -21,7 +21,6 @@ defmodule ElixirDropsWeb.ConnCase do
   alias ElixirDrops.Accounts.User
 
   @type conn :: Plug.Conn.t()
-  @type context :: map()
   @type user :: User.t()
 
   using do
