@@ -155,14 +155,27 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream_insert(:notifications, notification, at: 0)}
   end
 
-  defp create_notifications(actor, drop_author, comment, top_level_comment_author) do
+  defp create_notifications(
+         actor,
+         drop_author,
+         %Comment{parent_id: nil} = comment,
+         top_level_comment_author
+       ) do
+    if drop_author != top_level_comment_author,
+      do: create_notification(actor, drop_author, comment, %{type: :comment_on_post}),
+      else: :ok
+  end
+
+  defp create_notifications(
+         actor,
+         drop_author,
+         %Comment{parent_id: _parent_id} = comment,
+         top_level_comment_author
+       ) do
     if drop_author != top_level_comment_author,
       do: create_notification(actor, drop_author, comment, %{type: :comment_on_post})
 
-    if comment.parent_id,
-      do:
-        create_notification(actor, top_level_comment_author, comment, %{type: :reply_to_comment}),
-      else: :ok
+    create_notification(actor, top_level_comment_author, comment, %{type: :reply_to_comment})
   end
 
   defp create_notification(actor, recipient, comment, attrs) do

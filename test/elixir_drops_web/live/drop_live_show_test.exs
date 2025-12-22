@@ -39,7 +39,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert updated_html =~ user.name
     end
 
-    test "adding a comment sends a notification to the drop author", %{
+    test "commenting sends a notification to the drop author", %{
       conn: conn
     } do
       drop_author = user_fixture()
@@ -62,7 +62,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
              |> render() =~ "1"
     end
 
-    test "adding a reply_comment sends a notification to both the drop author and the parent_comment author",
+    test "replying to a comment sends a notification to both the drop author and the comment author",
          %{
            conn: conn
          } do
@@ -98,7 +98,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
              |> render() =~ "some_name replied to your comment on -"
     end
 
-    test "adding a reply_comment sends only one notification to the drop author, albeit they are the parent_comment author",
+    test "replying to a comment sends only one notification to a drop author if they are the comment's author",
          %{
            conn: conn
          } do
