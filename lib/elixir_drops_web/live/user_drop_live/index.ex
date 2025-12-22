@@ -34,7 +34,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:loading_more, false)
      |> assign(:search_query, "")
      |> assign(:drops_empty?, true)
-     |> NotificationHelpers.assign_notifications()
      |> SearchHelper.initialize_profile_search_assigns(user_id)}
   end
 

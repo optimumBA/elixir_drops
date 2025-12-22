@@ -36,8 +36,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:loading_more, false)
      |> assign(:search_query, "")
      |> assign(:searching, false)
-     |> assign(:drops_empty?, true)
-     |> NotificationHelpers.assign_notifications()}
+     |> assign(:drops_empty?, true)}
   end
 
   @impl Phoenix.LiveView

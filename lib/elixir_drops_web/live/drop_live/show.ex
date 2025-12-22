@@ -40,8 +40,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:end_of_notifications_timeline?, false)
      |> assign(:show_user_drops?, false)
-     |> assign_drop(drop)
-     |> NotificationHelpers.assign_notifications()}
+     |> assign_drop(drop)}
   end
 
   @impl Phoenix.LiveView
