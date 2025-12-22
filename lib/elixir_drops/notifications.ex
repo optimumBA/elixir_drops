@@ -19,16 +19,52 @@ defmodule ElixirDrops.Notifications do
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
+  @doc """
+  Subscribes to notifications events for a specific user by calling `NotificationsBroadcast.subscribe/1`.
+
+  ## Examples
+
+      iex> subscribe("550e8400-e29b-41d4-a716-446655440000")
+      :ok
+
+  """
   @spec subscribe(user_id()) :: :ok
   def subscribe(user_id) do
     NotificationsBroadcast.subscribe(user_id)
   end
 
-  @spec dispatch_notification(notification()) :: :ok
-  def dispatch_notification(notification) do
-    NotificationsBroadcast.broadcast_notification_creation(notification)
+  @doc """
+  Dispatches a notification to subscribers by broadcasting its creation.
+
+  ## Examples
+
+      iex> broadcast_notification(%Notification{})
+      :ok
+
+  """
+  @spec broadcast_notification(notification()) :: :ok
+  def broadcast_notification(notification) do
+    NotificationsBroadcast.broadcast(notification)
   end
 
+  @doc """
+  Returns a list of unread notifications filtered by the given filters.
+
+  Notifications are ordered by insertion date in descending order and preloaded
+  with actor, recipient, and comment associations.
+
+  ## Examples
+
+      iex> list_notifications(%{user_id: user_id})
+      [%Notification{}, ...]
+
+      iex> list_notifications(%{older_than: %Notification{}}, 5)
+      [%Notification{}, ...]
+
+      iex> list_notifications(%{user_id: user_id}, 20)
+      [%Notification{}, ...]
+
+  """
   @spec list_notifications(map(), integer()) :: [notification()]
   def list_notifications(filters, limit \\ 10) do
     filter_query = apply_filters()

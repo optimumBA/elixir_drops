@@ -31,12 +31,12 @@ defmodule ElixirDrops.Notifications.NotificationsBroadcast do
 
   ## Examples
 
-      iex> broadcast_notification_creation(notification)
+      iex> broadcast(notification)
       :ok
 
   """
-  @spec broadcast_notification_creation(notification()) :: :ok
-  def broadcast_notification_creation(notification) do
+  @spec broadcast(notification()) :: :ok
+  def broadcast(notification) do
     Phoenix.PubSub.broadcast(
       ElixirDrops.PubSub,
       "notifications-#{notification.recipient_id}",

@@ -170,7 +170,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp create_notification(actor, recipient, comment, attrs) do
     case Notifications.create_notification(actor, recipient, comment, attrs) do
       {:ok, notification} ->
-        Notifications.dispatch_notification(notification)
+        Notifications.broadcast_notification(notification)
 
       {:error, _changeset} ->
         :ok

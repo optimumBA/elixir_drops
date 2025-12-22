@@ -208,7 +208,7 @@ defmodule ElixirDrops.NotificationsTest do
     end
   end
 
-  describe "dispatch_notification/1" do
+  describe "broadcast_notification/1" do
     setup [:create_notification_setup]
 
     test "broadcasts a notification creation event", %{
@@ -216,7 +216,7 @@ defmodule ElixirDrops.NotificationsTest do
       recipient: recipient
     } do
       :ok = Notifications.subscribe(recipient.id)
-      :ok = Notifications.dispatch_notification(notification)
+      :ok = Notifications.broadcast_notification(notification)
 
       assert_receive {:new_notification, ^notification}
     end
