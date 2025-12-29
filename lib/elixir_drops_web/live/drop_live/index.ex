@@ -23,8 +23,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
      |> assign(:new_drops?, false)
-     |> assign(:page_title, "ElixirDrops")
      |> assign(:page, 1)
+     |> assign(:page_title, "ElixirDrops")
      |> assign(:search_query, "")
      |> assign(:searching, false)
      |> assign(:viewport_height, nil)
@@ -62,7 +62,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket) do
+  def handle_event("update_viewport", %{"width" => width, "height" => height}, socket) do
     batch_size = DropsBatchCalculator.calculate_batch_size(width, height)
 
     {:noreply,
@@ -72,21 +72,21 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:viewport_width, width)}
   end
 
-  def handle_event("load-more", %{"layout_complete" => true}, socket) do
+  def handle_event("load_more", %{"layout_complete" => true}, socket) do
     socket = assign(socket, :loading_more, true)
     DropsListHelper.load_more(socket, socket.assigns.batch_size)
   end
 
-  def handle_event("load-more", _params, socket) do
+  def handle_event("load_more", _params, socket) do
     socket = assign(socket, :loading_more, true)
     DropsListHelper.load_more(socket, socket.assigns.batch_size)
   end
 
-  def handle_event("load-more-complete", _params, socket) do
+  def handle_event("load_more_complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
   end
 
-  def handle_event("refresh-drops", _params, socket) do
+  def handle_event("refresh_drops", _params, socket) do
     {:noreply,
      socket
      |> assign(:new_drops?, false)

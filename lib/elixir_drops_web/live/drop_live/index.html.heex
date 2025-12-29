@@ -38,7 +38,7 @@
         ]}
         id="new-drops-indicator"
         phx-click={
-          JS.push("refresh-drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")
+          JS.push("refresh_drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")
         }
       >
         <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
