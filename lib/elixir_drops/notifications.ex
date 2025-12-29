@@ -8,7 +8,6 @@ defmodule ElixirDrops.Notifications do
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Notifications.Notification
-  alias ElixirDrops.Notifications.NotificationsBroadcast
   alias ElixirDrops.Repo
 
   @type attrs :: map()
@@ -20,7 +19,7 @@ defmodule ElixirDrops.Notifications do
   @type user_id :: Ecto.UUID.t()
 
   @doc """
-  Subscribes to notifications events for a specific user by calling `NotificationsBroadcast.subscribe/1`.
+   Subscribes to notification events.
 
   ## Examples
 
@@ -30,21 +29,29 @@ defmodule ElixirDrops.Notifications do
   """
   @spec subscribe(user_id()) :: :ok
   def subscribe(user_id) do
-    NotificationsBroadcast.subscribe(user_id)
+    Phoenix.PubSub.subscribe(ElixirDrops.PubSub, "notifications-#{user_id}")
   end
 
   @doc """
-  Dispatches a notification to subscribers by broadcasting its creation.
+  Broadcasts a message indicating that a new comment has been created.
+
+  ## Parameters
+
+    - `notification`: The notification data to be broadcast.
 
   ## Examples
 
-      iex> broadcast_notification(%Notification{})
+      iex> broadcast(notification)
       :ok
 
   """
-  @spec broadcast_notification(notification()) :: :ok
-  def broadcast_notification(notification) do
-    NotificationsBroadcast.broadcast(notification)
+  @spec broadcast(notification()) :: :ok
+  def broadcast(notification) do
+    Phoenix.PubSub.broadcast(
+      ElixirDrops.PubSub,
+      "notifications-#{notification.recipient_id}",
+      {:new_notification, notification}
+    )
   end
 
   @doc """
