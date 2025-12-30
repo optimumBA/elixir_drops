@@ -6,7 +6,7 @@
       live_action={@live_action}
       search_query={@navbar_search_query}
       search_suggestions={@search_suggestions}
-      show_suggestions={@show_suggestions}
+      show_suggestions?={@show_suggestions?}
       show_user_drops?={true}
     />
 
@@ -26,8 +26,7 @@
         profile_search_suggestions={@profile_search_suggestions}
         search_query={@search_query}
         search_suggestions={@profile_search_suggestions}
-        show_profile_suggestions={@show_profile_suggestions}
-        show_suggestions={@show_profile_suggestions}
+        show_profile_suggestions?={@show_profile_suggestions?}
       />
 
       <DropsListHelper.drops_list
@@ -59,6 +58,6 @@
     current_user={@current_user}
     search_query={@search_query}
     search_suggestions={@profile_search_suggestions}
-    show_suggestions={@show_profile_suggestions}
+    show_suggestions?={@show_profile_suggestions?}
   />
 </Layouts.app>

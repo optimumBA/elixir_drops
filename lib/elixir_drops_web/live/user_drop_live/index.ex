@@ -96,7 +96,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       socket
       |> assign(:profile_search_suggestions, [])
       |> assign(:search_query, trimmed_query)
-      |> assign(:show_profile_suggestions, false)
+      |> assign(:show_profile_suggestions?, false)
 
     # Stay on profile page with search query
     if trimmed_query != "" do
@@ -107,7 +107,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_event("close_search_overlay", _params, socket) do
-    {:noreply, assign(socket, :show_profile_suggestions, false)}
+    {:noreply, assign(socket, :show_profile_suggestions?, false)}
   end
 
   def handle_event("clear_search", _params, socket) do
@@ -115,7 +115,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      socket
      |> assign(:profile_search_suggestions, [])
      |> assign(:search_query, "")
-     |> assign(:show_profile_suggestions, false)
+     |> assign(:show_profile_suggestions?, false)
      |> push_patch(to: ~p"/profile")}
   end
 
@@ -126,11 +126,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply,
      socket
      |> assign(:profile_search_suggestions, suggestions)
-     |> assign(:show_profile_suggestions, length(suggestions) > 0)}
+     |> assign(:show_profile_suggestions?, length(suggestions) > 0)}
   end
 
   def handle_event("load_suggestions", _params, socket) do
-    {:noreply, assign(socket, :show_profile_suggestions, false)}
+    {:noreply, assign(socket, :show_profile_suggestions?, false)}
   end
 
   def handle_event("delete_search_history", %{"id" => id}, socket) do
@@ -147,17 +147,17 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_event("blur_search_input", _params, socket) do
-    {:noreply, assign(socket, :show_profile_suggestions, false)}
+    {:noreply, assign(socket, :show_profile_suggestions?, false)}
   end
 
   def handle_event("focus_search_input", _params, socket) do
     user_id = socket.assigns.current_user.id
-    {suggestions, show_suggestions} = SearchHelper.get_focus_search_suggestions(user_id)
+    {suggestions, show_suggestions?} = SearchHelper.get_focus_search_suggestions(user_id)
 
     {:noreply,
      socket
      |> assign(:profile_search_suggestions, suggestions)
-     |> assign(:show_profile_suggestions, show_suggestions)}
+     |> assign(:show_profile_suggestions?, show_suggestions?)}
   end
 
   # Handle navbar search submit - navigate to homepage with search
@@ -170,7 +170,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       socket
       |> assign(:navbar_search_query, trimmed_query)
       |> assign(:search_suggestions, [])
-      |> assign(:show_suggestions, false)
+      |> assign(:show_suggestions?, false)
 
     # Navigate to homepage with search query
     if trimmed_query != "" do

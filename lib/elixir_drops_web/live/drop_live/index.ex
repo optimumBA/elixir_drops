@@ -109,7 +109,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
       |> assign(:search_query, trimmed_query)
       |> assign(:search_suggestions, [])
       |> assign(:searching, trimmed_query != "")
-      |> assign(:show_suggestions, false)
+      |> assign(:show_suggestions?, false)
 
     # Update URL and trigger search
     {:noreply,
@@ -124,7 +124,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
         {:noreply,
          socket
          |> assign(:search_suggestions, [])
-         |> assign(:show_suggestions, false)}
+         |> assign(:show_suggestions?, false)}
 
       socket.assigns.current_user ->
         suggestions = Search.get_search_suggestions(socket.assigns.current_user.id, query)
@@ -132,7 +132,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
         {:noreply,
          socket
          |> assign(:search_suggestions, suggestions)
-         |> assign(:show_suggestions, true)}
+         |> assign(:show_suggestions?, true)}
 
       true ->
         # For unauthenticated users, show only popular searches
@@ -141,7 +141,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
         {:noreply,
          socket
          |> assign(:search_suggestions, suggestions)
-         |> assign(:show_suggestions, true)}
+         |> assign(:show_suggestions?, true)}
     end
   end
 
@@ -149,7 +149,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply,
      socket
      |> assign(:search_suggestions, [])
-     |> assign(:show_suggestions, false)}
+     |> assign(:show_suggestions?, false)}
   end
 
   def handle_event("delete_search_history", %{"id" => history_id}, socket) do
@@ -164,7 +164,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   def handle_event("close_search_overlay", _params, socket) do
-    {:noreply, assign(socket, :show_suggestions, false)}
+    {:noreply, assign(socket, :show_suggestions?, false)}
   end
 
   def handle_event("clear_search", _params, socket) do
@@ -173,7 +173,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:navbar_search_query, "")
      |> assign(:search_query, "")
      |> assign(:search_suggestions, [])
-     |> assign(:show_suggestions, false)
+     |> assign(:show_suggestions?, false)
      |> push_patch(to: ~p"/")}
   end
 
@@ -182,7 +182,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   def handle_event("blur_search_input", _params, socket) do
-    {:noreply, assign(socket, :show_suggestions, false)}
+    {:noreply, assign(socket, :show_suggestions?, false)}
   end
 
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
@@ -195,7 +195,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
       socket
       |> assign(:navbar_search_query, trimmed_query)
       |> assign(:search_suggestions, [])
-      |> assign(:show_suggestions, false)
+      |> assign(:show_suggestions?, false)
 
     # Use push_navigate to force a masonry refresh
     if trimmed_query != "" do

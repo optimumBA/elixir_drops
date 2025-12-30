@@ -50,7 +50,7 @@ defmodule ElixirDropsWeb.SearchHelper do
 
   @doc """
   Gets recent search history suggestions for focus event.
-  Returns tuple of {suggestions, show_suggestions_flag}.
+  Returns tuple of {suggestions, show_suggestions?_flag}.
   """
   @spec get_focus_search_suggestions(binary() | nil) :: {list(map()), boolean()}
   def get_focus_search_suggestions(user_id) do
@@ -67,12 +67,12 @@ defmodule ElixirDropsWeb.SearchHelper do
   def handle_focus_search_input(socket, suggestions_assign_key) do
     if socket.assigns.current_user do
       user_id = socket.assigns.current_user.id
-      {suggestions, show_suggestions} = get_focus_search_suggestions(user_id)
+      {suggestions, show_suggestions?} = get_focus_search_suggestions(user_id)
 
       {:noreply,
        socket
        |> assign(suggestions_assign_key, suggestions)
-       |> assign(:show_suggestions, show_suggestions)}
+       |> assign(:show_suggestions?, show_suggestions?)}
     else
       # For unauthenticated users, show top popular searches
       suggestions =
@@ -83,7 +83,7 @@ defmodule ElixirDropsWeb.SearchHelper do
       {:noreply,
        socket
        |> assign(suggestions_assign_key, suggestions)
-       |> assign(:show_suggestions, length(suggestions) > 0)}
+       |> assign(:show_suggestions?, length(suggestions) > 0)}
     end
   end
 
@@ -120,7 +120,7 @@ defmodule ElixirDropsWeb.SearchHelper do
     socket
     |> assign(:navbar_search_query, "")
     |> assign(:searching, false)
-    |> assign(:show_suggestions, false)
+    |> assign(:show_suggestions?, false)
     |> assign(:search_suggestions, initial_suggestions)
   end
 
@@ -137,7 +137,7 @@ defmodule ElixirDropsWeb.SearchHelper do
     |> assign(:profile_search_suggestions, initial_suggestions)
     |> assign(:searching, false)
     |> assign(:search_suggestions, initial_suggestions)
-    |> assign(:show_profile_suggestions, false)
-    |> assign(:show_suggestions, false)
+    |> assign(:show_profile_suggestions?, false)
+    |> assign(:show_suggestions?, false)
   end
 end
