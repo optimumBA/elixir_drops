@@ -82,7 +82,6 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   defp handle_save_success(socket, %{screenshot: %{status: :pending}} = drop) do
     enqueue_seo_screenshot_creation(
       drop,
-      socket.assigns.drop.body,
       socket.assigns.live_action
     )
 
@@ -167,10 +166,10 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     end
   end
 
-  defp enqueue_seo_screenshot_creation(drop, old_body, action) do
+  defp enqueue_seo_screenshot_creation(drop, action) do
     Drops.broadcast_drop_screenshot_started(drop)
 
-    %{"drop_id" => drop.id, "old_body" => old_body, "action" => action}
+    %{"drop_id" => drop.id, "action" => action}
     |> ScreenshotGeneratorWorker.new()
     |> Oban.insert()
   end
