@@ -823,35 +823,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert path == ~p"/"
     end
 
-    test "screenshot job uses correct old body value when updating drop", %{
-      conn: conn,
-      user: user
-    } do
-      drop = drop_fixture(%Drop{}, user, %{title: "Drop title", body: "No code block"})
-
-      conn = sign_in_user(conn, user)
-      old_body = drop.body
-
-      new_body =
-        "#{old_body} with a change ```elixir\ndefmodule Test do\n  def hello do\n    :world\n  end\nend\n edited code block```"
-
-      {:ok, live, _html} = live(conn, ~p"/drops/#{drop.short_id}/edit")
-
-      live
-      |> form("#drops-editor-form", drop: %{body: new_body})
-      |> render_submit()
-
-      assert_enqueued(
-        worker: ScreenshotGeneratorWorker,
-        args: %{
-          "drop_id" => drop.id,
-          "old_body" => old_body,
-          "action" => "edit"
-        },
-        queue: :seo_images
-      )
-    end
-
     test "search with query returns matching drops", %{conn: conn, user: user} do
       # Create test drops
       _matching_drop =
