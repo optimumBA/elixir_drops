@@ -6,7 +6,6 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   import Phoenix.HTML.Form
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDrops.Workers.SitemapGeneratorWorker
   alias ElixirDropsWeb.CodeBlockHelper
@@ -168,7 +167,7 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
   end
 
   defp enqueue_seo_screenshot_creation(drop, action) do
-    DropsBroadcast.broadcast_drop_screenshot_started(drop)
+    Drops.broadcast_drop_screenshot_started(drop)
 
     %{"drop_id" => drop.id, "action" => action}
     |> ScreenshotGeneratorWorker.new()
