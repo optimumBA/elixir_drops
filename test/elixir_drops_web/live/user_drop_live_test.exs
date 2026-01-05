@@ -11,7 +11,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.Repo
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
@@ -197,7 +196,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       send(
         live.pid,
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, 100, :completed, %{}}
+        {Drops, [:drop, :screenshot_generation_completion], drop, 100, :completed, %{}}
       )
 
       assert render(live) =~ "100%"
@@ -468,7 +467,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           }
         })
 
-      DropsBroadcast.broadcast_drop_screenshot_completion(
+      Drops.broadcast_drop_screenshot_completion(
         updated_drop,
         100,
         :completed,
@@ -551,7 +550,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       updated_drop = Drops.get_drop(%{drop_id: drop.id})
 
-      DropsBroadcast.broadcast_drop_screenshot_completion(
+      Drops.broadcast_drop_screenshot_completion(
         updated_drop,
         100,
         :completed,
@@ -1164,7 +1163,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       # Send screenshot generation failure for the other user's drop
       send(
         live.pid,
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, 100, :failed, %{}}
+        {Drops, [:drop, :screenshot_generation_completion], drop, 100, :failed, %{}}
       )
 
       # Should handle gracefully without streaming the drop (since it failed and it's not this user's drop)
@@ -1191,7 +1190,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       # Send screenshot generation started
       send(
         live.pid,
-        {DropsBroadcast, [:drop, :screenshot_generation_started], drop}
+        {Drops, [:drop, :screenshot_generation_started], drop}
       )
 
       # Should reload drops

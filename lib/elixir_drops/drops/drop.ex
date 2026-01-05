@@ -4,7 +4,6 @@ defmodule ElixirDrops.Drops.Drop do
   use Ecto.Schema
 
   import Ecto.Changeset
-  import Ecto.Query, warn: false
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops.Screenshot
@@ -18,12 +17,10 @@ defmodule ElixirDrops.Drops.Drop do
     field :body, :string
     field :comment_count, :integer, virtual: true
     embeds_one :screenshot, Screenshot, on_replace: :update
+    field :relevance_rank, :float, virtual: true
     field :search_vector, :string, load_in_query: false
     field :short_id, :string
     field :title, :string
-
-    # Virtual field for search relevance ranking
-    field :relevance_rank, :float, virtual: true
 
     belongs_to :user, User
 

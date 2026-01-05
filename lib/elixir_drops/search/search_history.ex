@@ -2,6 +2,7 @@ defmodule ElixirDrops.Search.SearchHistory do
   @moduledoc false
 
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @type t :: %__MODULE__{}
@@ -23,11 +24,10 @@ defmodule ElixirDrops.Search.SearchHistory do
       |> cast(attrs, [:query, :results_count, :user_id])
       |> validate_required([:query, :user_id])
 
-    # Set default results_count to 0 if not provided
-    if get_change(changeset, :results_count) == nil and search_history.results_count == nil do
-      put_change(changeset, :results_count, 0)
-    else
+    if get_change(changeset, :results_count) || search_history.results_count do
       changeset
+    else
+      put_change(changeset, :results_count, 0)
     end
   end
 end
