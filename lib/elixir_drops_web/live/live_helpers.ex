@@ -8,6 +8,11 @@ defmodule ElixirDropsWeb.LiveHelpers do
   import Phoenix.Component
   import Phoenix.LiveView, only: [get_connect_params: 1]
 
+  alias ElixirDrops.Search
+  alias ElixirDropsWeb.DropsBatchCalculator
+  alias ElixirDropsWeb.SearchHelper
+
+  @type id :: Ecto.UUID.t()
   @type socket :: Phoenix.LiveView.Socket.t()
 
   # Existing welcome message functionality
@@ -51,5 +56,29 @@ defmodule ElixirDropsWeb.LiveHelpers do
   else
     @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
     def on_mount(:allow_ecto_sandbox, _params, _session, socket), do: {:cont, socket}
+  end
+
+  # shared handle_event logic for Liveviews
+
+  @spec update_viewport(non_neg_integer(), non_neg_integer(), socket()) :: socket()
+  def update_viewport(width, height, socket) do
+    batch_size = DropsBatchCalculator.calculate_batch_size(width, height)
+
+    socket
+    |> assign(:batch_size, batch_size)
+    |> assign(:viewport_height, height)
+    |> assign(:viewport_width, width)
+  end
+
+  @spec delete_search_history(id(), atom(), socket()) :: {:noreply, socket()}
+  def delete_search_history(id, suggestion_type, socket) do
+    with %{current_user: %{id: user_id}} <- socket.assigns,
+         {:ok, _} <- Search.delete_search_history(id, user_id) do
+      # Re-fetch suggestions like focus does
+      {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
+      {:noreply, assign(socket, suggestion_type, suggestions)}
+    else
+      _error -> {:noreply, socket}
+    end
   end
 end

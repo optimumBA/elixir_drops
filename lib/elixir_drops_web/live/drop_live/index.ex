@@ -6,8 +6,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
-  alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.LiveHelpers
   alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
@@ -48,15 +48,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket) do
-    batch_size = DropsBatchCalculator.calculate_batch_size(width, height)
-
-    {:noreply,
-     socket
-     |> assign(:viewport_width, width)
-     |> assign(:viewport_height, height)
-     |> assign(:batch_size, batch_size)}
-  end
+  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket),
+    do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
 
   def handle_event("load-more", %{"layout_complete" => true}, socket) do
     socket = assign(socket, :loading_more, true)
@@ -140,16 +133,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:show_suggestions, false)}
   end
 
-  def handle_event("delete_search_history", %{"id" => history_id}, socket) do
-    with %{current_user: %{id: user_id}} <- socket.assigns,
-         {:ok, _} <- Search.delete_search_history(history_id, user_id) do
-      # Re-fetch suggestions like focus does
-      {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
-      {:noreply, assign(socket, :search_suggestions, suggestions)}
-    else
-      _error -> {:noreply, socket}
-    end
-  end
+  def handle_event("delete_search_history", %{"id" => id}, socket),
+    do: LiveHelpers.delete_search_history(id, :search_suggestions, socket)
 
   def handle_event("close_search_overlay", _params, socket) do
     {:noreply, assign(socket, :show_suggestions, false)}

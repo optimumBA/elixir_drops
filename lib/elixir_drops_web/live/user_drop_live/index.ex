@@ -6,6 +6,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.LiveHelpers
   alias ElixirDropsWeb.SearchHelper
   alias ElixirDropsWeb.UserDropLive.Bookmarks
   alias ElixirDropsWeb.UserDropLive.FormComponent
@@ -59,15 +60,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket) do
-    batch_size = ElixirDropsWeb.DropsBatchCalculator.calculate_batch_size(width, height)
-
-    {:noreply,
-     socket
-     |> assign(:batch_size, batch_size)
-     |> assign(:viewport_height, height)
-     |> assign(:viewport_width, width)}
-  end
+  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket),
+    do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
 
   def handle_event("load-more", %{"layout_complete" => true}, socket) do
     socket = assign(socket, :loading_more, true)
@@ -133,18 +127,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply, assign(socket, :show_profile_suggestions, false)}
   end
 
-  def handle_event("delete_search_history", %{"id" => id}, socket) do
-    case ElixirDrops.Search.delete_search_history(id, socket.assigns.current_user.id) do
-      {:ok, _search_history} ->
-        # Re-fetch suggestions to update the list
-        user_id = socket.assigns.current_user.id
-        {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
-        {:noreply, assign(socket, :profile_search_suggestions, suggestions)}
-
-      {:error, _reason} ->
-        {:noreply, socket}
-    end
-  end
+  def handle_event("delete_search_history", %{"id" => id}, socket),
+    do: LiveHelpers.delete_search_history(id, :profile_search_suggestions, socket)
 
   def handle_event("blur_search_input", _params, socket) do
     {:noreply, assign(socket, :show_profile_suggestions, false)}
