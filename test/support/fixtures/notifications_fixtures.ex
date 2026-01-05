@@ -4,7 +4,7 @@ defmodule ElixirDrops.NotificationsFixtures do
   entities via the `ElixirDrops.Notifications` context.
   """
 
-  import ElixirDrops.PaginationHelpers
+  import ElixirDrops.FactoryHelpers
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Comments.Comment
