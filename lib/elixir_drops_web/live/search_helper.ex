@@ -50,7 +50,7 @@ defmodule ElixirDropsWeb.SearchHelper do
 
   @doc """
   Gets recent search history suggestions for focus event.
-  Returns tuple of {suggestions, show_suggestions?_flag}.
+  Returns tuple of {suggestions, show_suggestions_flag}.
   """
   @spec get_focus_search_suggestions(binary() | nil) :: {list(map()), boolean()}
   def get_focus_search_suggestions(user_id) do
