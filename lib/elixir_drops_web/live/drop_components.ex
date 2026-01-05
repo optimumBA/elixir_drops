@@ -914,7 +914,7 @@ defmodule ElixirDropsWeb.DropComponents do
     <div class="flex gap-4">
       <section class="shrink-0 pt-1 md:pt-0">
         <img
-          src={@actor.avatar || "/images/default-avatar.svg"}
+          src={@actor.avatar || ~p"/images/default-avatar.svg"}
           alt={@actor.name}
           class="w-11 h-11 rounded-full"
         />

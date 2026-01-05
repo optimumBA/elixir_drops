@@ -82,7 +82,7 @@ InfiniteScrollHooks.InfiniteScrollNotifications = {
 
     this.connectObserver()
 
-    this.handleEvent('load-more-notifications-complete', () => {
+    this.handleEvent('load_more_notifications_complete', () => {
       setTimeout(() => {
         this.connectObserver()
       }, 500)
@@ -121,7 +121,7 @@ InfiniteScrollHooks.InfiniteScrollNotifications = {
   async loadMore() {
     this.disconnectObserver()
 
-    this.pushEvent('load-more-notifications')
+    this.pushEvent('load_more_notifications')
   },
 }
 

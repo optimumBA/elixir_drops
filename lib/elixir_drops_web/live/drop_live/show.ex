@@ -103,7 +103,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign(:notification_count, 0)}
   end
 
-  def handle_event("load-more-notifications", _params, socket),
+  def handle_event("load_more_notifications", _params, socket),
     do: NotificationHelpers.load_more(socket)
 
   @impl Phoenix.LiveView

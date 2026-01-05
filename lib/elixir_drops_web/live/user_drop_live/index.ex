@@ -89,7 +89,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply, assign(socket, :loading_more, false)}
   end
 
-  def handle_event("load-more-notifications", _params, socket),
+  def handle_event("load_more_notifications", _params, socket),
     do: NotificationHelpers.load_more(socket)
 
   def handle_event("search_submit", %{"query" => query}, socket) do
