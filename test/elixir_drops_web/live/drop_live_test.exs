@@ -9,7 +9,6 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Drops.ShortIdGenerator
 
   setup :verify_on_exit!
@@ -209,7 +208,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
           screenshot: %{status: :completed, url: "http://example.com/screenshot.png"}
         })
 
-      DropsBroadcast.broadcast_drop_screenshot_completion(
+      Drops.broadcast_drop_screenshot_completion(
         updated_drop,
         100,
         :completed,
@@ -258,7 +257,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
           screenshot: %{status: :completed, url: "http://example.com/new-screenshot.png"}
         })
 
-      DropsBroadcast.broadcast_drop_screenshot_completion(
+      Drops.broadcast_drop_screenshot_completion(
         completed_drop,
         100,
         :completed,
@@ -344,7 +343,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute has_element?(live, "#drop-#{drop.id}")
       refute has_element?(live, "#new-drops-indicator")
 
-      DropsBroadcast.broadcast_drop_screenshot_started(drop)
+      Drops.broadcast_drop_screenshot_started(drop)
 
       Process.sleep(100)
       render(live)
@@ -1012,7 +1011,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       # Send screenshot completion with action other than "new"
       send(
         live.pid,
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, 100, :completed,
+        {Drops, [:drop, :screenshot_generation_completion], drop, 100, :completed,
          %{action: "update"}}
       )
 

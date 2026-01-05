@@ -3,7 +3,7 @@ defmodule ElixirDrops.Comments do
   The Comments context.
   """
 
-  import Ecto.Query, warn: false
+  import Ecto.Query
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Comments.Comment
