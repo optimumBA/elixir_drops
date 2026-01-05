@@ -3,7 +3,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
-  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
@@ -222,7 +221,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_info({DropsBroadcast, [:drop, :created], _drop}, socket) do
+  def handle_info({Drops, [:drop, :created], _drop}, socket) do
     {:noreply,
      socket
      |> assign(:page, 1)
@@ -230,7 +229,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_started], drop},
+        {Drops, [:drop, :screenshot_generation_started], drop},
         %{assigns: %{live_action: action}} = socket
       )
       when action in [:edit, :new] do
@@ -247,8 +246,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, progress, status,
-         _metadata},
+        {Drops, [:drop, :screenshot_generation_completion], drop, progress, status, _metadata},
         %{assigns: %{live_action: action}} = socket
       )
       when action in [:edit, :new] do
@@ -267,13 +265,12 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply, socket}
   end
 
-  def handle_info({DropsBroadcast, [:drop, :screenshot_generation_started], _drop}, socket) do
+  def handle_info({Drops, [:drop, :screenshot_generation_started], _drop}, socket) do
     {:noreply, DropsListHelper.assign_drops(socket)}
   end
 
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], drop, _progress, status,
-         _metadata},
+        {Drops, [:drop, :screenshot_generation_completion], drop, _progress, status, _metadata},
         socket
       ) do
     if status == :completed do

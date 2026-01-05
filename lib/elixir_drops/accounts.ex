@@ -4,8 +4,6 @@ defmodule ElixirDrops.Accounts do
   Implements functions for user manipulation.
   """
 
-  import Ecto.Query, warn: false
-
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Accounts.UserToken
   alias ElixirDrops.Repo

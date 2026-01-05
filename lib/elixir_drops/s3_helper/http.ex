@@ -1,9 +1,11 @@
 defmodule ElixirDrops.S3Helper.Http do
   @moduledoc false
 
-  @behaviour ElixirDrops.S3Helper.Client
+  alias ElixirDrops.S3Helper.Client
 
-  @impl ElixirDrops.S3Helper.Client
+  @behaviour Client
+
+  @impl Client
   def upload_image(image, filename, type) do
     s3 = Application.fetch_env!(:elixir_drops, :s3)
     url = "#{s3[:endpoint_url]}/#{s3[:bucket]}/#{filename}"

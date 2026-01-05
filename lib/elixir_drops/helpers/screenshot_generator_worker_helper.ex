@@ -3,9 +3,9 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelper do
   Helper functions for our screenshot generator worker
   """
 
+  @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
   @line_height 19.2
   @logo_offset_height 600
-  @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
   @max_height 843
 
   @spec calc_height(String.t()) :: integer()

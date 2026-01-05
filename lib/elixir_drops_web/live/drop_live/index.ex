@@ -2,7 +2,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
-  alias ElixirDrops.Drops.DropsBroadcast
   alias ElixirDrops.Search
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.CodeBlockHelper
@@ -201,7 +200,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
       do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
 
   @impl Phoenix.LiveView
-  def handle_info({DropsBroadcast, [:drop, :created], drop}, socket) do
+  def handle_info({Drops, [:drop, :created], drop}, socket) do
     if CodeBlockHelper.has_code_block?(drop.body) == false do
       {:noreply, assign(socket, :new_drops?, true)}
     else
@@ -210,13 +209,13 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_info({DropsBroadcast, [:drop, :screenshot_generation_started], _drop}, socket) do
+  def handle_info({Drops, [:drop, :screenshot_generation_started], _drop}, socket) do
     {:noreply, socket}
   end
 
   @impl Phoenix.LiveView
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, :completed,
+        {Drops, [:drop, :screenshot_generation_completion], _drop, _progress, :completed,
          %{action: "new"} = _metadata},
         socket
       ) do
@@ -224,8 +223,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   def handle_info(
-        {DropsBroadcast, [:drop, :screenshot_generation_completion], _drop, _progress, _status,
-         _metadata},
+        {Drops, [:drop, :screenshot_generation_completion], _drop, _progress, _status, _metadata},
         socket
       ) do
     {:noreply, socket}
