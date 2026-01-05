@@ -121,7 +121,7 @@ defmodule ElixirDropsWeb.SearchHelperTest do
 
       # Should only have popular searches (from seeds), no history items
       assert Enum.all?(suggestions, &(&1.type == :popular))
-      assert show_suggestions? == true
+      assert show_suggestions?
     end
   end
 
