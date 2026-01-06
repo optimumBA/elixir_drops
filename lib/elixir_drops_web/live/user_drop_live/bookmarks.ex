@@ -5,6 +5,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   alias ElixirDrops.Bookmarks
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.LiveHelpers
   alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
@@ -59,15 +60,8 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket) do
-    batch_size = ElixirDropsWeb.DropsBatchCalculator.calculate_batch_size(width, height)
-
-    {:noreply,
-     socket
-     |> assign(:batch_size, batch_size)
-     |> assign(:viewport_height, height)
-     |> assign(:viewport_width, width)}
-  end
+  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket),
+    do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
 
   def handle_event("load-more", %{"layout_complete" => true}, socket) do
     socket = assign(socket, :loading_more, true)
