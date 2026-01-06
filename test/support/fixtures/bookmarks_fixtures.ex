@@ -6,7 +6,7 @@ defmodule ElixirDrops.BookmarksFixtures do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.DropsFixtures
-  import ElixirDrops.PaginationHelpers
+  import ElixirDrops.FactoryHelpers
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Bookmarks

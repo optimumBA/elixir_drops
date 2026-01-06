@@ -4,7 +4,7 @@ defmodule ElixirDrops.DropsFixtures do
   entities via the `ElixirDrops.Drops` context.
   """
 
-  import ElixirDrops.PaginationHelpers
+  import ElixirDrops.FactoryHelpers
 
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Drops

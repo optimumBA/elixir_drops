@@ -1,4 +1,4 @@
-defmodule ElixirDrops.PaginationHelpers do
+defmodule ElixirDrops.FactoryHelpers do
   @moduledoc """
   Helper functions to assist in pagination tests.
   """
