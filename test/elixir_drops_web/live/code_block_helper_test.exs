@@ -7,7 +7,7 @@ defmodule ElixirDropsWeb.CodeBlockHelperTest do
     test "returns true when code block is present" do
       body = "Some text\n```elixir\nIO.puts(\"hello\")\n```\nMore text"
 
-      assert CodeBlockHelper.has_code_block?(body) == true
+      assert CodeBlockHelper.has_code_block?(body)
     end
 
     test "returns false when no code block is present" do

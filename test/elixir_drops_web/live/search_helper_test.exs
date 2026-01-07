@@ -97,7 +97,7 @@ defmodule ElixirDropsWeb.SearchHelperTest do
 
       {suggestions, show_suggestions?} = SearchHelper.get_focus_search_suggestions(user.id)
 
-      assert show_suggestions? == true
+      assert show_suggestions?
       # Should have at least the 2 history items we created
       assert length(Enum.filter(suggestions, &(&1.type == :history))) == 2
 
