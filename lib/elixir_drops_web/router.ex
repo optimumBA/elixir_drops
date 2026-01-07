@@ -42,6 +42,7 @@ defmodule ElixirDropsWeb.Router do
             ),
             {ElixirDropsWeb.UserAuth, :ensure_authenticated},
             {ElixirDropsWeb.UserAuth, :assign_current_user},
+            {ElixirDropsWeb.LiveHelpers, :attach_shared_hooks},
             {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
           ],
           & &1
@@ -63,6 +64,7 @@ defmodule ElixirDropsWeb.Router do
             if(Application.compile_env(:elixir_drops, :sql_sandbox),
               do: {ElixirDropsWeb.LiveAcceptance, :default}
             ),
+            {ElixirDropsWeb.LiveHelpers, :attach_shared_hooks},
             {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
             {ElixirDropsWeb.UserAuth, :assign_current_user},
             {ElixirDropsWeb.NavbarSearchHook, :navbar_search}

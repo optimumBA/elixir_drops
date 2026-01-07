@@ -6,10 +6,11 @@ defmodule ElixirDropsWeb.LiveHelpers do
   """
 
   import Phoenix.Component
-  import Phoenix.LiveView, only: [get_connect_params: 1]
+  import Phoenix.LiveView, only: [get_connect_params: 1, attach_hook: 4]
 
   alias ElixirDrops.Search
   alias ElixirDropsWeb.DropsBatchCalculator
+  alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.SearchHelper
 
   @type id :: Ecto.UUID.t()
@@ -25,6 +26,10 @@ defmodule ElixirDropsWeb.LiveHelpers do
       end
 
     {:cont, assign(socket, :show_welcome_message?, show_welcome_message)}
+  end
+
+  def on_mount(:attach_shared_hooks, _params, _session, socket) do
+    {:cont, attach_hook(socket, :process_event, :handle_event, &process_event/3)}
   end
 
   # Only compile sandbox support in test environment
@@ -80,5 +85,20 @@ defmodule ElixirDropsWeb.LiveHelpers do
     else
       _error -> {:noreply, socket}
     end
+  end
+
+  defp process_event("load-more-complete", _params, socket) do
+    {:cont, assign(socket, :loading_more, false)}
+  end
+
+  defp process_event("load-more", _params, socket) do
+    {:cont,
+     socket
+     |> assign(:loading_more, true)
+     |> DropsListHelper.load_more(socket.assigns.batch_size)}
+  end
+
+  defp process_event(_event, _params, socket) do
+    {:cont, socket}
   end
 end

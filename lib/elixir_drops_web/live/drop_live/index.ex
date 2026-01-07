@@ -51,20 +51,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   def handle_event("update-viewport", %{"width" => width, "height" => height}, socket),
     do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
 
-  def handle_event("load-more", %{"layout_complete" => true}, socket) do
-    socket = assign(socket, :loading_more, true)
-    DropsListHelper.load_more(socket, socket.assigns.batch_size)
-  end
-
-  def handle_event("load-more", _params, socket) do
-    socket = assign(socket, :loading_more, true)
-    DropsListHelper.load_more(socket, socket.assigns.batch_size)
-  end
-
-  def handle_event("load-more-complete", _params, socket) do
-    {:noreply, assign(socket, :loading_more, false)}
-  end
-
   def handle_event("refresh-drops", _params, socket) do
     {:noreply,
      socket
@@ -183,6 +169,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
   def handle_event(event, params, socket)
       when event in ["remove_from_bookmark", "bookmark_drop"],
       do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
+
+  def handle_event(_event, _params, socket), do: {:noreply, socket}
 
   @impl Phoenix.LiveView
   def handle_info({Drops, [:drop, :created], drop}, socket) do

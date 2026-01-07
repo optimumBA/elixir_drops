@@ -213,14 +213,14 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> assign(:last_drop, last_drop)
   end
 
-  @spec load_more(socket(), pos_integer()) :: {:noreply, socket()}
+  @spec load_more(socket(), pos_integer()) :: socket()
   def load_more(socket, batch_size \\ 10)
 
   def load_more(%{assigns: %{end_of_timeline?: true}} = socket, _batch_size),
-    do: {:noreply, socket}
+    do: socket
 
   def load_more(socket, _batch_size),
-    do: {:noreply, assign_drops_with_cursor(socket, socket.assigns.search_query)}
+    do: assign_drops_with_cursor(socket, socket.assigns.search_query)
 
   defp assign_drops_with_cursor(socket, search_query) when search_query != "" do
     socket
