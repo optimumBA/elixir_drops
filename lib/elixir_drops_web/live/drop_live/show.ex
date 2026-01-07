@@ -157,25 +157,22 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp create_notifications(
          actor,
          drop_author,
-         %Comment{parent_id: nil} = comment,
+         %Comment{parent_id: parent_id} = comment,
          top_level_comment_author
        ) do
-    if drop_author != top_level_comment_author,
-      do: create_notification(actor, drop_author, comment, %{type: :comment_on_post}),
-      else: :ok
+    if parent_id do
+      create_notification(actor, top_level_comment_author, comment, %{type: :reply_to_comment})
+    end
+
+    notify_drop_author(actor, drop_author, comment, top_level_comment_author)
   end
 
-  defp create_notifications(
-         actor,
-         drop_author,
-         %Comment{parent_id: _parent_id} = comment,
-         top_level_comment_author
-       ) do
-    if drop_author != top_level_comment_author,
-      do: create_notification(actor, drop_author, comment, %{type: :comment_on_post})
-
-    create_notification(actor, top_level_comment_author, comment, %{type: :reply_to_comment})
+  defp notify_drop_author(actor, drop_author, comment, top_level_comment_author)
+       when drop_author != top_level_comment_author do
+    create_notification(actor, drop_author, comment, %{type: :comment_on_post})
   end
+
+  defp notify_drop_author(_actor, _drop_author, _comment, _top_level_comment_author), do: :ok
 
   defp create_notification(actor, recipient, comment, attrs) do
     case Notifications.create_notification(actor, recipient, comment, attrs) do
