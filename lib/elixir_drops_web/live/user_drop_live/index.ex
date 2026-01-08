@@ -41,12 +41,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
     search_query = params["q"] || ""
-    bookmark_search_query = params["bq"] || ""
 
     if params["buid"] do
       {:noreply,
        socket
-       |> assign(:bookmark_search_query, bookmark_search_query)
+       |> assign(:bookmark_search_query, search_query)
        |> assign(:bookmark_tab?, true)}
     else
       {:noreply,

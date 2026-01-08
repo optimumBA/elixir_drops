@@ -268,7 +268,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       render_hook(bookmark_view, :search_submit, %{query: "phoenix"})
 
-      assert_redirect(bookmark_view, "/profile?buid=bookmarks&bq=phoenix")
+      assert_redirect(bookmark_view, "/profile?buid=bookmarks&q=phoenix")
     end
 
     test "bookmark search navigates to /profile?buid=id if the search query is empty",
@@ -298,7 +298,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       bookmark_fixture(%{drop_id: non_matching_drop.id, user_id: user.id})
 
       conn = sign_in_user(conn, user)
-      {:ok, live, _html} = live(conn, ~p"/profile/?buid=bookmarks&bq=phoenix")
+      {:ok, live, _html} = live(conn, ~p"/profile/?buid=bookmarks&q=phoenix")
 
       html = render(live)
       assert html =~ "Phoenix Tutorial"
