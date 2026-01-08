@@ -346,7 +346,7 @@ defmodule ElixirDropsWeb.DropComponents do
               "min-h-full py-4 flex items-center mr-8",
               @bookmark_tab? && "border-b-2 border-b-[#887ce1]"
             ]}>
-              <.link patch={~p"/profile?buid=bookmarks"}>
+              <.link patch={~p"/profile/bookmarks"}>
                 Bookmarks
               </.link>
             </li>

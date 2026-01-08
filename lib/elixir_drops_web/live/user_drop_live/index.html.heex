@@ -19,7 +19,10 @@
       />
     </section>
 
-    <section :if={@live_action == :index} class="text-[#252525] relative user-drops">
+    <section
+      :if={@live_action in [:index, :show_bookmarks]}
+      class="text-[#252525] relative user-drops"
+    >
       <DropComponents.user_drops_header
         bookmark_tab?={@bookmark_tab?}
         current_user={@current_user}

@@ -95,12 +95,12 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     if trimmed_query != "" do
       {:noreply,
        push_navigate(socket,
-         to: ~p"/profile?buid=bookmarks&q=#{trimmed_query}"
+         to: ~p"/profile/bookmarks?q=#{trimmed_query}"
        )}
     else
       {:noreply,
        push_navigate(socket,
-         to: ~p"/profile?buid=bookmarks"
+         to: ~p"/profile/bookmarks"
        )}
     end
   end

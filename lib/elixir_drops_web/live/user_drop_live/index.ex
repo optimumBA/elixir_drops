@@ -35,10 +35,10 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_params(params, _url, socket) do
+  def handle_params(params, _url, %{assigns: %{live_action: live_action}} = socket) do
     search_query = params["q"] || ""
 
-    if params["buid"] do
+    if live_action == :show_bookmarks do
       {:noreply,
        socket
        |> assign(:bookmark_search_query, search_query)
@@ -50,7 +50,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
        |> assign(:searching, search_query != "")
        |> SearchHelper.update_search_filters(search_query)
        |> DropsListHelper.assign_drops()
-       |> apply_action(socket.assigns.live_action, params)}
+       |> apply_action(live_action, params)}
     end
   end
 
