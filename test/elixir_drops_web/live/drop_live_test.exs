@@ -288,15 +288,15 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute html =~ "Drop title 1"
 
       # Load more should show Drop title 20 but still not Drop title 5
-      assert html_2 = render_hook(live, "load-more", %{})
+      assert html_2 = render_hook(live, "load_more", %{})
       assert html_2 =~ "Drop title 20"
       # Should have the 30th drop (oldest on second page)
       assert html_2 =~ "Drop title 6"
       # Should NOT have the 31st drop
       refute html_2 =~ "Drop title 5"
 
-      # Another load-more should show Drop title 5 and Drop title 1 (oldest)
-      assert html_3 = render_hook(live, "load-more", %{})
+      # Another load_more should show Drop title 5 and Drop title 1 (oldest)
+      assert html_3 = render_hook(live, "load_more", %{})
       assert html_3 =~ "Drop title 5"
       # Should now have the oldest drop
       assert html_3 =~ "Drop title 1"
@@ -305,21 +305,21 @@ defmodule ElixirDropsWeb.DropLiveTest do
     test "viewport update event is handled", %{conn: conn} do
       {:ok, live, _html} = live(conn, ~p"/")
 
-      assert render_hook(live, "update-viewport", %{"width" => 375, "height" => 667}) =~ "drops"
-      assert render_hook(live, "update-viewport", %{"width" => 1920, "height" => 1080}) =~ "drops"
+      assert render_hook(live, "update_viewport", %{"width" => 375, "height" => 667}) =~ "drops"
+      assert render_hook(live, "update_viewport", %{"width" => 1920, "height" => 1080}) =~ "drops"
     end
 
-    test "load-more with layout_complete flag works", %{conn: conn, user: user} do
+    test "load_more with layout_complete flag works", %{conn: conn, user: user} do
       create_multiple_drops(user, 20)
       {:ok, live, _html} = live(conn, ~p"/")
 
-      assert render_hook(live, "load-more", %{"layout_complete" => true}) != ""
+      assert render_hook(live, "load_more", %{"layout_complete" => true}) != ""
     end
 
-    test "load-more-complete event is handled", %{conn: conn} do
+    test "load_more_complete event is handled", %{conn: conn} do
       {:ok, live, _html} = live(conn, ~p"/")
 
-      assert render_hook(live, "load-more-complete", %{}) =~ "drops"
+      assert render_hook(live, "load_more_complete", %{}) =~ "drops"
     end
 
     test "screenshot generation started broadcast doesn't change page state", %{
@@ -1305,8 +1305,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
       # Should show results (with pagination)
       assert html =~ "Elixir Pattern"
 
-      # Should handle load-more
-      render_hook(live, "load-more", %{})
+      # Should handle load_more
+      render_hook(live, "load_more", %{})
     end
 
     test "handles switching between empty and non-empty search", %{conn: conn} do

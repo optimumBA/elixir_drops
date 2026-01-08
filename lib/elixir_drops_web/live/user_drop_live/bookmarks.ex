@@ -60,20 +60,20 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket),
+  def handle_event("update_viewport", %{"width" => width, "height" => height}, socket),
     do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
 
-  def handle_event("load-more", %{"layout_complete" => true}, socket) do
+  def handle_event("load_more", %{"layout_complete" => true}, socket) do
     socket = assign(socket, :loading_more, true)
     load_more(socket, socket.assigns.batch_size)
   end
 
-  def handle_event("load-more", _params, socket) do
+  def handle_event("load_more", _params, socket) do
     socket = assign(socket, :loading_more, true)
     load_more(socket, socket.assigns.batch_size)
   end
 
-  def handle_event("load-more-complete", _params, socket) do
+  def handle_event("load_more_complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
   end
 
@@ -89,7 +89,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     socket =
       socket
       |> assign(:search_query, query)
-      |> assign(:show_profile_suggestions, false)
+      |> assign(:show_profile_suggestions?, false)
       |> assign(:profile_search_suggestions, [])
 
     if trimmed_query != "" do
@@ -160,7 +160,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     |> assign(:loading_more, false)
     |> assign(:page, socket.assigns.page + 1)
     |> maybe_insert_drops()
-    |> Phoenix.LiveView.push_event("load-more-complete", %{})
+    |> Phoenix.LiveView.push_event("load_more_complete", %{})
   end
 
   defp assign_drops_with_cursor(socket, _search_query) do
@@ -170,7 +170,7 @@ defmodule ElixirDropsWeb.UserDropLive.Bookmarks do
     |> assign(:loading_more, false)
     |> assign(:page, socket.assigns.page + 1)
     |> maybe_insert_drops(filters, socket.assigns.last_bookmark)
-    |> push_event("load-more-complete", %{})
+    |> push_event("load_more_complete", %{})
   end
 
   defp maybe_insert_drops(socket) do

@@ -71,7 +71,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           ]}
           type="button"
           phx-click={
-            JS.push("load_more",
+            JS.push("load_more_comments",
               value: %{offset: @comment_offset}
             )
           }

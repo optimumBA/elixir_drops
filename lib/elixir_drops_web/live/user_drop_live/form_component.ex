@@ -98,18 +98,26 @@ defmodule ElixirDropsWeb.UserDropLive.FormComponent do
     {:noreply, assign_form(socket, changeset)}
   end
 
-  defp create_or_update_drop(socket, :edit, drop_params) do
+  defp create_or_update_drop(
+         %{assigns: %{drop: drop, current_user: user}} = _socket,
+         :edit,
+         drop_params
+       ) do
     Drops.update_drop(
-      socket.assigns.drop,
-      socket.assigns.current_user,
+      drop,
+      user,
       drop_params
     )
   end
 
-  defp create_or_update_drop(socket, :new, drop_params) do
+  defp create_or_update_drop(
+         %{assigns: %{drop: drop, current_user: user}} = _socket,
+         :new,
+         drop_params
+       ) do
     Drops.create_drop(
-      socket.assigns.drop,
-      socket.assigns.current_user,
+      drop,
+      user,
       drop_params
     )
   end

@@ -156,7 +156,7 @@ MasonryHooks.Masonry = {
   },
 
   sendViewportDimensions() {
-    this.pushEvent('update-viewport', {
+    this.pushEvent('update_viewport', {
       width: window.innerWidth,
       height: window.innerHeight,
     })

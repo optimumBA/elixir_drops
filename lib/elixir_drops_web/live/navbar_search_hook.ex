@@ -22,7 +22,7 @@ defmodule ElixirDropsWeb.NavbarSearchHook do
      |> SearchHelper.initialize_search_assigns(user_id)
      |> assign(:navbar_search_query, "")
      |> assign(:search_suggestions, [])
-     |> assign(:show_suggestions, false)
+     |> assign(:show_suggestions?, false)
      |> attach_hook(:navbar_search_events, :handle_event, &handle_navbar_search_events/3)}
   end
 
@@ -34,7 +34,7 @@ defmodule ElixirDropsWeb.NavbarSearchHook do
   end
 
   defp handle_navbar_search_events("blur_navbar_search", _params, socket) do
-    {:halt, assign(socket, :show_suggestions, false)}
+    {:halt, assign(socket, :show_suggestions?, false)}
   end
 
   defp handle_navbar_search_events("load_navbar_suggestions", %{"query" => query}, socket)
@@ -43,13 +43,13 @@ defmodule ElixirDropsWeb.NavbarSearchHook do
     user = socket.assigns.current_user
 
     suggestions = get_navbar_suggestions(trimmed_query, user)
-    show_suggestions = String.length(trimmed_query) >= 2 && length(suggestions) > 0
+    show_suggestions? = String.length(trimmed_query) >= 2 && length(suggestions) > 0
 
     {:halt,
      socket
      |> assign(:navbar_search_query, query)
      |> assign(:search_suggestions, suggestions)
-     |> assign(:show_suggestions, show_suggestions)}
+     |> assign(:show_suggestions?, show_suggestions?)}
   end
 
   defp handle_navbar_search_events("load_navbar_suggestions", _params, socket) do

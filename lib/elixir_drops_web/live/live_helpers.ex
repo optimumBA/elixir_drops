@@ -87,11 +87,11 @@ defmodule ElixirDropsWeb.LiveHelpers do
     end
   end
 
-  defp process_event("load-more-complete", _params, socket) do
+  defp process_event("load_more_complete", _params, socket) do
     {:cont, assign(socket, :loading_more, false)}
   end
 
-  defp process_event("load-more", _params, socket) do
+  defp process_event("load_more", _params, socket) do
     {:cont,
      socket
      |> assign(:loading_more, true)
