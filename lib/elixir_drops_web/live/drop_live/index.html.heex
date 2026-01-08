@@ -5,8 +5,8 @@
       current_user={@current_user}
       live_action={@live_action}
       search_query={@navbar_search_query}
-      show_suggestions={@show_suggestions}
       search_suggestions={@search_suggestions}
+      show_suggestions?={@show_suggestions?}
       show_user_drops?={false}
     />
 
@@ -38,7 +38,7 @@
         ]}
         id="new-drops-indicator"
         phx-click={
-          JS.push("refresh-drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")
+          JS.push("refresh_drops") |> JS.dispatch("scroll-to-top", to: "#drops-container")
         }
       >
         <span><.icon name="hero-arrow-up" class="h-4 w-4" /></span>
@@ -55,9 +55,9 @@
   <DropComponents.signin_popup_message />
   <!-- Mobile Search Overlay -->
   <DropComponents.search_overlay_mobile
-    search_query={@search_query}
-    show_suggestions={@show_suggestions}
-    search_suggestions={@search_suggestions}
     current_user={@current_user}
+    search_query={@search_query}
+    search_suggestions={@search_suggestions}
+    show_suggestions?={@show_suggestions?}
   />
 </Layouts.app>

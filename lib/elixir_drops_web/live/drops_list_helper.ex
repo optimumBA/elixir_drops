@@ -217,7 +217,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> assign(:loading_more, false)
     |> assign(:page, socket.assigns.page + 1)
     |> maybe_insert_drops()
-    |> Phoenix.LiveView.push_event("load-more-complete", %{})
+    |> Phoenix.LiveView.push_event("load_more_complete", %{})
   end
 
   defp assign_drops_with_cursor(socket, _search_query) do
@@ -227,7 +227,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> assign(:loading_more, false)
     |> assign(:page, socket.assigns.page + 1)
     |> maybe_insert_drops(filters, socket.assigns.last_drop)
-    |> Phoenix.LiveView.push_event("load-more-complete", %{})
+    |> Phoenix.LiveView.push_event("load_more_complete", %{})
   end
 
   defp assign_drop_cursor(socket, drops, search_query)

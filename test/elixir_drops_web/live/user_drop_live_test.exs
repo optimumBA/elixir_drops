@@ -80,15 +80,15 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       refute html =~ "Drop title 1"
 
       # Load more should show Drop title 20 but still not Drop title 5
-      assert html_2 = render_hook(live, "load-more", %{})
+      assert html_2 = render_hook(live, "load_more", %{})
       assert html_2 =~ "Drop title 20"
       # Should have the 30th drop (oldest on second page)
       assert html_2 =~ "Drop title 6"
       # Should NOT have the 31st drop
       refute html_2 =~ "Drop title 5"
 
-      # Another load-more should show Drop title 5 and Drop title 1 (oldest)
-      assert html_3 = render_hook(live, "load-more", %{})
+      # Another load_more should show Drop title 5 and Drop title 1 (oldest)
+      assert html_3 = render_hook(live, "load_more", %{})
       assert html_3 =~ "Drop title 5"
       # Should now have the oldest drop
       assert html_3 =~ "Drop title 1"

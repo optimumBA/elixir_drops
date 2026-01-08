@@ -4,10 +4,10 @@
       current_url={~p"/d/#{@drop.short_id}"}
       current_user={@current_user}
       live_action={@live_action}
-      show_user_drops?={@show_user_drops?}
       search_query={@navbar_search_query}
-      show_suggestions={@show_suggestions}
       search_suggestions={@search_suggestions}
+      show_user_drops?={@show_user_drops?}
+      show_suggestions?={@show_suggestions?}
     />
 
     <section class="pt-10 py-4">
@@ -35,10 +35,10 @@
   <DropComponents.signin_popup_message />
   <!-- Mobile Search Overlay -->
   <DropComponents.search_overlay_mobile
-    search_query={@navbar_search_query}
-    show_suggestions={@show_suggestions}
-    search_suggestions={@search_suggestions}
     current_user={@current_user}
+    search_query={@navbar_search_query}
+    search_suggestions={@search_suggestions}
+    show_suggestions?={@show_suggestions?}
   />
 
   <script type="application/ld+json">

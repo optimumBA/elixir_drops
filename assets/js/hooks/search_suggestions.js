@@ -121,7 +121,7 @@ export default {
 
       this.input.addEventListener('keydown', this.handleKeydown)
 
-      // Remove all manual dropdown manipulation - let Phoenix LiveView handle it via show_suggestions state
+      // Remove all manual dropdown manipulation - let Phoenix LiveView handle it via show_suggestions? state
     },
 
     destroyed() {
