@@ -14,7 +14,6 @@
         notification_count={@notification_count}
         show_user_drops?={@show_user_drops?}
         search_query={@navbar_search_query}
-        show_suggestions={@show_suggestions}
         search_suggestions={@search_suggestions}
       />
 
@@ -42,10 +41,10 @@
   <DropComponents.signin_popup_message />
   <!-- Mobile Search Overlay -->
   <DropComponents.search_overlay_mobile
-    search_query={@navbar_search_query}
-    show_suggestions={@show_suggestions}
-    search_suggestions={@search_suggestions}
     current_user={@current_user}
+    search_query={@navbar_search_query}
+    search_suggestions={@search_suggestions}
+    show_suggestions?={@show_suggestions?}
   />
 
   <script type="application/ld+json">

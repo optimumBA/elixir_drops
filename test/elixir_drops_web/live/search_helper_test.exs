@@ -95,9 +95,9 @@ defmodule ElixirDropsWeb.SearchHelperTest do
           results_count: 2
         })
 
-      {suggestions, show_suggestions} = SearchHelper.get_focus_search_suggestions(user.id)
+      {suggestions, show_suggestions?} = SearchHelper.get_focus_search_suggestions(user.id)
 
-      assert show_suggestions == true
+      assert show_suggestions?
       # Should have at least the 2 history items we created
       assert length(Enum.filter(suggestions, &(&1.type == :history))) == 2
 
@@ -117,11 +117,11 @@ defmodule ElixirDropsWeb.SearchHelperTest do
       {:ok, _} = Search.track_popular_search("elixir")
       {:ok, _} = Search.track_popular_search("liveview")
 
-      {suggestions, show_suggestions} = SearchHelper.get_focus_search_suggestions(user.id)
+      {suggestions, show_suggestions?} = SearchHelper.get_focus_search_suggestions(user.id)
 
       # Should only have popular searches (from seeds), no history items
       assert Enum.all?(suggestions, &(&1.type == :popular))
-      assert show_suggestions == true
+      assert show_suggestions?
     end
   end
 

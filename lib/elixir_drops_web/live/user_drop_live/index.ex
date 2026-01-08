@@ -22,17 +22,16 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
+     |> assign(:batch_size, 15)
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:end_of_notifications_timeline?, false)
-     |> assign(:end_of_timeline?, false)
-     |> assign(:page, 1)
-     |> assign(:viewport_width, nil)
-     |> assign(:viewport_height, nil)
-     |> assign(:batch_size, 15)
-     |> assign(:initial_load, true)
-     |> assign(:loading_more, false)
-     |> assign(:search_query, "")
      |> assign(:drops_empty?, true)
+     |> assign(:end_of_timeline?, false)
+     |> assign(:loading_more, false)
+     |> assign(:page, 1)
+     |> assign(:search_query, "")
+     |> assign(:viewport_height, nil)
+     |> assign(:viewport_width, nil)
      |> SearchHelper.initialize_profile_search_assigns(user_id)}
   end
 
@@ -65,27 +64,27 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket) do
+  def handle_event("update_viewport", %{"width" => width, "height" => height}, socket) do
     batch_size = ElixirDropsWeb.DropsBatchCalculator.calculate_batch_size(width, height)
 
     {:noreply,
      socket
-     |> assign(:viewport_width, width)
+     |> assign(:batch_size, batch_size)
      |> assign(:viewport_height, height)
-     |> assign(:batch_size, batch_size)}
+     |> assign(:viewport_width, width)}
   end
 
-  def handle_event("load-more", %{"layout_complete" => true}, socket) do
+  def handle_event("load_more", %{"layout_complete" => true}, socket) do
     socket = assign(socket, :loading_more, true)
     DropsListHelper.load_more(socket, socket.assigns.batch_size)
   end
 
-  def handle_event("load-more", _params, socket) do
+  def handle_event("load_more", _params, socket) do
     socket = assign(socket, :loading_more, true)
     DropsListHelper.load_more(socket, socket.assigns.batch_size)
   end
 
-  def handle_event("load-more-complete", _params, socket) do
+  def handle_event("load_more_complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
   end
 
@@ -103,9 +102,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     socket =
       socket
-      |> assign(:search_query, trimmed_query)
-      |> assign(:show_profile_suggestions, false)
       |> assign(:profile_search_suggestions, [])
+      |> assign(:search_query, trimmed_query)
+      |> assign(:show_profile_suggestions?, false)
 
     # Stay on profile page with search query
     if trimmed_query != "" do
@@ -116,15 +115,15 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_event("close_search_overlay", _params, socket) do
-    {:noreply, assign(socket, :show_profile_suggestions, false)}
+    {:noreply, assign(socket, :show_profile_suggestions?, false)}
   end
 
   def handle_event("clear_search", _params, socket) do
     {:noreply,
      socket
-     |> assign(:search_query, "")
-     |> assign(:show_profile_suggestions, false)
      |> assign(:profile_search_suggestions, [])
+     |> assign(:search_query, "")
+     |> assign(:show_profile_suggestions?, false)
      |> push_patch(to: ~p"/profile")}
   end
 
@@ -135,11 +134,11 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply,
      socket
      |> assign(:profile_search_suggestions, suggestions)
-     |> assign(:show_profile_suggestions, length(suggestions) > 0)}
+     |> assign(:show_profile_suggestions?, length(suggestions) > 0)}
   end
 
   def handle_event("load_suggestions", _params, socket) do
-    {:noreply, assign(socket, :show_profile_suggestions, false)}
+    {:noreply, assign(socket, :show_profile_suggestions?, false)}
   end
 
   def handle_event("delete_search_history", %{"id" => id}, socket) do
@@ -156,17 +155,17 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_event("blur_search_input", _params, socket) do
-    {:noreply, assign(socket, :show_profile_suggestions, false)}
+    {:noreply, assign(socket, :show_profile_suggestions?, false)}
   end
 
   def handle_event("focus_search_input", _params, socket) do
     user_id = socket.assigns.current_user.id
-    {suggestions, show_suggestions} = SearchHelper.get_focus_search_suggestions(user_id)
+    {suggestions, show_suggestions?} = SearchHelper.get_focus_search_suggestions(user_id)
 
     {:noreply,
      socket
      |> assign(:profile_search_suggestions, suggestions)
-     |> assign(:show_profile_suggestions, show_suggestions)}
+     |> assign(:show_profile_suggestions?, show_suggestions?)}
   end
 
   # Handle navbar search submit - navigate to homepage with search
@@ -178,8 +177,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     socket =
       socket
       |> assign(:navbar_search_query, trimmed_query)
-      |> assign(:show_suggestions, false)
       |> assign(:search_suggestions, [])
+      |> assign(:show_suggestions?, false)
 
     # Navigate to homepage with search query
     if trimmed_query != "" do

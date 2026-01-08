@@ -12,7 +12,7 @@ InfiniteScrollHooks.InfiniteScroll = {
 
     this.connectObserver()
 
-    this.handleEvent('load-more-complete', () => {
+    this.handleEvent('load_more_complete', () => {
       this.pending = false
 
       setTimeout(() => {
@@ -72,7 +72,7 @@ InfiniteScrollHooks.InfiniteScroll = {
       await this.masonryEl._masonryHook.waitForLayoutComplete()
     }
 
-    this.pushEvent('load-more', { layout_complete: true })
+    this.pushEvent('load_more', { layout_complete: true })
   },
 }
 

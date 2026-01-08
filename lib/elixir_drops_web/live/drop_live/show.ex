@@ -189,21 +189,21 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp get_top_level_comment(%{parent_id: parent_id}),
     do: Comments.get_comment!(parent_id)
 
-  defp create_comment(socket, params, nil) do
+  defp create_comment(%{assigns: %{drop: drop, current_user: user}} = _socket, params, nil) do
     Comments.create_comment(
-      socket.assigns.drop,
-      socket.assigns.current_user,
+      drop,
+      user,
       nil,
       params
     )
   end
 
-  defp create_comment(socket, params, parent_id) do
+  defp create_comment(%{assigns: %{drop: drop, current_user: user}} = _socket, params, parent_id) do
     parent_comment = Comments.get_comment!(parent_id)
 
     Comments.create_comment(
-      socket.assigns.drop,
-      socket.assigns.current_user,
+      drop,
+      user,
       parent_comment,
       params
     )
