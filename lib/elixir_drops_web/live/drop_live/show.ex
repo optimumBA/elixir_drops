@@ -4,21 +4,41 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops
+  alias ElixirDrops.Notifications
   alias ElixirDrops.StructuredData
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.CommentComponents
   alias ElixirDropsWeb.DropComponents
+  alias ElixirDropsWeb.NotificationHelpers
 
   @consecutive_whitespace_regex ~r/\s+/
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
   @impl Phoenix.LiveView
-  def handle_params(%{"short_id" => short_id}, _url, socket) do
+  def handle_params(%{"short_id" => short_id} = params, _url, socket) do
+    comment_id = params["comment_id"]
+    parent_id = params["comment_parent_id"] || ""
+
+    socket =
+      if comment_id do
+        push_event(socket, "show_comment", %{
+          comment_id: comment_id,
+          parent_id: parent_id
+        })
+      else
+        socket
+      end
+
+    user = socket.assigns.current_user
+
+    if connected?(socket) && user, do: Notifications.subscribe(user.id)
+
     drop = Drops.get_drop_by_short_id(short_id)
 
     {:noreply,
      socket
+     |> assign(:end_of_notifications_timeline?, false)
      |> assign(:show_user_drops?, false)
      |> assign_drop(drop)}
   end
@@ -70,6 +90,22 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments)}
   end
 
+  def handle_event(
+        "mark_notifications_as_read",
+        _params,
+        %{assigns: %{current_user: user}} = socket
+      ) do
+    {_integer, nil} = Notifications.mark_all_as_read(user.id)
+
+    {:noreply,
+     socket
+     |> stream(:notifications, [], reset: true)
+     |> assign(:notification_count, 0)}
+  end
+
+  def handle_event("load_more_notifications", _params, socket),
+    do: NotificationHelpers.load_more(socket)
+
   @impl Phoenix.LiveView
   def handle_info({:new_comment, parent_id, comment_type, comment_params}, socket) do
     case create_comment(socket, comment_params, parent_id) do
@@ -84,6 +120,9 @@ defmodule ElixirDropsWeb.DropLive.Show do
               id: "new-comment-form",
               form: to_form(changeset)
             )
+
+        %{assigns: %{current_user: user, drop: %{user: drop_author}}} = socket
+        create_notifications(user, drop_author, comment, top_level_comment.user)
 
         {:noreply,
          socket
@@ -102,6 +141,46 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Failed to update comment")}
+    end
+  end
+
+  def handle_info(
+        {:new_notification, notification},
+        %{assigns: %{notification_count: count}} = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:notification_count, count + 1)
+     |> stream_insert(:notifications, notification, at: 0)}
+  end
+
+  defp create_notifications(
+         actor,
+         drop_author,
+         %Comment{parent_id: parent_id} = comment,
+         top_level_comment_author
+       ) do
+    if parent_id do
+      create_notification(actor, top_level_comment_author, comment, %{type: :reply_to_comment})
+    end
+
+    notify_drop_author(actor, drop_author, comment, top_level_comment_author)
+  end
+
+  defp notify_drop_author(actor, drop_author, comment, top_level_comment_author)
+       when drop_author != top_level_comment_author do
+    create_notification(actor, drop_author, comment, %{type: :comment_on_post})
+  end
+
+  defp notify_drop_author(_actor, _drop_author, _comment, _top_level_comment_author), do: :ok
+
+  defp create_notification(actor, recipient, comment, attrs) do
+    case Notifications.create_notification(actor, recipient, comment, attrs) do
+      {:ok, notification} ->
+        Notifications.broadcast(notification)
+
+      {:error, _changeset} ->
+        :ok
     end
   end
 

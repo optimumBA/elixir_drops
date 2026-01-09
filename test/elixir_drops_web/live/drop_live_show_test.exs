@@ -39,6 +39,132 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert updated_html =~ user.name
     end
 
+    test "commenting sends a notification to the drop author", %{
+      conn: conn
+    } do
+      drop_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> form("#new-comment-form",
+        comment: %{body: "This is my test comment"}
+      )
+      |> render_submit()
+
+      conn = sign_in_user(conn, drop_author)
+
+      {:ok, view_2, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view_2
+             |> element("#notifications-count")
+             |> render() =~ "1"
+    end
+
+    test "replying to a comment sends a notification to both the drop author and the comment author",
+         %{
+           conn: conn
+         } do
+      drop_author = user_fixture()
+      parent_comment_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+
+      {:ok, parent_comment} =
+        Comments.create_comment(drop, parent_comment_author, nil, %{body: "Top level"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> form("#reply-form-#{parent_comment.id}",
+        comment: %{body: "A reply"}
+      )
+      |> render_submit()
+
+      conn_2 = sign_in_user(conn, drop_author)
+
+      {:ok, view_2, _html} = live(conn_2, ~p"/d/#{drop.short_id}")
+
+      assert view_2
+             |> element("#notifications-container")
+             |> render() =~ "some_name commented on your post -"
+
+      conn_3 = sign_in_user(conn, parent_comment_author)
+
+      {:ok, view_3, _html} = live(conn_3, ~p"/d/#{drop.short_id}")
+
+      assert view_3
+             |> element("#notifications-container")
+             |> render() =~ "some_name replied to your comment on -"
+    end
+
+    test "replying to a comment sends only one notification to a drop author if they are the comment's author",
+         %{
+           conn: conn
+         } do
+      drop_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+
+      {:ok, parent_comment} =
+        Comments.create_comment(drop, drop_author, nil, %{body: "Top level"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> form("#reply-form-#{parent_comment.id}",
+        comment: %{body: "A reply"}
+      )
+      |> render_submit()
+
+      conn = sign_in_user(conn, drop_author)
+
+      {:ok, view_2, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view_2
+             |> element("#notifications-count")
+             |> render() =~ "1"
+
+      refute view_2
+             |> element("#notifications-container")
+             |> render() =~ "some_name commented on your post -"
+
+      assert view_2
+             |> element("#notifications-container")
+             |> render() =~ "some_name replied to your comment on -"
+    end
+
+    test "user can mark notifications as read",
+         %{
+           conn: conn
+         } do
+      drop_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> form("#new-comment-form",
+        comment: %{body: "This is my test comment"}
+      )
+      |> render_submit()
+
+      conn = sign_in_user(conn, drop_author)
+
+      {:ok, view_2, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert view_2
+             |> element("#notifications-count")
+             |> render() =~ "1"
+
+      view_2
+      |> element("#mark-notifications-as-read")
+      |> render_click()
+
+      refute view_2
+             |> element("#notifications-count")
+             |> has_element?()
+    end
+
     test "a user who has not logged in cannot add comments", %{drop: drop} do
       conn = build_conn()
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")

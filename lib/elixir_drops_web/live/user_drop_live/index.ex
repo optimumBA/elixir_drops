@@ -3,22 +3,28 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Notifications
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Drops.subscribe()
-
     user_id = socket.assigns.current_user.id
+
+    if connected?(socket) do
+      Drops.subscribe()
+      Notifications.subscribe(user_id)
+    end
 
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:batch_size, 15)
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
+     |> assign(:end_of_notifications_timeline?, false)
      |> assign(:drops_empty?, true)
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
@@ -81,6 +87,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def handle_event("load_more_complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
   end
+
+  def handle_event("load_more_notifications", _params, socket),
+    do: NotificationHelpers.load_more(socket)
 
   def handle_event("search_submit", %{"query" => query}, socket) do
     trimmed_query =
@@ -179,6 +188,19 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     end
   end
 
+  def handle_event(
+        "mark_notifications_as_read",
+        _params,
+        %{assigns: %{current_user: user}} = socket
+      ) do
+    {_integer, nil} = Notifications.mark_all_as_read(user.id)
+
+    {:noreply,
+     socket
+     |> stream(:notifications, [], reset: true)
+     |> assign(:notification_count, 0)}
+  end
+
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do
     filters = %{
       short_id: short_id,
@@ -273,6 +295,16 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     else
       {:noreply, socket}
     end
+  end
+
+  def handle_info(
+        {:new_notification, notification},
+        %{assigns: %{notification_count: count}} = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:notification_count, count + 1)
+     |> stream_insert(:notifications, notification, at: 0)}
   end
 
   def handle_info(_message, socket) do

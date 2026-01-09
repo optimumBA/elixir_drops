@@ -8,6 +8,8 @@ defmodule ElixirDropsWeb.LiveHelpers do
   import Phoenix.Component
   import Phoenix.LiveView, only: [get_connect_params: 1]
 
+  alias ElixirDropsWeb.NotificationHelpers
+
   @type socket :: Phoenix.LiveView.Socket.t()
 
   # Existing welcome message functionality
@@ -20,6 +22,11 @@ defmodule ElixirDropsWeb.LiveHelpers do
       end
 
     {:cont, assign(socket, :show_welcome_message?, show_welcome_message)}
+  end
+
+  @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
+  def on_mount(:assign_notifications, _params, _session, socket) do
+    {:cont, NotificationHelpers.assign_notifications(socket)}
   end
 
   # Only compile sandbox support in test environment

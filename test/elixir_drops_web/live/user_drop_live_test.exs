@@ -2,7 +2,9 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   use ElixirDropsWeb.ConnCase, async: true
 
   import ElixirDrops.AccountsFixtures
+  import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
+  import ElixirDrops.NotificationsFixtures
   import ElixirDrops.SearchFixtures
   import Mox
   import Phoenix.LiveViewTest
@@ -228,6 +230,32 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
       assert html =~ "100%"
       assert html =~ "http://example.com/new-screenshot.png"
+    end
+
+    test "user can mark notifications as read",
+         %{
+           conn: conn,
+           user: user
+         } do
+      drop_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+      comment = comment_fixture(drop, user)
+      _notification = notification_fixture(user, drop_author, comment)
+
+      conn = sign_in_user(conn, drop_author)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      assert live
+             |> element("#notifications-count")
+             |> render() =~ "1"
+
+      live
+      |> element("#mark-notifications-as-read")
+      |> render_click()
+
+      refute live
+             |> element("#notifications-count")
+             |> has_element?()
     end
   end
 

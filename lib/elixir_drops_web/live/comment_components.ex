@@ -21,7 +21,7 @@ defmodule ElixirDropsWeb.CommentComponents do
   def comment_section(assigns) do
     ~H"""
     <div>
-      <div class="comments-section mt-8 border-y py-8">
+      <div class="mt-8 border-y border-gray-200 py-8">
         <h3 class="text-lg font-semibold mb-6 text-gray-700">
           Comments ({@comment_count})
         </h3>
@@ -58,6 +58,7 @@ defmodule ElixirDropsWeb.CommentComponents do
             current_url={@current_url}
             current_user={@current_user}
             depth={0}
+            id={"comment-#{comment.id}"}
             parent={nil}
           />
         </div>
@@ -93,11 +94,12 @@ defmodule ElixirDropsWeb.CommentComponents do
   attr :current_url, :string, required: true
   attr :current_user, :any, required: true
   attr :depth, :integer, required: true
+  attr :id, :string, required: true
   attr :parent, :any, default: nil
 
   defp comment(assigns) do
     ~H"""
-    <div class="flex gap-4 comment font-roboto" id={"comment-container-#{@comment.id}"}>
+    <div class="flex gap-4 comment font-roboto" id={@id}>
       <div class="shrink-0">
         <img
           src={@comment.user.avatar || "/images/default-avatar.svg"}
@@ -328,6 +330,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           current_url={@current_url}
           current_user={@current_user}
           depth={@depth + 1}
+          id={"comment-#{reply.id}"}
           parent={@comment}
         />
       </div>

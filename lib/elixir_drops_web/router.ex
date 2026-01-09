@@ -42,7 +42,8 @@ defmodule ElixirDropsWeb.Router do
             ),
             {ElixirDropsWeb.UserAuth, :ensure_authenticated},
             {ElixirDropsWeb.UserAuth, :assign_current_user},
-            {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
+            {ElixirDropsWeb.NavbarSearchHook, :navbar_search},
+            {ElixirDropsWeb.LiveHelpers, :assign_notifications}
           ],
           & &1
         ) do
@@ -65,7 +66,8 @@ defmodule ElixirDropsWeb.Router do
             ),
             {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
             {ElixirDropsWeb.UserAuth, :assign_current_user},
-            {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
+            {ElixirDropsWeb.NavbarSearchHook, :navbar_search},
+            {ElixirDropsWeb.LiveHelpers, :assign_notifications}
           ],
           & &1
         ) do

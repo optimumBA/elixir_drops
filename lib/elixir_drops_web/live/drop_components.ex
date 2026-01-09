@@ -13,6 +13,7 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :current_url, :string
   attr :current_user, User
   attr :live_action, :atom, required: true
+  attr :notification_count, :integer, default: 0
   attr :search_query, :string, default: ""
   attr :search_suggestions, :list, default: []
   attr :show_suggestions?, :boolean, default: false
@@ -48,6 +49,10 @@ defmodule ElixirDropsWeb.DropComponents do
             </button>
             <!-- Create Drop Button - Always visible -->
             <.create_drop_button current_user={@current_user} live_action={@live_action} />
+            <.view_notifications_component
+              current_user={@current_user}
+              notification_count={@notification_count}
+            />
 
             <%= if @current_user do %>
               <div
@@ -732,6 +737,67 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  defp view_notifications_component(assigns) do
+    ~H"""
+    <section :if={@current_user} class="hover:cursor-pointer">
+      <div
+        phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#main-page-body")}
+        class="flex shrink-0 sm:hidden"
+      >
+        <div class="relative group w-5 h-5">
+          <img
+            src={~p"/images/default_notification.svg"}
+            class="group-hover:hidden group-active:hidden object-cover"
+            alt="notification icon"
+          />
+          <img
+            src={~p"/images/hover_notification.svg"}
+            class="hidden group-active:hidden group-hover:block object-cover"
+            alt="notification icon"
+          />
+          <img
+            src={~p"/images/active_notification.svg"}
+            class="hidden group-active:block object-cover"
+            alt="notification icon"
+          />
+          <section
+            :if={@notification_count > 0}
+            class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px]"
+          >
+            <p id="notifications-count">{@notification_count}</p>
+          </section>
+        </div>
+      </div>
+
+      <div phx-click={JS.toggle(to: "#notifications-container")} class="hidden shrink-0 sm:flex">
+        <div class="relative group w-5 h-5">
+          <img
+            src={~p"/images/default_notification.svg"}
+            class="group-hover:hidden group-active:hidden object-cover"
+            alt="notification icon"
+          />
+          <img
+            src={~p"/images/hover_notification.svg"}
+            class="hidden group-active:hidden group-hover:block object-cover"
+            alt="notification icon"
+          />
+          <img
+            src={~p"/images/active_notification.svg"}
+            class="hidden group-active:block object-cover"
+            alt="notification icon"
+          />
+          <section
+            :if={@notification_count > 0}
+            class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px]"
+          >
+            <p id="notifications-count-large">{@notification_count}</p>
+          </section>
+        </div>
+      </div>
+    </section>
+    """
+  end
+
   defp drop_page_menu(assigns) do
     ~H"""
     <div
@@ -754,6 +820,124 @@ defmodule ElixirDropsWeb.DropComponents do
         <.icon name="hero-pencil" class="h-5 w-5" />
         <span>Edit drop</span>
       </.link>
+    </div>
+    """
+  end
+
+  attr :end_of_notifications_timeline?, :boolean, required: true
+  attr :notifications, :list, required: true
+  attr :notification_count, :integer, required: true
+
+  @spec notification_component(assigns()) :: rendered()
+  def notification_component(assigns) do
+    ~H"""
+    <div
+      id="notifications-container"
+      class="w-full pb-40 h-screen bg-[#FFFFFF] flex flex-col py-4 absolute top-0 right-0 sm:top-16 z-[100] notification-shadow overflow-y-auto hidden sm:w-[26rem] sm:h-[55vh] sm:right-[20%] sm:border-[0.5px] sm:border-[#CBCBCB] sm:rounded-xl"
+    >
+      <section class="w-[90%] mx-auto flex justify-between">
+        <div class="flex justify-between gap-2 items-stretch">
+          <div
+            phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#main-page-body")}
+            class="w-[25%] shrink-0 flex items-center hover:cursor-pointer sm:hidden"
+          >
+            <img src={~p"/images/back_btn.svg"} alt="Back button" />
+          </div>
+
+          <div class="roboto-medium text-[#252525] leading-7 tracking-[0.5%]">
+            Notifications
+          </div>
+        </div>
+        <div
+          :if={@notification_count > 0}
+          id="mark-notifications-as-read"
+          phx-click={JS.push("mark_notifications_as_read")}
+          class="flex items-center gap-2 hover:cursor-pointer"
+        >
+          <p class="roboto-regular text-sm text-[#4F4F4F] leading-4">Mark all as read</p>
+          <p><img src={~p"/images/mark.svg"} alt="Mark as read" class="w-4 h-4" /></p>
+        </div>
+      </section>
+      <section class="border-b-[0.5px] border-[#CBCBCB] mt-4"></section>
+      <section>
+        <div
+          :if={@notification_count == 0}
+          class="flex items-center justify-center h-[80vh] sm:h-[40vh]"
+        >
+          <section class="flex flex-col w-[70%]">
+            <div>
+              <img
+                src={~p"/images/notification.svg"}
+                class="w-full h-full object-cover"
+                alt="showing the notifications"
+              />
+            </div>
+            <div class="roboto-regular text-center text-[#8E8E8E] leading-7">
+              No new notifications at the moment
+            </div>
+          </section>
+        </div>
+        <div
+          :if={@notification_count > 0}
+          id="notifications"
+          phx-update="stream"
+          class="last:mb-10 border-[#CBCBCB]"
+        >
+          <div
+            :for={{dom_id, notification} <- @notifications}
+            id={dom_id}
+            class="w-[94%] mx-auto border-b-[0.5px] border-[#CBCBCB] py-4"
+          >
+            <.notification_card
+              actor={notification.actor}
+              comment={notification.comment}
+              id={notification.id}
+              notification_type={notification.type}
+              time_created={notification.inserted_at}
+            />
+          </div>
+          <div
+            id="notifications-infinite-scroll-marker"
+            phx-hook="InfiniteScrollNotifications"
+            class="h-3 w-full"
+          >
+          </div>
+        </div>
+      </section>
+    </div>
+    """
+  end
+
+  defp notification_card(assigns) do
+    ~H"""
+    <div class="flex gap-4">
+      <section class="shrink-0 pt-1 md:pt-0">
+        <img
+          src={@actor.avatar || ~p"/images/default-avatar.svg"}
+          alt={@actor.name}
+          class="w-11 h-11 rounded-full"
+        />
+      </section>
+
+      <section class="flex flex-col gap-3 roboto-regular">
+        <p class="text-sm leading-5 text-[#252525]">
+          {@actor.name} {add_body(@notification_type)} -
+          <a
+            class="text-[#5947F1] hover:underline hover:cursor-pointer"
+            href={
+              navigate_to_comment_page(
+                @comment,
+                @comment.parent_id
+              )
+            }
+          >
+            {@comment.drop.title}
+          </a>
+        </p>
+        <p class="text-xs text-[#8E8E8E] leading-4">
+          {Timex.format!(@time_created, "{relative}", :relative)}
+        </p>
+      </section>
     </div>
     """
   end
@@ -796,6 +980,15 @@ defmodule ElixirDropsWeb.DropComponents do
     </div>
     """
   end
+
+  defp navigate_to_comment_page(comment, nil),
+    do: ~p"/d/#{comment.drop.short_id}/?comment_id=#{comment.id}"
+
+  defp navigate_to_comment_page(comment, parent_id),
+    do: ~p"/d/#{comment.drop.short_id}/?comment_parent_id=#{parent_id}&comment_id=#{comment.id}"
+
+  defp add_body(:comment_on_post), do: "commented on your post"
+  defp add_body(:reply_to_comment), do: "replied to your comment on"
 
   defp slide_menu(assigns) do
     ~H"""

@@ -2,16 +2,22 @@ defmodule ElixirDropsWeb.DropLive.Index do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Notifications
   alias ElixirDrops.Search
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Drops.subscribe()
+    if connected?(socket) do
+      Drops.subscribe()
+      user = socket.assigns.current_user
+      if user, do: Notifications.subscribe(user.id)
+    end
 
     {:ok,
      socket
@@ -19,6 +25,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:batch_size, 15)
      |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
      |> assign(:drops_empty?, true)
+     |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
      |> assign(:new_drops?, false)
@@ -84,6 +91,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
   def handle_event("load_more_complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
   end
+
+  def handle_event("load_more_notifications", _params, socket),
+    do: NotificationHelpers.load_more(socket)
 
   def handle_event("refresh_drops", _params, socket) do
     {:noreply,
@@ -204,6 +214,19 @@ defmodule ElixirDropsWeb.DropLive.Index do
     end
   end
 
+  def handle_event(
+        "mark_notifications_as_read",
+        _params,
+        %{assigns: %{current_user: user}} = socket
+      ) do
+    {_integer, nil} = Notifications.mark_all_as_read(user.id)
+
+    {:noreply,
+     socket
+     |> stream(:notifications, [], reset: true)
+     |> assign(:notification_count, 0)}
+  end
+
   @impl Phoenix.LiveView
   def handle_info({Drops, [:drop, :created], drop}, socket) do
     if CodeBlockHelper.has_code_block?(drop.body) == false do
@@ -232,5 +255,15 @@ defmodule ElixirDropsWeb.DropLive.Index do
         socket
       ) do
     {:noreply, socket}
+  end
+
+  def handle_info(
+        {:new_notification, notification},
+        %{assigns: %{notification_count: count}} = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:notification_count, count + 1)
+     |> stream_insert(:notifications, notification, at: 0)}
   end
 end
