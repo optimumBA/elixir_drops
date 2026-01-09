@@ -55,7 +55,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update-viewport", %{"width" => width, "height" => height}, socket),
+  def handle_event("update_viewport", %{"width" => width, "height" => height}, socket),
     do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
 
   def handle_event("search_submit", %{"query" => query}, socket) do
