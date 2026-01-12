@@ -117,21 +117,10 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_event(
-        "mark_notifications_as_read",
-        _params,
-        %{assigns: %{current_user: user}} = socket
-      ) do
-    {_integer, nil} = Notifications.mark_all_as_read(user.id)
-
-    {:noreply,
-     socket
-     |> stream(:notifications, [], reset: true)
-     |> assign(:notification_count, 0)}
-  end
-
   def handle_event("load_more_notifications", _params, socket),
     do: NotificationHelpers.load_more(socket)
+
+  def handle_event(_event, _params, socket), do: {:noreply, socket}
 
   @impl Phoenix.LiveView
   def handle_info({:new_comment, parent_id, comment_type, comment_params}, socket) do

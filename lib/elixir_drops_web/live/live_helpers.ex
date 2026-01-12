@@ -6,13 +6,15 @@ defmodule ElixirDropsWeb.LiveHelpers do
   """
 
   import Phoenix.Component
-  import Phoenix.LiveView, only: [attach_hook: 4, get_connect_params: 1, stream_insert: 4]
 
-  alias ElixirDropsWeb.NotificationHelpers
+  import Phoenix.LiveView,
+    only: [attach_hook: 4, get_connect_params: 1, stream: 4, stream_insert: 4]
 
+  alias ElixirDrops.Notifications
   alias ElixirDrops.Search
   alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
+  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
 
   @type id :: Ecto.UUID.t()
@@ -106,6 +108,19 @@ defmodule ElixirDropsWeb.LiveHelpers do
      socket
      |> assign(:loading_more, true)
      |> DropsListHelper.load_more(socket.assigns.batch_size)}
+  end
+
+  defp process_event(
+         "mark_notifications_as_read",
+         _params,
+         %{assigns: %{current_user: user}} = socket
+       ) do
+    {_integer, nil} = Notifications.mark_all_as_read(user.id)
+
+    {:cont,
+     socket
+     |> stream(:notifications, [], reset: true)
+     |> assign(:notification_count, 0)}
   end
 
   defp process_event(_event, _params, socket) do
