@@ -269,16 +269,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     end
   end
 
-  def handle_info(
-        {:new_notification, notification},
-        %{assigns: %{notification_count: count}} = socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(:notification_count, count + 1)
-     |> stream_insert(:notifications, notification, at: 0)}
-  end
-
   def handle_info({:update_search_query, query}, socket),
     do: {:noreply, assign(socket, :search_query, query)}
 

@@ -224,15 +224,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply, socket}
   end
 
-  def handle_info(
-        {:new_notification, notification},
-        %{assigns: %{notification_count: count}} = socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(:notification_count, count + 1)
-     |> stream_insert(:notifications, notification, at: 0)}
-  end
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp assign_drop_filters(%{assigns: %{current_user: nil}} = socket),
     do:

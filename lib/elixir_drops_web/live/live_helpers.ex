@@ -6,7 +6,7 @@ defmodule ElixirDropsWeb.LiveHelpers do
   """
 
   import Phoenix.Component
-  import Phoenix.LiveView, only: [get_connect_params: 1, attach_hook: 4]
+  import Phoenix.LiveView, only: [attach_hook: 4, get_connect_params: 1, stream_insert: 4]
 
   alias ElixirDropsWeb.NotificationHelpers
 
@@ -36,7 +36,10 @@ defmodule ElixirDropsWeb.LiveHelpers do
   end
 
   def on_mount(:attach_shared_hooks, _params, _session, socket) do
-    {:cont, attach_hook(socket, :process_event, :handle_event, &process_event/3)}
+    {:cont,
+     socket
+     |> attach_hook(:process_event, :handle_event, &process_event/3)
+     |> attach_hook(:process_message, :handle_info, &process_message/2)}
   end
 
   # Only compile sandbox support in test environment
@@ -106,6 +109,20 @@ defmodule ElixirDropsWeb.LiveHelpers do
   end
 
   defp process_event(_event, _params, socket) do
+    {:cont, socket}
+  end
+
+  defp process_message(
+         {:new_notification, notification},
+         %{assigns: %{notification_count: count}} = socket
+       ) do
+    {:cont,
+     socket
+     |> assign(:notification_count, count + 1)
+     |> stream_insert(:notifications, notification, at: 0)}
+  end
+
+  defp process_message(_message, socket) do
     {:cont, socket}
   end
 end
