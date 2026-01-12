@@ -99,15 +99,19 @@ defmodule ElixirDropsWeb.LiveHelpers do
     end
   end
 
-  defp process_event("load_more_complete", _params, socket) do
-    {:cont, assign(socket, :loading_more, false)}
-  end
-
   defp process_event("load_more", _params, socket) do
     {:cont,
      socket
      |> assign(:loading_more, true)
      |> DropsListHelper.load_more(socket.assigns.batch_size)}
+  end
+
+  defp process_event("load_more_complete", _params, socket) do
+    {:cont, assign(socket, :loading_more, false)}
+  end
+
+  defp process_event("load_more_notifications", _params, socket) do
+    {:cont, NotificationHelpers.load_more(socket)}
   end
 
   defp process_event(

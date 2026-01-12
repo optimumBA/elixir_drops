@@ -10,7 +10,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.CommentComponents
   alias ElixirDropsWeb.DropComponents
-  alias ElixirDropsWeb.NotificationHelpers
 
   @consecutive_whitespace_regex ~r/\s+/
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
@@ -116,9 +115,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
         {:noreply, socket}
     end
   end
-
-  def handle_event("load_more_notifications", _params, socket),
-    do: NotificationHelpers.load_more(socket)
 
   def handle_event(_event, _params, socket), do: {:noreply, socket}
 

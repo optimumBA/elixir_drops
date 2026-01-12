@@ -9,7 +9,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.LiveHelpers
-  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
@@ -56,9 +55,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   @impl Phoenix.LiveView
   def handle_event("update_viewport", %{"width" => width, "height" => height}, socket),
     do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
-
-  def handle_event("load_more_notifications", _params, socket),
-    do: NotificationHelpers.load_more(socket)
 
   def handle_event("refresh_drops", _params, socket) do
     {:noreply,

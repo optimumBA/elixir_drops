@@ -8,7 +8,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.LiveHelpers
-  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
   alias ElixirDropsWeb.UserDropLive.Bookmarks
   alias ElixirDropsWeb.UserDropLive.FormComponent
@@ -63,9 +62,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   @impl Phoenix.LiveView
   def handle_event("update_viewport", %{"width" => width, "height" => height}, socket),
     do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
-
-  def handle_event("load_more_notifications", _params, socket),
-    do: NotificationHelpers.load_more(socket)
 
   def handle_event("search_submit", %{"query" => query}, socket) do
     trimmed_query =
