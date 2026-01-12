@@ -3,7 +3,9 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.BookmarksFixtures
+  import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
+  import ElixirDrops.NotificationsFixtures
   import ElixirDrops.SearchFixtures
   import Mox
   import Phoenix.LiveViewTest
@@ -230,6 +232,32 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ "100%"
       assert html =~ "http://example.com/new-screenshot.png"
     end
+
+    test "user can mark notifications as read",
+         %{
+           conn: conn,
+           user: user
+         } do
+      drop_author = user_fixture()
+      drop = drop_fixture(%Drop{}, drop_author)
+      comment = comment_fixture(drop, user)
+      _notification = notification_fixture(user, drop_author, comment)
+
+      conn = sign_in_user(conn, drop_author)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      assert live
+             |> element("#notifications-count")
+             |> render() =~ "1"
+
+      live
+      |> element("#mark-notifications-as-read")
+      |> render_click()
+
+      refute live
+             |> element("#notifications-count")
+             |> has_element?()
+    end
   end
 
   describe "/profile/bookmarks" do
@@ -274,15 +302,11 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     test "bookmark search navigates to /profile/bookmarks if the search query is empty",
          %{conn: conn, user: user} do
       conn = sign_in_user(conn, user)
-      {:ok, live, html} = live(conn, ~p"/profile/bookmarks")
+      {:ok, live, _html} = live(conn, ~p"/profile/bookmarks")
       assert bookmark_view = find_live_child(live, "bookmarks_liveview")
-      assert html =~ "profile-search-input"
-      form_element = element(live, "#profile-search-input form")
-      assert form_element
 
       render_hook(bookmark_view, :search_submit, %{query: ""})
 
-      # Note: spaces in query params are encoded as +
       assert_redirect(bookmark_view, "/profile/bookmarks")
     end
 

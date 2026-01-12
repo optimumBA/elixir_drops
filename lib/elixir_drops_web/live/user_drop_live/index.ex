@@ -3,19 +3,24 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Notifications
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.LiveHelpers
+  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
   alias ElixirDropsWeb.UserDropLive.Bookmarks
   alias ElixirDropsWeb.UserDropLive.FormComponent
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Drops.subscribe()
-
     user_id = socket.assigns.current_user.id
+
+    if connected?(socket) do
+      Drops.subscribe()
+      Notifications.subscribe(user_id)
+    end
 
     {:ok,
      socket
@@ -25,6 +30,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:bookmark_tab?, false)
      |> assign(:drop_filters, %{user_id: user_id, bookmarks_user_id: user_id})
      |> assign(:drops_empty?, true)
+     |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
      |> assign(:page, 1)
@@ -57,6 +63,9 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   @impl Phoenix.LiveView
   def handle_event("update_viewport", %{"width" => width, "height" => height}, socket),
     do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
+
+  def handle_event("load_more_notifications", _params, socket),
+    do: NotificationHelpers.load_more(socket)
 
   def handle_event("search_submit", %{"query" => query}, socket) do
     trimmed_query =
@@ -143,6 +152,19 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     else
       {:noreply, push_navigate(socket, to: ~p"/")}
     end
+  end
+
+  def handle_event(
+        "mark_notifications_as_read",
+        _params,
+        %{assigns: %{current_user: user}} = socket
+      ) do
+    {_integer, nil} = Notifications.mark_all_as_read(user.id)
+
+    {:noreply,
+     socket
+     |> stream(:notifications, [], reset: true)
+     |> assign(:notification_count, 0)}
   end
 
   def handle_event(event, params, socket)
@@ -245,6 +267,16 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     else
       {:noreply, socket}
     end
+  end
+
+  def handle_info(
+        {:new_notification, notification},
+        %{assigns: %{notification_count: count}} = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:notification_count, count + 1)
+     |> stream_insert(:notifications, notification, at: 0)}
   end
 
   def handle_info({:update_search_query, query}, socket),

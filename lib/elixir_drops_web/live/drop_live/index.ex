@@ -2,23 +2,30 @@ defmodule ElixirDropsWeb.DropLive.Index do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Drops
+  alias ElixirDrops.Notifications
   alias ElixirDrops.Search
   alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.LiveHelpers
+  alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Drops.subscribe()
+    if connected?(socket) do
+      Drops.subscribe()
+      user = socket.assigns.current_user
+      if user, do: Notifications.subscribe(user.id)
+    end
 
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:batch_size, 15)
      |> assign(:drops_empty?, true)
+     |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
      |> assign(:new_drops?, false)
@@ -49,6 +56,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
   @impl Phoenix.LiveView
   def handle_event("update_viewport", %{"width" => width, "height" => height}, socket),
     do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
+
+  def handle_event("load_more_notifications", _params, socket),
+    do: NotificationHelpers.load_more(socket)
 
   def handle_event("refresh_drops", _params, socket) do
     {:noreply,
@@ -165,6 +175,19 @@ defmodule ElixirDropsWeb.DropLive.Index do
     end
   end
 
+  def handle_event(
+        "mark_notifications_as_read",
+        _params,
+        %{assigns: %{current_user: user}} = socket
+      ) do
+    {_integer, nil} = Notifications.mark_all_as_read(user.id)
+
+    {:noreply,
+     socket
+     |> stream(:notifications, [], reset: true)
+     |> assign(:notification_count, 0)}
+  end
+
   def handle_event(event, params, socket)
       when event in ["remove_from_bookmark", "bookmark_drop"],
       do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
@@ -199,6 +222,16 @@ defmodule ElixirDropsWeb.DropLive.Index do
         socket
       ) do
     {:noreply, socket}
+  end
+
+  def handle_info(
+        {:new_notification, notification},
+        %{assigns: %{notification_count: count}} = socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:notification_count, count + 1)
+     |> stream_insert(:notifications, notification, at: 0)}
   end
 
   defp assign_drop_filters(%{assigns: %{current_user: nil}} = socket),

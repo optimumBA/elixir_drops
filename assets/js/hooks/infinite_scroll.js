@@ -76,4 +76,53 @@ InfiniteScrollHooks.InfiniteScroll = {
   },
 }
 
+InfiniteScrollHooks.InfiniteScrollNotifications = {
+  mounted() {
+    this.observer = null
+
+    this.connectObserver()
+
+    this.handleEvent('load_more_notifications_complete', () => {
+      setTimeout(() => {
+        this.connectObserver()
+      }, 500)
+    })
+  },
+
+  destroyed() {
+    this.disconnectObserver()
+  },
+
+  connectObserver() {
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+
+        if (entry.isIntersecting) {
+          this.loadMore()
+        }
+      },
+      {
+        rootMargin: '150px',
+        threshold: 0.1,
+      }
+    )
+
+    this.observer.observe(this.el)
+  },
+
+  disconnectObserver() {
+    if (this.observer) {
+      this.observer.disconnect()
+      this.observer = null
+    }
+  },
+
+  async loadMore() {
+    this.disconnectObserver()
+
+    this.pushEvent('load_more_notifications')
+  },
+}
+
 export default InfiniteScrollHooks

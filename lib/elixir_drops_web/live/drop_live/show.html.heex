@@ -1,35 +1,42 @@
 <Layouts.app flash={@flash}>
   <section class="drops-container relative h-full w-full">
-    <DropComponents.navbar
-      current_url={~p"/d/#{@drop.short_id}"}
-      current_user={@current_user}
-      live_action={@live_action}
-      search_query={@navbar_search_query}
-      search_suggestions={@search_suggestions}
-      show_suggestions?={@show_suggestions?}
+    <DropComponents.notification_component
+      end_of_notifications_timeline?={@end_of_notifications_timeline?}
+      notifications={@streams.notifications}
+      notification_count={@notification_count}
     />
 
-    <section class="pt-10 py-4">
-      <DropComponents.drop
-        bookmarked?={@bookmarked?}
-        comment_count={@comment_count}
-        current_user={@current_user}
-        drop={@drop}
-      />
-    </section>
-
-    <section :if={@drop} class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <CommentComponents.comment_section
-        comment_count={@comment_count}
-        comment_offset={@comment_offset}
-        comments={@streams.comments}
+    <section id="main-page-body">
+      <DropComponents.navbar
         current_url={~p"/d/#{@drop.short_id}"}
         current_user={@current_user}
-        top_level_comment_count={@top_level_comment_count}
+        live_action={@live_action}
+        notification_count={@notification_count}
+        search_query={@navbar_search_query}
+        search_suggestions={@search_suggestions}
+        show_suggestions?={@show_suggestions?}
       />
-    </section>
 
-    <DropComponents.copied_link_popup_message />
+      <section class="pt-10 py-4">
+        <DropComponents.drop
+          bookmarked?={@bookmarked?}
+          comment_count={@comment_count}
+          current_user={@current_user}
+          drop={@drop}
+        />
+      </section>
+      <section :if={@drop} class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <CommentComponents.comment_section
+          comment_count={@comment_count}
+          comment_offset={@comment_offset}
+          comments={@streams.comments}
+          current_url={~p"/d/#{@drop.short_id}"}
+          current_user={@current_user}
+          top_level_comment_count={@top_level_comment_count}
+        />
+      </section>
+      <DropComponents.copied_link_popup_message />
+    </section>
   </section>
 
   <DropComponents.signin_popup_message />

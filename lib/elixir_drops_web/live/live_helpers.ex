@@ -8,6 +8,8 @@ defmodule ElixirDropsWeb.LiveHelpers do
   import Phoenix.Component
   import Phoenix.LiveView, only: [get_connect_params: 1, attach_hook: 4]
 
+  alias ElixirDropsWeb.NotificationHelpers
+
   alias ElixirDrops.Search
   alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
@@ -26,6 +28,11 @@ defmodule ElixirDropsWeb.LiveHelpers do
       end
 
     {:cont, assign(socket, :show_welcome_message?, show_welcome_message)}
+  end
+
+  @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
+  def on_mount(:assign_notifications, _params, _session, socket) do
+    {:cont, NotificationHelpers.assign_notifications(socket)}
   end
 
   def on_mount(:attach_shared_hooks, _params, _session, socket) do
