@@ -328,6 +328,128 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert html =~ "Phoenix Tutorial"
       refute html =~ "Random Drop"
     end
+
+    test "bookmark search returns drops with infinite scroll", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      # Relevance rank depends on: term frequency in title (weight A) > body (weight B)
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView Phoenix LiveView Phoenix",
+        "LiveView Phoenix LiveView Phoenix LiveView framework"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView Phoenix LiveView tutorial",
+        "Phoenix LiveView Phoenix guide"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix Phoenix LiveView LiveView patterns",
+        "Phoenix LiveView intro"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView Phoenix tutorial guide",
+        "LiveView Phoenix basics"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView LiveView components",
+        "Phoenix framework tips"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix Phoenix LiveView guide",
+        "LiveView basics intro"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView LiveView",
+        "Phoenix tips guide"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView Phoenix",
+        "LiveView intro basics"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView tutorial",
+        "Phoenix LiveView Phoenix LiveView"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView guide",
+        "Phoenix LiveView LiveView"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView basics",
+        "LiveView Phoenix intro"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView intro",
+        "Phoenix LiveView tips"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix framework patterns",
+        "LiveView Phoenix LiveView components"
+      )
+
+      create_bookmark(
+        user,
+        "LiveView components patterns",
+        "Phoenix Phoenix framework"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix basics guide",
+        "LiveView intro tutorial"
+      )
+
+      create_bookmark(
+        user,
+        "LiveView intro guide by Webmasters",
+        "Phoenix framework basics"
+      )
+
+      create_bookmark(
+        user,
+        "LiveView crash course 1",
+        "nothing related to what we're searching for"
+      )
+
+      {:ok, live, html} = live(conn, ~p"/profile/bookmarks?q=phoenix+liveview")
+
+      assert bookmark_view = find_live_child(live, "bookmarks_liveview")
+
+      assert html =~ "Phoenix LiveView Phoenix LiveView Phoenix"
+      assert html =~ "Phoenix Phoenix LiveView LiveView patterns"
+      assert html =~ "Phoenix LiveView LiveView components"
+      assert html =~ "Phoenix framework patterns"
+      assert html =~ "Phoenix basics guide"
+
+      html_2 = render_hook(bookmark_view, "load_more", %{})
+      assert html_2 =~ "LiveView intro guide by Webmasters"
+      refute html_2 =~ "LiveView crash course 1"
+    end
   end
 
   describe "/drop/new" do

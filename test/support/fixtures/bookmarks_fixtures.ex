@@ -11,9 +11,13 @@ defmodule ElixirDrops.BookmarksFixtures do
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Bookmarks
   alias ElixirDrops.Bookmarks.Bookmark
+  alias ElixirDrops.Drops.Drop
 
   @type attrs :: map()
+  @type body :: String.t()
   @type bookmark :: Bookmark.t()
+  @type drop :: Drop.t()
+  @type title :: String.t()
   @type user :: User.t()
 
   @doc """
@@ -48,5 +52,15 @@ defmodule ElixirDrops.BookmarksFixtures do
       |> Enum.at(bookmark_num - 1)
       |> update_inserted_at(offset_time)
     end
+  end
+
+  @spec create_bookmark(user(), title(), body()) :: drop()
+  def create_bookmark(user, title, body) do
+    %Drop{}
+    |> drop_fixture(user, %{
+      title: title,
+      body: body
+    })
+    |> tap(&bookmark_fixture(%{drop_id: &1.id, user_id: user.id}))
   end
 end

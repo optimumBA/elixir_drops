@@ -61,7 +61,7 @@ defmodule ElixirDrops.TextSearchHelpers do
           "ts_rank(?, websearch_to_tsquery('english', ?))",
           drop.search_vector,
           ^search_query
-        ) < ^rank
+        ) <= ^rank
     )
   end
 end
