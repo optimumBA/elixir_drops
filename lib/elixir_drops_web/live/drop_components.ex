@@ -249,10 +249,7 @@ defmodule ElixirDropsWeb.DropComponents do
           <button
             class="text-[#797979] hover:text-[#5947F1] p-2"
             id={"action-row-menu-btn-#{@drop.id}"}
-            phx-click={
-              JS.toggle(to: "#drop-menu-#{@drop.id}")
-              |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
-            }
+            phx-click={toggle_drop_menu(@drop.id)}
             type="button"
           >
             <Icons.three_dots_icon class="h-5 w-5" />
@@ -397,10 +394,7 @@ defmodule ElixirDropsWeb.DropComponents do
                       :for={suggestion <- @profile_search_suggestions}
                       class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
                       tabindex="0"
-                      phx-click={
-                        JS.push("search_submit", value: %{query: suggestion.query})
-                        |> JS.hide(to: "#profile-search-dropdown")
-                      }
+                      phx-click={submit_suggestion(suggestion)}
                     >
                       <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -420,10 +414,7 @@ defmodule ElixirDropsWeb.DropComponents do
                           :if={suggestion.type == :history}
                           type="button"
                           tabindex="0"
-                          phx-click={
-                            JS.push("delete_search_history", value: %{id: suggestion.id})
-                            |> JS.show(to: "#profile-search-dropdown")
-                          }
+                          phx-click={delete_search_history(suggestion)}
                           class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600"
                         >
                           <.icon name="hero-trash" class="h-3 w-3" />
@@ -441,10 +432,7 @@ defmodule ElixirDropsWeb.DropComponents do
                 phx-hook="SearchSuggestions"
               >
                 <form
-                  phx-submit={
-                    JS.push("search_submit", target: "#bookmarks_liveview")
-                    |> JS.hide(to: "#profile-search-dropdown")
-                  }
+                  phx-submit={submit_bookmarks()}
                   class="relative flex items-center"
                 >
                   <.icon name="hero-magnifying-glass" class="absolute left-3 h-4 w-4 text-gray-500" />
@@ -477,13 +465,7 @@ defmodule ElixirDropsWeb.DropComponents do
                       :for={suggestion <- @profile_search_suggestions}
                       class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
                       tabindex="0"
-                      phx-click={
-                        JS.push("search_submit",
-                          target: "#bookmarks_liveview",
-                          value: %{query: suggestion.query}
-                        )
-                        |> JS.hide(to: "#profile-search-dropdown")
-                      }
+                      phx-click={submit_bookmark_suggestion(suggestion)}
                     >
                       <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -503,10 +485,7 @@ defmodule ElixirDropsWeb.DropComponents do
                           :if={suggestion.type == :history}
                           type="button"
                           tabindex="0"
-                          phx-click={
-                            JS.push("delete_search_history", value: %{id: suggestion.id})
-                            |> JS.show(to: "#profile-search-dropdown")
-                          }
+                          phx-click={delete_search_history(suggestion)}
                           class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600"
                         >
                           <.icon name="hero-trash" class="h-3 w-3" />
@@ -875,7 +854,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <section :if={@current_user} class="hover:cursor-pointer">
       <div
-        phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#main-page-body")}
+        phx-click={view_notifications()}
         class="flex shrink-0 sm:hidden"
       >
         <div class="relative group w-5 h-5">
@@ -937,10 +916,7 @@ defmodule ElixirDropsWeb.DropComponents do
     <div
       class="text-sm hidden opacity-0 absolute right-0 top-12 py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] transition-opacity duration-200"
       id={"drop-menu-#{@id}"}
-      phx-click-away={
-        JS.hide(to: "#drop-menu-#{@id}")
-        |> JS.add_class("opacity-0", to: "#drop-menu-#{@id}")
-      }
+      phx-click-away={hide_drop_menu(@id)}
     >
       <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} show_separator={false} />
@@ -1362,7 +1338,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div id="desktop-search-input" class="relative w-full" phx-hook="SearchSuggestions">
       <form
-        phx-submit={JS.push("navbar_search_submit") |> JS.hide(to: "#navbar-search-dropdown")}
+        phx-submit={navbar_search_submit()}
         class="relative"
       >
         <label for="desktop-search-query" class="sr-only">Search drops</label>
@@ -1642,5 +1618,53 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
     </div>
     """
+  end
+
+  defp view_notifications do
+    %JS{}
+    |> JS.toggle(to: "#notifications-container")
+    |> JS.toggle(to: "#main-page-body")
+  end
+
+  defp navbar_search_submit do
+    "navbar_search_submit"
+    |> JS.push()
+    |> JS.hide(to: "#navbar-search-dropdown")
+  end
+
+  defp submit_bookmark_suggestion(suggestion) do
+    "search_submit"
+    |> JS.push(target: "#bookmarks_liveview", value: %{query: suggestion.query})
+    |> JS.hide(to: "#profile-search-dropdown")
+  end
+
+  defp submit_suggestion(suggestion) do
+    "search_submit"
+    |> JS.push(value: %{query: suggestion.query})
+    |> JS.hide(to: "#profile-search-dropdown")
+  end
+
+  defp hide_drop_menu(id) do
+    "opacity-0"
+    |> JS.add_class(to: "#drop-menu-#{id}")
+    |> JS.hide(to: "#drop-menu-#{id}")
+  end
+
+  defp toggle_drop_menu(id) do
+    "opacity-0"
+    |> JS.toggle_class(to: "#drop-menu-#{id}")
+    |> JS.toggle(to: "#drop-menu-#{id}")
+  end
+
+  defp delete_search_history(suggestion) do
+    "delete_search_history"
+    |> JS.push(value: %{id: suggestion.id})
+    |> JS.show(to: "#profile-search-dropdown")
+  end
+
+  defp submit_bookmarks do
+    "search_submit"
+    |> JS.push(target: "#bookmarks_liveview")
+    |> JS.hide(to: "#profile-search-dropdown")
   end
 end
