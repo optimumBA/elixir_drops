@@ -16,6 +16,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @type socket :: Phoenix.LiveView.Socket.t()
 
   attr :batch_size, :integer, default: 10
+  attr :bookmark_tab?, :boolean, default: false
   attr :current_user, :any
   attr :drops, :list, required: true
   attr :drops_empty?, :boolean, required: true
@@ -25,7 +26,6 @@ defmodule ElixirDropsWeb.DropsListHelper do
   attr :page, :integer
   attr :search_query, :string, default: ""
   attr :searching, :boolean, default: false
-  attr :show_user_drops?, :boolean, default: false
 
   @spec drops_list(assigns()) :: rendered()
   def drops_list(assigns) do
@@ -66,19 +66,29 @@ defmodule ElixirDropsWeb.DropsListHelper do
           ]}
         >
           <div
-            :if={@show_user_drops?}
+            :if={@drops_empty? && !@bookmark_tab?}
             id="drops-empty"
-            class="drops-empty only:grid hidden text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+            class="only:grid text-[#656565] text-lg min-h-[60svh] items-center justify-center"
           >
             <div class="flex flex-col items-center justify-center">
               <p>You haven't created any drop yet.</p>
               <.link
                 navigate={~p"/drops/new"}
-                class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 md:hidden py-2 mt-2 rounded-lg flex items-center gap-x-2"
+                class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 py-2 mt-2 rounded-lg flex items-center gap-x-2"
               >
                 <span><.icon name="hero-plus" class="text-[#eae8fd] h-5 w-5" /></span>
                 <span> Create Drop</span>
               </.link>
+            </div>
+          </div>
+
+          <div
+            :if={@drops_empty? && @bookmark_tab?}
+            id="drops-empty"
+            class="only:grid text-[#656565] text-lg min-h-[60svh] items-center justify-center"
+          >
+            <div class="flex flex-col items-center justify-center">
+              <p>You haven't bookmarked any drop yet.</p>
             </div>
           </div>
           <div
@@ -203,14 +213,14 @@ defmodule ElixirDropsWeb.DropsListHelper do
     |> assign(:last_drop, last_drop)
   end
 
-  @spec load_more(socket(), pos_integer()) :: {:noreply, socket()}
+  @spec load_more(socket(), pos_integer()) :: socket()
   def load_more(socket, batch_size \\ 10)
 
   def load_more(%{assigns: %{end_of_timeline?: true}} = socket, _batch_size),
-    do: {:noreply, socket}
+    do: socket
 
   def load_more(socket, _batch_size),
-    do: {:noreply, assign_drops_with_cursor(socket, socket.assigns.search_query)}
+    do: assign_drops_with_cursor(socket, socket.assigns.search_query)
 
   defp assign_drops_with_cursor(socket, search_query) when search_query != "" do
     socket

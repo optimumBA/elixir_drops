@@ -4,11 +4,11 @@ defmodule ElixirDropsWeb.DropLive.Index do
   alias ElixirDrops.Drops
   alias ElixirDrops.Notifications
   alias ElixirDrops.Search
+  alias ElixirDropsWeb.BookmarkHelpers
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
-  alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
-  alias ElixirDropsWeb.NotificationHelpers
+  alias ElixirDropsWeb.LiveHelpers
   alias ElixirDropsWeb.SearchHelper
 
   @impl Phoenix.LiveView
@@ -23,7 +23,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:batch_size, 15)
-     |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
      |> assign(:drops_empty?, true)
      |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
@@ -34,7 +33,8 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:search_query, "")
      |> assign(:searching, false)
      |> assign(:viewport_height, nil)
-     |> assign(:viewport_width, nil)}
+     |> assign(:viewport_width, nil)
+     |> assign_drop_filters()}
   end
 
   @impl Phoenix.LiveView
@@ -46,54 +46,15 @@ defmodule ElixirDropsWeb.DropLive.Index do
       |> assign(:navbar_search_query, search_query)
       |> assign(:search_query, search_query)
       |> assign(:searching, search_query != "")
-      |> update_search_filters(search_query)
+      |> SearchHelper.update_search_filters(search_query)
       |> DropsListHelper.assign_drops()
 
     {:noreply, socket}
   end
 
-  defp update_search_filters(socket, search_query) do
-    current_filters = socket.assigns.drop_filters
-
-    filters =
-      if search_query != "" do
-        current_filters
-        |> Map.put(:relevance_rank, {1, search_query})
-        |> Map.put(:search, search_query)
-      else
-        Map.delete(current_filters, :search)
-      end
-
-    assign(socket, :drop_filters, filters)
-  end
-
   @impl Phoenix.LiveView
-  def handle_event("update_viewport", %{"width" => width, "height" => height}, socket) do
-    batch_size = DropsBatchCalculator.calculate_batch_size(width, height)
-
-    {:noreply,
-     socket
-     |> assign(:batch_size, batch_size)
-     |> assign(:viewport_height, height)
-     |> assign(:viewport_width, width)}
-  end
-
-  def handle_event("load_more", %{"layout_complete" => true}, socket) do
-    socket = assign(socket, :loading_more, true)
-    DropsListHelper.load_more(socket, socket.assigns.batch_size)
-  end
-
-  def handle_event("load_more", _params, socket) do
-    socket = assign(socket, :loading_more, true)
-    DropsListHelper.load_more(socket, socket.assigns.batch_size)
-  end
-
-  def handle_event("load_more_complete", _params, socket) do
-    {:noreply, assign(socket, :loading_more, false)}
-  end
-
-  def handle_event("load_more_notifications", _params, socket),
-    do: NotificationHelpers.load_more(socket)
+  def handle_event("update_viewport", %{"width" => width, "height" => height}, socket),
+    do: {:noreply, LiveHelpers.update_viewport(width, height, socket)}
 
   def handle_event("refresh_drops", _params, socket) do
     {:noreply,
@@ -110,7 +71,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
       |> String.trim()
 
     # Track search history and popular searches
-    current_filters = update_search_filters(socket, trimmed_query).assigns.drop_filters
+    current_filters =
+      SearchHelper.update_search_filters(socket, trimmed_query).assigns.drop_filters
+
     SearchHelper.track_search(query, socket, current_filters)
 
     socket =
@@ -161,17 +124,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:show_suggestions?, false)}
   end
 
-  def handle_event("delete_search_history", %{"id" => history_id}, socket) do
-    with %{current_user: %{id: user_id}} <- socket.assigns,
-         {:ok, _} <- Search.delete_search_history(history_id, user_id) do
-      # Re-fetch suggestions like focus does
-      {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
-      {:noreply, assign(socket, :search_suggestions, suggestions)}
-    else
-      _error -> {:noreply, socket}
-    end
-  end
-
   def handle_event("close_search_overlay", _params, socket) do
     {:noreply, assign(socket, :show_suggestions?, false)}
   end
@@ -197,7 +149,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
     # Track search history and popular searches
-    current_filters = update_search_filters(socket, trimmed_query).assigns.drop_filters
+    current_filters =
+      SearchHelper.update_search_filters(socket, trimmed_query).assigns.drop_filters
+
     SearchHelper.track_search(query, socket, current_filters)
 
     socket =
@@ -214,18 +168,11 @@ defmodule ElixirDropsWeb.DropLive.Index do
     end
   end
 
-  def handle_event(
-        "mark_notifications_as_read",
-        _params,
-        %{assigns: %{current_user: user}} = socket
-      ) do
-    {_integer, nil} = Notifications.mark_all_as_read(user.id)
+  def handle_event(event, params, socket)
+      when event in ["remove_from_bookmark", "bookmark_drop"],
+      do: BookmarkHelpers.handle_bookmark_event(event, params, socket)
 
-    {:noreply,
-     socket
-     |> stream(:notifications, [], reset: true)
-     |> assign(:notification_count, 0)}
-  end
+  def handle_event(_event, _params, socket), do: {:noreply, socket}
 
   @impl Phoenix.LiveView
   def handle_info({Drops, [:drop, :created], drop}, socket) do
@@ -257,13 +204,18 @@ defmodule ElixirDropsWeb.DropLive.Index do
     {:noreply, socket}
   end
 
-  def handle_info(
-        {:new_notification, notification},
-        %{assigns: %{notification_count: count}} = socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(:notification_count, count + 1)
-     |> stream_insert(:notifications, notification, at: 0)}
-  end
+  def handle_info(_message, socket), do: {:noreply, socket}
+
+  defp assign_drop_filters(%{assigns: %{current_user: nil}} = socket),
+    do:
+      assign(socket, :drop_filters, %{
+        screenshot_status: [:completed, :skipped]
+      })
+
+  defp assign_drop_filters(%{assigns: %{current_user: user}} = socket),
+    do:
+      assign(socket, :drop_filters, %{
+        bookmarks_user_id: user.id,
+        screenshot_status: [:completed, :skipped]
+      })
 end

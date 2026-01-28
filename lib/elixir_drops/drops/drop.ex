@@ -15,6 +15,7 @@ defmodule ElixirDrops.Drops.Drop do
   @foreign_key_type :binary_id
   schema "drops" do
     field :body, :string
+    field :bookmarked?, :boolean, virtual: true
     field :comment_count, :integer, virtual: true
     embeds_one :screenshot, Screenshot, on_replace: :update
     field :relevance_rank, :float, virtual: true

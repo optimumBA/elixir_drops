@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
   use ElixirDropsWeb.ConnCase, async: true
 
   import ElixirDrops.AccountsFixtures
+  import ElixirDrops.BookmarksFixtures
   import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
   import ElixirDrops.NotificationsFixtures
@@ -256,6 +257,198 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       refute live
              |> element("#notifications-count")
              |> has_element?()
+    end
+  end
+
+  describe "/profile/bookmarks" do
+    setup [:create_drops_setup]
+
+    test "shows bookmarked drops with infinite scroll", %{conn: conn, user: user} do
+      _bookmarks = create_multiple_bookmarks(user, 35)
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile/bookmarks")
+
+      assert bookmark_view = find_live_child(live, "bookmarks_liveview")
+
+      assert html =~ "Drop title 35"
+      assert html =~ "Drop title 26"
+      refute html =~ "Drop title 1"
+
+      assert html_2 = render_hook(bookmark_view, "load_more", %{})
+      assert html_2 =~ "Drop title 20"
+      assert html_2 =~ "Drop title 6"
+      refute html_2 =~ "Drop title 5"
+
+      assert html_3 = render_hook(bookmark_view, "load_more", %{})
+      assert html_3 =~ "Drop title 5"
+      assert html_3 =~ "Drop title 1"
+    end
+
+    test "bookmark search navigates to /profile/bookmarks?q=query if search query is not empty",
+         %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, html} = live(conn, ~p"/profile/bookmarks")
+      assert bookmark_view = find_live_child(live, "bookmarks_liveview")
+      assert html =~ "profile-search-input"
+      form_element = element(live, "#profile-search-input form")
+      assert form_element
+
+      render_hook(bookmark_view, :search_submit, %{query: "phoenix"})
+
+      assert_redirect(bookmark_view, "/profile/bookmarks?q=phoenix")
+    end
+
+    test "bookmark search navigates to /profile/bookmarks if the search query is empty",
+         %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile/bookmarks")
+      assert bookmark_view = find_live_child(live, "bookmarks_liveview")
+
+      render_hook(bookmark_view, :search_submit, %{query: ""})
+
+      assert_redirect(bookmark_view, "/profile/bookmarks")
+    end
+
+    test "returns only relevant bookmarks when searching", %{conn: conn, user: user} do
+      matching_drop =
+        drop_fixture(%Drop{}, user, %{title: "Phoenix Tutorial", body: "Learning Phoenix"})
+
+      bookmark_fixture(%{drop_id: matching_drop.id, user_id: user.id})
+
+      non_matching_drop =
+        drop_fixture(%Drop{}, user, %{title: "Random Drop", body: "Not related"})
+
+      bookmark_fixture(%{drop_id: non_matching_drop.id, user_id: user.id})
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile/bookmarks?q=phoenix")
+
+      html = render(live)
+      assert html =~ "Phoenix Tutorial"
+      refute html =~ "Random Drop"
+    end
+
+    test "bookmark search returns drops with infinite scroll", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+
+      # Relevance rank depends on: term frequency in title (weight A) > body (weight B)
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView Phoenix LiveView Phoenix",
+        "LiveView Phoenix LiveView Phoenix LiveView framework"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView Phoenix LiveView tutorial",
+        "Phoenix LiveView Phoenix guide"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix Phoenix LiveView LiveView patterns",
+        "Phoenix LiveView intro"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView Phoenix tutorial guide",
+        "LiveView Phoenix basics"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView LiveView components",
+        "Phoenix framework tips"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix Phoenix LiveView guide",
+        "LiveView basics intro"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView LiveView",
+        "Phoenix tips guide"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView Phoenix",
+        "LiveView intro basics"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView tutorial",
+        "Phoenix LiveView Phoenix LiveView"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView guide",
+        "Phoenix LiveView LiveView"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView basics",
+        "LiveView Phoenix intro"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix LiveView intro",
+        "Phoenix LiveView tips"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix framework patterns",
+        "LiveView Phoenix LiveView components"
+      )
+
+      create_bookmark(
+        user,
+        "LiveView components patterns",
+        "Phoenix Phoenix framework"
+      )
+
+      create_bookmark(
+        user,
+        "Phoenix basics guide",
+        "LiveView intro tutorial"
+      )
+
+      create_bookmark(
+        user,
+        "LiveView intro guide by Webmasters",
+        "Phoenix framework basics"
+      )
+
+      create_bookmark(
+        user,
+        "LiveView crash course 1",
+        "nothing related to what we're searching for"
+      )
+
+      {:ok, live, html} = live(conn, ~p"/profile/bookmarks?q=phoenix+liveview")
+
+      assert bookmark_view = find_live_child(live, "bookmarks_liveview")
+
+      assert html =~ "Phoenix LiveView Phoenix LiveView Phoenix"
+      assert html =~ "Phoenix Phoenix LiveView LiveView patterns"
+      assert html =~ "Phoenix LiveView LiveView components"
+      assert html =~ "Phoenix framework patterns"
+      assert html =~ "Phoenix basics guide"
+
+      html_2 = render_hook(bookmark_view, "load_more", %{})
+      assert html_2 =~ "LiveView intro guide by Webmasters"
+      refute html_2 =~ "LiveView crash course 1"
     end
   end
 

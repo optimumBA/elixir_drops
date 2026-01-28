@@ -12,13 +12,14 @@
         current_user={@current_user}
         live_action={@live_action}
         notification_count={@notification_count}
-        show_user_drops?={@show_user_drops?}
         search_query={@navbar_search_query}
         search_suggestions={@search_suggestions}
+        show_suggestions?={@show_suggestions?}
       />
 
       <section class="pt-10 py-4">
         <DropComponents.drop
+          bookmarked?={@bookmarked?}
           comment_count={@comment_count}
           current_user={@current_user}
           drop={@drop}

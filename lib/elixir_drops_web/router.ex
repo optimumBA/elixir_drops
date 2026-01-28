@@ -42,12 +42,14 @@ defmodule ElixirDropsWeb.Router do
             ),
             {ElixirDropsWeb.UserAuth, :ensure_authenticated},
             {ElixirDropsWeb.UserAuth, :assign_current_user},
-            {ElixirDropsWeb.NavbarSearchHook, :navbar_search},
-            {ElixirDropsWeb.LiveHelpers, :assign_notifications}
+            {ElixirDropsWeb.LiveHelpers, :assign_notifications},
+            {ElixirDropsWeb.LiveHelpers, :attach_shared_hooks},
+            {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
           ],
           & &1
         ) do
       live "/profile", UserDropLive.Index, :index
+      live "/profile/bookmarks", UserDropLive.Index, :show_bookmarks
 
       live "/drops/:short_id/edit", UserDropLive.Index, :edit
       live "/drops/new", UserDropLive.Index, :new
@@ -66,8 +68,9 @@ defmodule ElixirDropsWeb.Router do
             ),
             {ElixirDropsWeb.LiveHelpers, :maybe_show_welcome_message},
             {ElixirDropsWeb.UserAuth, :assign_current_user},
-            {ElixirDropsWeb.NavbarSearchHook, :navbar_search},
-            {ElixirDropsWeb.LiveHelpers, :assign_notifications}
+            {ElixirDropsWeb.LiveHelpers, :assign_notifications},
+            {ElixirDropsWeb.LiveHelpers, :attach_shared_hooks},
+            {ElixirDropsWeb.NavbarSearchHook, :navbar_search}
           ],
           & &1
         ) do

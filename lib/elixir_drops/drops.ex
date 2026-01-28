@@ -6,11 +6,13 @@ defmodule ElixirDrops.Drops do
   import Ecto.Query
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Bookmarks.Bookmark
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
   alias ElixirDrops.MarkdownCache
   alias ElixirDrops.Repo
+  alias ElixirDrops.TextSearchHelpers
 
   require Logger
 
@@ -209,7 +211,8 @@ defmodule ElixirDrops.Drops do
 
     result =
       query
-      |> apply_search_ordering(filters[:search])
+      |> TextSearchHelpers.apply_search_ordering(filters[:search])
+      |> add_bookmark_field(filters[:bookmarks_user_id])
       |> Repo.all()
 
     {:ok, result}
@@ -227,30 +230,17 @@ defmodule ElixirDrops.Drops do
     from drop in Drop, as: :drop
   end
 
-  defp apply_search_ordering(query, search_query)
-       when is_binary(search_query) and search_query != "" do
-    query
-    |> select_merge([drop: drop], %{
-      relevance_rank:
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
+  defp add_bookmark_field(query, nil), do: query
+
+  defp add_bookmark_field(query, user_id) do
+    select_merge(query, [d], %{
+      bookmarked?:
+        exists(
+          from(b in Bookmark,
+            where: b.drop_id == parent_as(:drop).id and b.user_id == ^user_id
+          )
         )
     })
-    |> order_by(
-      [drop: drop],
-      desc:
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        )
-    )
-  end
-
-  defp apply_search_ordering(query, _no_search) do
-    order_by(query, [d], {:desc, d.inserted_at})
   end
 
   defp apply_filters do
@@ -283,29 +273,11 @@ defmodule ElixirDrops.Drops do
     dynamic([drop: drop], ^dynamic and drop.user_id == ^user_id)
   end
 
-  defp apply_filter({:search, query}, dynamic) when is_binary(query) and query != "" do
-    # Use PostgreSQL websearch_to_tsquery for better search experience
-    # websearch_to_tsquery handles phrases, AND/OR operators naturally
-    dynamic(
-      [drop: drop],
-      ^dynamic and fragment("? @@ websearch_to_tsquery('english', ?)", drop.search_vector, ^query)
-    )
-  end
+  defp apply_filter({:search, search_query}, dynamic),
+    do: TextSearchHelpers.apply_filter({:search, search_query}, dynamic)
 
-  defp apply_filter({:search, _}, dynamic), do: dynamic
-
-  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
-       when is_binary(search_query) and search_query != "" do
-    dynamic(
-      [drop: drop],
-      ^dynamic and
-        fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
-          drop.search_vector,
-          ^search_query
-        ) < ^rank
-    )
-  end
+  defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic),
+    do: TextSearchHelpers.apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
 
   defp apply_filter(_other, dynamic), do: dynamic
 

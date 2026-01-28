@@ -17,7 +17,6 @@ defmodule ElixirDropsWeb.DropComponents do
   attr :search_query, :string, default: ""
   attr :search_suggestions, :list, default: []
   attr :show_suggestions?, :boolean, default: false
-  attr :show_user_drops?, :boolean, default: false
 
   @spec navbar(assigns()) :: rendered()
   def navbar(assigns) do
@@ -150,7 +149,13 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
       </div>
 
-      <.drop_card_menu author?={@drop.user_id == @user_id} id={@drop.id} short_id={@drop.short_id} />
+      <.drop_card_menu
+        author?={@drop.user_id == @user_id}
+        bookmarked?={@drop.bookmarked?}
+        id={@drop.id}
+        short_id={@drop.short_id}
+        user_id={@user_id}
+      />
     </div>
     """
   end
@@ -163,6 +168,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :bookmarked?, :boolean
   attr :comment_count, :integer
   attr :current_user, User, default: nil
   attr :drop, Drop, required: true
@@ -201,6 +207,34 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
         <!-- Right side: Action buttons -->
         <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 text-[#4f4f4f] cursor-pointer">
+            <div
+              :if={@current_user && @bookmarked?}
+              id={"remove-bookmark-button-#{@drop.id}"}
+              class="flex gap-2"
+              phx-click={
+                JS.push("remove_from_bookmark",
+                  value: %{drop_id: @drop.id, user_id: @current_user.id}
+                )
+              }
+            >
+              <img src={~p"/images/remove_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
+              <span class="hidden md:inline text-sm">Remove Bookmark</span>
+            </div>
+            <div
+              :if={@current_user && !@bookmarked?}
+              id={"bookmark-button-#{@drop.id}"}
+              class="flex gap-2"
+              phx-click={
+                JS.push("bookmark_drop",
+                  value: %{drop_id: @drop.id, user_id: @current_user.id}
+                )
+              }
+            >
+              <img src={~p"/images/add_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
+              <span class="hidden md:inline text-sm">Bookmark Drop</span>
+            </div>
+          </div>
           <!-- Copy link button -->
           <div
             class="flex items-center gap-2 text-[#8E8E8E] hover:text-[#5947F1] cursor-pointer"
@@ -215,10 +249,7 @@ defmodule ElixirDropsWeb.DropComponents do
           <button
             class="text-[#797979] hover:text-[#5947F1] p-2"
             id={"action-row-menu-btn-#{@drop.id}"}
-            phx-click={
-              JS.toggle(to: "#drop-menu-#{@drop.id}")
-              |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
-            }
+            phx-click={toggle_drop_menu(@drop.id)}
             type="button"
           >
             <Icons.three_dots_icon class="h-5 w-5" />
@@ -276,6 +307,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :bookmark_tab?, :boolean
   attr :current_user, User, required: true
   attr :profile_search_suggestions, :list, default: []
   attr :search_query, :string, default: ""
@@ -304,14 +336,30 @@ defmodule ElixirDropsWeb.DropComponents do
       <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
         <div class="flex items-center px-4 md:px-0">
           <ul class="flex items-center" id="secondary-nav-links">
-            <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center mr-8">
-              <.link href={~p"/profile"}>
+            <li class={[
+              "min-h-full py-4 flex items-center mr-8",
+              !@bookmark_tab? && "border-b-2 border-b-[#887ce1]"
+            ]}>
+              <.link navigate={~p"/profile"}>
                 My drops
+              </.link>
+            </li>
+            <li class={[
+              "min-h-full py-4 flex items-center mr-8",
+              @bookmark_tab? && "border-b-2 border-b-[#887ce1]"
+            ]}>
+              <.link patch={~p"/profile/bookmarks"}>
+                Bookmarks
               </.link>
             </li>
             <!-- User Profile Search Input -->
             <li class="min-h-full py-4 border-b-2 border-b-transparent hover:border-b-gray-300 flex items-center">
-              <div id="profile-search-input" class="relative" phx-hook="SearchSuggestions">
+              <div
+                :if={!@bookmark_tab?}
+                id="profile-search-input"
+                class="relative"
+                phx-hook="SearchSuggestions"
+              >
                 <form
                   phx-submit={JS.push("search_submit") |> JS.hide(to: "#profile-search-dropdown")}
                   class="relative flex items-center"
@@ -346,10 +394,7 @@ defmodule ElixirDropsWeb.DropComponents do
                       :for={suggestion <- @profile_search_suggestions}
                       class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
                       tabindex="0"
-                      phx-click={
-                        JS.push("search_submit", value: %{query: suggestion.query})
-                        |> JS.hide(to: "#profile-search-dropdown")
-                      }
+                      phx-click={submit_suggestion(suggestion)}
                     >
                       <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -369,10 +414,78 @@ defmodule ElixirDropsWeb.DropComponents do
                           :if={suggestion.type == :history}
                           type="button"
                           tabindex="0"
-                          phx-click={
-                            JS.push("delete_search_history", value: %{id: suggestion.id})
-                            |> JS.show(to: "#profile-search-dropdown")
-                          }
+                          phx-click={delete_search_history(suggestion)}
+                          class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600"
+                        >
+                          <.icon name="hero-trash" class="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                :if={@bookmark_tab?}
+                id="profile-search-input"
+                class="relative"
+                phx-hook="SearchSuggestions"
+              >
+                <form
+                  phx-submit={submit_bookmarks()}
+                  class="relative flex items-center"
+                >
+                  <.icon name="hero-magnifying-glass" class="absolute left-3 h-4 w-4 text-gray-500" />
+                  <label for="profile-search-query" class="sr-only">Search your drops</label>
+                  <input
+                    id="profile-search-query"
+                    type="text"
+                    name="query"
+                    value={@search_query}
+                    placeholder="Search bookmarks"
+                    phx-change="load_suggestions"
+                    class={[
+                      "pl-10 pr-4 py-2 bg-transparent border-0",
+                      "focus:outline-none focus:ring-0 placeholder-gray-500 text-sm",
+                      "min-w-[200px]"
+                    ]}
+                  />
+                </form>
+                <!-- Search Suggestions Dropdown -->
+                <div
+                  :if={@show_profile_suggestions? and length(@profile_search_suggestions) > 0}
+                  id="profile-search-dropdown"
+                  class={[
+                    "absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50",
+                    "max-h-80 overflow-y-auto min-w-[200px]"
+                  ]}
+                >
+                  <div class="py-2">
+                    <div
+                      :for={suggestion <- @profile_search_suggestions}
+                      class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
+                      tabindex="0"
+                      phx-click={submit_bookmark_suggestion(suggestion)}
+                    >
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <.icon
+                            :if={suggestion.type == :history}
+                            name="hero-clock"
+                            class="h-4 w-4 text-gray-400"
+                          />
+                          <.icon
+                            :if={suggestion.type == :popular}
+                            name="hero-magnifying-glass"
+                            class="h-4 w-4 text-gray-400"
+                          />
+                          <span class="text-sm text-gray-900">{suggestion.query}</span>
+                        </div>
+                        <button
+                          :if={suggestion.type == :history}
+                          type="button"
+                          tabindex="0"
+                          phx-click={delete_search_history(suggestion)}
                           class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600"
                         >
                           <.icon name="hero-trash" class="h-3 w-3" />
@@ -741,7 +854,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <section :if={@current_user} class="hover:cursor-pointer">
       <div
-        phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#main-page-body")}
+        phx-click={view_notifications()}
         class="flex shrink-0 sm:hidden"
       >
         <div class="relative group w-5 h-5">
@@ -803,10 +916,7 @@ defmodule ElixirDropsWeb.DropComponents do
     <div
       class="text-sm hidden opacity-0 absolute right-0 top-12 py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] transition-opacity duration-200"
       id={"drop-menu-#{@id}"}
-      phx-click-away={
-        JS.hide(to: "#drop-menu-#{@id}")
-        |> JS.add_class("opacity-0", to: "#drop-menu-#{@id}")
-      }
+      phx-click-away={hide_drop_menu(@id)}
     >
       <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} show_separator={false} />
@@ -945,16 +1055,18 @@ defmodule ElixirDropsWeb.DropComponents do
   defp drop_card_menu(assigns) do
     ~H"""
     <div
-      class="drop-card-menu text-sm absolute right-2 top-[7.5rem] md:top-[8.5rem] py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] hidden"
+      class="drop-card-menu text-sm absolute right-2 bottom-[4rem] py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] hidden"
       id={"drop-card-menu-#{@id}"}
       phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
       onclick="event.stopPropagation()"
     >
       <!-- Sharing Section Header -->
-      <div class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
+      <div :if={!@user_id} class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
         Sharing
       </div>
-
+      <div :if={@user_id} class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
+        Sharing & Bookmark
+      </div>
       <div
         id={"card-copy-link-menu-#{@id}"}
         data-clipboard-text={url(~p"/d/#{@short_id}")}
@@ -963,6 +1075,39 @@ defmodule ElixirDropsWeb.DropComponents do
       >
         <.icon name="hero-link" class="h-5 w-5" />
         <span>Copy Drop link</span>
+      </div>
+      <div
+        :if={@user_id}
+        class="text-[#4f4f4f] flex items-center gap-x-2 px-2 py-2 rounded cursor-pointer"
+      >
+        <div
+          id={"add-bookmark-#{@id}-#{@user_id}"}
+          data-user-id={@user_id}
+          data-drop-id={@id}
+          data-event-name="bookmark_drop"
+          class={[
+            "flex gap-2",
+            @bookmarked? && "hidden"
+          ]}
+          phx-hook="Bookmark"
+        >
+          <img src={~p"/images/add_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
+          <span>Bookmark Drop</span>
+        </div>
+        <div
+          id={"remove-bookmark-#{@id}-#{@user_id}"}
+          data-user-id={@user_id}
+          data-drop-id={@id}
+          data-event-name="remove_from_bookmark"
+          class={[
+            "flex gap-2",
+            !@bookmarked? && "hidden"
+          ]}
+          phx-hook="Bookmark"
+        >
+          <img src={~p"/images/remove_bookmark_icon.svg"} alt="bookmark" class="h-5 w-5" />
+          <span>Remove Bookmark</span>
+        </div>
       </div>
       
     <!-- Markdown Section -->
@@ -1193,7 +1338,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div id="desktop-search-input" class="relative w-full" phx-hook="SearchSuggestions">
       <form
-        phx-submit={JS.push("navbar_search_submit") |> JS.hide(to: "#navbar-search-dropdown")}
+        phx-submit={navbar_search_submit()}
         class="relative"
       >
         <label for="desktop-search-query" class="sr-only">Search drops</label>
@@ -1261,10 +1406,7 @@ defmodule ElixirDropsWeb.DropComponents do
                 type="button"
                 tabindex="0"
                 class="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
-                phx-click={
-                  JS.push("delete_navbar_search_history", value: %{id: suggestion.id})
-                  |> JS.show(to: "#navbar-search-dropdown")
-                }
+                phx-click={delete_navbar_search_history(suggestion)}
               >
                 <.icon name="hero-trash" class="h-3 w-3 text-gray-500" />
               </button>
@@ -1473,5 +1615,59 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
     </div>
     """
+  end
+
+  defp view_notifications do
+    %JS{}
+    |> JS.toggle(to: "#notifications-container")
+    |> JS.toggle(to: "#main-page-body")
+  end
+
+  defp navbar_search_submit do
+    "navbar_search_submit"
+    |> JS.push()
+    |> JS.hide(to: "#navbar-search-dropdown")
+  end
+
+  defp submit_bookmark_suggestion(suggestion) do
+    "search_submit"
+    |> JS.push(target: "#bookmarks_liveview", value: %{query: suggestion.query})
+    |> JS.hide(to: "#profile-search-dropdown")
+  end
+
+  defp submit_suggestion(suggestion) do
+    "search_submit"
+    |> JS.push(value: %{query: suggestion.query})
+    |> JS.hide(to: "#profile-search-dropdown")
+  end
+
+  defp hide_drop_menu(id) do
+    "opacity-0"
+    |> JS.add_class(to: "#drop-menu-#{id}")
+    |> JS.hide(to: "#drop-menu-#{id}")
+  end
+
+  defp toggle_drop_menu(id) do
+    "opacity-0"
+    |> JS.toggle_class(to: "#drop-menu-#{id}")
+    |> JS.toggle(to: "#drop-menu-#{id}")
+  end
+
+  defp delete_search_history(suggestion) do
+    "delete_search_history"
+    |> JS.push(value: %{id: suggestion.id})
+    |> JS.show(to: "#profile-search-dropdown")
+  end
+
+  defp delete_navbar_search_history(suggestion) do
+    "delete_navbar_search_history"
+    |> JS.push(value: %{id: suggestion.id})
+    |> JS.show(to: "#navbar-search-dropdown")
+  end
+
+  defp submit_bookmarks do
+    "search_submit"
+    |> JS.push(target: "#bookmarks_liveview")
+    |> JS.hide(to: "#profile-search-dropdown")
   end
 end

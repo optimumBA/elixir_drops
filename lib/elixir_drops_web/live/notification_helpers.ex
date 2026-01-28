@@ -31,19 +31,18 @@ defmodule ElixirDropsWeb.NotificationHelpers do
     |> assign(:notification_filters, filters)
   end
 
-  @spec load_more(socket()) :: {:noreply, socket()}
+  @spec load_more(socket()) :: socket()
   def load_more(socket)
 
   def load_more(%{assigns: %{end_of_notifications_timeline?: true}} = socket),
-    do: {:noreply, socket}
+    do: socket
 
   def load_more(socket) do
     filters = %{older_than: socket.assigns.last_notification}
 
-    {:noreply,
-     socket
-     |> maybe_insert_notifications(filters, socket.assigns.last_notification)
-     |> Phoenix.LiveView.push_event("load_more_notifications_complete", %{})}
+    socket
+    |> maybe_insert_notifications(filters, socket.assigns.last_notification)
+    |> Phoenix.LiveView.push_event("load_more_notifications_complete", %{})
   end
 
   defp maybe_insert_notifications(socket, _filters, _last_notification, _opts \\ [])

@@ -1,6 +1,7 @@
 defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
+  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops
@@ -9,7 +10,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.CommentComponents
   alias ElixirDropsWeb.DropComponents
-  alias ElixirDropsWeb.NotificationHelpers
 
   @consecutive_whitespace_regex ~r/\s+/
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
@@ -74,7 +74,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   end
 
   def handle_event(
-        "load_more",
+        "load_more_comments",
         %{"offset" => offset},
         %{
           assigns: %{
@@ -90,21 +90,33 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments)}
   end
 
-  def handle_event(
-        "mark_notifications_as_read",
-        _params,
-        %{assigns: %{current_user: user}} = socket
-      ) do
-    {_integer, nil} = Notifications.mark_all_as_read(user.id)
+  def handle_event("remove_from_bookmark", %{"drop_id" => drop_id, "user_id" => user_id}, socket) do
+    bookmark = Bookmarks.get_bookmark(drop_id, user_id)
 
-    {:noreply,
-     socket
-     |> stream(:notifications, [], reset: true)
-     |> assign(:notification_count, 0)}
+    case Bookmarks.delete_bookmark(bookmark) do
+      {:ok, _bookmark} ->
+        {:noreply, assign(socket, :bookmarked?, false)}
+
+      {:error, _changeset} ->
+        {:noreply, socket}
+    end
   end
 
-  def handle_event("load_more_notifications", _params, socket),
-    do: NotificationHelpers.load_more(socket)
+  def handle_event(
+        "bookmark_drop",
+        params,
+        socket
+      ) do
+    case Bookmarks.create_bookmark(params) do
+      {:ok, _bookmark} ->
+        {:noreply, assign(socket, :bookmarked?, true)}
+
+      {:error, _changeset} ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event(_event, _params, socket), do: {:noreply, socket}
 
   @impl Phoenix.LiveView
   def handle_info({:new_comment, parent_id, comment_type, comment_params}, socket) do
@@ -144,15 +156,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_info(
-        {:new_notification, notification},
-        %{assigns: %{notification_count: count}} = socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(:notification_count, count + 1)
-     |> stream_insert(:notifications, notification, at: 0)}
-  end
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp create_notifications(
          actor,
@@ -215,13 +219,19 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> push_patch(to: ~p"/")
   end
 
-  defp assign_drop(socket, drop) do
+  defp assign_drop(%{assigns: %{current_user: user}} = socket, drop) do
     title =
       drop.title
       |> Phoenix.HTML.html_escape()
       |> Phoenix.HTML.safe_to_string()
 
+    bookmarked? =
+      if user,
+        do: drop_bookmarked?(drop.id, user.id),
+        else: false
+
     socket
+    |> assign(:bookmarked?, bookmarked?)
     |> assign(:drop, drop)
     |> assign(:page_title, title)
     |> assign_comments(drop)
@@ -288,5 +298,12 @@ defmodule ElixirDropsWeb.DropLive.Show do
     @images_regex
     |> Regex.replace(markdown, "")
     |> String.replace(@consecutive_whitespace_regex, " ")
+  end
+
+  defp drop_bookmarked?(drop_id, user_id) do
+    case Bookmarks.get_bookmark(drop_id, user_id) do
+      nil -> false
+      _bookmark -> true
+    end
   end
 end

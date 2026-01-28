@@ -14,6 +14,12 @@ MasonryHooks.Masonry = {
 
     window.addEventListener('resize', this.handleResize)
 
+    this.handleEvent('remove_element', ({ drop_id }) => {
+      let element = document.getElementById(`drop-${drop_id}`)
+      this.masonry.remove(element)
+      this.masonry.layout()
+    })
+
     this.el.addEventListener('load_masonry', () => {
       this.masonry = null
       this.isLayouting = false
