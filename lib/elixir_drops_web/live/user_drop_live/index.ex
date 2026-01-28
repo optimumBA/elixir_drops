@@ -74,7 +74,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     socket =
       socket
-      |> assign(:profile_search_suggestions, [])
+      |> assign(:search_suggestions, [])
       |> assign(:search_query, trimmed_query)
       |> assign(:show_profile_suggestions?, false)
 
@@ -93,7 +93,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def handle_event("clear_search", _params, socket) do
     {:noreply,
      socket
-     |> assign(:profile_search_suggestions, [])
+     |> assign(:search_suggestions, [])
      |> assign(:search_query, "")
      |> assign(:show_profile_suggestions?, false)
      |> push_patch(to: ~p"/profile")}
@@ -105,16 +105,13 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     {:noreply,
      socket
-     |> assign(:profile_search_suggestions, suggestions)
+     |> assign(:search_suggestions, suggestions)
      |> assign(:show_profile_suggestions?, length(suggestions) > 0)}
   end
 
   def handle_event("load_suggestions", _params, socket) do
     {:noreply, assign(socket, :show_profile_suggestions?, false)}
   end
-
-  def handle_event("delete_search_history", %{"id" => id}, socket),
-    do: LiveHelpers.delete_search_history(id, :profile_search_suggestions, socket)
 
   def handle_event("blur_search_input", _params, socket) do
     {:noreply, assign(socket, :show_profile_suggestions?, false)}
@@ -126,7 +123,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
     {:noreply,
      socket
-     |> assign(:profile_search_suggestions, suggestions)
+     |> assign(:search_suggestions, suggestions)
      |> assign(:show_profile_suggestions?, show_suggestions?)}
   end
 
@@ -139,7 +136,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     socket =
       socket
       |> assign(:navbar_search_query, trimmed_query)
-      |> assign(:search_suggestions, [])
       |> assign(:show_suggestions?, false)
 
     # Navigate to homepage with search query

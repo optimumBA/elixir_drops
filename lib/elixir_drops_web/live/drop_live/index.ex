@@ -124,9 +124,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:show_suggestions?, false)}
   end
 
-  def handle_event("delete_search_history", %{"id" => id}, socket),
-    do: LiveHelpers.delete_search_history(id, :search_suggestions, socket)
-
   def handle_event("close_search_overlay", _params, socket) do
     {:noreply, assign(socket, :show_suggestions?, false)}
   end

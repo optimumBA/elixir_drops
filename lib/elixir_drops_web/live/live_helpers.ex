@@ -87,18 +87,6 @@ defmodule ElixirDropsWeb.LiveHelpers do
     |> assign(:viewport_width, width)
   end
 
-  @spec delete_search_history(id(), atom(), socket()) :: {:noreply, socket()}
-  def delete_search_history(id, suggestion_type, socket) do
-    with %{current_user: %{id: user_id}} <- socket.assigns,
-         {:ok, _} <- Search.delete_search_history(id, user_id) do
-      # Re-fetch suggestions like focus does
-      {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
-      {:noreply, assign(socket, suggestion_type, suggestions)}
-    else
-      _error -> {:noreply, socket}
-    end
-  end
-
   defp process_event("load_more", _params, socket) do
     {:cont,
      socket
@@ -125,6 +113,17 @@ defmodule ElixirDropsWeb.LiveHelpers do
      socket
      |> stream(:notifications, [], reset: true)
      |> assign(:notification_count, 0)}
+  end
+
+  defp process_event("delete_search_history", %{"id" => id}, socket) do
+    with %{current_user: %{id: user_id}} <- socket.assigns,
+         {:ok, _} <- Search.delete_search_history(id, user_id) do
+      # Re-fetch suggestions like focus does
+      {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
+      {:cont, assign(socket, :search_suggestions, suggestions)}
+    else
+      _error -> {:cont, socket}
+    end
   end
 
   defp process_event(_event, _params, socket) do

@@ -13,7 +13,6 @@
         live_action={@live_action}
         notification_count={@notification_count}
         search_query={@navbar_search_query}
-        search_suggestions={@search_suggestions}
         show_suggestions?={@show_suggestions?}
       />
       <section :if={@live_action in [:edit, :new]}>
@@ -32,9 +31,9 @@
         <DropComponents.user_drops_header
           bookmark_tab?={@bookmark_tab?}
           current_user={@current_user}
-          profile_search_suggestions={@profile_search_suggestions}
+          profile_search_suggestions={@search_suggestions}
           search_query={@search_query}
-          search_suggestions={@profile_search_suggestions}
+          search_suggestions={@search_suggestions}
           show_profile_suggestions?={@show_profile_suggestions?}
         />
 
@@ -74,7 +73,7 @@
   <DropComponents.search_overlay_mobile
     current_user={@current_user}
     search_query={@search_query}
-    search_suggestions={@profile_search_suggestions}
+    search_suggestions={@search_suggestions}
     show_suggestions?={@show_profile_suggestions?}
   />
 </Layouts.app>
