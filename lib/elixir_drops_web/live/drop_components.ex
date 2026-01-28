@@ -1406,10 +1406,7 @@ defmodule ElixirDropsWeb.DropComponents do
                 type="button"
                 tabindex="0"
                 class="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
-                phx-click={
-                  JS.push("delete_navbar_search_history", value: %{id: suggestion.id})
-                  |> JS.show(to: "#navbar-search-dropdown")
-                }
+                phx-click={delete_navbar_search_history(suggestion)}
               >
                 <.icon name="hero-trash" class="h-3 w-3 text-gray-500" />
               </button>
@@ -1660,6 +1657,12 @@ defmodule ElixirDropsWeb.DropComponents do
     "delete_search_history"
     |> JS.push(value: %{id: suggestion.id})
     |> JS.show(to: "#profile-search-dropdown")
+  end
+
+  defp delete_navbar_search_history(suggestion) do
+    "delete_navbar_search_history"
+    |> JS.push(value: %{id: suggestion.id})
+    |> JS.show(to: "#navbar-search-dropdown")
   end
 
   defp submit_bookmarks do
