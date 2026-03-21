@@ -83,6 +83,10 @@ defmodule ElixirDrops.MixProject do
 
   defp optimum_deps do
     [
+      {:appsignal,
+       github: "almirsarajcic/appsignal-elixir",
+       branch: "scope-working-directory-path",
+       override: true},
       {:appsignal_phoenix, "~> 2.3"},
       {:credo, "~> 1.7", only: :test, runtime: false},
       {:dialyxir, "~> 1.4", only: :test, runtime: false},

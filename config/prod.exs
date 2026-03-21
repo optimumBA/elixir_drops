@@ -24,3 +24,5 @@ config :logger,
 
 # AppSignal
 config :appsignal, :config, active: true
+
+config :flame, backend: FLAME.LocalBackend

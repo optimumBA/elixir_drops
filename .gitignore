@@ -53,8 +53,6 @@ npm-debug.log
 # Optimum Codegen
 /.vscode/
 /codegen/
-/AGENTS.md
-/CLAUDE.md
 .mcp.json
 *.code-workspace
 opencode.json

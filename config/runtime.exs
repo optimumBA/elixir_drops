@@ -213,22 +213,4 @@ if config_env() == :prod do
     endpoint_url: aws_endpoint_url,
     region: aws_region,
     secret_access_key: aws_secret_access_key
-
-  config :flame, :backend, FLAME.FlyBackend
-
-  config :flame, FLAME.FlyBackend,
-    cpu_kind: "shared",
-    env: %{
-      "APPSIGNAL_APP_ENV" => appsignal_app_env,
-      "APPSIGNAL_PUSH_API_KEY" => appsignal_push_api_key,
-      "AWS_ACCESS_KEY_ID" => aws_access_key_id,
-      "AWS_ENDPOINT_URL_S3" => aws_endpoint_url,
-      "AWS_REGION" => aws_region,
-      "AWS_SECRET_ACCESS_KEY" => aws_secret_access_key,
-      "BUCKET_NAME" => aws_bucket,
-      "WALLABY_AUTH_USERNAME" => wallaby_auth_username,
-      "WALLABY_AUTH_PASSWORD" => wallaby_auth_password
-    },
-    memory_mb: 1024,
-    token: System.get_env("FLY_API_TOKEN")
 end
