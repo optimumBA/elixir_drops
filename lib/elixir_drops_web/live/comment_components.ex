@@ -41,7 +41,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           class="text-gray-600 text-center text-sm bg-[#EAE8FD80] py-4 rounded-lg"
         >
           <.link
-            href={~p"/auth/github" <> "?return_to=#{assigns[:current_url] || "/"}"}
+            href={~p"/auth/github?return_to=#{assigns[:current_url] || "/"}"}
             class="text-indigo-600 hover:opacity-80 font-medium"
           >
             Sign in with GitHub

@@ -194,6 +194,22 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       assert html =~ "Sign in with GitHub"
     end
 
+    test "sign in link in comment section uses encoded return_to value matching navbar link format",
+         %{drop: drop} do
+      conn = build_conn()
+      {:ok, _view, html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      # The ~p sigil encodes path values, so /d/short_id becomes %2Fd%2Fshort_id.
+      # All sign-in links should consistently encode the return_to value.
+      # The comment section uses string concatenation which skips encoding, producing an
+      # unencoded href="/auth/github?return_to=/d/..." instead.
+      encoded_link = ~s(href="/auth/github?return_to=%2Fd%2F#{drop.short_id}")
+      unencoded_link = ~s(href="/auth/github?return_to=/d/#{drop.short_id}")
+
+      assert html =~ encoded_link
+      refute html =~ unencoded_link
+    end
+
     test "edited comments show 'edited' flag", %{conn: conn, drop: drop, user: user} do
       {:ok, comment} =
         Comments.create_comment(drop, user, nil, %{body: "Initial body"})
