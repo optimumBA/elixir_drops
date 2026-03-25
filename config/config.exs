@@ -31,7 +31,8 @@ config :wallaby,
     timeout: 60_000
   ],
   max_wait_time: 10_000,
-  screenshot_on_failure: true
+  screenshot_on_failure: true,
+  screenshot_dir: "/tmp/elixir_drops_screenshots"
 
 # Configures the mailer
 #
