@@ -50,6 +50,9 @@ npm-debug.log
 
 /priv/static/sitemap.xml
 
+# Drop drafts
+/drops/
+
 # Optimum Codegen
 /.vscode/
 /codegen/
