@@ -238,11 +238,18 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_info({Drops, [:drop, :created], _drop}, socket) do
+  def handle_info(
+        {Drops, [:drop, :created], %{user_id: user_id}},
+        %{assigns: %{current_user: %{id: user_id}}} = socket
+      ) do
     {:noreply,
      socket
      |> assign(:page, 1)
      |> DropsListHelper.assign_drops()}
+  end
+
+  def handle_info({Drops, [:drop, :created], _drop}, socket) do
+    {:noreply, socket}
   end
 
   def handle_info(
