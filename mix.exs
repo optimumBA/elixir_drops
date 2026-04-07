@@ -170,11 +170,11 @@ defmodule ElixirDrops.MixProject do
         "deps.unlock --check-unused",
         "deps.audit",
         "hex.audit",
-        "sobelow --config .sobelow-conf",
+        "sobelow --config .sobelow-conf --compact --quiet",
         "format --check-formatted",
         "cmd npx prettier -c .",
-        "credo --strict",
-        "dialyzer",
+        "credo --strict --format oneline",
+        "dialyzer --quiet-with-result",
         "test --cover --warnings-as-errors"
       ],
       "test.features": [
