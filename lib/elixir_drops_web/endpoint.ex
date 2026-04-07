@@ -45,7 +45,14 @@ defmodule ElixirDropsWeb.Endpoint do
     cookie_key: "request_logger"
 
   plug Plug.RequestId
-  plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+
+  plug Plug.Telemetry,
+    event_prefix: [:phoenix, :endpoint],
+    log: {__MODULE__, :log_level, []}
+
+  @spec log_level(Plug.Conn.t()) :: false | :info
+  def log_level(%{path_info: ["health" | _]}), do: false
+  def log_level(_conn), do: :info
 
   # SQL Sandbox for feature tests
   if Application.compile_env(:elixir_drops, :sql_sandbox) do
