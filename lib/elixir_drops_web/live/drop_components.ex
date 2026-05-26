@@ -233,8 +233,8 @@ defmodule ElixirDropsWeb.DropComponents do
       >
         {to_html(@drop.body)}
       </div>
-      
-    <!-- Three-dots dropdown menu -->
+
+      <!-- Three-dots dropdown menu -->
       <.drop_page_menu
         id={@drop.id}
         author?={@current_user && @current_user.id == @drop.user_id}
@@ -964,8 +964,8 @@ defmodule ElixirDropsWeb.DropComponents do
         <.icon name="hero-link" class="h-5 w-5" />
         <span>Copy Drop link</span>
       </div>
-      
-    <!-- Markdown Section -->
+
+      <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} />
 
       <.link
@@ -1127,7 +1127,7 @@ defmodule ElixirDropsWeb.DropComponents do
   defp get_preview_text(markdown) do
     code_block_pos =
       case Regex.run(~r/```/, markdown, return: :index) do
-        [{start_pos, _}] -> start_pos
+        [{start_pos, _len}] -> start_pos
         _no_match -> nil
       end
 

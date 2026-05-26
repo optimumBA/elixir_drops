@@ -86,7 +86,7 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec click(session(), selector()) :: session()
   def click(session, selector) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} = Frame.click(frame_id, selector)
+      {:ok, _result} = Frame.click(frame_id, selector)
     end)
 
     session
@@ -98,7 +98,7 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec press_key(session(), key()) :: session()
   def press_key(session, key) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} = Frame.press(frame_id, "body", key)
+      {:ok, _result} = Frame.press(frame_id, "body", key)
     end)
 
     session
@@ -301,7 +301,7 @@ defmodule ElixirDrops.FeatureHelpers do
     delay = Keyword.get(opts, :delay, 50)
 
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} = Frame.type(frame_id, selector, text, delay: delay)
+      {:ok, _result} = Frame.type(frame_id, selector, text, delay: delay)
     end)
 
     session
@@ -479,7 +479,7 @@ defmodule ElixirDrops.FeatureHelpers do
           :ok
 
         # Handle navigation-related context destruction
-        {:error, %{error: %{error: %{message: "Execution context was destroyed" <> _}}}} ->
+        {:error, %{error: %{error: %{message: "Execution context was destroyed" <> _rest}}}} ->
           # Click succeeded but caused navigation - this is expected
           :ok
 
@@ -516,7 +516,7 @@ defmodule ElixirDrops.FeatureHelpers do
   def assert_element_exists_and_clickable(session, selector) do
     unwrap(session, fn %{frame_id: frame_id} ->
       # Wait for element to exist in DOM, but don't require visibility
-      {:ok, _} =
+      {:ok, _element} =
         Frame.wait_for_selector(frame_id, %{
           selector: selector,
           timeout: 10_000,

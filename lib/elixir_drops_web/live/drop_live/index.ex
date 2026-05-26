@@ -13,18 +13,13 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket) do
-      Drops.subscribe()
-      user = socket.assigns.current_user
-      if user, do: Notifications.subscribe(user.id)
-    end
-
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:batch_size, 15)
      |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
      |> assign(:drops_empty?, true)
+     |> assign(:drops_list, [])
      |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
@@ -38,33 +33,35 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_params(params, _url, socket) do
+  def handle_params(params, _url, socket) when is_connected(socket) do
+    Drops.subscribe()
+    if socket.assigns.current_user, do: Notifications.subscribe(socket.assigns.current_user.id)
+
     search_query = params["q"] || ""
 
     socket =
-      socket
-      |> assign(:navbar_search_query, search_query)
-      |> assign(:search_query, search_query)
-      |> assign(:searching, search_query != "")
-      |> update_search_filters(search_query)
-      |> DropsListHelper.assign_drops()
+      if not socket.assigns.drops_empty? and search_query == socket.assigns.search_query do
+        Phoenix.LiveView.stream(socket, :drops, socket.assigns.drops_list, reset: true)
+      else
+        apply_params(socket, params)
+      end
 
     {:noreply, socket}
   end
 
-  defp update_search_filters(socket, search_query) do
-    current_filters = socket.assigns.drop_filters
+  def handle_params(params, _url, socket) do
+    {:noreply, apply_params(socket, params)}
+  end
 
-    filters =
-      if search_query != "" do
-        current_filters
-        |> Map.put(:relevance_rank, {1, search_query})
-        |> Map.put(:search, search_query)
-      else
-        Map.delete(current_filters, :search)
-      end
+  defp apply_params(socket, params) do
+    search_query = params["q"] || ""
 
-    assign(socket, :drop_filters, filters)
+    socket
+    |> assign(:navbar_search_query, search_query)
+    |> assign(:search_query, search_query)
+    |> assign(:searching, search_query != "")
+    |> DropsListHelper.update_search_filters(search_query)
+    |> DropsListHelper.assign_drops()
   end
 
   @impl Phoenix.LiveView
@@ -110,7 +107,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
       |> String.trim()
 
     # Track search history and popular searches
-    current_filters = update_search_filters(socket, trimmed_query).assigns.drop_filters
+    current_filters =
+      DropsListHelper.update_search_filters(socket, trimmed_query).assigns.drop_filters
+
     SearchHelper.track_search(query, socket, current_filters)
 
     socket =
@@ -163,9 +162,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   def handle_event("delete_search_history", %{"id" => history_id}, socket) do
     with %{current_user: %{id: user_id}} <- socket.assigns,
-         {:ok, _} <- Search.delete_search_history(history_id, user_id) do
+         {:ok, _deleted} <- Search.delete_search_history(history_id, user_id) do
       # Re-fetch suggestions like focus does
-      {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
+      {suggestions, _show?} = SearchHelper.get_focus_search_suggestions(user_id)
       {:noreply, assign(socket, :search_suggestions, suggestions)}
     else
       _error -> {:noreply, socket}
@@ -197,7 +196,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
     # Track search history and popular searches
-    current_filters = update_search_filters(socket, trimmed_query).assigns.drop_filters
+    current_filters =
+      DropsListHelper.update_search_filters(socket, trimmed_query).assigns.drop_filters
+
     SearchHelper.track_search(query, socket, current_filters)
 
     socket =

@@ -8,8 +8,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
   alias ElixirDrops.ScreenshotGeneratorWorkerHelper
+  alias ElixirDrops.WallabyAdapter
   alias ElixirDrops.Workers.SitemapGeneratorWorker
-  alias Wallaby.Browser
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args}) do
@@ -69,7 +69,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp generate_screenshot(drop, type, action, height) do
     {:ok, session} =
-      Wallaby.start_session(
+      WallabyAdapter.start_session(
         capabilities: %{
           chromeOptions: %{
             args: [
@@ -92,10 +92,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
     %Wallaby.Session{screenshots: [screenshot]} =
       session
-      |> Browser.visit(url)
-      |> Browser.take_screenshot()
+      |> WallabyAdapter.visit(url)
+      |> WallabyAdapter.take_screenshot()
 
-    Wallaby.end_session(session)
+    WallabyAdapter.end_session(session)
 
     broadcast_drop_screenshot_completion(drop, if(type == :meta, do: 65, else: 75), :pending, %{
       action: action

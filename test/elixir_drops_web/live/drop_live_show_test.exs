@@ -81,6 +81,9 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       )
       |> render_submit()
 
+      # Flush pending handle_info({:new_comment, ...}) so notifications are persisted to DB
+      render(view)
+
       conn_2 = sign_in_user(conn, drop_author)
 
       {:ok, view_2, _html} = live(conn_2, ~p"/d/#{drop.short_id}")
@@ -115,6 +118,9 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
         comment: %{body: "A reply"}
       )
       |> render_submit()
+
+      # Flush pending handle_info({:new_comment, ...}) so notifications are persisted to DB
+      render(view)
 
       conn = sign_in_user(conn, drop_author)
 
@@ -312,7 +318,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       user: user
     } do
       for i <- 1..15 do
-        {:ok, _} = Comments.create_comment(drop, user, nil, %{body: "Comment #{i}"})
+        {:ok, _comment} = Comments.create_comment(drop, user, nil, %{body: "Comment #{i}"})
       end
 
       {:ok, view, html} = live(conn, ~p"/d/#{drop.short_id}")

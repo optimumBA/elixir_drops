@@ -142,6 +142,24 @@ defmodule ElixirDropsWeb.DropsListHelper do
     end
   end
 
+  @spec update_search_filters(socket(), String.t()) :: socket()
+  def update_search_filters(socket, search_query) do
+    current_filters = socket.assigns.drop_filters
+
+    filters =
+      if search_query != "" do
+        current_filters
+        |> Map.delete(:relevance_rank)
+        |> Map.put(:search, search_query)
+      else
+        current_filters
+        |> Map.delete(:relevance_rank)
+        |> Map.delete(:search)
+      end
+
+    assign(socket, :drop_filters, filters)
+  end
+
   @spec assign_drops(socket()) :: socket()
   def assign_drops(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
@@ -149,6 +167,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
     socket
     |> assign_drop_cursor(drops, socket.assigns.search_query)
+    |> assign(:drops_list, drops)
     |> Phoenix.LiveView.stream(:drops, drops, reset: true, limit: batch_size)
     |> assign(:drops_empty?, Enum.empty?(drops))
     |> assign(:end_of_timeline?, false)

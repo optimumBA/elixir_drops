@@ -12,13 +12,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    user_id = socket.assigns.current_user.id
-
-    if connected?(socket) do
-      Drops.subscribe()
-      Notifications.subscribe(user_id)
-    end
-
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
@@ -30,37 +23,24 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:loading_more, false)
      |> assign(:page, 1)
      |> assign(:search_query, "")
+     |> assign(:subscribed?, false)
      |> assign(:viewport_height, nil)
      |> assign(:viewport_width, nil)
-     |> SearchHelper.initialize_profile_search_assigns(user_id)}
+     |> SearchHelper.initialize_profile_search_assigns(socket.assigns.current_user.id)}
   end
 
   @impl Phoenix.LiveView
   def handle_params(params, _url, socket) do
     search_query = params["q"] || ""
 
-    socket =
-      socket
-      |> assign(:search_query, search_query)
-      |> assign(:searching, search_query != "")
-      |> update_search_filters(search_query)
-      |> DropsListHelper.assign_drops()
-      |> apply_action(socket.assigns.live_action, params)
-
-    {:noreply, socket}
-  end
-
-  defp update_search_filters(socket, search_query) do
-    current_filters = socket.assigns.drop_filters
-
-    filters =
-      if search_query != "" do
-        Map.put(current_filters, :search, search_query)
-      else
-        Map.delete(current_filters, :search)
-      end
-
-    assign(socket, :drop_filters, filters)
+    {:noreply,
+     socket
+     |> maybe_subscribe()
+     |> assign(:search_query, search_query)
+     |> assign(:searching, search_query != "")
+     |> DropsListHelper.update_search_filters(search_query)
+     |> DropsListHelper.assign_drops()
+     |> apply_action(socket.assigns.live_action, params)}
   end
 
   @impl Phoenix.LiveView
@@ -134,7 +114,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply,
      socket
      |> assign(:profile_search_suggestions, suggestions)
-     |> assign(:show_profile_suggestions?, length(suggestions) > 0)}
+     |> assign(:show_profile_suggestions?, suggestions != [])}
   end
 
   def handle_event("load_suggestions", _params, socket) do
@@ -146,7 +126,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       {:ok, _search_history} ->
         # Re-fetch suggestions to update the list
         user_id = socket.assigns.current_user.id
-        {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
+        {suggestions, _show?} = SearchHelper.get_focus_search_suggestions(user_id)
         {:noreply, assign(socket, :profile_search_suggestions, suggestions)}
 
       {:error, _reason} ->
@@ -221,6 +201,18 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     |> assign(:drop, nil)
     |> assign(:page_title, "ElixirDrops | #{socket.assigns.current_user.github_username}")
   end
+
+  defp maybe_subscribe(%{assigns: %{subscribed?: false}} = socket) do
+    if connected?(socket) do
+      Drops.subscribe()
+      Notifications.subscribe(socket.assigns.current_user.id)
+      assign(socket, :subscribed?, true)
+    else
+      socket
+    end
+  end
+
+  defp maybe_subscribe(socket), do: socket
 
   defp assign_user_drop(socket, filters) do
     case Drops.get_drop(filters) do

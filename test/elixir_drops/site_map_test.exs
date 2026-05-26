@@ -78,7 +78,7 @@ defmodule ElixirDrops.SitemapTest do
       File.mkdir_p!(sitemap_dir)
       File.chmod!(sitemap_dir, 0o444)
 
-      assert {:error, _} = Sitemap.generate(drop)
+      assert {:error, _reason} = Sitemap.generate(drop)
 
       # Restore permissions
       File.chmod!(sitemap_dir, 0o755)
@@ -107,7 +107,7 @@ defmodule ElixirDrops.SitemapTest do
 
       File.chmod!(path, 0o444)
 
-      assert {:error, "Failed to update sitemap file: " <> _} = Sitemap.generate(drop)
+      assert {:error, "Failed to update sitemap file: " <> _reason} = Sitemap.generate(drop)
 
       File.chmod!(path, 0o755)
     end
@@ -122,7 +122,7 @@ defmodule ElixirDrops.SitemapTest do
 
       {:ok, updated_drop} = Drops.update_drop(drop, user, %{title: "Updated Title"})
 
-      assert {:ok, _} = Sitemap.generate(updated_drop)
+      assert {:ok, _path} = Sitemap.generate(updated_drop)
 
       {:ok, content} = File.read(path)
 

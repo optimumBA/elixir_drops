@@ -37,7 +37,7 @@ defmodule ElixirDrops.Workers.SitemapGeneratorWorkerTest do
       File.mkdir_p!(sitemap_dir)
       File.chmod!(sitemap_dir, 0o444)
 
-      assert {:error, _} = perform_job(SitemapGeneratorWorker, %{drop_id: drop.id})
+      assert {:error, _reason} = perform_job(SitemapGeneratorWorker, %{drop_id: drop.id})
 
       # Restore permissions
       File.chmod!(sitemap_dir, 0o755)

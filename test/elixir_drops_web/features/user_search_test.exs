@@ -363,7 +363,7 @@ defmodule ElixirDropsWeb.Features.UserSearchTest do
       user: user,
       drops: drops
     } do
-      [first_drop | _] = drops
+      [first_drop | _rest] = drops
 
       conn
       |> sign_in_user(user)

@@ -169,8 +169,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           <span
             :if={@comment.edited_at}
             class="hidden sm:inline-block w-1 h-1 rounded-full bg-gray-500"
-          >
-          </span>
+          ></span>
           <span :if={@comment.edited_at} class="hidden sm:inline-block text-xs py-1 italic">
             Edited
           </span>

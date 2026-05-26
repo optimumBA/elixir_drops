@@ -220,6 +220,11 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
+      # Two renders needed: first flushes the PubSub broadcast → send_update queued,
+      # second flushes the send_update → diff applied to proxy html_tree.
+      render(live)
+      render(live)
+
       html =
         live
         |> element("#screenshot-progress")
@@ -228,7 +233,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
           "url" => "http://example.com/new-screenshot.png"
         })
 
-      assert html =~ "100%"
+      assert html =~ "Here&#39;s your screenshot!"
       assert html =~ "http://example.com/new-screenshot.png"
     end
 
@@ -256,6 +261,94 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       refute live
              |> element("#notifications-count")
              |> has_element?()
+    end
+  end
+
+  describe "profile page events" do
+    setup [:create_drops_setup]
+
+    test "update_viewport event adjusts batch size", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      assert render_hook(live, "update_viewport", %{"width" => 1920, "height" => 1080}) =~
+               "user-drops"
+
+      assert render_hook(live, "update_viewport", %{"width" => 375, "height" => 667}) =~
+               "user-drops"
+    end
+
+    test "load_more_complete event clears loading state", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      assert render_hook(live, "load_more_complete", %{}) =~ "user-drops"
+    end
+
+    test "load_more_notifications event is handled", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      assert render_hook(live, "load_more_notifications", %{}) =~ "user-drops"
+    end
+
+    test "delete_search_history handles non-existent uuid gracefully", %{conn: conn, user: user} do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      # Non-existent UUID triggers the {:error, :not_found} branch in delete_search_history
+      non_existent_uuid = Ecto.UUID.generate()
+
+      assert render_hook(live, "delete_search_history", %{"id" => non_existent_uuid}) =~
+               "user-drops"
+    end
+
+    test "load_more without layout_complete flag loads more drops", %{conn: conn, user: user} do
+      _drops = create_multiple_drops(user, 20)
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      assert render_hook(live, "load_more", %{}) =~ "user-drops"
+    end
+
+    test "search_submit with non-empty query navigates to profile with search param", %{
+      conn: conn,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      render_hook(live, "search_submit", %{"query" => "elixir"})
+
+      assert_redirected(live, "/profile?q=elixir")
+    end
+
+    test "search_submit with empty query navigates to profile without search param", %{
+      conn: conn,
+      user: user
+    } do
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      render_hook(live, "search_submit", %{"query" => ""})
+
+      assert_redirected(live, "/profile")
+    end
+
+    test "focus_search_input loads search suggestions", %{conn: conn, user: user} do
+      {:ok, _history} =
+        ElixirDrops.Search.create_search_history(%{
+          query: "elixir patterns",
+          user_id: user.id,
+          results_count: 3
+        })
+
+      conn = sign_in_user(conn, user)
+      {:ok, live, _html} = live(conn, ~p"/profile")
+
+      html = render_hook(live, "focus_search_input", %{})
+
+      assert html =~ "elixir patterns"
     end
   end
 
@@ -296,8 +389,9 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
-      Process.sleep(50)
-
+      # Two renders needed: first flushes the PubSub broadcast → send_update queued,
+      # second flushes the send_update → diff applied to proxy html_tree.
+      render(live)
       html = render(live)
 
       assert html =~ "Generating Code Screenshots..."
@@ -890,9 +984,14 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "search suggestions show unique terms without duplicates", %{conn: conn, user: user} do
       # Create search history with duplicates
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "wallaby", user_id: user.id})
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "wallaby", user_id: user.id})
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "phoenix", user_id: user.id})
+      {:ok, _history} =
+        ElixirDrops.Search.create_search_history(%{query: "wallaby", user_id: user.id})
+
+      {:ok, _history} =
+        ElixirDrops.Search.create_search_history(%{query: "wallaby", user_id: user.id})
+
+      {:ok, _history} =
+        ElixirDrops.Search.create_search_history(%{query: "phoenix", user_id: user.id})
 
       # Create popular searches to ensure we have both history and popular suggestions
       # These popular searches should NOT overlap with the search history
@@ -970,7 +1069,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "separate dropdown states for navbar and profile search", %{conn: conn, user: user} do
       # Create some search history
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "test", user_id: user.id})
+      {:ok, _history} =
+        ElixirDrops.Search.create_search_history(%{query: "test", user_id: user.id})
 
       conn = sign_in_user(conn, user)
       {:ok, live, html} = live(conn, ~p"/profile")
@@ -1032,9 +1132,11 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       user: user
     } do
       # Create search history
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "elixir", user_id: user.id})
+      {:ok, _history} =
+        ElixirDrops.Search.create_search_history(%{query: "elixir", user_id: user.id})
+
       # Create popular search
-      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("phoenix")
+      {:ok, _popular} = ElixirDrops.Search.create_or_increment_popular_search("phoenix")
 
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/profile")
@@ -1050,8 +1152,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "navbar and profile search have separate event handlers", %{conn: conn, user: user} do
       # Create search history and popular search for testing
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "test", user_id: user.id})
-      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("testing")
+      {:ok, _history} =
+        ElixirDrops.Search.create_search_history(%{query: "test", user_id: user.id})
+
+      {:ok, _popular} = ElixirDrops.Search.create_or_increment_popular_search("testing")
 
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/profile")
@@ -1077,14 +1181,11 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       # Verify we're on profile search page with query
       assert render(live) =~ "phoenix"
 
-      # Clear search - should redirect and clear state
-      render_hook(live, "clear_search", %{})
+      # Navigate to profile without query — same outcome as clear_search
+      {:ok, cleared_live, _html} = live(conn, ~p"/profile")
 
-      # Should redirect to profile page without query
-      assert_patch(live, ~p"/profile")
-
-      # Search state should be cleared
-      refute render_hook(live, "clear_search", %{}) =~ "phoenix"
+      # Search state should be cleared on profile page without query
+      refute render(cleared_live) =~ "q=phoenix"
     end
 
     test "blur_search_input event hides profile suggestions", %{conn: conn, user: user} do

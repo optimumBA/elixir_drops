@@ -44,7 +44,7 @@ defmodule ElixirDrops.CommentsTest do
     end
 
     test "respects the limit option", %{drop: drop, user: user} do
-      for _ <- 1..5 do
+      for _i <- 1..5 do
         comment_fixture(drop, user)
       end
 

@@ -264,7 +264,7 @@ defmodule ElixirDrops.Search do
         query_text = search_history.query
 
         # Delete all occurrences of this query for the user
-        {count, _} =
+        {count, _deleted} =
           SearchHistory
           |> where([sh], sh.query == ^query_text and sh.user_id == ^user_id)
           |> Repo.delete_all()

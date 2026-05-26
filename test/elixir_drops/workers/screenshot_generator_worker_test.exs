@@ -8,6 +8,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.S3Helper.Client
+  alias ElixirDrops.WallabyAdapter
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
   alias ElixirDrops.Workers.SitemapGeneratorWorker
 
@@ -45,14 +46,29 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       user = user_fixture()
       drop = drop_fixture(%Drop{}, user, %{title: "Drop title", body: @drop_body})
 
-      %{drop: drop, user: user}
+      # Create temp screenshot files upfront — on_exit can't be called from FLAME worker process
+      meta_path = temp_screenshot_path()
+      internal_path = temp_screenshot_path()
+      File.write!(meta_path, :crypto.strong_rand_bytes(128))
+      File.write!(internal_path, :crypto.strong_rand_bytes(128))
+
+      on_exit(fn ->
+        File.rm(meta_path)
+        File.rm(internal_path)
+      end)
+
+      %{drop: drop, user: user, meta_path: meta_path, internal_path: internal_path}
     end
 
     test "creates two screenshots for a drop with a code block and enqueues a sitemap job", %{
-      drop: drop
+      drop: drop,
+      meta_path: meta_path,
+      internal_path: internal_path
     } do
       %{meta_image_url: meta_image_url, internal_image_url: internal_image_url} =
         screenshot_upload_mock(drop)
+
+      wallaby_mock_success(meta_path, internal_path)
 
       assert :ok = perform_job(ScreenshotGeneratorWorker, %{drop_id: drop.id})
 
@@ -68,7 +84,13 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       )
     end
 
-    test "properly handles meta screenshot upload failure", %{drop: drop} do
+    test "properly handles meta screenshot upload failure", %{
+      drop: drop,
+      meta_path: meta_path,
+      internal_path: internal_path
+    } do
+      wallaby_mock_success(meta_path, internal_path)
+
       expect(Client.Mock, :upload_image, 2, fn _image, filename, _type ->
         case filename do
           "drop-meta-image-latest-" <> _id ->
@@ -88,7 +110,13 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       refute updated_drop.screenshot.meta_url
     end
 
-    test "properly handles internal screenshot upload failure", %{drop: drop} do
+    test "properly handles internal screenshot upload failure", %{
+      drop: drop,
+      meta_path: meta_path,
+      internal_path: internal_path
+    } do
+      wallaby_mock_success(meta_path, internal_path)
+
       expect(Client.Mock, :upload_image, 2, fn _image, filename, _type ->
         case filename do
           "drop-meta-image-latest-" <> _id ->
@@ -108,7 +136,13 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       refute updated_drop.screenshot.meta_url
     end
 
-    test "handles both screenshots failing", %{drop: drop} do
+    test "handles both screenshots failing", %{
+      drop: drop,
+      meta_path: meta_path,
+      internal_path: internal_path
+    } do
+      wallaby_mock_success(meta_path, internal_path)
+
       expect(Client.Mock, :upload_image, 2, fn _image, filename, _type ->
         case filename do
           "drop-meta-image-latest-" <> _id ->
@@ -137,6 +171,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
 
     test "creates a screenshot when the code block changes and enqueues a sitemap job", %{
       drop: drop,
+      meta_path: meta_path,
+      internal_path: internal_path,
       user: user
     } do
       updated_body = ~S"""
@@ -149,6 +185,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
 
       %{meta_image_url: meta_image_url, internal_image_url: internal_image_url} =
         screenshot_upload_mock(drop)
+
+      wallaby_mock_success(meta_path, internal_path)
 
       assert :ok =
                perform_job(ScreenshotGeneratorWorker, %{
@@ -189,5 +227,27 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
     end)
 
     %{meta_image_url: meta_image_url, internal_image_url: internal_image_url}
+  end
+
+  defp wallaby_mock_success(meta_path, internal_path) do
+    paths = [meta_path, internal_path]
+    path_agent = elem(Agent.start_link(fn -> paths end), 1)
+
+    # Called twice: once for meta, once for internal screenshot
+    expect(WallabyAdapter.Mock, :start_session, 2, fn _capabilities ->
+      screenshot_path = Agent.get_and_update(path_agent, fn [h | t] -> {h, t} end)
+      session = %Wallaby.Session{screenshots: [screenshot_path]}
+      {:ok, session}
+    end)
+
+    expect(WallabyAdapter.Mock, :visit, 2, fn session, _url -> session end)
+
+    expect(WallabyAdapter.Mock, :take_screenshot, 2, fn session -> session end)
+
+    expect(WallabyAdapter.Mock, :end_session, 2, fn _session -> :ok end)
+  end
+
+  defp temp_screenshot_path do
+    Path.join(System.tmp_dir!(), "test_screenshot_#{System.unique_integer([:positive])}.png")
   end
 end

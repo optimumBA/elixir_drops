@@ -56,7 +56,7 @@ defmodule ElixirDropsWeb.SearchHelper do
   def get_focus_search_suggestions(user_id) do
     # Use get_search_suggestions with empty query to get initial suggestions
     suggestions = Search.get_search_suggestions(user_id, "")
-    {suggestions, length(suggestions) > 0}
+    {suggestions, suggestions != []}
   end
 
   @doc """
@@ -83,7 +83,7 @@ defmodule ElixirDropsWeb.SearchHelper do
       {:noreply,
        socket
        |> assign(suggestions_assign_key, suggestions)
-       |> assign(:show_suggestions?, length(suggestions) > 0)}
+       |> assign(:show_suggestions?, suggestions != [])}
     end
   end
 
@@ -98,7 +98,7 @@ defmodule ElixirDropsWeb.SearchHelper do
         {:ok, _search_history} ->
           # Re-fetch suggestions to update the list
           user_id = socket.assigns.current_user.id
-          {suggestions, _} = get_focus_search_suggestions(user_id)
+          {suggestions, _show?} = get_focus_search_suggestions(user_id)
           {:noreply, assign(socket, suggestions_assign_key, suggestions)}
 
         {:error, _reason} ->
@@ -115,7 +115,7 @@ defmodule ElixirDropsWeb.SearchHelper do
   @spec initialize_search_assigns(Phoenix.LiveView.Socket.t(), binary() | nil) ::
           Phoenix.LiveView.Socket.t()
   def initialize_search_assigns(socket, current_user_id) do
-    {initial_suggestions, _} = get_focus_search_suggestions(current_user_id)
+    {initial_suggestions, _show?} = get_focus_search_suggestions(current_user_id)
 
     socket
     |> assign(:navbar_search_query, "")
@@ -130,7 +130,7 @@ defmodule ElixirDropsWeb.SearchHelper do
   @spec initialize_profile_search_assigns(Phoenix.LiveView.Socket.t(), binary() | nil) ::
           Phoenix.LiveView.Socket.t()
   def initialize_profile_search_assigns(socket, current_user_id) do
-    {initial_suggestions, _} = get_focus_search_suggestions(current_user_id)
+    {initial_suggestions, _show?} = get_focus_search_suggestions(current_user_id)
 
     socket
     |> assign(:navbar_search_query, "")

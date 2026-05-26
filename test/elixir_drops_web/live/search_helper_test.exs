@@ -32,7 +32,7 @@ defmodule ElixirDropsWeb.SearchHelperTest do
 
       # Verify search history was created
       histories = Search.get_user_search_history(user.id, 10)
-      assert length(histories) > 0
+      assert histories != []
 
       history = hd(histories)
       assert history.user_id == user.id
@@ -113,9 +113,9 @@ defmodule ElixirDropsWeb.SearchHelperTest do
       user = AccountsFixtures.user_fixture()
 
       # Create some popular searches since test database doesn't have seeds
-      {:ok, _} = Search.track_popular_search("phoenix")
-      {:ok, _} = Search.track_popular_search("elixir")
-      {:ok, _} = Search.track_popular_search("liveview")
+      {:ok, _popular} = Search.track_popular_search("phoenix")
+      {:ok, _popular} = Search.track_popular_search("elixir")
+      {:ok, _popular} = Search.track_popular_search("liveview")
 
       {suggestions, show_suggestions?} = SearchHelper.get_focus_search_suggestions(user.id)
 
@@ -130,8 +130,8 @@ defmodule ElixirDropsWeb.SearchHelperTest do
       user = AccountsFixtures.user_fixture()
 
       # Create some popular searches that should remain
-      {:ok, _} = Search.track_popular_search("phoenix")
-      {:ok, _} = Search.track_popular_search("elixir")
+      {:ok, _popular} = Search.track_popular_search("phoenix")
+      {:ok, _popular} = Search.track_popular_search("elixir")
 
       # Create search history
       {:ok, history} =
@@ -154,7 +154,7 @@ defmodule ElixirDropsWeb.SearchHelperTest do
       # Should remove the deleted history from suggestions
       refute Enum.any?(updated_socket.assigns.search_suggestions, &(&1.query == "test"))
       # Should have popular searches remaining (from seeds: liveview, oban, phx.tools)
-      assert length(updated_socket.assigns.search_suggestions) > 0
+      assert updated_socket.assigns.search_suggestions != []
       # All remaining should be popular type since we deleted the only history item
       assert Enum.all?(updated_socket.assigns.search_suggestions, &(&1.type == :popular))
     end
