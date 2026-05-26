@@ -15,16 +15,38 @@ MasonryHooks.Masonry = {
     window.addEventListener('resize', this.handleResize)
 
     this.el.addEventListener('load_masonry', () => {
-      this.masonry = null
+      // Cancel mounted timer if still pending
+      if (this._mountedTimer) {
+        cancelAnimationFrame(this._mountedTimer)
+        this._mountedTimer = null
+      }
+
+      // Reset state (triggered by phx-connected or search reset)
+      if (this.masonry) {
+        this.masonry.destroy()
+        this.masonry = null
+      }
       this.isLayouting = false
       this.layoutCompleteCallbacks = []
       this.trackedItems = new Set()
 
       this.sendViewportDimensions()
 
-      setTimeout(() => {
+      this._mountedTimer = requestAnimationFrame(() => {
+        this._mountedTimer = null
         this.initializeMasonry()
-      }, 100)
+      })
+    })
+
+    // Initialize immediately on mount (dead render already has drops in DOM)
+    // so cards get positioned without waiting for WS connect
+    this.isLayouting = false
+    this.layoutCompleteCallbacks = []
+    this.trackedItems = new Set()
+
+    this._mountedTimer = requestAnimationFrame(() => {
+      this._mountedTimer = null
+      this.initializeMasonry()
     })
   },
 
@@ -47,10 +69,10 @@ MasonryHooks.Masonry = {
           }, 150)
         }
       }
-    } else {
-      setTimeout(() => {
+    } else if (!this._mountedTimer) {
+      requestAnimationFrame(() => {
         this.initializeMasonry()
-      }, 100)
+      })
     }
   },
 
@@ -62,6 +84,20 @@ MasonryHooks.Masonry = {
   },
 
   initializeMasonry() {
+    // If eager pre-connect init ran, destroy it first to take clean ownership
+    if (this.el._eagerMasonry) {
+      this.el._eagerMasonry.destroy()
+      this.el._eagerMasonry = null
+    }
+
+    if (this.masonry) {
+      this.masonry.destroy()
+      this.masonry = null
+    }
+
+    this.el.classList.add('masonry-js-init')
+    this.el.classList.remove('masonry-ready')
+
     if (!this.el.querySelector('.grid-sizer')) {
       const gridSizer = document.createElement('div')
       gridSizer.className = 'grid-sizer'
@@ -80,6 +116,15 @@ MasonryHooks.Masonry = {
     this.masonry.on('layoutComplete', () => {
       this.isLayouting = false
 
+      if (!this.el.classList.contains('masonry-ready')) {
+        // Double rAF: ensures browser commits positioned paint before opacity transition
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.el.classList.add('masonry-ready')
+          })
+        })
+      }
+
       while (this.layoutCompleteCallbacks.length > 0) {
         const callback = this.layoutCompleteCallbacks.shift()
         callback()
@@ -89,6 +134,12 @@ MasonryHooks.Masonry = {
     const items = this.el.querySelectorAll('.masonry-item')
     items.forEach((item) => {
       this.trackedItems.add(item.id)
+    })
+
+    // Skip fade-in for cards already in DOM (SPA back-navigation)
+    const existingCards = this.el.querySelectorAll('.drop-card')
+    existingCards.forEach((card) => {
+      card.classList.add('animation-complete')
     })
 
     this.layoutWithImageLoading()
@@ -125,16 +176,7 @@ MasonryHooks.Masonry = {
       if (this.masonry) {
         // Force a complete layout recalculation
         this.masonry.layout()
-
-        setTimeout(() => {
-          const dropCards = this.el.querySelectorAll('.drop-card')
-
-          dropCards.forEach((card) => {
-            if (!card.classList.contains('animation-complete')) {
-              card.classList.add('animation-complete')
-            }
-          })
-        }, 500)
+        this.isLayouting = false
       }
     })
   },

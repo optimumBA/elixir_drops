@@ -7,6 +7,16 @@
 
 .masonry-grid {
   position: relative;
+  /* opacity: 0 lives on .masonry-grid.masonry-js-init — server-rendered so grid is hidden from first paint; <noscript> override in root.html.heex restores visibility for JS-disabled users */
+}
+
+.masonry-grid.masonry-js-init {
+  opacity: 0;
+}
+
+.masonry-grid.masonry-ready {
+  opacity: 1;
+  transition: opacity 0.15s ease-in;
 }
 
 .grid-sizer {

@@ -24,6 +24,8 @@ import 'phoenix_html'
 import { Socket } from 'phoenix'
 import { LiveSocket } from 'phoenix_live_view'
 import topbar from '../vendor/topbar'
+import Masonry from 'masonry-layout'
+import imagesLoaded from 'imagesloaded'
 import CommentFormHooks from './hooks/comment_form'
 import CommentModalHooks from './hooks/comment_modal'
 import CopyToClipboardHooks from './hooks/copy_to_clipboard'
@@ -79,6 +81,44 @@ const liveSocket = new LiveSocket('/live', Socket, {
 topbar.config({ barColors: { 0: '#29d' }, shadowColor: 'rgba(0, 0, 0, .3)' })
 window.addEventListener('phx:page-loading-start', (_info) => topbar.show(300))
 window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
+
+// Initialize Masonry eagerly on DOMContentLoaded for dead-render drops
+// so layout is correct before WebSocket connects and the hook fires.
+document.addEventListener('DOMContentLoaded', () => {
+  const grid = document.querySelector('.masonry-grid')
+  if (!grid) return
+
+  // masonry-js-init is server-rendered; ensure masonry-ready is absent in case of warm reconnect
+  grid.classList.remove('masonry-ready')
+
+  // Add grid-sizer if missing
+  if (!grid.querySelector('.grid-sizer')) {
+    const gridSizer = document.createElement('div')
+    gridSizer.className = 'grid-sizer'
+    grid.prepend(gridSizer)
+  }
+
+  const masonry = new Masonry(grid, {
+    itemSelector: '.masonry-item',
+    columnWidth: '.grid-sizer',
+    gutter: 24,
+    percentPosition: false,
+    transitionDuration: '0.0s',
+    stagger: 0,
+  })
+
+  imagesLoaded(grid, () => {
+    masonry.layout()
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        grid.classList.add('masonry-ready')
+      })
+    })
+  })
+
+  // Store on element so the hook can detect and take ownership
+  grid._eagerMasonry = masonry
+})
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
