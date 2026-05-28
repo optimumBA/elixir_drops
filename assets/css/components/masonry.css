@@ -10,6 +10,10 @@
   /* opacity: 0 lives on .masonry-grid.masonry-js-init — server-rendered so grid is hidden from first paint; <noscript> override in root.html.heex restores visibility for JS-disabled users */
 }
 
+.masonry-grid .masonry-item {
+  position: absolute;
+}
+
 .masonry-grid.masonry-js-init {
   opacity: 0;
 }

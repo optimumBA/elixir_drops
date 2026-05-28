@@ -19,6 +19,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   attr :current_user, :any
   attr :drops, :list, required: true
   attr :drops_empty?, :boolean, required: true
+  attr :masonry_ready?, :boolean, default: false
   attr :end_of_timeline?, :boolean
   attr :id, :string, required: true
   attr :loading_more, :boolean, default: false
@@ -62,9 +63,11 @@ defmodule ElixirDropsWeb.DropsListHelper do
           phx-connected={JS.dispatch("load_masonry", to: "##{@id}")}
           class={[
             @drops_empty? && "grid gap-y-2 md:gap-y-5 px-6 md:px-8 lg:px-12",
-            !@drops_empty? && "masonry-grid masonry-js-init"
+            !@drops_empty? && "masonry-grid",
+            !@drops_empty? && !@masonry_ready? && "masonry-js-init"
           ]}
         >
+          <div :if={!@drops_empty?} class="grid-sizer" id={"#{@id}-grid-sizer"}></div>
           <div
             :if={@show_user_drops?}
             id="drops-empty"
@@ -85,7 +88,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
             :for={{dom_id, drop} <- @drops}
             id={dom_id}
             phx-click={JS.navigate(~p"/d/#{drop.short_id}")}
-            class="masonry-item cursor-pointer relative"
+            class="masonry-item cursor-pointer"
             role="link"
           >
             <div class="relative">

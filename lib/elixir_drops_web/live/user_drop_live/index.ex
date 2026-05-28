@@ -19,6 +19,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
      |> assign(:end_of_notifications_timeline?, false)
      |> assign(:drops_empty?, true)
+     |> assign(:masonry_ready?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
      |> assign(:page, 1)
@@ -38,6 +39,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> maybe_subscribe()
      |> assign(:search_query, search_query)
      |> assign(:searching, search_query != "")
+     |> assign(:masonry_ready?, connected?(socket))
      |> DropsListHelper.update_search_filters(search_query)
      |> DropsListHelper.assign_drops()
      |> apply_action(socket.assigns.live_action, params)}

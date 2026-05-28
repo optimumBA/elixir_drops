@@ -20,6 +20,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
      |> assign(:drops_empty?, true)
      |> assign(:drops_list, [])
+     |> assign(:masonry_ready?, false)
      |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
@@ -41,12 +42,12 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
     socket =
       if not socket.assigns.drops_empty? and search_query == socket.assigns.search_query do
-        Phoenix.LiveView.stream(socket, :drops, socket.assigns.drops_list, reset: true)
+        socket
       else
         apply_params(socket, params)
       end
 
-    {:noreply, socket}
+    {:noreply, assign(socket, :masonry_ready?, true)}
   end
 
   def handle_params(params, _url, socket) do

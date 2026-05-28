@@ -91,13 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // masonry-js-init is server-rendered; ensure masonry-ready is absent in case of warm reconnect
   grid.classList.remove('masonry-ready')
 
-  // Add grid-sizer if missing
-  if (!grid.querySelector('.grid-sizer')) {
-    const gridSizer = document.createElement('div')
-    gridSizer.className = 'grid-sizer'
-    grid.prepend(gridSizer)
-  }
-
   const masonry = new Masonry(grid, {
     itemSelector: '.masonry-item',
     columnWidth: '.grid-sizer',

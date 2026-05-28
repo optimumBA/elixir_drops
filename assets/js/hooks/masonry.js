@@ -21,7 +21,17 @@ MasonryHooks.Masonry = {
         this._mountedTimer = null
       }
 
-      // Reset state (triggered by phx-connected or search reset)
+      // Warm reconnect: masonry already positioned — restore masonry-ready
+      // (LV strips it during DOM patch because the server never renders it)
+      // and re-layout without full teardown.
+      if (this.masonry) {
+        this.sendViewportDimensions()
+        this.el.classList.add('masonry-ready')
+        this.masonry.layout()
+        return
+      }
+
+      // Cold start or search reset: full re-init
       if (this.masonry) {
         this.masonry.destroy()
         this.masonry = null
@@ -38,16 +48,34 @@ MasonryHooks.Masonry = {
       })
     })
 
-    // Initialize immediately on mount (dead render already has drops in DOM)
-    // so cards get positioned without waiting for WS connect
     this.isLayouting = false
     this.layoutCompleteCallbacks = []
     this.trackedItems = new Set()
 
-    this._mountedTimer = requestAnimationFrame(() => {
-      this._mountedTimer = null
-      this.initializeMasonry()
-    })
+    if (this.el._eagerMasonry) {
+      // Eager pre-connect init already ran — take ownership without re-initialising.
+      this.masonry = this.el._eagerMasonry
+      this.el._eagerMasonry = null
+      this.el.querySelectorAll('.masonry-item').forEach((el) => this.trackedItems.add(el.id))
+      this.el.querySelectorAll('.drop-card').forEach((el) => el.classList.add('animation-complete'))
+      // Re-layout synchronously: LV's morphdom may have cleared inline left/top from items.
+      // Doing this in mounted() (same JS task as the DOM patch) means the browser never
+      // paints the stacked-at-origin state.
+      this.masonry.layout()
+      // Wire up layoutComplete so re-layouts can restore masonry-ready.
+      this.masonry.on('layoutComplete', () => {
+        this.isLayouting = false
+        if (!this.el.classList.contains('masonry-ready')) {
+          requestAnimationFrame(() => requestAnimationFrame(() => this.el.classList.add('masonry-ready')))
+        }
+        while (this.layoutCompleteCallbacks.length > 0) this.layoutCompleteCallbacks.shift()()
+      })
+    } else {
+      this._mountedTimer = requestAnimationFrame(() => {
+        this._mountedTimer = null
+        this.initializeMasonry()
+      })
+    }
   },
 
   updated() {
@@ -97,12 +125,6 @@ MasonryHooks.Masonry = {
 
     this.el.classList.add('masonry-js-init')
     this.el.classList.remove('masonry-ready')
-
-    if (!this.el.querySelector('.grid-sizer')) {
-      const gridSizer = document.createElement('div')
-      gridSizer.className = 'grid-sizer'
-      this.el.prepend(gridSizer)
-    }
 
     this.masonry = new Masonry(this.el, {
       itemSelector: '.masonry-item',
