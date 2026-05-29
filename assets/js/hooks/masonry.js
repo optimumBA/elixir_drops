@@ -56,8 +56,12 @@ MasonryHooks.Masonry = {
       // Eager pre-connect init already ran — take ownership without re-initialising.
       this.masonry = this.el._eagerMasonry
       this.el._eagerMasonry = null
-      this.el.querySelectorAll('.masonry-item').forEach((el) => this.trackedItems.add(el.id))
-      this.el.querySelectorAll('.drop-card').forEach((el) => el.classList.add('animation-complete'))
+      this.el
+        .querySelectorAll('.masonry-item')
+        .forEach((el) => this.trackedItems.add(el.id))
+      this.el
+        .querySelectorAll('.drop-card')
+        .forEach((el) => el.classList.add('animation-complete'))
       // Re-layout synchronously: LV's morphdom may have cleared inline left/top from items.
       // Doing this in mounted() (same JS task as the DOM patch) means the browser never
       // paints the stacked-at-origin state.
@@ -66,9 +70,12 @@ MasonryHooks.Masonry = {
       this.masonry.on('layoutComplete', () => {
         this.isLayouting = false
         if (!this.el.classList.contains('masonry-ready')) {
-          requestAnimationFrame(() => requestAnimationFrame(() => this.el.classList.add('masonry-ready')))
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => this.el.classList.add('masonry-ready'))
+          )
         }
-        while (this.layoutCompleteCallbacks.length > 0) this.layoutCompleteCallbacks.shift()()
+        while (this.layoutCompleteCallbacks.length > 0)
+          this.layoutCompleteCallbacks.shift()()
       })
     } else {
       this._mountedTimer = requestAnimationFrame(() => {

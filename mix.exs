@@ -114,7 +114,7 @@ defmodule ElixirDrops.MixProject do
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view,
-       path: "/Users/almirsarajcic/Projects/AppBuilder/phoenix_live_view", override: true},
+       github: "almirsarajcic/phoenix_live_view", branch: "parked-process", override: true},
       {:floki, "~> 0.36.0", only: :test, override: true},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},

@@ -75,6 +75,18 @@ const liveSocket = new LiveSocket('/live', Socket, {
   hooks: Hooks,
   longPollFallbackMs: 2500,
   params: params,
+  dom: {
+    onBeforeElUpdated(fromEl, toEl) {
+      if (fromEl.nodeType !== 1 || !fromEl.classList) return
+      if (
+        fromEl.classList.contains('masonry-grid') ||
+        fromEl.classList.contains('masonry-item')
+      ) {
+        const fromStyle = fromEl.getAttribute('style')
+        if (fromStyle) toEl.setAttribute('style', fromStyle)
+      }
+    },
+  },
 })
 
 // Show progress bar on live navigation and form submits

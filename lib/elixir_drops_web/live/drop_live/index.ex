@@ -34,24 +34,24 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_params(params, _url, socket) when is_connected(socket) do
-    Drops.subscribe()
-    if socket.assigns.current_user, do: Notifications.subscribe(socket.assigns.current_user.id)
+  def handle_params(params, _url, socket) do
+    if connected?(socket) do
+      Drops.subscribe()
+      if socket.assigns.current_user, do: Notifications.subscribe(socket.assigns.current_user.id)
+    end
 
     search_query = params["q"] || ""
 
     socket =
-      if not socket.assigns.drops_empty? and search_query == socket.assigns.search_query do
-        socket
+      if connected?(socket) and not socket.assigns.drops_empty? and
+           search_query == socket.assigns.search_query do
+        Phoenix.LiveView.stream(socket, :drops, socket.assigns.drops_list, reset: true)
       else
         apply_params(socket, params)
       end
 
-    {:noreply, assign(socket, :masonry_ready?, true)}
-  end
-
-  def handle_params(params, _url, socket) do
-    {:noreply, apply_params(socket, params)}
+    masonry_ready? = connected?(socket)
+    {:noreply, assign(socket, :masonry_ready?, masonry_ready?)}
   end
 
   defp apply_params(socket, params) do
