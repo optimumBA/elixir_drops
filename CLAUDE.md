@@ -1,1 +1,1 @@
-AGENTS.md
+/Users/almirsarajcic/Areas/Optimum/codegen/shared/apps/CLAUDE-phoenix.md
