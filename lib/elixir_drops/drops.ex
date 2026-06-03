@@ -292,7 +292,7 @@ defmodule ElixirDrops.Drops do
     )
   end
 
-  defp apply_filter({:search, _}, dynamic), do: dynamic
+  defp apply_filter({:search, _search}, dynamic), do: dynamic
 
   defp apply_filter({:relevance_rank, {rank, search_query}}, dynamic)
        when is_binary(search_query) and search_query != "" do

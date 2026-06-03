@@ -233,8 +233,7 @@ defmodule ElixirDropsWeb.DropComponents do
       >
         {to_html(@drop.body)}
       </div>
-      
-    <!-- Three-dots dropdown menu -->
+      <!-- Three-dots dropdown menu -->
       <.drop_page_menu
         id={@drop.id}
         author?={@current_user && @current_user.id == @drop.user_id}
@@ -334,7 +333,7 @@ defmodule ElixirDropsWeb.DropComponents do
                 </form>
                 <!-- Search Suggestions Dropdown -->
                 <div
-                  :if={@show_profile_suggestions? and length(@profile_search_suggestions) > 0}
+                  :if={@show_profile_suggestions? and @profile_search_suggestions != []}
                   id="profile-search-dropdown"
                   class={[
                     "absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50",
@@ -964,8 +963,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <.icon name="hero-link" class="h-5 w-5" />
         <span>Copy Drop link</span>
       </div>
-      
-    <!-- Markdown Section -->
+      <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} />
 
       <.link
@@ -1127,7 +1125,7 @@ defmodule ElixirDropsWeb.DropComponents do
   defp get_preview_text(markdown) do
     code_block_pos =
       case Regex.run(~r/```/, markdown, return: :index) do
-        [{start_pos, _}] -> start_pos
+        [{start_pos, _len}] -> start_pos
         _no_match -> nil
       end
 
@@ -1225,7 +1223,7 @@ defmodule ElixirDropsWeb.DropComponents do
       </form>
       <!-- Search Suggestions Dropdown -->
       <div
-        :if={@show_suggestions? and length(@search_suggestions) > 0}
+        :if={@show_suggestions? and @search_suggestions != []}
         id="navbar-search-dropdown"
         class={[
           "absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50",
@@ -1338,7 +1336,7 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
         <!-- Search Suggestions -->
         <div
-          :if={@show_suggestions? and length(@search_suggestions) > 0}
+          :if={@show_suggestions? and @search_suggestions != []}
           id="mobile-search-dropdown"
           class="absolute top-full left-0 right-0 bg-white border-t border-gray-200 max-h-80 overflow-y-auto"
         >
@@ -1442,7 +1440,7 @@ defmodule ElixirDropsWeb.DropComponents do
           </div>
           <!-- Suggested Search Links -->
           <div
-            :if={length(@suggested_searches) > 0}
+            :if={@suggested_searches != []}
             class="flex flex-col gap-[33px] items-center justify-center w-full"
           >
             <!-- First row of suggestions -->

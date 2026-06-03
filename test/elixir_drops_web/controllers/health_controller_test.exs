@@ -7,7 +7,7 @@ defmodule ElixirDropsWeb.HealthControllerTest do
 
       assert %{
                "connected_to" => [],
-               "hostname" => _,
+               "hostname" => _hostname,
                "node" => "nonode@nohost",
                "status" => "ok"
              } = json_response(conn, 200)

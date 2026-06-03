@@ -43,7 +43,7 @@ defmodule ElixirDropsWeb.NavbarSearchHook do
     user = socket.assigns.current_user
 
     suggestions = get_navbar_suggestions(trimmed_query, user)
-    show_suggestions? = String.length(trimmed_query) >= 2 && length(suggestions) > 0
+    show_suggestions? = String.length(trimmed_query) >= 2 && suggestions != []
 
     {:halt,
      socket

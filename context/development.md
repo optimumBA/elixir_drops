@@ -25,8 +25,10 @@
 Local gate: `make ci`
 
 1. `MIX_ENV=test mix compile --warnings-as-errors`
-2. `mix ci` alias: `deps.unlock --check-unused` -> `deps.audit` -> `hex.audit` -> `sobelow --config .sobelow-conf --compact --quiet` -> `format --check-formatted` -> `cmd npx prettier -c .` -> `credo --strict --format oneline` -> `dialyzer --quiet-with-result` -> `test --cover --warnings-as-errors`
+2. `mix ci` alias: `deps.unlock --check-unused` -> `deps.audit` -> `cmd mix hex.audit` -> `sobelow --config .sobelow-conf --compact --quiet` -> `format --check-formatted` -> `cmd npx prettier -c .` -> `credo --strict --format oneline` -> `dialyzer --quiet-with-result` -> `test --cover --warnings-as-errors`
 3. `MIX_ENV=test mix ecto.rollback --all --quiet`
+
+**hex.audit form**: `cmd mix hex.audit` wraps the audit task as a fresh OS-level mix invocation so its non-zero exit reliably aborts the alias chain. Bare `hex.audit` resolves the task in the alias-runner env; wrapping forces a proper exit-code abort.
 
 No dialyzer plt cache on disk for this repo — `plt_file` is `priv/plts/dialyzer.plt`.
 
@@ -52,6 +54,8 @@ No dialyzer plt cache on disk for this repo — `plt_file` is `priv/plts/dialyze
 
 AppSignal revision is read from `priv/REVISION` at boot.
 
+**Exception to "no `System.get_env` in lib/"**: Release task modules in `lib/elixir_drops/release.ex` may use `System.get_env` — these modules run before the OTP app starts, so `Application.get_env` is not available. The rule targets runtime app code, not release tasks.
+
 ## Testing Patterns
 
 - **Ecto sandbox** — `:sql_sandbox` config toggles the `LiveAcceptance` on_mount in router `live_session` blocks.
@@ -67,8 +71,9 @@ AppSignal revision is read from `priv/REVISION` at boot.
 - **Binary IDs everywhere** — `generators: [timestamp_type: :utc_datetime, binary_id: true]`.
 - **Embedded schemas** — e.g. `Drop.screenshot` with `on_replace: :update`.
 - **Alphabetical attrs** — `attr` declarations and HEEx call sites sorted alphabetically for consistency.
+- **HEEx formatting** — empty elements with whitespace normalize to self-closing form (`<span>\n  </span>` → `<span />`); no structural rewrites, only formatter-driven changes.
 - **Route verification** — `~p` sigil for static routes; string interpolation for dynamic routes that the verifier can't prove.
-- **Credo strict** — zero-tolerance; `optimum_credo` config.
+- **Credo strict** — zero-tolerance; `optimum_credo` config. Lint rules: name underscore-prefixed match variables (e.g., `{:ok, _reason}` not `{:ok, _}`); for repeated `_` in same scope, reuse the semantic name (e.g., `{:ok, _popular}` × 5 in a test does not trigger rebound warnings); `length(x) > 0` → `x != []` (O(1) empty-list compare vs O(n) length), applies in HEEx `:if` attrs too (`@suggestions != []` not `length(@suggestions) > 0`). Exception: count comparisons like `length(@items) > 3` for pagination are NOT converted — only presence checks (`> 0` / `== 0`) are substituted.
 - **Prettier** — run on everything via `npx prettier -c .`; `prettier-plugin-toml` installed.
 
 ## Common Pitfalls

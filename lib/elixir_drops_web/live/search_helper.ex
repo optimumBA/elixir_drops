@@ -56,7 +56,7 @@ defmodule ElixirDropsWeb.SearchHelper do
   def get_focus_search_suggestions(user_id) do
     # Use get_search_suggestions with empty query to get initial suggestions
     suggestions = Search.get_search_suggestions(user_id, "")
-    {suggestions, length(suggestions) > 0}
+    {suggestions, suggestions != []}
   end
 
   @doc """
@@ -83,7 +83,7 @@ defmodule ElixirDropsWeb.SearchHelper do
       {:noreply,
        socket
        |> assign(suggestions_assign_key, suggestions)
-       |> assign(:show_suggestions?, length(suggestions) > 0)}
+       |> assign(:show_suggestions?, suggestions != [])}
     end
   end
 
@@ -98,7 +98,7 @@ defmodule ElixirDropsWeb.SearchHelper do
         {:ok, _search_history} ->
           # Re-fetch suggestions to update the list
           user_id = socket.assigns.current_user.id
-          {suggestions, _} = get_focus_search_suggestions(user_id)
+          {suggestions, _show?} = get_focus_search_suggestions(user_id)
           {:noreply, assign(socket, suggestions_assign_key, suggestions)}
 
         {:error, _reason} ->

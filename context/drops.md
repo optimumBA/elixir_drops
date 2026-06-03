@@ -56,6 +56,10 @@ Flow: user creates drop via `UserDropLive.FormComponent` -> `Drops.create_drop/2
 - Assets: `assets/js/hooks/masonry.js`, `assets/js/hooks/infinite_scroll.js`, `assets/css/components/masonry.css`.
 - Page behavior differs: homepage shows "New Drops" button on PubSub insert; user profile auto-refreshes.
 
+## Notification Timing
+
+Comment submission triggers an async PubSub broadcast to the drop author's `"notifications-#{user_id}"` topic. The author's LiveView session receives the notification via `handle_info(:notification, ...)`. Tests that assert notification count must force a message-queue drain on the commenting LiveView BEFORE mounting the author's viewer session, else the assertion races the async broadcast. Pattern: add `render(view)` flush after `render_submit()` and before the next `sign_in_user()` / mount of the author's session. This forces the commenting LiveView to complete a synchronous round-trip, draining its inbox first.
+
 ## Drops Pitfalls
 
 - **Stream resets cause visual glitches** — use page reset instead of `stream(:drops, drops, reset: true)`.
@@ -63,3 +67,4 @@ Flow: user creates drop via `UserDropLive.FormComponent` -> `Drops.create_drop/2
 - **Flaky tests from multi-query lookups** — use `Repo.get_by!` with specific filters, not `List.last(Drops.list_drops())`.
 - **Search ordering** — `apply_search_ordering/2` injects `ts_rank(...)` via `select_merge`; don't drop it when composing queries.
 - **Sandbox errors surface as empty lists** — `safe_list_drops/2` rescues `DBConnection.OwnershipError` / `ConnectionError` and returns `[]`.
+- **Pagination vs. presence checks** — lint rule converts `length(items) > 0` → `items != []` (O(1) empty-list compare), but NOT count comparisons like `length(@suggested_searches) > 3` (pagination sentinel for "show row if 4+ items"). Only presence checks (`> 0` / `== 0`) are substituted.

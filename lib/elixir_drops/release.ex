@@ -20,15 +20,7 @@ defmodule ElixirDrops.Release do
 
     for repo <- repos() do
       {:ok, _fun_return, _apps} =
-        Ecto.Migrator.with_repo(repo, fn repo ->
-          # Check if database has application tables
-          if should_restore_sanitized_dump?(repo) do
-            restore_sanitized_dump(repo)
-          end
-
-          # Run normal migrations
-          Ecto.Migrator.run(repo, :up, all: true)
-        end)
+        Ecto.Migrator.with_repo(repo, &migrate_repo/1)
     end
   end
 
@@ -53,14 +45,7 @@ defmodule ElixirDrops.Release do
 
     for repo <- repos() do
       {:ok, _fun_return, _apps} =
-        Ecto.Migrator.with_repo(repo, fn repo ->
-          # Run the seed script if it exists
-          seed_script = priv_path_for(repo, "seeds.exs")
-
-          if File.exists?(seed_script) do
-            Code.eval_file(seed_script)
-          end
-        end)
+        Ecto.Migrator.with_repo(repo, &seed_repo/1)
     end
   end
 
@@ -193,6 +178,25 @@ defmodule ElixirDrops.Release do
          ) do
       {_output, 0} -> :ok
       {error, exit_code} -> raise "Failed to restore dump: #{error} (exit code: #{exit_code})"
+    end
+  end
+
+  defp migrate_repo(repo) do
+    # Check if database has application tables
+    if should_restore_sanitized_dump?(repo) do
+      restore_sanitized_dump(repo)
+    end
+
+    # Run normal migrations
+    Ecto.Migrator.run(repo, :up, all: true)
+  end
+
+  defp seed_repo(repo) do
+    # Run the seed script if it exists
+    seed_script = priv_path_for(repo, "seeds.exs")
+
+    if File.exists?(seed_script) do
+      Code.eval_file(seed_script)
     end
   end
 end

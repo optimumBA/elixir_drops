@@ -423,7 +423,7 @@ defmodule ElixirDrops.DropsTest do
       user = user_fixture()
       drop_fixture(%Drop{}, user)
 
-      [drop | _] = Drops.list_all_drops()
+      [drop | _rest] = Drops.list_all_drops()
 
       assert Ecto.assoc_loaded?(drop.user)
       assert drop.user != nil
@@ -434,7 +434,7 @@ defmodule ElixirDrops.DropsTest do
       long_body = String.duplicate("a", 600)
       drop_fixture(%Drop{}, user, %{body: long_body})
 
-      [drop | _] = Drops.list_all_drops()
+      [drop | _rest] = Drops.list_all_drops()
 
       # Body should be truncated to 500 characters
       assert String.length(drop.body) <= 500
@@ -464,7 +464,7 @@ defmodule ElixirDrops.DropsTest do
 
       drop_fixture(%Drop{}, user, attrs)
 
-      [drop | _] = Drops.list_all_drops()
+      [drop | _rest] = Drops.list_all_drops()
 
       # Should have all standard fields
       assert drop.id != nil
