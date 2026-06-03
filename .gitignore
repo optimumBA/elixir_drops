@@ -59,3 +59,6 @@ npm-debug.log
 .mcp.json
 *.code-workspace
 opencode.json
+
+AGENTS.md
+CLAUDE.md
