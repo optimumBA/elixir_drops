@@ -75,6 +75,26 @@ const liveSocket = new LiveSocket('/live', Socket, {
   hooks: Hooks,
   longPollFallbackMs: 2500,
   params: params,
+  dom: {
+    onBeforeElUpdated(fromEl, toEl) {
+      if (fromEl.nodeType !== 1 || !fromEl.classList) return
+      if (
+        fromEl.classList.contains('masonry-grid') ||
+        fromEl.classList.contains('masonry-item')
+      ) {
+        const fromStyle = fromEl.getAttribute('style')
+        if (fromStyle) toEl.setAttribute('style', fromStyle)
+      }
+      // Preserve JS-only masonry-ready class: server HTML never includes it, so morphdom
+      // would strip it on every diff. Copy it forward so Masonry's visible state survives patches.
+      if (
+        fromEl.classList.contains('masonry-grid') &&
+        fromEl.classList.contains('masonry-ready')
+      ) {
+        toEl.classList.add('masonry-ready')
+      }
+    },
+  },
 })
 
 // Show progress bar on live navigation and form submits
@@ -88,7 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const grid = document.querySelector('.masonry-grid')
   if (!grid) return
 
-  // masonry-js-init is server-rendered; ensure masonry-ready is absent in case of warm reconnect
+  // Add masonry-js-init (opacity:0) immediately so grid is hidden during initial layout.
+  // masonry-ready is absent until layout completes; remove it in case of warm reconnect.
+  grid.classList.add('masonry-js-init')
   grid.classList.remove('masonry-ready')
 
   // Add grid-sizer if missing

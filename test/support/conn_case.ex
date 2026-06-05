@@ -19,6 +19,9 @@ defmodule ElixirDropsWeb.ConnCase do
 
   alias ElixirDrops.Accounts
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Repo
+  alias Phoenix.ConnTest
+  alias Phoenix.Ecto.SQL.Sandbox
 
   @type conn :: Plug.Conn.t()
   @type user :: User.t()
@@ -40,7 +43,13 @@ defmodule ElixirDropsWeb.ConnCase do
 
   setup tags do
     ElixirDrops.DataCase.setup_sandbox(tags)
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+
+    sandbox_meta = Sandbox.metadata_for(Repo, self())
+    metadata = Sandbox.encode_metadata(sandbox_meta)
+
+    conn = Plug.Conn.put_req_header(ConnTest.build_conn(), "user-agent", metadata)
+
+    {:ok, conn: conn}
   end
 
   @doc """
@@ -56,7 +65,7 @@ defmodule ElixirDropsWeb.ConnCase do
 
     conn =
       conn
-      |> Phoenix.ConnTest.init_test_session(%{user_token: token})
+      |> ConnTest.init_test_session(%{user_token: token})
       |> Plug.Conn.put_session(:user_token, token)
 
     conn

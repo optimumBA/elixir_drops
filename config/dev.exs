@@ -107,4 +107,7 @@ config :elixir_drops,
     password: "l3AVAovk4B8g5Sbq"
   ]
 
+# Dev never serves gzip (matches original `gzip: not code_reloading?` behaviour).
+config :elixir_drops, :serve_gzip_assets, false
+
 config :flame, backend: FLAME.LocalBackend

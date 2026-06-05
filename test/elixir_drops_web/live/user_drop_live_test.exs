@@ -898,17 +898,17 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       # These popular searches should NOT overlap with the search history
       popular_search_fixture(%{
         query: "ecto_unique_#{System.unique_integer([:positive])}",
-        search_count: 10
+        search_count: 100
       })
 
       popular_search_fixture(%{
         query: "liveview_unique_#{System.unique_integer([:positive])}",
-        search_count: 8
+        search_count: 80
       })
 
       popular_search_fixture(%{
         query: "genserver_unique_#{System.unique_integer([:positive])}",
-        search_count: 5
+        search_count: 60
       })
 
       conn = sign_in_user(conn, user)

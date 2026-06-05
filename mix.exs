@@ -15,7 +15,7 @@ defmodule ElixirDrops.MixProject do
 
       # CI
       dialyzer: [
-        plt_add_apps: [:ex_unit, :mix],
+        plt_add_apps: [:ex_unit, :mix, :phoenix_test_playwright],
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
       preferred_cli_env: [
@@ -156,7 +156,7 @@ defmodule ElixirDrops.MixProject do
       ],
       "ecto.setup": ["ecto.create", "ecto.load_dump", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "assets.build", "test"],
       "assets.setup": [
         "tailwind.install --if-missing",
         "esbuild.install --if-missing",

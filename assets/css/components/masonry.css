@@ -19,6 +19,14 @@
   transition: opacity 0.15s ease-in;
 }
 
+/* Hide appended items until Masonry has positioned them (left/top set).
+   visibility:hidden (not display:none) preserves dimensions so imagesLoaded
+   and layout() can measure the item correctly. */
+.masonry-item.masonry-item-pending {
+  opacity: 0;
+  visibility: hidden;
+}
+
 .grid-sizer {
   width: calc(33.333% - 16px);
   height: 0;

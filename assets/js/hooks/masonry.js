@@ -64,9 +64,17 @@ MasonryHooks.Masonry = {
         })
 
         if (newItems.length > 0) {
-          setTimeout(() => {
+          // Synchronously hide new items before any defer so they are never
+          // painted in static document flow (unpositioned).
+          newItems.forEach((item) => {
+            item.classList.add('masonry-item-pending')
+          })
+
+          // rAF instead of setTimeout(150): appended()+layout() run before
+          // the next browser paint, eliminating the visible-but-unpositioned window.
+          requestAnimationFrame(() => {
             this.appendNewItems(newItems)
-          }, 150)
+          })
         }
       }
     } else if (!this._mountedTimer) {
@@ -103,6 +111,14 @@ MasonryHooks.Masonry = {
       gridSizer.className = 'grid-sizer'
       this.el.prepend(gridSizer)
     }
+
+    // Strip any items that were hidden mid-flight (e.g. load_masonry fired while
+    // appendNewItems was waiting on imagesLoaded). Without this, those items
+    // would stay opacity:0;visibility:hidden after re-init since initializeMasonry
+    // does not call appendNewItems for already-tracked nodes.
+    this.el.querySelectorAll('.masonry-item-pending').forEach((item) => {
+      item.classList.remove('masonry-item-pending')
+    })
 
     this.masonry = new Masonry(this.el, {
       itemSelector: '.masonry-item',
@@ -151,18 +167,51 @@ MasonryHooks.Masonry = {
     if (this.masonry && newItems.length > 0) {
       this.masonry.appended(newItems)
 
+      // Safety timeout: if imagesLoaded never fires (e.g. external avatar URL hangs),
+      // unblock isLayouting after 3 seconds so the next scroll can trigger load_more.
+      const appendSafetyTimer = setTimeout(() => {
+        if (this.isLayouting) {
+          newItems.forEach((item) => {
+            item.classList.remove('masonry-item-pending')
+          })
+          this.isLayouting = false
+          while (this.layoutCompleteCallbacks.length > 0) {
+            const callback = this.layoutCompleteCallbacks.shift()
+            callback()
+          }
+        }
+      }, 3000)
+
       imagesLoaded(this.el, () => {
+        clearTimeout(appendSafetyTimer)
         if (this.masonry) {
           this.masonry.layout()
 
-          setTimeout(() => {
-            newItems.forEach((item) => {
-              const dropCard = item.querySelector('.drop-card')
-              if (!dropCard.classList.contains('animation-complete')) {
-                dropCard.classList.add('animation-complete')
-              }
+          // Double rAF: let browser commit the positioned paint before revealing items.
+          // This ensures masonry-item-pending is removed only after inline left/top
+          // are set, so items are never visible in static document flow.
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              newItems.forEach((item) => {
+                item.classList.remove('masonry-item-pending')
+
+                const dropCard = item.querySelector('.drop-card')
+                if (
+                  dropCard &&
+                  !dropCard.classList.contains('animation-complete')
+                ) {
+                  dropCard.classList.add('animation-complete')
+                }
+              })
             })
-          }, 500)
+          })
+        } else {
+          // Masonry was destroyed mid-flight (reconnect / search reset fired between
+          // the rAF and imagesLoaded resolution). Reveal items unconditionally so they
+          // are never left permanently hidden.
+          newItems.forEach((item) => {
+            item.classList.remove('masonry-item-pending')
+          })
         }
         this.isLayouting = false
       })
@@ -172,11 +221,31 @@ MasonryHooks.Masonry = {
   layoutWithImageLoading() {
     this.isLayouting = true
 
-    imagesLoaded(this.el, () => {
-      if (this.masonry) {
-        // Force a complete layout recalculation
-        this.masonry.layout()
+    // Safety timeout: if imagesLoaded never fires (e.g. image request hangs),
+    // unblock isLayouting after 3 seconds so InfiniteScroll can proceed.
+    const safetyTimer = setTimeout(() => {
+      if (this.isLayouting) {
         this.isLayouting = false
+        while (this.layoutCompleteCallbacks.length > 0) {
+          const callback = this.layoutCompleteCallbacks.shift()
+          callback()
+        }
+      }
+    }, 3000)
+
+    imagesLoaded(this.el, () => {
+      clearTimeout(safetyTimer)
+      if (this.masonry) {
+        // Force a complete layout recalculation; layoutComplete event drains
+        // layoutCompleteCallbacks after layout() finishes.
+        this.masonry.layout()
+        // layoutComplete fires async after layout(); set isLayouting=false here
+        // too so waitForLayoutComplete() callers that check the flag directly resolve.
+        this.isLayouting = false
+        while (this.layoutCompleteCallbacks.length > 0) {
+          const callback = this.layoutCompleteCallbacks.shift()
+          callback()
+        }
       }
     })
   },
@@ -186,7 +255,15 @@ MasonryHooks.Masonry = {
       if (!this.isLayouting) {
         resolve()
       } else {
-        this.layoutCompleteCallbacks.push(resolve)
+        // Bail out after 600ms so InfiniteScroll.loadMore() does not block
+        // indefinitely when imagesLoaded is slow (e.g. external avatar URLs).
+        // Flash prevention in updated() (masonry-item-pending) is unconditional
+        // and does not depend on this wait completing.
+        const bail = setTimeout(resolve, 600)
+        this.layoutCompleteCallbacks.push(() => {
+          clearTimeout(bail)
+          resolve()
+        })
       }
     })
   },

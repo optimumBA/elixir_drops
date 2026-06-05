@@ -28,7 +28,7 @@ defmodule ElixirDropsWeb.SearchHelper do
 
   defp track_search_for_user(query, nil, _filters) do
     # For unauthenticated users, only track popular searches
-    Task.start(fn ->
+    Task.Supervisor.start_child(ElixirDrops.TaskSupervisor, fn ->
       Search.track_popular_search(query)
     end)
   end
@@ -37,7 +37,7 @@ defmodule ElixirDropsWeb.SearchHelper do
     # Get current drops count for results tracking
     drops_count = length(Drops.list_drops(filters, 100))
 
-    Task.start(fn ->
+    Task.Supervisor.start_child(ElixirDrops.TaskSupervisor, fn ->
       Search.create_search_history(%{
         user_id: user.id,
         query: query,

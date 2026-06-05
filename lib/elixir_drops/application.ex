@@ -13,6 +13,7 @@ defmodule ElixirDrops.Application do
         always: ElixirDropsWeb.Endpoint,
         always: ElixirDrops.Repo,
         always: {Phoenix.PubSub, name: ElixirDrops.PubSub},
+        always: {Task.Supervisor, name: ElixirDrops.TaskSupervisor},
         parent:
           {DNSCluster, query: Application.get_env(:elixir_drops, :dns_cluster_query) || :ignore},
         # Start a worker by calling: ElixirDrops.Worker.start_link(arg)
