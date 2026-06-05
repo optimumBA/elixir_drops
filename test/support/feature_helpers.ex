@@ -11,6 +11,7 @@ defmodule ElixirDrops.FeatureHelpers do
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Repo
+  alias PhoenixTest.Playwright.Connection
   alias PhoenixTest.Playwright.Frame
 
   @type key :: String.t()
@@ -548,6 +549,127 @@ defmodule ElixirDrops.FeatureHelpers do
     end)
 
     session
+  end
+
+  @doc """
+  Install a MutationObserver into the current page that counts masonry items
+  painted visible-but-unpositioned (i.e. Masonry has not yet set inline left/top).
+
+  The counter is stored as `window.__masonryFlashCount`. Call this AFTER
+  the initial masonry layout has settled so already-positioned items (which
+  carry inline left/top) are not counted.
+
+  Implementation: injects via Frame.evaluate (runs immediately in current page
+  context). Also registers a BrowserContext init script for future navigations.
+  The synchronous inline-left/top-absence check at MutationObserver callback
+  time is the primary signal — broken code never sets them synchronously.
+  """
+  @spec install_masonry_flash_init_script(session()) :: session()
+  def install_masonry_flash_init_script(session) do
+    js = """
+    (function() {
+      // Reset / initialise counter
+      window.__masonryFlashCount = 0;
+
+      function isUnpositioned(el) {
+        // Masonry writes inline style.left AND style.top for every positioned item.
+        // Absence of either means layout has not run for this item yet.
+        return el.style.left === '' || el.style.top === '';
+      }
+
+      function isVisible(el) {
+        // Item is in the rendered document flow if offsetParent is not null
+        // and computed opacity/visibility are not "hidden".
+        var style = window.getComputedStyle(el);
+        return (
+          el.offsetParent !== null &&
+          style.opacity !== '0' &&
+          style.visibility !== 'hidden'
+        );
+      }
+
+      function checkFlash(el) {
+        // Synchronous check: visible AND unpositioned = flash
+        if (isUnpositioned(el) && isVisible(el)) {
+          window.__masonryFlashCount++;
+        }
+      }
+
+      function handleNode(node) {
+        if (!node || node.nodeType !== 1) return;
+        if (node.classList && node.classList.contains('masonry-item')) {
+          // Check synchronously at MutationObserver callback time.
+          // Broken code (setTimeout 150ms) never sets left/top synchronously,
+          // so unpositioned items are reliably caught here.
+          checkFlash(node);
+          // Also sample on next rAF to catch items that become visible shortly after.
+          requestAnimationFrame(function() { checkFlash(node); });
+        }
+        var items = node.querySelectorAll ? node.querySelectorAll('.masonry-item') : [];
+        for (var i = 0; i < items.length; i++) {
+          checkFlash(items[i]);
+          (function(item) {
+            requestAnimationFrame(function() { checkFlash(item); });
+          })(items[i]);
+        }
+      }
+
+      if (window.__masonryFlashObserver) {
+        window.__masonryFlashObserver.disconnect();
+      }
+
+      var observer = new MutationObserver(function(mutations) {
+        for (var m = 0; m < mutations.length; m++) {
+          var added = mutations[m].addedNodes;
+          for (var n = 0; n < added.length; n++) {
+            handleNode(added[n]);
+          }
+        }
+      });
+
+      observer.observe(document, { childList: true, subtree: true });
+      window.__masonryFlashObserver = observer;
+    })();
+    """
+
+    unwrap(session, fn %{frame_id: frame_id, context_id: context_id} ->
+      # Inject into current page immediately via Frame.evaluate
+      Frame.evaluate(frame_id, js)
+
+      # Also register as init script for future navigations (belt + suspenders)
+      Connection.post(
+        guid: context_id,
+        method: :addInitScript,
+        params: %{source: js}
+      )
+
+      {:ok, session}
+    end)
+  end
+
+  @doc """
+  Read the masonry append-flash counter set by `install_masonry_flash_init_script/1`.
+
+  Returns the number of `.masonry-item` nodes observed being visible-but-unpositioned
+  (i.e. painted in static flow before Masonry's `layout()` ran for them).
+  """
+  @spec read_masonry_flash_count(session()) :: integer()
+  def read_masonry_flash_count(session) do
+    unwrap(session, fn %{frame_id: frame_id} ->
+      result =
+        case Frame.evaluate(frame_id, "window.__masonryFlashCount") do
+          {:ok, n} -> n
+          n when is_integer(n) -> n
+          nil -> 0
+          _other -> 0
+        end
+
+      # Store result in process dict so we can return it after unwrap
+      Process.put(:__masonry_flash_count__, result)
+      {:ok, session}
+    end)
+
+    Process.get(:__masonry_flash_count__, 0)
   end
 
   @doc """

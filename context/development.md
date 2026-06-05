@@ -64,6 +64,8 @@ AppSignal revision is read from `priv/REVISION` at boot.
 - **Mox** — stub `ElixirDrops.S3Helper` via `Application.put_env(:elixir_drops, :s3_helper, MockClient)`.
 - **ExMachina factories** in `test/support` — prefer over raw `Repo.insert/1` for deterministic data.
 - **Coverage** — `coveralls.json` excludes test support files.
+- **DOM-mutation instruments** — For detecting subtle timing bugs (e.g., items painted unpositioned): use `Frame.evaluate/2` to inject a MutationObserver init script immediately after `visit/1`, which persists on `window` and tracks specific DOM conditions (visibility, inline styles). Read results via `Frame.evaluate/2` again. Prefer this over relying on CLS (cumulative layout shift) metrics, which read ≈0 in headless even when layout is broken.
+  - Example: masonry append-flash test detects newly-appended `.masonry-item` nodes that are `offsetParent !== null` (visible) AND have no inline `style.left` / `style.top` (unpositioned). Samples on both MutationObserver callback time AND the next `requestAnimationFrame` to avoid timing windows. Metric: `flashed_count == 0` (no visible-but-unpositioned items ever detected).
 
 ## Key Patterns
 
