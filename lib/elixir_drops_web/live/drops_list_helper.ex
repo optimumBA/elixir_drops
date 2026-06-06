@@ -62,9 +62,10 @@ defmodule ElixirDropsWeb.DropsListHelper do
           phx-connected={JS.dispatch("load_masonry", to: "##{@id}")}
           class={[
             @drops_empty? && "grid gap-y-2 md:gap-y-5 px-6 md:px-8 lg:px-12",
-            !@drops_empty? && "masonry-grid masonry-js-init"
+            !@drops_empty? && "masonry-grid"
           ]}
         >
+          <div :if={!@drops_empty?} class="grid-sizer" id={"#{@id}-grid-sizer"}></div>
           <div
             :if={@show_user_drops?}
             id="drops-empty"

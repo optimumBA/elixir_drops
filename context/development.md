@@ -32,13 +32,16 @@ Local gate: `make ci`
 
 No dialyzer plt cache on disk for this repo — `plt_file` is `priv/plts/dialyzer.plt`.
 
+**Asset freshness in tests**: `endpoint.ex` uses `gzip: Application.compile_env(:elixir_drops, :serve_gzip_assets, true)` (prod default true). Test and dev override to `false` in their config files (`config/test.exs:77-81`, `config/dev.exs:111`). When `gzip: true`, Plug.Static serves `priv/static/assets/js/app.js.gz` (if present) in preference to the plain `app.js`. Only `phx.digest` (in `assets.deploy`) regenerates `.gz`; bare `mix assets.build` only regenerates the plain file. A stale `.gz` from a prior branch can shadow source edits, causing feature tests to load old (possibly broken) JS while the source has been fixed. Result: test sees stale behavior, development work appears ineffective. Fix: (1) `mix.exs` `test` alias includes `assets.build` to keep plain `.js` current; (2) `gzip: false` in test env so only the fresh plain file is served. Pre-existing broken test runs may have a stale `.gz` on disk — `mix assets.build` clears the shadow by regenerating the plain file correctly.
+
 ## Test Commands
 
 - `mix test` — unit + integration (Ecto sandbox, no server).
 - `mix coveralls` / `mix coveralls.html` — coverage report.
-- `mix test.features` — browser tests: deploys assets then `FEATURE_TESTS=true mix test --only feature`.
-- Playwright env vars: `PW_HEADLESS`, `PW_SCREENSHOT`, `PW_TIMEOUT`, `PW_TRACE`.
+- `mix test.features` — browser tests: deploys assets (`phx.digest` regenerates `.gz` fresh) then `FEATURE_TESTS=true mix test --only feature`.
+- Playwright env vars: `PW_HEADLESS`, `PW_SCREENSHOT`, `PW_TIMEOUT` (default 500ms, affects Frame.evaluate timeouts), `PW_TRACE`.
 - `PORT_TEST` overrides the feature-test port (default 4100).
+- `@moduletag :feature` tests are EXCLUDED from `mix test` (via `test_helper.exs` `exclude: [:feature]`) and NOT run by `make ci`. They run only via `make test.features` or explicit `--include feature`. The masonry feature test is in this category.
 
 ## Environment Variables
 
@@ -66,6 +69,7 @@ AppSignal revision is read from `priv/REVISION` at boot.
 - **Coverage** — `coveralls.json` excludes test support files.
 - **DOM-mutation instruments** — For detecting subtle timing bugs (e.g., items painted unpositioned): use `Frame.evaluate/2` to inject a MutationObserver init script immediately after `visit/1`, which persists on `window` and tracks specific DOM conditions (visibility, inline styles). Read results via `Frame.evaluate/2` again. Prefer this over relying on CLS (cumulative layout shift) metrics, which read ≈0 in headless even when layout is broken.
   - Example: masonry append-flash test detects newly-appended `.masonry-item` nodes that are `offsetParent !== null` (visible) AND have no inline `style.left` / `style.top` (unpositioned). Samples on both MutationObserver callback time AND the next `requestAnimationFrame` to avoid timing windows. Metric: `flashed_count == 0` (no visible-but-unpositioned items ever detected).
+- **Playwright Frame.evaluate scroll-event delivery** — `window.scrollBy` via `Frame.evaluate` changes `window.scrollY` but does NOT reliably fire a `scroll` event in headless Chromium (event-delivery timing is non-deterministic in JS evaluation context). Tests using scroll listeners must either: (a) explicitly dispatch `dispatchEvent(new Event('scroll'))` after `scrollBy` to ensure listeners fire, or (b) call hook methods directly via element property refs (e.g., `void marker._hookRef.loadMore()`) to bypass scroll wiring entirely. The `Frame.evaluate` timeout (`PW_TIMEOUT` default 500ms) also awaits Promise return values — calling an async hook method without `void` will block `evaluate` until the async chain resolves, which may timeout if the hook internally awaits image-loading or other slow events. Use `void asyncFn()` to make `evaluate` return a synchronous value instead.
 
 ## Key Patterns
 

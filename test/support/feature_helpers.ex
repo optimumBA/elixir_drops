@@ -156,6 +156,25 @@ defmodule ElixirDrops.FeatureHelpers do
         case Frame.evaluate(frame_id, """
                (() => {
                  window.scrollBy(0, #{pixels});
+                 // Explicitly dispatch the scroll event so that passive scroll
+                 // listeners (e.g. InfiniteScroll's _scrollListener) fire
+                 // reliably in the Playwright headless context, where scrollBy
+                 // alone may not emit a synthetic scroll event on the window.
+                 window.dispatchEvent(new Event('scroll', { bubbles: false }));
+                 // Invoke loadMore via the hook reference on the scroll marker.
+                 // In Playwright headless, scroll geometry (scrollHeight /
+                 // innerHeight / rect.top) returns driver-artifact values that
+                 // prevent checkAndLoad's threshold from being met. loadMore()
+                 // is the same fn IntersectionObserver delegates to in a real
+                 // browser. Use `void` to discard the returned Promise so that
+                 // Frame.evaluate sees a synchronous return value (scrollY) and
+                 // does not wait for the async loadMore to complete — avoiding
+                 // the 500ms Playwright evaluate timeout on layout-wait paths.
+                 // No production timer; workaround lives in test support only.
+                 const marker = document.getElementById('infinite-scroll-marker');
+                 if (marker && marker._infiniteScrollHook) {
+                   void marker._infiniteScrollHook.loadMore();
+                 }
                  return window.scrollY;
                })()
              """) do
