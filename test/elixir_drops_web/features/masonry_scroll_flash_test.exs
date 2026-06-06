@@ -39,26 +39,29 @@ defmodule ElixirDropsWeb.Features.MasonryScrollFlashTest do
     test "no masonry item is painted visible-but-unpositioned during infinite-scroll append",
          %{conn: conn, user: user} do
       # 1. Sign in and visit homepage
-      session = conn |> sign_in_user(user) |> visit("/")
+      session =
+        conn
+        |> sign_in_user(user)
+        |> visit("/")
 
       # 2. Wait for initial batch to render and masonry to settle
-      session = wait_for_element(session, ".masonry-item")
+      ready_session = wait_for_element(session, ".masonry-item")
       Process.sleep(2000)
 
       # 3. Arm the flash counter AFTER initial masonry-ready so already-positioned
       #    items (carrying inline left/top) don't register as flashes.
-      session = install_masonry_flash_init_script(session)
+      armed_session = install_masonry_flash_init_script(ready_session)
 
       # 4. Record initial item count, then scroll until a new batch appends.
-      initial_count = count_masonry_items(session)
+      initial_count = count_masonry_items(armed_session)
 
-      session = scroll_until_more_items(session, initial_count, 15, 3000)
+      scrolled_session = scroll_until_more_items(armed_session, initial_count, 15, 3000)
 
       # 5. Let the append path + imagesLoaded + layout + rAF reveal finish.
       Process.sleep(2500)
 
       # 6. PRIMARY ASSERTION: no item was visible-but-unpositioned at append time.
-      flashed = read_masonry_flash_count(session)
+      flashed = read_masonry_flash_count(scrolled_session)
 
       assert flashed == 0,
              "#{flashed} appended masonry item(s) painted visible-but-unpositioned (static flow) " <>
@@ -66,7 +69,7 @@ defmodule ElixirDropsWeb.Features.MasonryScrollFlashTest do
 
       # 7. SECONDARY GUARD: all items now have positive height (settled state).
       all_have_height =
-        evaluate_js(session, """
+        evaluate_js(scrolled_session, """
           (() => {
             const items = document.querySelectorAll('.masonry-item');
             for (let item of items) {
@@ -82,7 +85,7 @@ defmodule ElixirDropsWeb.Features.MasonryScrollFlashTest do
       # 8. SECONDARY GUARD: no two items share the same rounded top-left position
       #    (proves items ARE positioned by Masonry after append).
       duplicate_position =
-        evaluate_js(session, """
+        evaluate_js(scrolled_session, """
           (() => {
             const items = document.querySelectorAll('.masonry-item');
             const seen = new Set();

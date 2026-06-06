@@ -15,7 +15,7 @@ defmodule ElixirDrops.MixProject do
 
       # CI
       dialyzer: [
-        plt_add_apps: [:ex_unit, :mix],
+        plt_add_apps: [:ex_unit, :mix, :phoenix_test_playwright],
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ],
       preferred_cli_env: [

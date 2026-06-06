@@ -147,41 +147,60 @@ defmodule ElixirDrops.FeatureHelpers do
   end
 
   @doc """
-  Scroll down by a specified number of pixels using mouse wheel.
+  Scroll down and drive the InfiniteScroll hook's loadMore, then wait IN-PAGE
+  until the appended batch actually lands (item count grows) or the timeline ends.
+
+  Why self-synchronizing: on a slow CI machine the server round-trip
+  (load_more -> cursor query -> stream append -> LiveView diff -> WS push -> DOM
+  patch) does NOT complete within the test's fixed 1000 ms post-scroll sleep, so a
+  plain "fire and return" helper leaves every recount seeing the old count and the
+  15-attempt loop exhausts with a misleading "load_more never fired". We also clear
+  the `pending` flag the mount-time auto-load can leave stuck (InfiniteScroll.mounted
+  fires checkAndLoad 200 ms after mount; if masonry layout has not run the doc is
+  short, Case-1 fires loadMore, pending sticks until the slow load_more_complete).
+
+  By firing loadMore ONCE and then polling in-page for the count to increase, the
+  helper is machine-speed independent and never overlaps two in-flight load_more
+  events (the server cursor is `older_than: last_drop` and is NOT idempotent, so
+  overlapping fires would skip pages).
+
+  Polls up to ~8 s; passes an explicit Frame.evaluate `timeout:` larger than the
+  in-page poll so the default 500 ms PW_TIMEOUT does not abort it.
   """
   @spec scroll_down(session(), integer()) :: session()
   def scroll_down(session, pixels \\ 300) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      _result =
-        case Frame.evaluate(frame_id, """
-               (() => {
-                 window.scrollBy(0, #{pixels});
-                 // Explicitly dispatch the scroll event so that passive scroll
-                 // listeners (e.g. InfiniteScroll's _scrollListener) fire
-                 // reliably in the Playwright headless context, where scrollBy
-                 // alone may not emit a synthetic scroll event on the window.
-                 window.dispatchEvent(new Event('scroll', { bubbles: false }));
-                 // Invoke loadMore via the hook reference on the scroll marker.
-                 // In Playwright headless, scroll geometry (scrollHeight /
-                 // innerHeight / rect.top) returns driver-artifact values that
-                 // prevent checkAndLoad's threshold from being met. loadMore()
-                 // is the same fn IntersectionObserver delegates to in a real
-                 // browser. Use `void` to discard the returned Promise so that
-                 // Frame.evaluate sees a synchronous return value (scrollY) and
-                 // does not wait for the async loadMore to complete — avoiding
-                 // the 500ms Playwright evaluate timeout on layout-wait paths.
-                 // No production timer; workaround lives in test support only.
-                 const marker = document.getElementById('infinite-scroll-marker');
-                 if (marker && marker._infiniteScrollHook) {
-                   void marker._infiniteScrollHook.loadMore();
-                 }
-                 return window.scrollY;
-               })()
-             """) do
-          {:ok, value} -> value
-          value when is_number(value) -> value
-          other -> raise "Unexpected scroll_down result: #{inspect(other)}"
-        end
+      Frame.evaluate(
+        frame_id,
+        """
+        (async () => {
+          const sel = '.masonry-item';
+          const startCount = document.querySelectorAll(sel).length;
+          window.scrollBy(0, #{pixels});
+          window.dispatchEvent(new Event('scroll', { bubbles: false }));
+          const marker = document.getElementById('infinite-scroll-marker');
+          const hook = marker && marker._infiniteScrollHook;
+          const atEnd = () =>
+            marker && marker.dataset.endOfTimeline === 'true';
+          // Fire load_more ONCE. Clear a pending flag left stuck by the mount-time
+          // auto-load so the hook's `if (this.pending) return` does not no-op us.
+          if (hook && !atEnd()) {
+            hook.pending = false;
+            hook.connectObserver();
+            hook.loadMore();
+          }
+          // Wait in-page until the batch lands (count grows) or timeline ends.
+          const deadline = Date.now() + 8000;
+          while (Date.now() < deadline) {
+            if (document.querySelectorAll(sel).length > startCount) return true;
+            if (atEnd()) return true;
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          return false;
+        })()
+        """,
+        timeout: 10_000
+      )
 
       {:ok, session}
     end)
