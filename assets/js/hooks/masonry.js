@@ -103,8 +103,15 @@ MasonryHooks.Masonry = {
       this.masonry = null
     }
 
-    this.el.classList.add('masonry-js-init')
-    this.el.classList.remove('masonry-ready')
+    // Only blink-hide on a COLD init (first paint, grid not yet shown). On a warm
+    // (re)connect the grid is already laid out and visible (masonry-ready); removing
+    // it here and re-adding it on layoutComplete fires the 0.15s opacity fade =
+    // a visible flash. Keep it visible and just re-layout in place.
+    const alreadyVisible = this.el.classList.contains('masonry-ready')
+    if (!alreadyVisible) {
+      this.el.classList.add('masonry-js-init')
+      this.el.classList.remove('masonry-ready')
+    }
 
     if (!this.el.querySelector('.grid-sizer')) {
       const gridSizer = document.createElement('div')
