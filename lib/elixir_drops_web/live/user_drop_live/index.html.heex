@@ -14,6 +14,7 @@
         notification_count={@notification_count}
         search_query={@navbar_search_query}
         search_suggestions={@search_suggestions}
+        show_suggestions?={@show_suggestions?}
         show_user_drops?={true}
       />
       <section :if={@live_action in [:edit, :new]}>

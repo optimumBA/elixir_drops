@@ -16,7 +16,9 @@ defmodule ElixirDropsWeb.NotificationHelpers do
   def assign_notifications(%{assigns: %{current_user: nil}} = socket) do
     socket
     |> stream(:notifications, [], reset: true)
+    |> assign(:last_notification, nil)
     |> assign(:notification_count, 0)
+    |> assign(:notification_filters, %{user_id: nil})
   end
 
   def assign_notifications(%{assigns: %{current_user: user}} = socket) do

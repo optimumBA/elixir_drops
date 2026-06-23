@@ -52,6 +52,16 @@ defmodule ElixirDropsWeb do
       use Phoenix.LiveView
 
       unquote(html_helpers())
+
+      # Runs on every WebSocket connect (cold, warm/resumed, and reconnect). The
+      # default grants the connected process Ecto sandbox access in tests; it is a
+      # no-op otherwise. LiveViews that define their own on_connect/1 should call
+      # `super(socket)` so sandbox access still happens under :resume, where the
+      # on_mount hooks are skipped on the warm connect.
+      @impl Phoenix.LiveView
+      def on_connect(socket), do: {:ok, ElixirDropsWeb.LiveAcceptance.allow_sandbox(socket)}
+
+      defoverridable on_connect: 1
     end
   end
 

@@ -10,6 +10,10 @@ defmodule ElixirDropsWeb.NavbarSearchHook do
 
   @type socket :: Phoenix.LiveView.Socket.t()
 
+  # Runs on the dead render and, under :resume, is reused on the connected render
+  # (the hook does not re-run on a warm connect). So it must load plainly — no
+  # connected?/1 guard, no placeholder — otherwise the placeholder would stick on a
+  # resumed connect. See ElixirDropsWeb.LiveHelpers for the same pattern.
   @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
   def on_mount(:navbar_search, _params, _session, socket) do
     user_id =

@@ -58,17 +58,8 @@ const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content')
 
-let showOrHideWelcomeMessage = () => {
-  if (localStorage.getItem('show-welcome-message') === null) {
-    localStorage.setItem('show-welcome-message', true)
-  }
-
-  return localStorage.getItem('show-welcome-message')
-}
-
 let params = {
   _csrf_token: csrfToken,
-  show_welcome_message: showOrHideWelcomeMessage(),
 }
 
 const liveSocket = new LiveSocket('/live', Socket, {

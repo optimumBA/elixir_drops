@@ -4,10 +4,12 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
+  import ElixirDrops.NotificationsFixtures
   import Phoenix.LiveViewTest
 
   alias ElixirDrops.Comments
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Notifications
 
   defp create_drop_setup(%{conn: conn}) do
     user = user_fixture()
@@ -65,6 +67,28 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
              |> render() =~ "1"
     end
 
+    test "receives live notification broadcasts while viewing a drop", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      # No notifications yet — the count badge only renders when > 0.
+      refute has_element?(view, "#notifications-count")
+
+      # Broadcasting through PubSub (not send/2 to the pid) is what proves the
+      # LiveView actually subscribed. This is the resume-sensitive path: subscribe
+      # must happen on connect, because on a resumed warm connect mount/3 and
+      # handle_params/3 are skipped — connection-only work belongs in on_connect/1.
+      actor = user_fixture()
+      comment = comment_fixture(drop, actor)
+      notification = notification_fixture(actor, user, comment)
+      Notifications.broadcast(notification)
+
+      assert has_element?(view, "#notifications-count", "1")
+    end
+
     test "replying to a comment sends a notification to both the drop author and the comment author",
          %{
            conn: conn
@@ -116,11 +140,20 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
 
       {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
 
+      # The reply form is a LiveComponent that sends {:new_comment, ...} to the
+      # parent LiveView, which creates the comment and notifications in handle_info.
+      # render_submit/1 only awaits the component's event, not the parent's async
+      # handle_info, so subscribe and wait for the notification broadcast to be sure
+      # it has been persisted before we read it back through a fresh mount.
+      Notifications.subscribe(drop_author.id)
+
       view
       |> form("#reply-form-#{parent_comment.id}",
         comment: %{body: "A reply"}
       )
       |> render_submit()
+
+      assert_receive {:new_notification, _notification}
 
       conn = sign_in_user(conn, drop_author)
 

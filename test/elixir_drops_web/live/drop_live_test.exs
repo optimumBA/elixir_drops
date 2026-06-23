@@ -16,14 +16,8 @@ defmodule ElixirDropsWeb.DropLiveTest do
   setup :verify_on_exit!
 
   defp create_drops_setup(%{conn: conn}) do
-    conn =
-      put_connect_params(
-        conn,
-        %{
-          "show_welcome_message" => "true"
-        }
-      )
-
+    # The welcome banner defaults to showing when the `show_welcome_message`
+    # cookie is absent (see ElixirDropsWeb.Router), so no setup is needed here.
     user = user_fixture(%{github_id: 1_456_872})
     user2 = user_fixture(%{github_id: 9_456_872})
     drop = drop_fixture(user)
@@ -39,6 +33,14 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~ "Sign in with GitHub"
       assert html =~ "Welcome to ElixirDrops!"
+    end
+
+    test "hides the welcome banner when the show_welcome_message cookie is false", %{conn: conn} do
+      conn = Plug.Test.put_req_cookie(conn, "show_welcome_message", "false")
+
+      {:ok, _live, html} = live(conn, ~p"/")
+
+      refute html =~ "Welcome to ElixirDrops!"
     end
 
     test "shows the logged-in user's info", %{conn: conn, user: user} do
@@ -867,6 +869,51 @@ defmodule ElixirDropsWeb.DropLiveTest do
       # Should handle empty query without crashing
       result3 = render_hook(live, "load_suggestions", %{"query" => ""})
       assert result3 =~ "ElixirDrops"
+    end
+
+    test "navbar search renders matching suggestions in the desktop dropdown", %{conn: conn} do
+      import ElixirDrops.SearchFixtures
+
+      popular_search_fixture(%{query: "phoenix tutorial", search_count: 100})
+
+      {:ok, live, _html} = live(conn, ~p"/")
+
+      # Regression guard for the navbar -> search_input_desktop wiring: the dropdown
+      # is gated on @show_suggestions?, which every LiveView must pass into
+      # <DropComponents.navbar>. If that attr is dropped (it defaults to false), the
+      # dropdown silently never renders even though the server computes suggestions.
+      # Scope to #desktop-search-input: the mobile overlay also renders suggestions,
+      # so an unscoped assertion would pass even with the desktop wiring removed.
+      render_hook(live, "load_navbar_suggestions", %{"query" => "phoenix"})
+
+      assert has_element?(
+               live,
+               "#desktop-search-input #navbar-search-dropdown",
+               "phoenix tutorial"
+             )
+    end
+
+    test "the dead render carries a data-phx-resume token (server-half resume guard)", %{
+      conn: conn
+    } do
+      # Resume fails *silently*: if the server stops stamping the token (config
+      # flipped to enabled: false, or the resume plug falls out of the endpoint),
+      # the client just cold-mounts and the double render returns with no error.
+      # This asserts the server half is wired so that regression is caught here.
+      conn = get(conn, ~p"/")
+      assert html_response(conn, 200) =~ "data-phx-resume="
+    end
+
+    test "renders over a forced cold connect (resume-disabled fallback path)", %{conn: conn} do
+      # The app must still work when resume does not engage (config off, or the
+      # client bundle lacks the resume code). __force_cold__ nulls the resume token
+      # on the WS join so the connect takes the normal cold double-mount path.
+      {:ok, _live, html} =
+        conn
+        |> put_connect_params(%{"__force_cold__" => true})
+        |> live(~p"/")
+
+      assert html =~ "ElixirDrops"
     end
 
     test "search suggestions should work for authenticated users", %{conn: conn, user: user} do

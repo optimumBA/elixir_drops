@@ -6,3 +6,5 @@ ci:
 	@echo "=== CI: ecto.rollback ==="
 	MIX_ENV=test mix ecto.rollback --all --quiet
 	@echo "=== CI: ALL PASSED ==="
+
+test: ci

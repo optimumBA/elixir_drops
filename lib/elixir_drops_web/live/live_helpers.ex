@@ -1,62 +1,41 @@
 defmodule ElixirDropsWeb.LiveHelpers do
   @moduledoc """
-  LiveView helpers including database sandbox support for tests.
+  Shared `on_mount/4` hooks.
 
-  Based on StoryDeck's proven async testing patterns.
+  These hooks run on the disconnected (dead) render and, with `:resume` enabled,
+  their results are reused on the connected render rather than recomputed. They
+  must therefore derive everything from data available on the dead render (the
+  session, the current user) — never from `get_connect_params/1` or
+  `get_connect_info/2`, which are only populated once connected.
   """
 
-  import Phoenix.Component
-  import Phoenix.LiveView, only: [get_connect_params: 1]
+  import Phoenix.Component, only: [assign: 2]
 
   alias ElixirDropsWeb.NotificationHelpers
 
   @type socket :: Phoenix.LiveView.Socket.t()
 
-  # Existing welcome message functionality
-  @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
-  def on_mount(:maybe_show_welcome_message, _params, _session, socket) do
-    show_welcome_message =
-      case get_connect_params(socket) do
-        %{"show_welcome_message" => "true"} -> true
-        _other -> false
-      end
+  @doc """
+  Assigns `:show_welcome_message?` from the `show_welcome_message` session value.
 
-    {:cont, assign(socket, :show_welcome_message?, show_welcome_message)}
+  The flag is carried in a cookie that `ElixirDropsWeb.Router`'s `:browser`
+  pipeline copies into the session (see `put_welcome_message_flag/2`), so it is
+  available on the dead render. Reading it here — instead of from
+  `get_connect_params/1` — keeps the dead render authoritative and avoids the
+  banner flashing in or out when the socket connects. First-time visitors (no
+  cookie yet) default to seeing the welcome message.
+  """
+  @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
+  def on_mount(:maybe_show_welcome_message, _params, session, socket) do
+    {:cont, assign(socket, show_welcome_message?: Map.get(session, "show_welcome_message", true))}
   end
 
+  # Loads the current user's notifications on the dead render. Under :resume the
+  # connected render reuses this result, so the work is done once and the value is
+  # correct in the first paint (no connected?/1 guard, no placeholder that would
+  # otherwise stick around on a resumed connect).
   @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
   def on_mount(:assign_notifications, _params, _session, socket) do
     {:cont, NotificationHelpers.assign_notifications(socket)}
-  end
-
-  # Only compile sandbox support in test environment
-  if Application.compile_env(:elixir_drops, :sandbox, false) do
-    @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
-    def on_mount(:allow_ecto_sandbox, _params, _session, socket) do
-      # Get encoded metadata from process dictionary (set by FeatureCase)
-      if encoded_metadata = Process.get(:phoenix_ecto_sandbox) do
-        try do
-          # Decode and allow this process to access the database
-          metadata = Phoenix.Ecto.SQL.Sandbox.decode_metadata(encoded_metadata)
-          # Correct API: Ecto.Adapters.SQL.Sandbox.allow(repo, owner_pid, allow_pid)
-          # metadata contains {repo, owner_pid}, so we extract the owner and allow current process
-          case metadata do
-            {_repo, owner_pid} when is_pid(owner_pid) ->
-              Ecto.Adapters.SQL.Sandbox.allow(ElixirDrops.Repo, owner_pid, self())
-
-            _other ->
-              :ok
-          end
-        rescue
-          # If allow fails (e.g., already allowed), that's OK
-          _error -> :ok
-        end
-      end
-
-      {:cont, socket}
-    end
-  else
-    @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
-    def on_mount(:allow_ecto_sandbox, _params, _session, socket), do: {:cont, socket}
   end
 end

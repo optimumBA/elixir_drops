@@ -13,12 +13,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    if connected?(socket) do
-      Drops.subscribe()
-      user = socket.assigns.current_user
-      if user, do: Notifications.subscribe(user.id)
-    end
-
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
@@ -35,6 +29,14 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:searching, false)
      |> assign(:viewport_height, nil)
      |> assign(:viewport_width, nil)}
+  end
+
+  @impl Phoenix.LiveView
+  def on_connect(socket) do
+    Drops.subscribe()
+    user = socket.assigns.current_user
+    if user, do: Notifications.subscribe(user.id)
+    super(socket)
   end
 
   @impl Phoenix.LiveView

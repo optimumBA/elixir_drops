@@ -12,13 +12,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    user_id = socket.assigns.current_user.id
-
-    if connected?(socket) do
-      Drops.subscribe()
-      Notifications.subscribe(user_id)
-    end
-
     {:ok,
      socket
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
@@ -32,7 +25,15 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> assign(:search_query, "")
      |> assign(:viewport_height, nil)
      |> assign(:viewport_width, nil)
-     |> SearchHelper.initialize_profile_search_assigns(user_id)}
+     |> SearchHelper.initialize_profile_search_assigns(socket.assigns.current_user.id)}
+  end
+
+  @impl Phoenix.LiveView
+  def on_connect(socket) do
+    user_id = socket.assigns.current_user.id
+    Drops.subscribe()
+    Notifications.subscribe(user_id)
+    super(socket)
   end
 
   @impl Phoenix.LiveView
@@ -45,9 +46,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       |> assign(:searching, search_query != "")
       |> update_search_filters(search_query)
       |> DropsListHelper.assign_drops()
-      |> apply_action(socket.assigns.live_action, params)
 
-    {:noreply, socket}
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
   defp update_search_filters(socket, search_query) do
@@ -294,14 +294,25 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   def handle_info(
-        {Drops, [:drop, :screenshot_generation_completion], drop, _progress, status, _metadata},
+        {Drops, [:drop, :screenshot_generation_completion], drop, _progress, :completed,
+         _metadata},
+        %{assigns: %{current_user: %{id: user_id}}} = socket
+      ) do
+    # The broadcast drop comes straight from the worker without its :user
+    # association loaded, and the profile only lists the current user's drops.
+    # Reload it scoped to this user (preloaded) before inserting; a drop owned by
+    # someone else returns nil and is ignored.
+    case Drops.get_drop(%{drop_id: drop.id, user_id: user_id}) do
+      nil -> {:noreply, socket}
+      reloaded -> {:noreply, stream_insert(socket, :drops, reloaded)}
+    end
+  end
+
+  def handle_info(
+        {Drops, [:drop, :screenshot_generation_completion], _drop, _progress, _status, _metadata},
         socket
       ) do
-    if status == :completed do
-      {:noreply, stream_insert(socket, :drops, drop)}
-    else
-      {:noreply, socket}
-    end
+    {:noreply, socket}
   end
 
   def handle_info(

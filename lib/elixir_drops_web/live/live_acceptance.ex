@@ -1,37 +1,51 @@
 defmodule ElixirDropsWeb.LiveAcceptance do
   @moduledoc """
-  LiveView acceptance testing hook for handling Ecto SQL Sandbox.
+  Grants the connected LiveView process access to the Ecto SQL Sandbox in tests.
 
-  Ensures all LiveView processes and their spawned children can access the 
-  test database connection in async tests.
+  A LiveView's connected process is separate from the test process that owns the
+  sandbox connection, so it must be explicitly allowed. We cover both connect
+  paths, because under `:resume` they run different lifecycle callbacks:
+
+    * `on_mount/4` runs on the disconnected (dead) render and on a cold connect.
+    * `allow_sandbox/1` is called from `c:Phoenix.LiveView.on_connect/1` (injected
+      by `ElixirDropsWeb.live_view/0`), which is the only relevant callback that
+      runs on a resumed (warm) connect, where `mount/3` and the on_mount hooks are
+      skipped.
+
+  The sandbox metadata travels in the `user-agent` header (see
+  `ElixirDropsWeb.ConnCase`), so it is only available once connected.
   """
-
-  import Phoenix.Component
-  import Phoenix.LiveView
 
   @type socket :: Phoenix.LiveView.Socket.t()
 
-  @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
-  def on_mount(:default, _params, _session, socket) do
-    socket =
-      assign_new(socket, :phoenix_ecto_sandbox, fn ->
-        if connected?(socket), do: get_connect_info(socket, :user_agent)
-      end)
+  if Application.compile_env(:elixir_drops, :sql_sandbox) do
+    import Phoenix.LiveView, only: [connected?: 1, get_connect_info: 2]
 
-    metadata = socket.assigns.phoenix_ecto_sandbox
-
-    if metadata do
-      setup_sandbox_access(metadata)
+    @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
+    def on_mount(:default, _params, _session, socket) do
+      if connected?(socket), do: allow(get_connect_info(socket, :user_agent))
+      {:cont, socket}
     end
 
-    {:cont, socket}
-  end
+    @spec allow_sandbox(socket()) :: socket()
+    def allow_sandbox(socket) do
+      allow(get_connect_info(socket, :user_agent))
+      socket
+    end
 
-  defp setup_sandbox_access(metadata) do
-    Phoenix.Ecto.SQL.Sandbox.allow(metadata, Ecto.Adapters.SQL.Sandbox)
-  rescue
-    DBConnection.OwnershipError ->
-      # Connection already allowed - this is expected in some test scenarios
-      :ok
+    defp allow(nil), do: :ok
+
+    defp allow(metadata) do
+      Phoenix.Ecto.SQL.Sandbox.allow(metadata, Ecto.Adapters.SQL.Sandbox)
+    rescue
+      # Connection already allowed — expected when both on_mount and on_connect run.
+      DBConnection.OwnershipError -> :ok
+    end
+  else
+    @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
+    def on_mount(:default, _params, _session, socket), do: {:cont, socket}
+
+    @spec allow_sandbox(socket()) :: socket()
+    def allow_sandbox(socket), do: socket
   end
 end

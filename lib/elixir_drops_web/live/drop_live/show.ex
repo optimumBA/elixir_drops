@@ -15,6 +15,17 @@ defmodule ElixirDropsWeb.DropLive.Show do
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
 
+  # Connection-only work lives here: on a resumed warm connect mount/3 and
+  # handle_params/3 are skipped, so subscribing in handle_params/3 behind
+  # connected?/1 would never run (the dead render had connected? == false).
+  # on_connect/1 fires once per live connection. See drop_live/index.ex.
+  @impl Phoenix.LiveView
+  def on_connect(socket) do
+    user = socket.assigns.current_user
+    if user, do: Notifications.subscribe(user.id)
+    super(socket)
+  end
+
   @impl Phoenix.LiveView
   def handle_params(%{"short_id" => short_id} = params, _url, socket) do
     comment_id = params["comment_id"]
@@ -29,10 +40,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
       else
         socket
       end
-
-    user = socket.assigns.current_user
-
-    if connected?(socket) && user, do: Notifications.subscribe(user.id)
 
     drop = Drops.get_drop_by_short_id(short_id)
 
@@ -224,8 +231,8 @@ defmodule ElixirDropsWeb.DropLive.Show do
     socket
     |> assign(:drop, drop)
     |> assign(:page_title, title)
-    |> assign_comments(drop)
     |> assign_seo_attributes()
+    |> assign_comments(drop)
   end
 
   defp assign_comments(socket, drop) do

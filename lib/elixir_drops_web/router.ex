@@ -7,11 +7,22 @@ defmodule ElixirDropsWeb.Router do
     plug ElixirDropsWeb.Plugs.MarkdownInterceptor
     plug :accepts, ["html"]
     plug :fetch_session
+    plug :put_welcome_message_flag
     plug :fetch_live_flash
     plug :put_root_layout, html: {ElixirDropsWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_user
+  end
+
+  # Copies the `show_welcome_message` cookie into the session so the LiveView dead
+  # render (via the :maybe_show_welcome_message on_mount hook) can read it. The
+  # cookie is managed client-side by assets/js/hooks/welcome_message.js. Absent
+  # cookie defaults to showing the welcome message to first-time visitors.
+  defp put_welcome_message_flag(conn, _opts) do
+    conn = Plug.Conn.fetch_cookies(conn)
+    show? = Map.get(conn.cookies, "show_welcome_message") != "false"
+    Plug.Conn.put_session(conn, "show_welcome_message", show?)
   end
 
   pipeline :markdown do

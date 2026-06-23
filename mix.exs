@@ -113,8 +113,16 @@ defmodule ElixirDrops.MixProject do
       {:postgrex, "~> 0.22"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
-      {:phoenix_live_view, "~> 1.1.0"},
+      # Fork: resume feature (avoids the LiveView double mount). The resume-built
+      # branch carries the compiled priv/static assets so no asset build of the
+      # dep is needed. Revert to hex once the upstream adoption mechanism
+      # (phoenix_live_view#3551) ships.
+      {:phoenix_live_view,
+       github: "almirsarajcic/phoenix_live_view", branch: "resume-built", override: true},
+      # Pin to 1.19.2: plug 1.19.3 backported (and 1.20.0 kept) a strict header
+      # validation that rejects the atom `:upgrade` value bandit sends during the
+      # WebSocket handshake, crashing every LiveView connect. Remove once fixed.
+      {:plug, "1.19.2", override: true},
       {:floki, "~> 0.36.0", only: :test, override: true},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
@@ -134,7 +142,8 @@ defmodule ElixirDrops.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      # Held at the known-good 1.11.x alongside the plug 1.19.2 pin above (see note).
+      {:bandit, "~> 1.11.0"}
     ]
   end
 

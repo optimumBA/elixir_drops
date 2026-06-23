@@ -96,6 +96,15 @@ config :elixir_drops, Oban,
   queues: [default: 10, seo_images: 1, seo_sitemap: 1],
   repo: ElixirDrops.Repo
 
+# Retain the fully-mounted dead-render socket so the WebSocket connect can
+# resume it instead of mounting a second time (avoids the double mount).
+# Connection-only work (PubSub subscriptions, timers) must live in on_connect/1,
+# since mount/3 is skipped on a resumed connect.
+config :phoenix_live_view, :resume,
+  enabled: true,
+  ttl: 5_000,
+  max_children: 10_000
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
