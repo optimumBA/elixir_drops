@@ -1,279 +1,211 @@
 ---
-description: Generate ElixirDrops post topic suggestions and write complete drop content
+description: Suggest and write a verified ElixirDrops post
 ---
 
-Generate 5-10 ElixirDrops topic suggestions from available recipes and Elixir/Phoenix patterns. When user selects topic, write complete drop content.
+# Write an ElixirDrop
 
-**STEP 1: Topic Suggestion Phase**
+Suggest 5–10 non-duplicative topics, let the user select one, then write and validate the drop and its two social hooks (X and LinkedIn). Keep one clear problem and one clear solution. Prefer working code and observed output over illustrative claims.
 
-**EXECUTION CHECKLIST:**
-□ 1. Plausible analytics screenshot — if user provided with command, proceed; otherwise request it
-□ 2. Read ALL coding rules from `~/Areas/Optimum/context/rules/subagents/`
-□ 3. Fetch `https://elixirdrops.net/index.md` for all published drop titles
-□ 4. Check `./drops/` for existing drafts — recommend from those first before suggesting new topics
-□ 4b. Check every existing draft for matching `_hook.md` — if missing, write hook too
-□ 5. Analyze `~/Areas/Optimum/context/recipes/` for adaptable patterns
-□ 6. Generate suggestions avoiding ALL redundancy
-□ 7. User selects topic → create content using proper Elixir style
-□ 8. Validate all code blocks — format with `mix format`, compile-check with `Code.string_to_quoted!/1` for illustrative snippets, run standalone blocks with `elixir /tmp/test.exs`
-□ 9. Test code examples → save markdown to `./drops/`
+## 0. Preflight
 
-**Content Discovery — MANDATORY DUPLICATION CHECK:**
+Work from the ElixirDrops project root. The verified baseline on 2026-08-20 is Elixir 1.20.2 / OTP 29, Phoenix 1.8, Phoenix LiveView 1.1, and Ecto SQL 3.13. Check the current environment before relying on it:
 
-1. Fetch COMPLETE drops index:
-
-   ```
-   WebFetch `https://elixirdrops.net/index.md`:
-   "Extract COMPLETE list of ALL drop titles, one per line."
-   ```
-
-2. VERIFY you received ALL drops — response should contain 40+ titles. Fewer → fetch failed.
-
-3. Create duplication avoidance list:
-   - Existing published drops (from index.md)
-   - Draft drops in `./drops/` (check `ls ./drops/*.md`)
-   - Semantic variations (e.g., "Ecto.StaleEntryError" = "optimistic locking" = "race conditions in updates")
-
-4. Cross-check semantically — don't just match keywords:
-   - "Parameter validation" could overlap with "Safe URL params" or "Ecto changesets"
-   - "String.to_atom" covers "atom exhaustion" AND "preventing atom attacks"
-
-5. Cross-check EVERY suggestion against avoidance list. ANY overlap → REMOVE that suggestion.
-
-6. Full content verification: `https://elixirdrops.net/d/{short_id}.md`
-
-Do NOT present suggestions until verified ZERO duplication.
-
-**Analytics Integration (MANDATORY FIRST STEP):**
-
-- Request Plausible screenshot BEFORE generating ANY suggestions — not optional
-- Analyze for high-performing patterns (low bounce rate, high time on page, deep scroll)
-- Identify content gaps in popular topic areas
-- Use popular drop patterns to inform suggestions
-
-**High-Performing Patterns (from analytics):**
-
-1. **Direct Technical Warning + Solution** (3,596 impressions):
-   - Opening: "Stop using `X`" or "`X` can crash your entire BEAM VM"
-   - Structure: Problem → Bad code (❌) → Good code (✅) → Why it works
-
-2. **Performance Optimization with Concrete Benefits** (2,768 impressions):
-   - Opening: "Database queries for X become performance bottlenecks fast"
-   - Structure: Problem → ETS/caching solution → Impl → Pro tips
-
-3. **Developer UX Improvements** (3,791 impressions):
-   - Opening: "Use this LiveView hook to make X automatically Y"
-   - Structure: Goal → Impl → JavaScript hook → Integration steps
-
-4. **Workflow Optimization** (2,872 impressions):
-   - Opening: "Don't regenerate your entire X for every change"
-   - Structure: Current problem → Incremental approach → Impl → Benefits
-
-5. **Hidden Feature Discovery** (6,664 impressions — TOP PERFORMER):
-   - Opening: "Stop using `@impl true`" — direct instruction with authority
-   - Structure: What not to do → What to do instead → Compiler benefits → Examples
-
-**Opening Paragraph Formula:**
-
-- Technical authority — direct instruction or warning
-- Immediate value proposition
-- NO fluff — jump straight into technical challenge
-
-**First Code Block Requirements:**
-
-- Show SOLUTION in first block — gets screenshotted for social media, MUST demonstrate key technique
-- Visual contrast: ❌/✅ comparison when showing bad vs good (both in same block)
-- Real-world context, not toy examples
-- Progressive complexity: start simple, add sophistication
-- Perfect comment alignment — count characters precisely, align ALL comments at same column
-
-**Twitter Hook Style Guide:**
-
-- 280 char limit — aim 240-250 max for buffer
-- Clean and direct — state problem and solution
-- Technical focus — lead with code/technical insight
-- No marketing fluff — avoid "🧵 Thread", "👇", "Here's how"
-- Factual tone — only use facts from the drop
-- Concrete: "500 KB → 1 KB" not "99% reduction" without showing math
-- Link at end: `https://elixirdrops.net/d/[id]`
-- Count characters precisely — don't guess
-
-**Preventing Twitter Auto-Link Detection**
-
-Twitter converts `Module.function` patterns to clickable links (e.g., `File.read!/1` → link to `file.read`). Fix with Zero-Width Space (ZWSP, U+200B) after the dot:
-
-```
-❌ Wrong: File.read!/1 on a 2GB file = 2GB RAM
-✅ Right: File​.read!/1 on a 2GB file = 2GB RAM (ZWSP after "File")
+```bash
+elixir --version
+mix deps | grep -E 'phoenix |phoenix_live_view |ecto_sql '
 ```
 
-ALWAYS insert ZWSP after module name dot in Twitter hooks:
+Optional local material must never block the command. Check whether a proposed rules or recipes directory exists; if absent, proceed using this command, the repository, official HexDocs, published drops, and drafts. Do not search for or require the obsolete `~/Areas/Optimum/context/rules/subagents/*.md` or `~/Areas/Optimum/context/recipes/` paths.
 
-- `File​.read!/1`, `File​.stream!/1`
-- `Enum​.map/2`, `Enum​.reduce/3`
-- `Ecto​.Query`, `Phoenix​.LiveView`
-- `String​.to_atom/1`, `GenServer​.call/3`
+If the user supplied a Plausible screenshot, use only metrics visible there: visitors, pageviews, bounce rate, time on page, and scroll depth. If none was supplied, ask once; if the user declines or it is unavailable, proceed without analytics. Never invent or relabel impressions. Treat warning/solution, performance, developer-UX, workflow, and hidden-feature angles only as historical editorial priors unless the supplied dashboard supports them.
 
-ZWSP character: `​` (invisible, select between backticks to copy)
+## 1. Discover topics without duplication
 
-**Rich Topic Sources:**
+This gate is mandatory. Do not present a topic until every step passes.
 
-- MCP Tools: Tidewave tools in Claude Code, playground usage
-- Phoenix/LiveView: Mixed-language flash messages, custom hooks, dropdown patterns
-- Testing: Wallaby async patterns, umbrella test failures, sys.get/put_state in tests
-- DB: Ecto.StaleEntryError solutions, enum translations, schema patterns
-- Deployment: Fly.io configs, Docker patterns, env setup
-- Email/Templates: MJML patterns, CSS inlining, template optimization
-- Dev Workflow: Custom IEX, JS.exec server-side, feature toggles
-- Integrations: GitHub Actions, webhook verification, file streaming
+1. Use WebFetch on `https://elixirdrops.net/index.md` with: “Return the complete list exactly as `Title /shortid`, one entry per line; do not summarize or truncate.” The index contained about 155 entries on 2026-08-20. If the result is unexpectedly small or lacks short IDs, fetch again or report the failure; do not continue with a partial catalogue.
 
-**Gap Analysis:**
-
-- Security: webhook verification, parameter sanitization
-- Error handling: StaleEntryError, GenServer crashes
-- Email: MJML templates, notification patterns
-
-**"Hidden Feature" Angle (High Engagement)**
-
-Features that are:
-
-- Built into frameworks but poorly documented
-- Solve common problems but hard to discover
-- Mentioned briefly in docs without examples
-- Save significant debugging time
-
-Examples:
-
-- `Ecto.Changeset.optimistic_lock/3` — prevents race conditions, buried in changeset docs
-- `:sys.get_state/1` — debug GenServers/LiveViews, mentioned in Erlang docs only
-- `Phoenix.LiveView.assign_new/3` — conditional assigns, not in main guides
-- `Ecto.Query.exclude/2` — remove query parts, rarely mentioned
-
-Template: "[Framework] has a hidden feature that [solves problem]. It's been [where documented] for years, but most devs [what they do instead]. Here's how it works..."
-
-Present each suggestion as:
-
-- **Title**: Proposed drop title
-- **Problem**: What it solves
-- **Hook**: Engaging first code snippet concept
-
-**STEP 2: Content Writing Phase (when user selects topic)**
-
-Write complete drop content, save as markdown for copy/paste.
-
-**Title**: 30-57 characters, action-oriented, sentence case, code in backticks.
-
-Good:
-
-- "Phoenix contexts should return tuples, not raise" (51 chars)
-- "Stop using bang functions in Phoenix contexts" (46 chars)
-
-Bad:
-
-- "Stop using `create_user!` in Phoenix contexts - return `{:ok, result}` tuples instead" (87 chars — too long)
-
-Body structure:
-
-Opening paragraph: problem/teaser that works as Twitter copy.
-
-```elixir
-# First code snippet - MOST ENGAGING/CLICKABLE
-# Gets screenshotted for social sharing
-# Must be visually appealing and immediately valuable
-```
-
-Explanation of solution and why it works.
-
-Optional additional snippets for edge cases.
-
-**MANDATORY: Link to relevant official docs** — always end with markdown link to most relevant hexdocs page. Format: `[Module.function/arity docs](https://hexdocs.pm/...)`
-
-4. **First Code Snippet** — make screenshot-worthy:
-   - Show "before and after" or key transformation
-   - Clear variable names and formatting
-   - Just enough context to be self-explanatory
-   - Focus on "aha moment"
-
-5. **Quality Assurance**:
-   - Format ALL code blocks with `mix format`
-   - Validate all code blocks: (a) write to `/tmp/drop_N.exs`, run `mix format /tmp/drop_N.exs`, copy back; (b) run `elixir /tmp/drop_N.exs` for standalone blocks; (c) for illustrative snippets with app modules, verify syntax with `Code.string_to_quoted!(code)` via `elixir -e`. If Tidewave available via `mcp__tidewave__project_eval`, use it too.
-   - Title SHORT (30-57 chars)
-   - Solution is simplest that works
-   - Verify ALL API/fn calls against actual docs — don't guess
-   - No invented metrics — only performance numbers shown in drop content. Say "drops from 500 KB to 1 KB" not "99% reduction" without proof.
-   - Ask user to review for hallucinations before claiming completion
-
-6. **Code Formatting**:
-
-   Markdown code blocks don't get auto-formatted by `mix format`. Workflow:
+2. Inventory drafts and hooks:
 
    ```bash
-   echo 'def your_function...' > temp_format.exs
-   mix format temp_format.exs
-   # copy formatted code back to markdown
-   rm temp_format.exs
+   find ./drops -maxdepth 1 -type f -name '*.md' -print | sort
    ```
 
-   If `mix format` prompts for Hex installation and hangs: run `mix local.hex --force` first.
+   Prefer a worthwhile unfinished draft before inventing a new topic. Note any `_drop.md` missing its matching `_hooks.md`, or a `_hooks.md` missing either section.
 
-   `mix format` vs Tidewave:
-   - `mix format` — reformats code (indentation, spacing, line breaks)
-   - `mcp__tidewave__project_eval` — validates code compiles and runs
+3. Build an avoidance list from every published title and every draft. Compare concepts, not just wording: aliases, failure modes, and alternative APIs count as possible overlap.
 
-   Both required.
+4. For each candidate, identify its nearest published and draft neighbors. Use WebFetch on `https://elixirdrops.net/d/{shortid}.md` for every plausible near-match and read the full body. Remove the candidate if its core problem and solution are already covered.
 
-   Compile-time macros limitation — can't test `~p` or `~H` sigils in Tidewave eval context. Create `.exs` file and run with `mix run` instead.
+5. Present 5–10 surviving suggestions, each with:
+   - **Title** — 30–57 characters
+   - **Problem** — the concrete problem it solves
+   - **First block** — the screenshot-worthy code concept
+   - **Nearest neighbor** — closest published/draft drop and why this is materially distinct
 
-   Formatting best practices:
-   - Comments on separate lines above code, not inline
-   - Each `|>` on its own line
-   - Multiple blocks: separate temp files (temp_format1.exs, temp_format2.exs, etc.)
-   - Comment alignment: count characters precisely, align ALL inline comments at same column
+Do not claim “zero duplication” from title matching alone. If the complete index or relevant near-match bodies cannot be fetched, say the duplication check is incomplete and stop before recommending topics.
 
-   Known `mix format` surprises:
-   - `<%= expr %>` → `{expr}` inside `~H` sigils
-   - Alignment spaces in `case` arms stripped
-   - Multi-line fn calls reformatted when LHS + RHS exceeds line length
-   - `do: bare_call` → `do: bare_call()` in single-line do expressions
-   - Plug `@behaviour` modules need `import Plug.Conn`
+## 2. Write the selected drop
 
-7. **Final Output** — ALWAYS save as TWO markdown files (don't ask — just save). Delegate all file writes to `developer-html/developer-hugo/developer-vite` — orchestrator hook blocks direct Write calls:
-   - Drop content: `./drops/[topic_name]_drop.md`
-   - Twitter hook: `./drops/[topic_name]_hook.md` — hook text only, ZWSP embedded for direct copy-paste
-   - Twitter hook MUST only use facts stated in the drop — cross-check every claim
+### Title and body
 
-8. **Content Categories**:
-   - Core Elixir: Pattern matching, data transformation, error handling
-   - Phoenix/LiveView: Components, real-time features, form handling, testing
-   - DB/Ecto: Query optimization, migrations, data relationships
-   - Dev Workflow: Testing patterns, deployment, debugging, tooling
-   - Performance: Profiling, optimization, memory management
-   - Integration: APIs, external services, background jobs
+- Title: 30–57 characters, action-oriented, sentence case. Count it exactly.
+- Open with a direct technical instruction, warning, or immediately useful outcome. No throat-clearing or marketing language.
+- Make the first code block the strongest visual: it is the social screenshot. Show the solution immediately, or a compact ❌/✅ contrast in one block. Use real context, clear names, and only enough code to reveal the technique.
+- Explain why it works, then add only the edge cases or gotchas needed to use it safely.
+- End with a markdown link to the most relevant official HexDocs page: `[Module.function/arity docs](https://hexdocs.pm/...)`.
+- Never invent metrics, benchmark results, version behavior, warning text, or output. Include numbers only when reproduced by the validation below. Show the measured before/after values; do not derive a percentage unless the math is also verified.
 
-9. **Recipe Transformation**:
-   - Extract core problem and solution
-   - Simplify to essential parts
-   - Focus on one specific aspect
-   - Turn detailed considerations into brief gotchas
+Count a proposed title without its Markdown decoration:
 
-**Critical Requirements:**
+```bash
+printf %s 'Exact title text' | wc -m
+```
 
-- Working code only — every example must compile and run
-- Focused scope — one clear problem, one clear solution
-- Practical value — must solve something devs actually encounter
-- Flexible length — 150-word tip to full blog-post style
+### X hook
 
-**Idiomatic Code — MANDATORY before writing ANY code:**
+- Hard limit: 280 characters; target 240–250 for buffer. Count characters exactly.
+- State the problem and solution directly. Use only facts present in the drop.
+- No “thread,” “here’s how,” pointing-down emoji, or marketing filler.
+- Put `https://elixirdrops.net/d/[id]` at the end.
+- Prevent Twitter auto-linking of `Module.function` by inserting a zero-width space (ZWSP, U+200B) immediately after the dot: `File​.read!/1`, `Enum​.map/2`, `Ecto​.Query`, `Phoenix​.LiveView`. The copyable character is between the dot and the following name in those examples.
 
-1. Read `~/Areas/Optimum/context/rules/subagents/elixir-code-generation.md`
-2. Read `~/Areas/Optimum/context/rules/subagents/phoenix.md`
-3. Read `~/Areas/Optimum/context/rules/subagents/testing.md`
-4. Apply ALL rules to code examples
+Both hooks live in one file, `./drops/NAME_hooks.md`, under `## X` and `## LinkedIn` headings. The
+headings are delimiters only — never paste them. Count the X section on its own:
 
-Key patterns:
+```bash
+awk '/^## X$/{f=1;next} /^## LinkedIn$/{f=0} f' ./drops/NAME_hooks.md | tr -d '\n' | wc -m
+```
 
-- Add `import Ecto.Query` when using `from` query syntax
-- Use `MyAppWeb.Endpoint.subscribe/1` for PubSub in LiveView, NOT `Phoenix.PubSub.subscribe/2`
-- `cast_assoc` for user-submitted params (runs changeset, validates, handles deletes)
-- `put_assoc` for trusted programmatic data (structs, bypasses validation)
-- `on_replace:` option required on `has_many`/`many_to_many` when using `cast_assoc`
+### LinkedIn hook
+
+The X hook does not work on LinkedIn. Write a separate one; do not paste one into the other.
+
+What is different, and why:
+
+- **Markdown is stripped.** LinkedIn renders no backticks, bold, or headings — they appear as literal characters. Write plain text. Show code as bare lines with blank lines around it, never in a fenced or backticked block.
+- **No 280-character limit.** The post cap is 3,000 characters; 1,200–1,700 is a comfortable working range. Use the room to explain the mechanism, not to add filler.
+- **The first line is the whole ad.** LinkedIn collapses the post behind a "…see more" fold at roughly 140 characters on mobile (the exact cut is undocumented and shifts). Make line 1 stand alone under ~140 characters and land the problem or the number. Verify with the command below.
+- **Line breaks survive and matter.** Short paragraphs, one idea each, blank line between. A wall of text is not read.
+- **No ZWSP.** That trick exists only because X linkifies `Module.function`. LinkedIn does not. Insert no zero-width spaces here — they are pure corruption risk in this file.
+- **Hashtags on the last line.** Three or four, lowercase, e.g. `#elixir #phoenix #otp`.
+- **Link on its own line** before the hashtags, same `https://elixirdrops.net/d/[id]` form.
+
+Same factual discipline as the X hook: every claim and every number must already appear in the drop and have been reproduced during validation.
+
+Verify both sections in one pass. The two have opposite ZWSP requirements, so the check is scoped per
+section — it reports X length and ZWSP, and the LinkedIn fold, markdown, and ZWSP:
+
+```bash
+python3 - ./drops/NAME_hooks.md <<'CHECK'
+import re, sys
+b = open(sys.argv[1]).read()
+x = b.split("## X", 1)[1].split("## LinkedIn")[0].strip()
+l = b.split("## LinkedIn", 1)[1].strip()
+print("X  :", len(x), "chars (<=280) | ZWSP", x.count("\u200b"), "(one per Module. in it)")
+print("LI :", len(l), "chars | line1", len(l.split("\n")[0]), "(<140) | ZWSP",
+      l.count("\u200b"), "(must be 0) | markdown",
+      "FOUND" if re.search(r"[`*]", l) else "none")
+CHECK
+```
+
+Do not flag a bare `#` in the LinkedIn section: `#=>` in pasted output and `#{...}` in interpolation
+are legitimate and frequent. LinkedIn only forms a hashtag when a word character follows the `#`, so
+neither becomes a link — but a stray `#` immediately before a word does.
+
+## 3. Validate every code block
+
+Use one scratch file per independent block. Paste the formatted, executed version back into the drop. Never present `# =>` output until it matches actual output.
+
+### A. Standalone Elixir
+
+Create the scratchpad inside the project root so the project `.formatter.exs` applies:
+
+```bash
+cat > .drop_check_1.exs <<'ELIXIR'
+# Paste one standalone snippet here.
+ELIXIR
+mix format .drop_check_1.exs
+mix format --check-formatted .drop_check_1.exs
+elixir .drop_check_1.exs
+```
+
+Copy real output into verified `# =>` comments, rerun, and remove the scratch file when finished:
+
+```bash
+rm .drop_check_1.exs
+```
+
+### B. Code needing project dependencies
+
+Use `mix run --no-start`; `--no-start` prevents the application supervision tree from starting when Postgres is unavailable.
+
+```bash
+cat > /tmp/check.exs <<'ELIXIR'
+# Paste code using Phoenix.Component, Ecto.Schema, or another project dependency.
+ELIXIR
+mix run --no-start /tmp/check.exs
+cp /tmp/check.exs .drop_check_deps.exs
+mix format .drop_check_deps.exs
+mix format --check-formatted .drop_check_deps.exs
+```
+
+Copy the formatted project-root file back into the drop, rerun it if formatting changed behavior, then clean up:
+
+```bash
+mix run --no-start .drop_check_deps.exs
+rm .drop_check_deps.exs /tmp/check.exs
+```
+
+### C. Literal compile-time warnings
+
+First format and execute the code being demonstrated using A or B. Then paste that formatted code into the heredoc and capture warnings under the project dependencies:
+
+```bash
+cat > /tmp/check.exs <<'ELIXIR'
+Code.put_compiler_option(:ignore_module_conflict, true)
+
+code = ~S"""
+# Paste the modules/code that should emit the warning here.
+"""
+
+Code.compile_string(code, "demo.exs")
+ELIXIR
+mix run --no-start /tmp/check.exs 2>&1 | tee /tmp/check.out
+```
+
+Quote only the literal warning captured in `/tmp/check.out`. Modules created by `Code.compile_string/2` cannot be referenced later in the same script with `%Struct{}` literals; construct and call them dynamically instead:
+
+```elixir
+value = struct(Demo, %{})
+apply(Demo, :run, [value])
+```
+
+For measurements, keep the measured return value genuinely alive by printing it, returning it, or otherwise consuming it. Do not bind it only to an underscore-prefixed variable: the compiler may discard the work and silently produce a zero measurement.
+
+### D. Final verification
+
+- Re-run every block using A, B, or C as appropriate.
+- Verify every public API and behavioral claim against the relevant official HexDocs page.
+- Run `mix format --check-formatted` on every project-root scratch file. Formatting a path from another working directory does not reliably apply this project’s `.formatter.exs`, including its Ecto/Phoenix imports and formatter plugins.
+- If `mcp__tidewave__project_eval` is available **and** a Phoenix server is already running, it may be used as an optional extra check. Never require it or start `mix phx.server` for this command. When Tidewave is absent, the `elixir` and `mix run --no-start` paths above are the fallback and source of truth.
+- Perform the duplication gate again against the finished angle, not only the initial title.
+
+## 4. Save exactly two files
+
+Write the files directly; do not delegate file writes to unavailable or assumed agent types:
+
+- `./drops/NAME_drop.md` — complete drop
+- `./drops/NAME_hooks.md` — both hooks, `## X` section then `## LinkedIn` section
+
+The headings are delimiters for you, not part of either post. Each section below its heading is the
+literal text to paste, ZWSP already embedded in the X one.
+
+A drop with no matching `_hooks.md`, or a `_hooks.md` missing either section, is incomplete. When you
+touch any drop, check for both files and both sections, and write whatever is missing.
+
+Before finishing, confirm: the title is 30–57 characters; the X section is at most 280 characters and
+carries a ZWSP after every `Module.` in it; the LinkedIn section has a first line under ~140
+characters, contains no markdown and no ZWSP, and makes no claim absent from the drop; the first code
+block is screenshot-ready; all shown output and metrics were reproduced; the HexDocs link is present;
+and the final semantic duplication check passed.
