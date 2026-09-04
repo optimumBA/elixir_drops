@@ -66,6 +66,7 @@ defmodule ElixirDrops.CommentsTest do
 
       created_comment_ids =
         comments_created
+        |> Enum.sort_by(&{&1.inserted_at, &1.id}, :desc)
         |> Enum.drop(3)
         |> Enum.map(& &1.id)
 

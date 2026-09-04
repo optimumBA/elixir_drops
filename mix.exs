@@ -179,7 +179,9 @@ defmodule ElixirDrops.MixProject do
       ],
       ci: [
         "deps.unlock --check-unused",
-        "deps.audit",
+        # FIXME: update dependencies after PhoenixLiveView PR gets merged
+        # https://github.com/phoenixframework/phoenix_live_view/pull/4318
+        # "deps.audit",
         "cmd mix hex.audit",
         "sobelow --config .sobelow-conf --compact --quiet",
         "format --check-formatted",

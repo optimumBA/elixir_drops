@@ -39,7 +39,7 @@ defmodule ElixirDrops.Comments do
 
     Comment
     |> where([c], c.drop_id == ^drop_id and is_nil(c.parent_id))
-    |> order_by([c], desc: c.inserted_at)
+    |> order_by([c], desc: c.inserted_at, desc: c.id)
     |> limit(^limit)
     |> offset(^offset)
     |> preload(^preload_list())
