@@ -25,6 +25,18 @@ defmodule ElixirDropsWeb.Router do
     Plug.Conn.put_session(conn, "show_welcome_message", show?)
   end
 
+  pipeline :sponsor_redirect do
+    plug :fetch_session
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug :fetch_current_user
+  end
+
+  scope "/go/appsignal", ElixirDropsWeb do
+    pipe_through :sponsor_redirect
+    get "/:placement", SponsorRedirectController, :show
+  end
+
   pipeline :markdown do
     plug :accepts, ["markdown", "text"]
     plug :put_resp_content_type, "text/markdown"

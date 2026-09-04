@@ -5,6 +5,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops
   alias ElixirDrops.Notifications
+  alias ElixirDrops.Sponsors
   alias ElixirDrops.StructuredData
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.CommentComponents
@@ -19,10 +20,14 @@ defmodule ElixirDropsWeb.DropLive.Show do
   # handle_params/3 are skipped, so subscribing in handle_params/3 behind
   # connected?/1 would never run (the dead render had connected? == false).
   # on_connect/1 fires once per live connection. See drop_live/index.ex.
+  # Capture connect info here; LiveView removes it before handle_event/3.
   @impl Phoenix.LiveView
   def on_connect(socket) do
     user = socket.assigns.current_user
     if user, do: Notifications.subscribe(user.id)
+
+    socket = assign(socket, :sponsor_impression_user_agent, get_connect_info(socket, :user_agent))
+
     super(socket)
   end
 
@@ -50,7 +55,40 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign_drop(drop)}
   end
 
+  defp record_sponsor_impressions(socket, drop, placements) do
+    {seen_drop, seen} = socket.assigns[:sponsor_impressions] || {nil, []}
+    seen_placements = if seen_drop == drop.id, do: seen, else: []
+    new_placements = placements -- seen_placements
+
+    if new_placements != [] do
+      Sponsors.record_impressions(new_placements,
+        user: socket.assigns[:current_user],
+        user_agent: socket.assigns[:sponsor_impression_user_agent]
+      )
+    end
+
+    assign(socket, :sponsor_impressions, {drop.id, seen_placements ++ new_placements})
+  end
+
+  defp sponsor_placements(%{"placements" => placements}) when is_list(placements) do
+    placements
+    |> Enum.filter(&(&1 in Sponsors.placements()))
+    |> Enum.uniq()
+  end
+
+  defp sponsor_placements(_params), do: []
+
   @impl Phoenix.LiveView
+  def handle_event("sponsor_impression", params, socket) do
+    drop = socket.assigns[:drop]
+
+    if drop && params["drop_id"] == drop.short_id do
+      {:noreply, record_sponsor_impressions(socket, drop, sponsor_placements(params))}
+    else
+      {:noreply, socket}
+    end
+  end
+
   def handle_event("navbar_search_submit", %{"query" => query}, socket) do
     trimmed_query = String.trim(query)
 

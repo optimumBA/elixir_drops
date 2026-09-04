@@ -65,7 +65,13 @@ defmodule ElixirDropsWeb.Endpoint do
     json_decoder: Phoenix.json_library()
 
   plug Plug.MethodOverride
+  plug :remember_head_request
   plug Plug.Head
   plug Plug.Session, @session_options
   plug ElixirDropsWeb.Router
+
+  # Plug.Head normalizes HEAD to GET; keep that distinction for click counting.
+  defp remember_head_request(conn, _opts) do
+    Plug.Conn.put_private(conn, :head_request, conn.method == "HEAD")
+  end
 end

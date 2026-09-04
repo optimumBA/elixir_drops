@@ -22,6 +22,62 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
   describe "/d/short_id" do
     setup [:create_drop_setup]
 
+    test "shows the AppSignal sponsor placements with distinct tracking", %{
+      conn: conn,
+      drop: drop
+    } do
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      banner_url =
+        "/go/appsignal/drop-banner"
+
+      sidebar_url =
+        "/go/appsignal/drop-sidebar"
+
+      assert has_element?(
+               view,
+               "#appsignal-drop-banner[href='#{banner_url}'][rel='sponsored noopener']",
+               "Slow Ecto Query? See The Exact Line. Trace Ecto queries to the line of code. Errors, traces, logs, BEAM metrics in one tool. Start Free, No Card"
+             )
+
+      assert has_element?(
+               view,
+               "aside[class*='hidden lg:block'] #appsignal-drop-sidebar[href='#{sidebar_url}'][rel='sponsored noopener']",
+               "Phoenix Monitoring With BEAM Metrics No One Else Has Monitor Phoenix and LiveView end to end. Errors, performance, hosts and logs in one tool. Try AppSignal Free"
+             )
+
+      assert has_element?(view, "#appsignal-drop-banner", "AppSignal")
+
+      assert has_element?(
+               view,
+               "#appsignal-drop-banner img[src='/images/appsignal.svg'][alt='AppSignal']"
+             )
+
+      assert has_element?(
+               view,
+               "#appsignal-drop-sidebar img[src='/images/appsignal.svg'][alt='AppSignal']"
+             )
+    end
+
+    test "keeps the sponsor colors even with the former native query parameter", %{
+      conn: conn,
+      drop: drop
+    } do
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}?variant=native")
+
+      assert has_element?(
+               view,
+               "#appsignal-drop-banner[class*='bg-[#18221c]'][rel='sponsored noopener']",
+               "Sponsored AppSignal Slow Ecto Query? See The Exact Line."
+             )
+
+      assert has_element?(
+               view,
+               "#appsignal-drop-sidebar[class*='bg-[#18221c]'][rel='sponsored noopener']",
+               "Sponsored AppSignal Phoenix Monitoring With BEAM Metrics No One Else Has"
+             )
+    end
+
     test "a user who has logged in can add comments", %{conn: conn, drop: drop, user: user} do
       {:ok, view, html} = live(conn, ~p"/d/#{drop.short_id}")
 
@@ -354,15 +410,26 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
         {:ok, _} = Comments.create_comment(drop, user, nil, %{body: "Comment #{i}"})
       end
 
-      {:ok, view, html} = live(conn, ~p"/d/#{drop.short_id}")
+      {:ok, view, initial_html} = live(conn, ~p"/d/#{drop.short_id}")
 
-      refute html =~ "Comment 15"
+      initial_comment_count =
+        initial_html
+        |> Floki.find("#comments > div")
+        |> length()
 
-      view
-      |> element("#load-more-comments")
-      |> render_click()
+      assert initial_comment_count == 10
 
-      assert render(view) =~ "Comment 15"
+      loaded_html =
+        view
+        |> element("#load-more-comments")
+        |> render_click()
+
+      loaded_comment_count =
+        loaded_html
+        |> Floki.find("#comments > div")
+        |> length()
+
+      assert loaded_comment_count == 15
     end
 
     test "cancel button clears textarea content", %{

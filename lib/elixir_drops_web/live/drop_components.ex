@@ -171,76 +171,148 @@ defmodule ElixirDropsWeb.DropComponents do
   def drop(assigns) do
     ~H"""
     <div
-      class="text-sm md:text-base w-[93%] md:w-[96%] max-w-md md:max-w-xl lg:max-w-2xl mx-auto leading-[1.5] relative"
+      id={"sponsor-impressions-#{@drop.short_id}"}
+      class="text-sm md:text-base w-[93%] md:w-[96%] lg:max-w-[1020px] mx-auto leading-[1.5] relative lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 lg:items-start"
+      data-drop-id={@drop.short_id}
+      phx-hook="SponsorImpression"
       phx-mounted={JS.add_class("shadow-md shadow-[#c4c0c8]", to: ".header")}
     >
-      <div class="flex justify-between items-start">
-        <h1 class="font-[500] text-2xl md:text-4xl flex-1">{@drop.title}</h1>
-      </div>
+      <div class="w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto">
+        <div class="flex justify-between items-start">
+          <h1 class="font-[500] text-2xl md:text-4xl flex-1">{@drop.title}</h1>
+        </div>
 
-      <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
-        <img
-          src={@drop.user.avatar}
-          alt={@drop.user.github_username}
-          class="rounded-full h-12 w-12 object-cover"
-        />
-        <div>
-          <p class="mb-1">{@drop.user.github_username}</p>
-          <p class="text-[#696969] text-xs">
-            <.created_at drop={@drop} />
-          </p>
-        </div>
-      </div>
-      <!-- Action row below author's name -->
-      <div class="flex items-center justify-between py-4 border-b border-gray-200">
-        <div class="flex items-center gap-2 text-[#8E8E8E]">
-          <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-5 h-5" />
-          <span class="inline text-sm">
-            {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}
-          </span>
-        </div>
-        <!-- Right side: Action buttons -->
-        <div class="flex items-center gap-4">
-          <!-- Copy link button -->
-          <div
-            class="flex items-center gap-2 text-[#8E8E8E] hover:text-[#5947F1] cursor-pointer"
-            id={"single-drop-copy-link-#{@drop.id}"}
-            data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
-            phx-hook="CopyToClipboard"
-          >
-            <.icon name="hero-link" class="h-5 w-5" />
-            <span class="hidden md:inline text-sm">Copy link</span>
+        <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
+          <img
+            src={@drop.user.avatar}
+            alt={@drop.user.github_username}
+            class="rounded-full h-12 w-12 object-cover"
+          />
+          <div>
+            <p class="mb-1">{@drop.user.github_username}</p>
+            <p class="text-[#696969] text-xs">
+              <.created_at drop={@drop} />
+            </p>
           </div>
-          <!-- Three dots menu button -->
-          <button
-            class="text-[#797979] hover:text-[#5947F1] p-2"
-            id={"action-row-menu-btn-#{@drop.id}"}
-            phx-click={
-              JS.toggle(to: "#drop-menu-#{@drop.id}")
-              |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
-            }
-            type="button"
-          >
-            <Icons.three_dots_icon class="h-5 w-5" />
-          </button>
         </div>
+        <!-- Action row below author's name -->
+        <div class="flex items-center justify-between py-4 border-b border-gray-200">
+          <div class="flex items-center gap-2 text-[#8E8E8E]">
+            <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-5 h-5" />
+            <span class="inline text-sm">
+              {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}
+            </span>
+          </div>
+          <!-- Right side: Action buttons -->
+          <div class="flex items-center gap-4">
+            <!-- Copy link button -->
+            <div
+              class="flex items-center gap-2 text-[#8E8E8E] hover:text-[#5947F1] cursor-pointer"
+              id={"single-drop-copy-link-#{@drop.id}"}
+              data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
+              phx-hook="CopyToClipboard"
+            >
+              <.icon name="hero-link" class="h-5 w-5" />
+              <span class="hidden md:inline text-sm">Copy link</span>
+            </div>
+            <!-- Three dots menu button -->
+            <button
+              class="text-[#797979] hover:text-[#5947F1] p-2"
+              id={"action-row-menu-btn-#{@drop.id}"}
+              phx-click={
+                JS.toggle(to: "#drop-menu-#{@drop.id}")
+                |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
+              }
+              type="button"
+            >
+              <Icons.three_dots_icon class="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <a
+          id="appsignal-drop-banner"
+          href={~p"/go/appsignal/drop-banner"}
+          target="_blank"
+          rel="sponsored noopener"
+          aria-label="Sponsored by AppSignal: Slow Ecto Query? See The Exact Line. Start Free, No Card"
+          class="my-6 block rounded-2xl bg-[#18221c] px-5 py-4 text-white shadow-sm transition hover:bg-[#202d25] focus:outline-none focus:ring-2 focus:ring-[#5947F1] focus:ring-offset-2 sm:px-6"
+        >
+          <span class="mb-3 block text-[11px] font-medium uppercase tracking-[0.16em] text-[#cbd8bf]">
+            Sponsored
+          </span>
+          <span class="flex items-center gap-5">
+            <img
+              src={~p"/images/appsignal.svg"}
+              alt="AppSignal"
+              class="h-14 w-14 shrink-0 object-contain"
+            />
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-[#ebf1d9]">AppSignal</span>
+              <span class="mt-1 block text-lg font-medium leading-snug">
+                Slow Ecto Query? See The Exact Line.
+              </span>
+              <span class="mt-1 block text-sm leading-5 text-[#dce6d3]">
+                Trace Ecto queries to the line of code. Errors, traces, logs, BEAM metrics in one tool.
+              </span>
+            </span>
+            <span class="hidden shrink-0 rounded-lg bg-[#ebf1d9] px-4 py-2 text-sm font-medium text-[#18221c] sm:block">
+              Start Free, No Card
+            </span>
+          </span>
+          <span class="mt-4 block rounded-lg bg-[#ebf1d9] px-4 py-2 text-center text-sm font-medium text-[#18221c] sm:hidden">
+            Start Free, No Card
+          </span>
+        </a>
+
+        <div
+          class="leading-[1.6] grid w-full py-3 drop-full-content"
+          id="drop-body"
+          phx-hook="DropBodyContainer"
+        >
+          {to_html(@drop.body)}
+        </div>
+        <!-- Three-dots dropdown menu -->
+        <.drop_page_menu
+          id={@drop.id}
+          author?={@current_user && @current_user.id == @drop.user_id}
+          short_id={@drop.short_id}
+        />
+
+        <.copy_prompt />
       </div>
 
-      <div
-        class="leading-[1.6] grid w-full py-3 drop-full-content"
-        id="drop-body"
-        phx-hook="DropBodyContainer"
-      >
-        {to_html(@drop.body)}
-      </div>
-      <!-- Three-dots dropdown menu -->
-      <.drop_page_menu
-        id={@drop.id}
-        author?={@current_user && @current_user.id == @drop.user_id}
-        short_id={@drop.short_id}
-      />
-
-      <.copy_prompt />
+      <aside class="hidden lg:block" aria-label="Sponsored by AppSignal">
+        <a
+          id="appsignal-drop-sidebar"
+          href={~p"/go/appsignal/drop-sidebar"}
+          target="_blank"
+          rel="sponsored noopener"
+          aria-label="Sponsored by AppSignal: Phoenix Monitoring With BEAM Metrics No One Else Has. Try AppSignal Free"
+          class="flex h-[250px] w-[300px] flex-col rounded-2xl bg-[#18221c] p-4 text-white shadow-sm transition hover:bg-[#202d25] focus:outline-none focus:ring-2 focus:ring-[#5947F1] focus:ring-offset-2"
+        >
+          <span class="text-[11px] font-medium uppercase tracking-[0.16em] text-[#cbd8bf]">
+            Sponsored
+          </span>
+          <span class="mt-2 flex items-center gap-3">
+            <img
+              src={~p"/images/appsignal.svg"}
+              alt="AppSignal"
+              class="h-10 w-10 shrink-0 object-contain"
+            />
+            <span class="text-lg font-medium">AppSignal</span>
+          </span>
+          <span class="mt-2 block text-base font-medium leading-tight">
+            Phoenix Monitoring With BEAM Metrics No One Else Has
+          </span>
+          <span class="mt-1 block text-xs leading-4 text-[#dce6d3]">
+            Monitor Phoenix and LiveView end to end. Errors, performance, hosts and logs in one tool.
+          </span>
+          <span class="mt-auto block rounded-lg bg-[#ebf1d9] px-4 py-2 text-center text-sm font-medium text-[#18221c]">
+            Try AppSignal Free
+          </span>
+        </a>
+      </aside>
     </div>
     """
   end

@@ -1,5 +1,12 @@
 import Config
 
+config :elixir_drops,
+       :sponsor_qa_github_usernames,
+       System.get_env("SPONSOR_QA_GITHUB_USERNAMES", "")
+       |> String.split(",", trim: true)
+       |> Enum.map(&String.trim/1)
+       |> Enum.reject(&(&1 == ""))
+
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration

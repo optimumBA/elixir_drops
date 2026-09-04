@@ -1,5 +1,17 @@
 # ElixirDrops
 
+ElixirDrops is a Phoenix application for publishing and discovering Elixir tips.
+
+## Start here
+
+- [Local setup](#setup) and [checks](#contributing).
+- [Sponsor tracking and reporting](docs/sponsor-tracking.md) — measurement, QA, deployment checks and 30-day reporting.
+- [Campaign terms and current work](</Users/almirsarajcic/Library/Mobile Documents/com~apple~CloudDocs/Projects/ElixirDrops - What's next/README.md>).
+
+Folder map: `lib/` owns application and web code; `assets/` browser code and styles;
+`priv/` migrations and static files; `test/` automated checks; `config/` runtime
+configuration; `docs/` maintained operating procedures.
+
 ## Setup
 
 - install Elixir, Erlang and Node using [mise](https://mise.jdx.dev)
