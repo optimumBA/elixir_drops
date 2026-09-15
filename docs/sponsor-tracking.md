@@ -3,7 +3,8 @@
 [Start here](../README.md)
 
 The app owns AppSignal measurement. Campaign terms, approved creative and actual
-flight dates remain in the linked [campaign record](</Users/almirsarajcic/Library/Mobile Documents/com~apple~CloudDocs/Projects/ElixirDrops - What's next/artifacts/operations/sponsor-campaigns/appsignal-detail-page-2026.md>).
+flight dates are maintained privately by Optimum and are not part of this
+repository.
 
 ## What is counted
 

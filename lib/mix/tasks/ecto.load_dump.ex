@@ -1,8 +1,14 @@
 defmodule Mix.Tasks.Ecto.LoadDump do
-  @shortdoc "Loads sanitized_data.dump for local development"
+  @shortdoc "Loads priv/repo/sanitized_data.dump when present"
 
   @moduledoc """
-  Loads sanitized_data.dump for local development.
+  Loads `priv/repo/sanitized_data.dump` into the development database when that
+  file is present.
+
+  No dump is distributed with the source. `mix setup` skips this step when the
+  file is absent and continues with migrations and seeds, so a first run starts
+  from an empty database. Maintainers generate a dump with
+  `priv/repo/sanitize_prod_data.exs` and keep it out of version control.
   """
 
   use Mix.Task

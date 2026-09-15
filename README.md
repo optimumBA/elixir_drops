@@ -15,7 +15,7 @@ data, credentials or private campaign records.
 
 ## What is included
 
-- Drop publishing, discovery, search, bookmarks and comments.
+- Drop publishing, discovery, search and comments.
 - GitHub authentication.
 - Markdown rendering and generated social-preview images.
 - Sponsor placement measurement and reporting.
@@ -37,6 +37,10 @@ data, credentials or private campaign records.
 4. Run `mix setup`.
 5. Run `mix phx.server`.
 6. Open [localhost:4000](http://localhost:4000).
+
+`mix setup` creates the database, runs the migrations and loads the seeds. No
+database dump is distributed with the source, so a first run starts with no
+Drops and no user accounts; sign in through GitHub and create your own.
 
 GitHub OAuth and object storage are required for their corresponding production
 features. Local development that does not exercise those integrations can leave

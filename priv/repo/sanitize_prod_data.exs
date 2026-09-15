@@ -99,4 +99,14 @@ IO.puts("\nNext steps:")
 IO.puts("1. Create sanitized dump:")
 IO.puts("   pg_dump -Fc --no-owner elixir_drops_dev > elixir_drops_sanitized.dump")
 IO.puts("2. Upload dump to Tigris at path: _db/elixir_drops_sanitized.dump")
-IO.puts("\nNote: Drop data (code snippets, titles, screenshots) are preserved as-is.")
+
+IO.puts("""
+
+Note: this script pseudonymizes users; it does not anonymize them. It rewrites
+email, name, github_username and avatar and deletes every row in users_tokens,
+but github_id is left intact and still identifies a real GitHub account. Drop
+data (code snippets, titles, screenshots) is preserved as-is and remains
+reserved content. A dump produced here therefore carries identifiable people and
+published Drop content: keep it out of version control and out of any public
+distribution.
+""")

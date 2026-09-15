@@ -62,3 +62,6 @@ opencode.json
 
 AGENTS.md
 CLAUDE.md
+
+# Local sanitized database dumps are not distributed with the public source.
+priv/repo/*.dump

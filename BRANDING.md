@@ -11,7 +11,9 @@ The reserved ElixirDrops identity includes:
 - the `elixirdrops.net` domain;
 - `priv/static/images/logo.png`, `priv/static/images/mark.svg`, and
   `priv/static/favicon.ico`;
-- published Drop content, production data, and social accounts.
+- published Drop content, production data, and social accounts. Neither published
+  Drop content nor any production or sanitized database extract is distributed in
+  this repository.
 
 Forks and public deployments must use their own name, logo, visual identity,
 domain, content, credentials, and data. Replace the files listed above rather
