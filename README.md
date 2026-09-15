@@ -1,41 +1,86 @@
 # ElixirDrops
 
-ElixirDrops is a Phoenix application for publishing and discovering Elixir tips.
+This is the Phoenix application behind
+[elixirdrops.net](https://elixirdrops.net), a collection of short, practical
+Elixir, Phoenix and OTP tips. The repository is published as a
+reference for people who want to study or run the application themselves. It
+contains the web application and its development workflows, but not production
+data, credentials or private campaign records.
 
-## Start here
+> [!NOTE]
+> **Open source, closed contribution.** The source code is available under the
+> Apache License 2.0. This repository does not accept issues or pull requests and
+> is not a public support channel. You are welcome to study the code, fork it and
+> adapt it under the license.
 
-- [Local setup](#setup) and [checks](#contributing).
-- [Sponsor tracking and reporting](docs/sponsor-tracking.md) — measurement, QA, deployment checks and 30-day reporting.
-- [Campaign terms and current work](</Users/almirsarajcic/Library/Mobile Documents/com~apple~CloudDocs/Projects/ElixirDrops - What's next/README.md>).
+## What is included
 
-Folder map: `lib/` owns application and web code; `assets/` browser code and styles;
-`priv/` migrations and static files; `test/` automated checks; `config/` runtime
-configuration; `docs/` maintained operating procedures.
+- Drop publishing, discovery, search, bookmarks and comments.
+- GitHub authentication.
+- Markdown rendering and generated social-preview images.
+- Sponsor placement measurement and reporting.
 
-## Setup
+## Local setup
 
-- install Elixir, Erlang and Node using [mise](https://mise.jdx.dev)
-  - install mise using either `curl https://mise.run | sh` or `brew install mise`
-  - make sure to activate it
-  - run `mise install`
-- install Tidewave MCP Proxy (https://elixirdrops.net/d/UAo4BtYi)
-- start PostgreSQL server
-- set environment variables in `.env` (see: [.env.sample](.env.sample))
-- run `mix setup`
-- start Phoenix server with `mix phx.server`
+### Requirements
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+- Elixir, Erlang and Node versions from [`.tool-versions`](.tool-versions),
+  installed with [mise](https://mise.jdx.dev) or equivalent tools.
+- PostgreSQL.
 
-## Docs
+### Start the application
 
-- execute `mix docs --formatter html --open`
+1. Install the required runtimes with `mise install`.
+2. Start PostgreSQL.
+3. Copy [`.env.sample`](.env.sample) to `.env` and provide the values needed for
+   the integrations you want to use.
+4. Run `mix setup`.
+5. Run `mix phx.server`.
+6. Open [localhost:4000](http://localhost:4000).
 
-It will open documentation in your browser.
+GitHub OAuth and object storage are required for their corresponding production
+features. Local development that does not exercise those integrations can leave
+their sample values unset.
 
-## Running tests
+Tidewave users can follow the current
+[MCP proxy setup](https://elixirdrops.net/d/UAo4BtYi).
 
-- run `mix coveralls` or `mix coveralls.html`
+## Checks
 
-## Contributing
+Run the complete project gate before committing:
 
-Make sure to execute `make ci` in order to run all the checks before committing the code.
+```sh
+make ci
+```
+
+For a coverage report, run `mix coveralls` or `mix coveralls.html`. Generate the
+Elixir documentation with `mix docs --formatter html --open`.
+
+## Operations documentation
+
+- [Sponsor tracking and reporting](docs/sponsor-tracking.md) explains what is
+  measured, how QA traffic is excluded and how delivery reports are produced.
+
+These documents describe the implementation and verification procedures. They
+do not authorize access to the hosted service or changes to its production
+infrastructure.
+
+## License and product identity
+
+The source code is licensed under the [Apache License 2.0](LICENSE). The license
+does not grant permission to operate a modified service as ElixirDrops.
+
+Forks and public deployments must use their own name, logo, visual identity,
+domain, content, credentials and data. The ElixirDrops name, logo and associated
+brand assets are not licensed under Apache-2.0. You may refer to ElixirDrops only
+as reasonably necessary to describe the origin of the software. See
+[Product identity](BRANDING.md) for the exact boundary.
+
+## Project map
+
+- `lib/` contains the application and web code.
+- `assets/` contains browser code and styles.
+- `priv/` contains migrations and static files.
+- `test/` contains automated checks and support code.
+- `config/` contains compile-time and runtime configuration.
+- `docs/` contains maintained operational documentation.
