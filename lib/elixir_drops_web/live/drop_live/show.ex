@@ -12,9 +12,11 @@ defmodule ElixirDropsWeb.DropLive.Show do
   alias ElixirDropsWeb.DropComponents
   alias ElixirDropsWeb.NotificationHelpers
 
-  @consecutive_whitespace_regex ~r/\s+/
   @images_regex ~r/!\[([^\]]*)\]\([^\)]+\)/
   @links_regex ~r/\[([^\]]+)\]\(([^\)]+)\)/
+  @code_blocks_regex ~r/```[\s\S]*?```/
+  @html_tags_regex ~r/<[^>]*>/
+  @description_max_length 160
 
   # Connection-only work lives here: on a resumed warm connect mount/3 and
   # handle_params/3 are skipped, so subscribing in handle_params/3 behind
@@ -288,16 +290,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp assign_seo_attributes(socket) do
     %{drop: drop} = socket.assigns
 
-    description =
-      drop.title
-      |> Phoenix.HTML.html_escape()
-      |> Phoenix.HTML.safe_to_string()
-      |> seo_description()
+    description = seo_description(drop)
 
     attributes = %{
       description: description,
       image_url: get_image_url(drop),
       type: "article",
+      canonical_url: url(~p"/d/#{drop.short_id}"),
       url: url(~p"/d/#{drop.short_id}")
     }
 
@@ -309,29 +308,48 @@ defmodule ElixirDropsWeb.DropLive.Show do
 
   defp get_image_url(_drop), do: nil
 
-  defp seo_description(title) do
-    description =
-      title
-      |> remove_images()
-      |> replace_links()
-      |> String.trim()
-      |> String.split(".")
-      |> Enum.at(0)
+  defp seo_description(drop) do
+    title = plain_text(drop.title)
+    summary = plain_text(drop.body)
 
-    String.pad_trailing(description, String.length(description) + 3, ".")
+    description =
+      case summary do
+        "" -> title
+        _summary -> title <> " — " <> summary
+      end
+
+    if String.length(description) > @description_max_length do
+      String.slice(description, 0, @description_max_length - 3) <> "..."
+    else
+      description
+    end
+  end
+
+  defp plain_text(markdown) do
+    markdown
+    |> remove_code_blocks()
+    |> remove_images()
+    |> replace_links()
+    |> remove_html_tags()
+    |> String.replace(~r/`([^`]+)`/, "\\1")
+    |> String.replace(~r/(\*\*|__)(.*?)\1/, "\\2")
+    |> String.replace(~r/(?<!\w)\*([^\*]+)\*(?!\w)/, "\\1")
+    |> String.replace(~r/(?<!\w)_([^_]+)_(?!\w)/, "\\1")
+    |> String.replace("~~", "")
+    |> String.replace(~r/^\s{0,3}#+\s+/m, "")
+    |> String.replace(~r/\s+/, " ")
+    |> String.trim()
   end
 
   defp replace_links(markdown) do
-    Regex.replace(
-      @links_regex,
-      markdown,
-      fn _other, description, _url -> description end
-    )
+    Regex.replace(@links_regex, markdown, fn _match, description, _url -> description end)
   end
 
   defp remove_images(markdown) do
-    @images_regex
-    |> Regex.replace(markdown, "")
-    |> String.replace(@consecutive_whitespace_regex, " ")
+    Regex.replace(@images_regex, markdown, "")
   end
+
+  defp remove_code_blocks(markdown), do: Regex.replace(@code_blocks_regex, markdown, " ")
+
+  defp remove_html_tags(markdown), do: Regex.replace(@html_tags_regex, markdown, " ")
 end

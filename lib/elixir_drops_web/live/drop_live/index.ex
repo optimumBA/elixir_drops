@@ -25,6 +25,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:new_drops?, false)
      |> assign(:page, 1)
      |> assign(:page_title, "ElixirDrops")
+     |> assign(:seo_attributes, %{canonical_url: url(~p"/")})
      |> assign(:search_query, "")
      |> assign(:searching, false)
      |> assign(:viewport_height, nil)

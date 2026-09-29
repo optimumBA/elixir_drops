@@ -19,7 +19,7 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponentsTest do
                "<meta name=\"twitter:site\" content=\"@optimumBA\">\n"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: assigns) =~
-               "<meta property=\"description\" content=\"Test description\">\n"
+               "<meta name=\"description\" content=\"Test description\">\n"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: assigns) =~
                "<meta property=\"og:description\" content=\"Test description\">\n"
@@ -45,7 +45,7 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponentsTest do
                "<meta name=\"twitter:url\" content=\"#{url(~p"/")}\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
-               "<meta property=\"description\" content=\"Share Elixir tips and tricks with the community...\">"
+               "<meta name=\"description\" content=\"Share Elixir tips and tricks with the community...\">"
 
       assert render_component(&SeoMetaTagsComponent.seo_meta_tags/1, attributes: nil) =~
                "<meta property=\"og:description\" content=\"Share Elixir tips and tricks with the community...\">"

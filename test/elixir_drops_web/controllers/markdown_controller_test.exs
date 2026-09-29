@@ -18,6 +18,10 @@ defmodule ElixirDropsWeb.MarkdownControllerTest do
              |> get_resp_header("content-type")
              |> Enum.join() =~ "text/markdown"
 
+      assert [canonical_link] = get_resp_header(conn, "link")
+      assert canonical_link =~ "/d/#{drop.short_id}"
+      assert canonical_link =~ ~s(rel="canonical")
+
       assert response(conn, 200) =~ "# #{drop.title}"
       assert response(conn, 200) =~ drop.body
       assert get_resp_header(conn, "cache-control") == ["public, max-age=300"]
@@ -102,6 +106,10 @@ defmodule ElixirDropsWeb.MarkdownControllerTest do
       assert conn
              |> get_resp_header("content-type")
              |> Enum.join() =~ "text/markdown"
+
+      assert [canonical_link] = get_resp_header(conn, "link")
+      assert canonical_link =~ "/archive"
+      assert canonical_link =~ ~s(rel="canonical")
 
       response_body = response(conn, 200)
       assert response_body =~ "# ElixirDrops"

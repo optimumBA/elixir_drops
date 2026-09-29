@@ -17,6 +17,8 @@ defmodule ElixirDropsWeb.MarkdownController do
 
   @spec index(conn(), params()) :: conn()
   def index(conn, _params) do
+    conn = put_html_canonical(conn, url(~p"/archive"))
+
     # Cache-first pattern: Check cache before hitting database
     case MarkdownCache.get_cached_index_content() do
       {:hit, cached_content} ->
@@ -29,6 +31,8 @@ defmodule ElixirDropsWeb.MarkdownController do
 
   @spec show(conn(), params()) :: conn()
   def show(conn, %{"short_id" => short_id}) do
+    conn = put_html_canonical(conn, url(~p"/d/#{short_id}"))
+
     # Cache-first pattern: Check cache before hitting database
     case MarkdownCache.get_cached_drop_content(short_id) do
       {:hit, cached_content} ->
@@ -48,6 +52,10 @@ defmodule ElixirDropsWeb.MarkdownController do
     |> put_resp_header("cache-control", "public, max-age=300")
     |> put_resp_header("x-content-type-options", "nosniff")
     |> text(content)
+  end
+
+  defp put_html_canonical(conn, canonical_url) do
+    put_resp_header(conn, "link", "<#{canonical_url}>; rel=\"canonical\"")
   end
 
   @spec handle_cache_miss_for_drop(conn(), short_id()) :: conn()

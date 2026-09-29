@@ -33,6 +33,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~ "Sign in with GitHub"
       assert html =~ "Welcome to ElixirDrops!"
+      assert html =~ "<link rel=\"canonical\" href=\"#{url(~p"/")}\"/>"
     end
 
     test "hides the welcome banner when the show_welcome_message cookie is false", %{conn: conn} do
@@ -477,9 +478,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
       user: user
     } do
       {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+      description = "#{drop.title} — Drop body text ..."
 
       assert html =~ "<meta name=\"twitter:card\" content=\"summary_large_image\"/>"
-      assert html =~ "<meta name=\"twitter:description\" content=\"#{drop.title}...\"/>"
+      assert html =~ "<meta name=\"twitter:description\" content=\"#{description}\"/>"
 
       assert html =~
                "<meta name=\"twitter:image\" content=\"#{url(~p"/images/seo_default_image.png")}\"/>"
@@ -490,10 +492,12 @@ defmodule ElixirDropsWeb.DropLiveTest do
                "<meta name=\"twitter:url\" content=\"#{url(~p"/d/#{drop.short_id}")}\"/>"
 
       assert html =~
-               "<meta property=\"description\" content=\"#{drop.title}...\"/>"
+               "<meta name=\"description\" content=\"#{description}\"/>"
+
+      refute html =~ "<meta property=\"description\""
 
       assert html =~
-               "<meta property=\"og:description\" content=\"#{drop.title}...\"/>"
+               "<meta property=\"og:description\" content=\"#{description}\"/>"
 
       assert html =~
                "<meta property=\"og:image\" content=\"#{url(~p"/images/seo_default_image.png")}\"/>"
@@ -503,6 +507,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       assert html =~
                "<meta property=\"og:url\" content=\"#{url(~p"/d/#{drop.short_id}")}\"/>"
+
+      assert html =~
+               "<link rel=\"canonical\" href=\"#{url(~p"/d/#{drop.short_id}")}\"/>"
 
       {:ok, _updated_drop} =
         Drops.update_drop(drop, user, %{
@@ -527,7 +534,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       user: user
     } do
       drop_attributes = %{
-        description: "Drop body",
+        body: "This **safe** summary uses `updated_at` and [docs](https://example.com).",
         title: "[In this drop](/good_drop) we discussed stuff"
       }
 
@@ -544,13 +551,29 @@ defmodule ElixirDropsWeb.DropLiveTest do
       {:ok, _live, html} = live(conn, ~p"/d/#{updated_drop.short_id}")
 
       assert html =~
-               "<meta property=\"description\" content=\"In this drop we discussed stuff...\"/>"
+               "<meta name=\"description\" content=\"In this drop we discussed stuff — This safe summary uses updated_at and docs.\"/>"
 
       assert html =~
-               "<meta property=\"og:description\" content=\"In this drop we discussed stuff...\"/>"
+               "<meta property=\"og:description\" content=\"In this drop we discussed stuff — This safe summary uses updated_at and docs.\"/>"
 
       assert html =~
-               "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff...\"/>"
+               "<meta name=\"twitter:description\" content=\"In this drop we discussed stuff — This safe summary uses updated_at and docs.\"/>"
+    end
+
+    test "plain description keeps punctuation in code names and escapes user text", %{
+      conn: conn,
+      user: user
+    } do
+      drop =
+        drop_fixture(%Drop{}, user, %{
+          body: "Call `File.cd!` to change folders & keep `Repo.update_all/3` names intact.",
+          title: "Use `File.cd!/1` with `updated_at`"
+        })
+
+      {:ok, _live, html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      assert html =~
+               "<meta name=\"description\" content=\"Use File.cd!/1 with updated_at — Call File.cd! to change folders &amp; keep Repo.update_all/3 names intact.\"/>"
     end
 
     test "rendered HTML includes structured data for drop", %{

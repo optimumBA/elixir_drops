@@ -27,6 +27,7 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
       |> assign_title()
       |> assign_type()
       |> assign_url()
+      |> assign_canonical_url()
 
     ~H"""
     <.open_graph_meta_tags
@@ -36,7 +37,7 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
       type={@type}
       url={@url}
     />
-    <.other_meta_tags description={@description} />
+    <.other_meta_tags canonical_url={@canonical_url} description={@description} />
     <.twitter_meta_tags
       description={@description}
       image_url={@image_url}
@@ -85,6 +86,13 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
     end)
   end
 
+  defp assign_canonical_url(assigns) do
+    assign_new(assigns, :canonical_url, fn
+      %{attributes: %{canonical_url: canonical_url}} -> canonical_url
+      _assigns -> nil
+    end)
+  end
+
   attr :description, :string, required: true
   attr :image_url, :string, required: true
   attr :title, :string, required: true
@@ -101,11 +109,13 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponent do
     """
   end
 
+  attr :canonical_url, :string, default: nil
   attr :description, :string, required: true
 
   defp other_meta_tags(assigns) do
     ~H"""
-    <meta property="description" content={@description} />
+    <meta name="description" content={@description} />
+    <link :if={@canonical_url} rel="canonical" href={@canonical_url} />
     """
   end
 

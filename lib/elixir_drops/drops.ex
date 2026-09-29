@@ -150,7 +150,7 @@ defmodule ElixirDrops.Drops do
   @spec list_all_drops() :: [drop()]
   def list_all_drops do
     Drop
-    |> from(order_by: [desc: :inserted_at])
+    |> from(order_by: [desc: :inserted_at, desc: :id])
     |> preload(:user)
     |> Repo.all()
     |> Enum.map(&truncate_body_for_index/1)

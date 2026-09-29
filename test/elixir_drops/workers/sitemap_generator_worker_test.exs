@@ -24,9 +24,15 @@ defmodule ElixirDrops.Workers.SitemapGeneratorWorkerTest do
       assert String.ends_with?(path, "sitemap.xml")
     end
 
-    test "handles non-existent drop_id" do
-      assert {:error, "Drop not found"} =
-               perform_job(SitemapGeneratorWorker, %{"drop_id" => Ecto.UUID.generate()})
+    test "regenerates the current sitemap when a queued drop has been removed" do
+      user = user_fixture()
+      drop = drop_fixture(user)
+      ElixirDrops.Repo.delete!(drop)
+
+      assert {:ok, path} =
+               perform_job(SitemapGeneratorWorker, %{"drop_id" => drop.id})
+
+      refute File.read!(path) =~ "/d/#{drop.short_id}"
     end
 
     test "handles file system errors" do
@@ -36,6 +42,7 @@ defmodule ElixirDrops.Workers.SitemapGeneratorWorkerTest do
       sitemap_dir = Path.join([:code.priv_dir(:elixir_drops), "static"])
       File.mkdir_p!(sitemap_dir)
       File.chmod!(sitemap_dir, 0o444)
+      on_exit(fn -> File.chmod!(sitemap_dir, 0o755) end)
 
       assert {:error, _reason} = perform_job(SitemapGeneratorWorker, %{drop_id: drop.id})
 
@@ -43,9 +50,11 @@ defmodule ElixirDrops.Workers.SitemapGeneratorWorkerTest do
       File.chmod!(sitemap_dir, 0o755)
     end
 
-    test "handles invalid drop_id format" do
-      assert {:error, "Drop not found"} =
+    test "regenerates the current sitemap when a queued id is invalid" do
+      assert {:ok, path} =
                perform_job(SitemapGeneratorWorker, %{"drop_id" => Ecto.UUID.generate()})
+
+      assert File.exists?(path)
     end
 
     test "generates full sitemap when no drop_id provided" do

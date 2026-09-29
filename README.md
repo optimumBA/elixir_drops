@@ -15,7 +15,7 @@ data, credentials or private campaign records.
 
 ## What is included
 
-- Drop publishing, discovery, search and comments.
+- Drop publishing, latest-drop discovery, an all-drops archive, search and comments.
 - GitHub authentication.
 - Markdown rendering and generated social-preview images.
 - Sponsor placement measurement and reporting.
@@ -64,6 +64,8 @@ Elixir documentation with `mix docs --formatter html --open`.
 
 - [Sponsor tracking and reporting](docs/sponsor-tracking.md) explains what is
   measured, how QA traffic is excluded and how delivery reports are produced.
+- [Search and archive pages](docs/seo.md) describes the complete HTML archive,
+  Markdown equivalents, canonical metadata and sitemap lifecycle.
 
 These documents describe the implementation and verification procedures. They
 do not authorize access to the hosted service or changes to its production

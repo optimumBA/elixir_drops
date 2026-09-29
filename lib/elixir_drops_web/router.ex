@@ -54,6 +54,12 @@ defmodule ElixirDropsWeb.Router do
   end
 
   scope "/", ElixirDropsWeb do
+    pipe_through :browser
+
+    get "/archive", ArchiveController, :index
+  end
+
+  scope "/", ElixirDropsWeb do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :require_authenticated_user,

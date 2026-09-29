@@ -9,25 +9,14 @@ defmodule ElixirDrops.Sitemap do
   alias ElixirDrops.Drops.Drop
 
   @doc """
-  Generates or updates the sitemap.
-  When called with a drop, it updates the sitemap with that drop.
-  When called without arguments, it generates a new sitemap with all drops.
+  Regenerates the sitemap from the current public collection.
+
+  Rebuilding keeps new, edited, and removed drops in the same newest-first
+  order and prevents a publication from being appended after older entries.
   Returns {:ok, path} on success or {:error, reason} on failure.
   """
   @spec generate(Drop.t()) :: {:ok, String.t()} | {:error, String.t()}
-  def generate(drop) do
-    with sitemap_dir <- Path.join([:code.priv_dir(:elixir_drops), "static"]),
-         :ok <- File.mkdir_p(sitemap_dir),
-         sitemap_path <- Path.join([sitemap_dir, "sitemap.xml"]) do
-      case {drop, File.exists?(sitemap_path)} do
-        {_drop, false} ->
-          generate_full_sitemap(sitemap_path)
-
-        {drop, true} ->
-          update_sitemap_with_drop(drop, sitemap_path)
-      end
-    end
-  end
+  def generate(%Drop{}), do: generate_full()
 
   @doc """
   Generates a full sitemap with all drops.
@@ -35,18 +24,26 @@ defmodule ElixirDrops.Sitemap do
   """
   @spec generate_full() :: {:ok, String.t()} | {:error, String.t()}
   def generate_full do
-    with sitemap_dir <- Path.join([:code.priv_dir(:elixir_drops), "static"]),
-         :ok <- File.mkdir_p(sitemap_dir),
-         sitemap_path <- Path.join([sitemap_dir, "sitemap.xml"]) do
-      generate_full_sitemap(sitemap_path)
+    sitemap_dir = Path.join([:code.priv_dir(:elixir_drops), "static"])
+
+    case File.mkdir_p(sitemap_dir) do
+      :ok ->
+        sitemap_path = Path.join([sitemap_dir, "sitemap.xml"])
+
+        :global.trans({{__MODULE__, sitemap_path}, self()}, fn ->
+          generate_full_sitemap(sitemap_path)
+        end)
+
+      {:error, reason} ->
+        {:error, "Failed to create sitemap directory: #{inspect(reason)}"}
     end
   end
 
   defp generate_full_sitemap(sitemap_path) do
-    drops = Drops.list_drops(%{}, 10_000)
+    drops = Drops.list_all_drops()
     sitemap_content = generate_sitemap_content(drops)
 
-    case File.write(sitemap_path, sitemap_content) do
+    case atomic_write(sitemap_path, sitemap_content) do
       :ok ->
         {:ok, sitemap_path}
 
@@ -55,14 +52,16 @@ defmodule ElixirDrops.Sitemap do
     end
   end
 
-  defp update_sitemap_with_drop(drop, sitemap_path) do
-    with {:ok, content} <- File.read(sitemap_path),
-         updated_content <- update_sitemap_content(content, drop),
-         :ok <- File.write(sitemap_path, updated_content) do
-      {:ok, sitemap_path}
-    else
-      {:error, reason} ->
-        {:error, "Failed to update sitemap file: #{inspect(reason)}"}
+  defp atomic_write(path, content) do
+    temp_path = path <> ".#{System.unique_integer([:positive, :monotonic])}.tmp"
+
+    try do
+      case File.write(temp_path, content, [:binary, :exclusive]) do
+        :ok -> File.rename(temp_path, path)
+        {:error, reason} -> {:error, reason}
+      end
+    after
+      File.rm(temp_path)
     end
   end
 
@@ -74,6 +73,11 @@ defmodule ElixirDrops.Sitemap do
       <loc>#{escape_xml(url(~p"/"))}</loc>
       <changefreq>daily</changefreq>
       <priority>1.0</priority>
+    </url>
+    <url>
+      <loc>#{escape_xml(url(~p"/archive"))}</loc>
+      <changefreq>weekly</changefreq>
+      <priority>0.9</priority>
     </url>
     #{drops_elements(drops)}
     </urlset>
@@ -107,17 +111,5 @@ defmodule ElixirDrops.Sitemap do
     |> String.replace(">", "&gt;")
     |> String.replace("\"", "&quot;")
     |> String.replace("'", "&apos;")
-  end
-
-  defp update_sitemap_content(content, drop) do
-    drop_element = drop_element(drop)
-    drop_url = url(~p"/d/#{drop.short_id}")
-
-    if String.contains?(content, drop_url) do
-      pattern = ~r(<url>\s*<loc>#{Regex.escape(drop_url)}</loc>.*?</url>)s
-      String.replace(content, pattern, drop_element)
-    else
-      String.replace(content, "</urlset>", "#{drop_element}\n</urlset>")
-    end
   end
 end

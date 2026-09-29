@@ -1,0 +1,44 @@
+<Layouts.app flash={@flash}>
+  <div class="mx-auto max-w-3xl px-6 py-8 sm:px-8">
+    <header class="mb-10 flex items-center justify-between gap-4">
+      <.link href={~p"/"} aria-label="ElixirDrops home">
+        <Icons.elixir_drops_logo class="w-32 md:w-48" />
+      </.link>
+      <.link href={~p"/"} class="text-sm font-medium text-[#656565] hover:text-[#5947F1]">
+        Latest drops
+      </.link>
+    </header>
+
+    <section>
+      <h1 class="text-3xl font-semibold text-[#252525]">All drops</h1>
+      <p :if={@groups == []} class="mt-8 text-[#656565]">No drops have been published yet.</p>
+
+      <section :for={group <- @groups} class="mt-9">
+        <h2 class="border-b border-[#e8e6ee] pb-2 text-lg font-medium text-[#4f4f4f]">
+          {group.label}
+        </h2>
+        <ul class="divide-y divide-[#f0eff3]">
+          <li
+            :for={drop <- group.drops}
+            class="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:gap-3"
+          >
+            <.link
+              href={~p"/d/#{drop.short_id}"}
+              class="font-medium text-[#4F42D2] hover:underline"
+            >
+              {drop.title}
+            </.link>
+            <div class="flex flex-wrap gap-x-2 text-xs text-[#777]">
+              <time datetime={NaiveDateTime.to_iso8601(drop.inserted_at)}>
+                {Calendar.strftime(drop.inserted_at, "%b %d, %Y")}
+              </time>
+              <span :if={drop.user && drop.user.github_username}>
+                · {drop.user.github_username}
+              </span>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </section>
+  </div>
+</Layouts.app>
