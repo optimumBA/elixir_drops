@@ -27,6 +27,16 @@ defmodule ElixirDropsWeb.DropsListHelper do
   attr :searching, :boolean, default: false
   attr :show_user_drops?, :boolean, default: false
 
+  @sponsor_dom_id "sponsor-dnsimple-homepage-feed"
+
+  @doc """
+  Stream `dom_id` for a feed with an optional sponsor entry (see
+  `assign_drops/1`).
+  """
+  @spec stream_dom_id(map()) :: String.t()
+  def stream_dom_id(%{sponsor: "dnsimple"}), do: @sponsor_dom_id
+  def stream_dom_id(%{id: id}), do: "drop-#{id}"
+
   @spec drops_list(assigns()) :: rendered()
   def drops_list(assigns) do
     # Check if we're searching and have no results
@@ -83,21 +93,25 @@ defmodule ElixirDropsWeb.DropsListHelper do
             </div>
           </div>
           <div
-            :for={{dom_id, drop} <- @drops}
+            :for={{dom_id, item} <- @drops}
             id={dom_id}
-            phx-click={JS.navigate(~p"/d/#{drop.short_id}")}
-            class="masonry-item cursor-pointer relative"
-            role="link"
+            phx-click={match?(%Drop{}, item) && JS.navigate(~p"/d/#{item.short_id}")}
+            class={["masonry-item relative", match?(%Drop{}, item) && "cursor-pointer"]}
+            role={match?(%Drop{}, item) && "link"}
           >
-            <div class="relative">
+            <div :if={match?(%{sponsor: "dnsimple"}, item)} class="relative">
+              <DropComponents.dnsimple_sponsor_card />
+            </div>
+
+            <div :if={match?(%Drop{}, item)} class="relative">
               <DropComponents.drop_card
-                drop={drop}
+                drop={item}
                 show_card_menu?={true}
                 user_id={@current_user && @current_user.id}
               />
 
               <div
-                :if={drop.screenshot && drop.screenshot.status == :pending}
+                :if={item.screenshot && item.screenshot.status == :pending}
                 class="absolute inset-0 bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center z-10"
               >
                 <DropComponents.loading_spinner id="loading-spinner" />
@@ -147,14 +161,28 @@ defmodule ElixirDropsWeb.DropsListHelper do
   def assign_drops(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
     drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
+    sponsor_feed? = sponsor_feed?(socket, drops)
 
     socket
     |> assign_drop_cursor(drops, socket.assigns.search_query)
-    |> Phoenix.LiveView.stream(:drops, drops, reset: true)
+    |> Phoenix.LiveView.stream(:drops, with_sponsor(drops, sponsor_feed?), reset: true)
     |> assign(:drops_empty?, Enum.empty?(drops))
     |> assign(:end_of_timeline?, false)
     |> assign(:loading_more, false)
   end
+
+  # The Sponsor Link is a stream entry placed after the first organic Drop of
+  # page one. Only a reset (this function) adds it, so pagination appends and
+  # reconnect/refresh resets can never duplicate it. Opt-in per LiveView via
+  # `:sponsor_feed?`; never during search or for an empty feed.
+  defp sponsor_feed?(socket, drops) do
+    socket.assigns[:sponsor_feed?] == true and
+      socket.assigns[:search_query] in [nil, ""] and
+      drops != []
+  end
+
+  defp with_sponsor(drops, true), do: List.insert_at(drops, 1, %{sponsor: "dnsimple"})
+  defp with_sponsor(drops, false), do: drops
 
   @spec maybe_insert_drops(socket()) :: socket()
   def maybe_insert_drops(socket) do

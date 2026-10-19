@@ -15,7 +15,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
+     |> stream_configure(:drops, dom_id: &DropsListHelper.stream_dom_id/1)
      |> assign(:batch_size, 15)
      |> assign(:drop_filters, %{screenshot_status: [:completed, :skipped]})
      |> assign(:drops_empty?, true)
@@ -25,6 +25,7 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:new_drops?, false)
      |> assign(:page, 1)
      |> assign(:page_title, "ElixirDrops")
+     |> assign(:sponsor_feed?, true)
      |> assign(:seo_attributes, %{canonical_url: url(~p"/")})
      |> assign(:search_query, "")
      |> assign(:searching, false)
@@ -64,7 +65,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
         |> Map.put(:relevance_rank, {1, search_query})
         |> Map.put(:search, search_query)
       else
-        Map.delete(current_filters, :search)
+        # Clearing a search must also drop its relevance cursor, otherwise the
+        # next unfiltered list query is anchored to the old search and is blank.
+        Map.drop(current_filters, [:search, :relevance_rank])
       end
 
     assign(socket, :drop_filters, filters)

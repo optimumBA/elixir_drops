@@ -86,6 +86,50 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  @spec dnsimple_sponsor_card(assigns()) :: rendered()
+  def dnsimple_sponsor_card(assigns) do
+    ~H"""
+    <a
+      id="dnsimple-homepage-feed"
+      href="https://blog.dnsimple.com/2026/10/making-dns-erlang-fast/"
+      target="_blank"
+      rel="sponsored noopener"
+      aria-label="Sponsored by DNSimple: Making dns_erlang Fast: Binary Tricks for the BEAM"
+      class="block no-underline focus:outline-none focus:ring-2 focus:ring-[#5947F1] focus:ring-offset-2 rounded-2xl"
+    >
+      <div class="drop-card">
+        <div class="drop-content">
+          <div class="mb-3 flex items-center gap-3">
+            <img
+              src={~p"/images/dnsimple-logomark-classic.svg"}
+              alt="DNSimple"
+              class="h-10 w-10 shrink-0 object-contain"
+            />
+            <span class="rounded border border-[#d1d5db] bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-medium leading-4 text-[#6b7280]">
+              Sponsored
+            </span>
+          </div>
+          <h3 class="drop-title">Making dns_erlang Fast: Binary Tricks for the BEAM</h3>
+          <div class="drop-body">
+            Binary parsing and encoding patterns from DNSimple’s Erlang DNS library.
+          </div>
+          <p class="mb-4 text-sm font-medium text-[#5947F1]">
+            Read the article <span aria-hidden="true">→</span>
+          </p>
+          <div class="drop-meta">
+            <img
+              src={~p"/images/dnsimple-logomark-classic.svg"}
+              alt=""
+              class="user-avatar"
+            />
+            <p class="text-xs text-[#868686]">DNSimple · Sponsor</p>
+          </div>
+        </div>
+      </div>
+    </a>
+    """
+  end
+
   attr :drop, Drop, required: true
   attr :open_menus, :map, default: %{}
   attr :show_card_menu?, :boolean, default: false
