@@ -22,6 +22,6 @@ defmodule ElixirDrops.Sponsors.SponsorEvent do
     sponsor_event
     |> cast(attrs, [:sponsor, :placement, :kind])
     |> validate_required([:sponsor, :placement, :kind])
-    |> validate_inclusion(:kind, ["impression", "click"])
+    |> validate_inclusion(:kind, ["impression", "visible_impression", "click"])
   end
 end

@@ -1,6 +1,8 @@
 defmodule ElixirDropsWeb.Features.SponsorTrackingTest do
   use ElixirDropsWeb.FeatureCase, async: false
 
+  import Ecto.Query
+
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
   alias ElixirDrops.Sponsors.SponsorEvent
@@ -61,7 +63,7 @@ defmodule ElixirDropsWeb.Features.SponsorTrackingTest do
     end)
 
     patched_session = assert_has(session, "#appsignal-drop-banner[class*='bg-[#18221c]']")
-    assert Repo.aggregate(SponsorEvent, :count) == 2
+    assert impression_count() == 2
 
     unwrap(patched_session, fn %{frame_id: frame_id} ->
       assert true ==
@@ -100,7 +102,7 @@ defmodule ElixirDropsWeb.Features.SponsorTrackingTest do
                )
     end)
 
-    assert Repo.aggregate(SponsorEvent, :count) == 2
+    assert impression_count() == 2
   end
 
   test "widening reveals and counts the sidebar only once", %{conn: conn, drop: drop} do
@@ -132,7 +134,7 @@ defmodule ElixirDropsWeb.Features.SponsorTrackingTest do
                  )
       end)
 
-      assert Repo.aggregate(SponsorEvent, :count) == 2
+      assert impression_count() == 2
     end
   end
 
@@ -151,13 +153,19 @@ defmodule ElixirDropsWeb.Features.SponsorTrackingTest do
     session
   end
 
+  defp impression_count do
+    SponsorEvent
+    |> where([event], event.kind == "impression")
+    |> Repo.aggregate(:count)
+  end
+
   defp assert_event_count(expected, retries \\ 60)
 
   defp assert_event_count(expected, 0),
-    do: assert(Repo.aggregate(SponsorEvent, :count) == expected)
+    do: assert(impression_count() == expected)
 
   defp assert_event_count(expected, retries) do
-    if Repo.aggregate(SponsorEvent, :count) != expected do
+    if impression_count() != expected do
       Process.sleep(50)
       assert_event_count(expected, retries - 1)
     end

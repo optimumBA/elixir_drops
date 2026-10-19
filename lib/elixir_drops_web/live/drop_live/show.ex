@@ -57,20 +57,40 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign_drop(drop)}
   end
 
-  defp record_sponsor_impressions(socket, drop, placements) do
-    {seen_drop, seen} = socket.assigns[:sponsor_impressions] || {nil, []}
-    seen_placements = if seen_drop == drop.id, do: seen, else: []
-    new_placements = placements -- seen_placements
+  # Successful/skipped placements are acknowledged separately per metric. IDs
+  # originate here and remain stable for retries; client IDs are never accepted.
+  defp record_sponsor_impressions(socket, drop, placements, kind) do
+    measurements = socket.assigns[:sponsor_measurements] || %{}
+    key = {drop.id, kind}
+    state = Map.get(measurements, key, %{seen: [], ids: %{}})
+    {already, pending} = Enum.split_with(placements, &(&1 in state.seen))
 
-    if new_placements != [] do
-      Sponsors.record_impressions(new_placements,
-        user: socket.assigns[:current_user],
-        user_agent: socket.assigns[:sponsor_impression_user_agent]
-      )
-    end
+    ids = sponsor_event_ids(pending, state.ids)
+    opts = sponsor_impression_options(socket, ids)
+    results = record_sponsor_metric(kind, pending, opts)
 
-    assign(socket, :sponsor_impressions, {drop.id, seen_placements ++ new_placements})
+    handled = for {placement, status} <- results, status in [:persisted, :skipped], do: placement
+    updated_measurements = Map.put(measurements, key, %{seen: state.seen ++ handled, ids: ids})
+    {already ++ handled, assign(socket, :sponsor_measurements, updated_measurements)}
   end
+
+  defp sponsor_event_ids(pending, ids) do
+    Enum.reduce(pending, ids, &Map.put_new_lazy(&2, &1, fn -> Sponsors.new_event_id() end))
+  end
+
+  defp sponsor_impression_options(socket, ids) do
+    [
+      user: socket.assigns[:current_user],
+      user_agent: socket.assigns[:sponsor_impression_user_agent],
+      event_ids: ids
+    ]
+  end
+
+  defp record_sponsor_metric("impression", pending, opts),
+    do: Sponsors.record_impression_results(pending, opts)
+
+  defp record_sponsor_metric("visible_impression", pending, opts),
+    do: Sponsors.record_visible_impression_results(pending, opts)
 
   defp sponsor_placements(%{"placements" => placements}) when is_list(placements) do
     placements
@@ -81,13 +101,19 @@ defmodule ElixirDropsWeb.DropLive.Show do
   defp sponsor_placements(_params), do: []
 
   @impl Phoenix.LiveView
-  def handle_event("sponsor_impression", params, socket) do
+  def handle_event(event, params, socket)
+      when event in ["sponsor_impression", "sponsor_visible_impression"] do
     drop = socket.assigns[:drop]
 
     if drop && params["drop_id"] == drop.short_id do
-      {:noreply, record_sponsor_impressions(socket, drop, sponsor_placements(params))}
+      kind = if event == "sponsor_impression", do: "impression", else: "visible_impression"
+
+      {acknowledged, socket} =
+        record_sponsor_impressions(socket, drop, sponsor_placements(params), kind)
+
+      {:reply, %{acknowledged: acknowledged}, socket}
     else
-      {:noreply, socket}
+      {:reply, %{acknowledged: []}, socket}
     end
   end
 
