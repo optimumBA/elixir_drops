@@ -91,7 +91,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <a
       id="dnsimple-homepage-feed"
-      href="https://blog.dnsimple.com/2026/10/making-dns-erlang-fast/"
+      href="https://blog.dnsimple.com/2026/10/making-dns-erlang-fast/?utm_source=elixirdrops&utm_medium=native&utm_campaign=dnsimple_q4_2026&utm_content=homepage-feed"
       target="_blank"
       rel="sponsored noopener"
       aria-label="Sponsored by DNSimple: Making dns_erlang Fast: Binary Tricks for the BEAM"

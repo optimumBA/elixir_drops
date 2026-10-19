@@ -33,7 +33,7 @@ defmodule ElixirDropsWeb.DnsimpleSponsorTest do
     assert has_element?(
              view,
              @card <>
-               "[href='https://blog.dnsimple.com/2026/10/making-dns-erlang-fast/'][rel='sponsored noopener']"
+               "[href='https://blog.dnsimple.com/2026/10/making-dns-erlang-fast/?utm_source=elixirdrops&utm_medium=native&utm_campaign=dnsimple_q4_2026&utm_content=homepage-feed'][rel='sponsored noopener']"
            )
 
     assert has_element?(view, @card, "Sponsored")

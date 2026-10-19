@@ -99,7 +99,9 @@ defmodule ElixirDropsWeb.Features.DnsimpleSponsorTest do
       assert Enum.at(layout["visualIds"], 1) == "sponsor-dnsimple-homepage-feed"
       assert_in_delta layout["sponsorWidth"], layout["organicWidth"], 1.0
 
-      assert layout["href"] == "https://blog.dnsimple.com/2026/10/making-dns-erlang-fast/"
+      assert layout["href"] ==
+               "https://blog.dnsimple.com/2026/10/making-dns-erlang-fast/?utm_source=elixirdrops&utm_medium=native&utm_campaign=dnsimple_q4_2026&utm_content=homepage-feed"
+
       assert layout["rel"] == "sponsored noopener"
       assert layout["text"] =~ "Sponsored"
       assert layout["text"] =~ "DNSimple · Sponsor"
