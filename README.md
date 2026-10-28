@@ -60,6 +60,15 @@ make ci
 For a coverage report, run `mix coveralls` or `mix coveralls.html`. Generate the
 Elixir documentation with `mix docs --formatter html --open`.
 
+## Behavioral specification
+
+[spec/README.md](spec/README.md) owns the whole-app behavior contract, coverage map
+and differences from the implementation. [quint/README.md](quint/README.md) links
+the executable models for identity, content, discovery, delivery, HTTP and sponsors.
+For spec/behavior changes, install the pinned checker with
+`npm ci --prefix quint --ignore-scripts` and run `make spec` alongside the appropriate
+application checks. The model gate requires no database or live integrations.
+
 ## Operations documentation
 
 - [Sponsor tracking and reporting](docs/sponsor-tracking.md) explains what is
@@ -90,3 +99,6 @@ as reasonably necessary to describe the origin of the software. See
 - `test/` contains automated checks and support code.
 - `config/` contains compile-time and runtime configuration.
 - `docs/` contains maintained operational documentation.
+- `spec/` owns the behavioral contract, coverage and verification evidence.
+- `quint/` owns executable models and their pinned tooling.
+- `scripts/` owns the reproducible model-checking workflow.

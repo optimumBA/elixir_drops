@@ -1,0 +1,155 @@
+{
+  "at": "2026-10-28T07:31:36.094607+00:00",
+  "quint": "0.33.0",
+  "backend": "typescript",
+  "samples_per_seed": 500,
+  "max_steps": 300,
+  "seeds": [1009, 1019, 1029],
+  "models": [
+    {
+      "model": "app",
+      "sha256": "1bd5635446bb93b655f6e13aaabd81b808a275530390fb212f258798c3700a9a",
+      "passed_tests": [
+        "ownershipTest",
+        "expiryBoundaryTest",
+        "reloginRevokesOldTokenTest",
+        "rememberMeTest",
+        "commentCascadeTest",
+        "crossDropParentTest",
+        "notificationFailureTest",
+        "notificationReadIsolationTest"
+      ],
+      "witness_trace_counts": {
+        "hasReply": 12,
+        "hasNotification": 78,
+        "rejected": 1500
+      },
+      "simulation_traces": 1500,
+      "invariant": "inv",
+      "result": "passed"
+    },
+    {
+      "model": "delivery",
+      "sha256": "0ed88a7d56673bf5bad2bf0f7dbf71e7a27fa34208170c2336188649bad545a6",
+      "passed_tests": [
+        "enqueueFailureTest",
+        "successfulImageTest",
+        "staleCompletionTest",
+        "unchangedFailedCodeTest",
+        "cacheBoundaryTest",
+        "atomicSitemapTest",
+        "partialUploadFailureTest",
+        "retryExhaustionTest"
+      ],
+      "witness_trace_counts": {
+        "completedImage": 234,
+        "failedImage": 1332,
+        "staleJob": 1500
+      },
+      "simulation_traces": 1500,
+      "invariant": "inv",
+      "result": "passed"
+    },
+    {
+      "model": "discovery",
+      "sha256": "62384364405e4c8b840ec2498fbf1b19e60b293313930cc7e3c70feb5a7b44e7",
+      "passed_tests": [
+        "tiedRankingPaginationTest",
+        "stalePageTest",
+        "suggestionDedupTest",
+        "anonymousHistoryTest",
+        "deleteAllQueryOccurrencesTest",
+        "batchBoundariesTest",
+        "welcomeDismissalTest",
+        "newDropRefreshTest"
+      ],
+      "witness_trace_counts": {
+        "hasPages": 297,
+        "hasSuggestions": 1500
+      },
+      "simulation_traces": 1500,
+      "invariant": "inv",
+      "result": "passed"
+    },
+    {
+      "model": "sponsors",
+      "sha256": "6518d138c6571b8264c8714df32799bc9a174b51116f2c88bc732b4d7ec61e79",
+      "passed_tests": [
+        "responsiveDedupTest",
+        "navigationResetTest",
+        "qaAndBotTest",
+        "headPrefetchTest",
+        "redirectDespiteDBFailureTest",
+        "dbFailureConsumesSeenTest",
+        "deliveryFailureRetryTest",
+        "reportBoundaryTest",
+        "unknownPlacementTest"
+      ],
+      "witness_trace_counts": {
+        "hasImpression": 421,
+        "hasClick": 1333
+      },
+      "simulation_traces": 1500,
+      "invariant": "inv",
+      "result": "passed"
+    },
+    {
+      "model": "http",
+      "sha256": "404ce628b756a09d0ca320b12903eba8af2835c2c9487d2e13b3fd5a5c82c971",
+      "passed_tests": [
+        "privateRoutesTest",
+        "markdownCanonicalTest",
+        "markdownMissingTest",
+        "snippetChallengeTest",
+        "invalidSnippetTypeTest",
+        "healthDBFailureTest",
+        "productionDevAuthTest",
+        "exactMarkdownPatternTest"
+      ],
+      "witness_trace_counts": {},
+      "simulation_traces": 1500,
+      "invariant": "inv",
+      "result": "passed"
+    },
+    {
+      "model": "system",
+      "sha256": "d83469bfe778ef4560f9ab76ad44cb89ded44772e8c83d81fdf213a0c1765ac1",
+      "passed_tests": [
+        "rejectedPublishHasNoJobTest",
+        "rejectedEditHasNoSideEffectTest",
+        "editedProjectionTest"
+      ],
+      "witness_trace_counts": {
+        "hasContent": 1402,
+        "hasImage": 258
+      },
+      "simulation_traces": 1500,
+      "invariant": "inv",
+      "result": "passed"
+    }
+  ],
+  "mutation_checks": [
+    {
+      "model": "app",
+      "scenario": "ownershipTest",
+      "detected": true
+    },
+    {
+      "model": "delivery",
+      "scenario": "staleCompletionTest",
+      "detected": true
+    },
+    {
+      "model": "sponsors",
+      "scenario": "headPrefetchTest",
+      "detected": true
+    }
+  ],
+  "scope": "Model type/effect checks, scenario tests and random invariant simulation; no implementation conformance or exhaustive proof.",
+  "source_revision": "dbb6ee9c16c5a9fe45e0e8c0a8873003302ca019",
+  "inputs_sha256": {
+    "scripts/check_quint.py": "f84f0bea5b98890534884082d12d557dd3d3ba5f9acd0250f12910df6f1b8fc9",
+    "quint/package.json": "5c49f60121cfed74aae403a2901ff07aba66754cddcc40e8f27502ed69bdb663",
+    "quint/package-lock.json": "03a501ca3dda192a33eb456004cef18ff51a374310241e7cf9c38d993a411525"
+  }
+}

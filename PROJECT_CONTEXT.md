@@ -7,6 +7,15 @@
 - **Data Flow**: User submits drop via LiveView -> `Drops` context -> PubSub broadcast to timeline -> Oban enqueues `ScreenshotGeneratorWorker` -> FLAME -> Wallaby/Chrome -> S3 upload -> progress broadcast -> sitemap regenerated.
 - **Key Integrations**: GitHub OAuth (Ueberauth), Tigris/S3, FLAME on Fly.io, Oban, AppSignal, PhoenixTest.Playwright + Wallaby.
 
+## Behavioral contract
+
+Read [spec/README.md](spec/README.md) before changing product behavior; then load the
+relevant rule pages and [Quint models](quint/README.md). The spec includes an explicit
+[implementation-difference ledger](spec/implementation-gaps.md): do not infer that
+the current code conforms merely because the models pass. An Intent owns authorized
+behavior changes; update affected contract, implementation and checks together.
+[Verification](spec/verification.md) owns the model gate and receipt refresh.
+
 ## Domain Context Files
 
 Detailed context is split by business domain. **Load the index (this file) always. Load domain files only when relevant to your task.**

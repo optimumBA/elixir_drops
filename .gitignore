@@ -65,3 +65,7 @@ CLAUDE.md
 
 # Local sanitized database dumps are not distributed with the public source.
 priv/repo/*.dump
+
+# Local Quint tool installation; models and locked tool versions remain tracked.
+/quint/node_modules/
+/scripts/__pycache__/

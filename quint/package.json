@@ -1,0 +1,11 @@
+{
+  "name": "elixirdrops-quint-spec",
+  "private": true,
+  "version": "1.0.0",
+  "devDependencies": {
+    "@informalsystems/quint": "0.33.0"
+  },
+  "overrides": {
+    "adm-zip": "0.6.1"
+  }
+}

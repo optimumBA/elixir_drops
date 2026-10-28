@@ -8,3 +8,7 @@ ci:
 	@echo "=== CI: ALL PASSED ==="
 
 test: ci
+
+.PHONY: spec
+spec:
+	python3 scripts/check_quint.py
