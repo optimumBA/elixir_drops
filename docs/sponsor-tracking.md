@@ -51,6 +51,9 @@ existing primary key prevents a lost reply from producing a second row. A
 conflicting ID is acknowledged only if its sponsor, placement and kind match.
 No migration or visitor identity is added.
 
+Reports cannot reconstruct events that never reached storage after the bounded
+retry attempts or a failed click write. Recorded clicks are not conversions.
+
 ## Before deployment
 
 Inputs: approved creative, actual flight start/end, deployment access, and the
@@ -99,6 +102,18 @@ with the measurement definition and limitations above. Retain the dated report
 in the campaign's artifacts and link it from the campaign record. Sending the
 report is a separate authorized action. Calendar reminders and manual campaign
 removal remain operational tasks, not features of this tracker.
+
+Keep the email self-contained: provide the results and measurement limitations
+without asking the sponsor to supply analytics, signups or other work to complete
+our report. Do not infer conversions or ROI from redirect counts. This reporting
+preference was specified by the owner on October 13, 2026.
+
+Before querying production, resolve the current hosting workflow and verify the
+host, deployed release and database. A historical host alias is not current
+production evidence. If app RPC is unavailable, use the host's maintained
+read-only release-eval route with only Repo started; do not run migrations or
+start another Endpoint for a report. Infrastructure access and private campaign
+dates remain with their maintained operational owners.
 
 ## Failure and resume
 
