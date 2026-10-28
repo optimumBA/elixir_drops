@@ -70,6 +70,11 @@ defmodule ElixirDrops.MixProject do
     [
       {:autumn, "~> 0.2"},
       {:flame, "~> 0.5.1"},
+      # Hackney 1.x has no patched release (fixes start at 4.0.1/4.9.0). Wallaby's
+      # fork still declares httpoison ~> 2.0 and web_driver_client ~> 0.2.0, which
+      # pull hackney ~> 1.x, so move that whole chain to its hackney 4 releases.
+      {:hackney, "~> 4.9", override: true},
+      {:httpoison, "~> 3.0", override: true},
       {:igniter, "~> 0.6"},
       {:mdex, "~> 0.1"},
       {:mox, "~> 1.1", only: :test},
@@ -77,7 +82,8 @@ defmodule ElixirDrops.MixProject do
       {:phoenix_test_playwright, "~> 0.7", only: :test, runtime: false},
       {:timex, "~> 3.7"},
       {:ueberauth_github, "~> 0.8.3"},
-      {:wallaby, github: "almirsarajcic/wallaby", branch: "releases"}
+      {:wallaby, github: "almirsarajcic/wallaby", branch: "releases"},
+      {:web_driver_client, "~> 0.3.0", override: true}
     ]
   end
 
@@ -111,7 +117,7 @@ defmodule ElixirDrops.MixProject do
       {:decimal, "~> 3.0", override: true},
       {:finch, "~> 0.21.0", override: true},
       {:postgrex, "~> 0.22"},
-      {:phoenix_html, "~> 4.1"},
+      {:phoenix_html, "~> 4.4.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       # Fork: resume feature (avoids the LiveView double mount). The resume-built
       # branch carries the compiled priv/static assets so no asset build of the
@@ -119,10 +125,7 @@ defmodule ElixirDrops.MixProject do
       # (phoenix_live_view#3551) ships.
       {:phoenix_live_view,
        github: "almirsarajcic/phoenix_live_view", branch: "resume-built", override: true},
-      # Pin to 1.19.2: plug 1.19.3 backported (and 1.20.0 kept) a strict header
-      # validation that rejects the atom `:upgrade` value bandit sends during the
-      # WebSocket handshake, crashing every LiveView connect. Remove once fixed.
-      {:plug, "1.19.2", override: true},
+      {:plug, "~> 1.20.3", override: true},
       {:floki, "~> 0.36.0", only: :test, override: true},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
@@ -142,8 +145,7 @@ defmodule ElixirDrops.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      # Held at the known-good 1.11.x alongside the plug 1.19.2 pin above (see note).
-      {:bandit, "~> 1.11.0"}
+      {:bandit, "~> 1.14.1"}
     ]
   end
 
