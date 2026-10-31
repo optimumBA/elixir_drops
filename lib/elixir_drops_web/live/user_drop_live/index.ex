@@ -17,8 +17,8 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
      |> stream_configure(:drops, dom_id: &"drop-#{&1.id}")
      |> assign(:batch_size, 15)
      |> assign(:drop_filters, %{user_id: socket.assigns.current_user.id})
-     |> assign(:end_of_notifications_timeline?, false)
      |> assign(:drops_empty?, true)
+     |> assign(:end_of_notifications_timeline?, false)
      |> assign(:end_of_timeline?, false)
      |> assign(:loading_more, false)
      |> assign(:page, 1)
@@ -64,26 +64,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update_viewport", %{"width" => width, "height" => height}, socket) do
-    batch_size = ElixirDropsWeb.DropsBatchCalculator.calculate_batch_size(width, height)
-
-    {:noreply,
-     socket
-     |> assign(:batch_size, batch_size)
-     |> assign(:viewport_height, height)
-     |> assign(:viewport_width, width)}
-  end
-
-  def handle_event("load_more", %{"layout_complete" => true}, socket) do
-    socket = assign(socket, :loading_more, true)
-    DropsListHelper.load_more(socket, socket.assigns.batch_size)
-  end
-
-  def handle_event("load_more", _params, socket) do
-    socket = assign(socket, :loading_more, true)
-    DropsListHelper.load_more(socket, socket.assigns.batch_size)
-  end
-
   def handle_event("load_more_complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
   end
@@ -134,7 +114,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     {:noreply,
      socket
      |> assign(:profile_search_suggestions, suggestions)
-     |> assign(:show_profile_suggestions?, length(suggestions) > 0)}
+     |> assign(:show_profile_suggestions?, suggestions != [])}
   end
 
   def handle_event("load_suggestions", _params, socket) do
@@ -146,7 +126,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
       {:ok, _search_history} ->
         # Re-fetch suggestions to update the list
         user_id = socket.assigns.current_user.id
-        {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
+        {suggestions, _show_suggestions?} = SearchHelper.get_focus_search_suggestions(user_id)
         {:noreply, assign(socket, :profile_search_suggestions, suggestions)}
 
       {:error, _reason} ->
@@ -186,19 +166,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     else
       {:noreply, push_navigate(socket, to: ~p"/")}
     end
-  end
-
-  def handle_event(
-        "mark_notifications_as_read",
-        _params,
-        %{assigns: %{current_user: user}} = socket
-      ) do
-    {_integer, nil} = Notifications.mark_all_as_read(user.id)
-
-    {:noreply,
-     socket
-     |> stream(:notifications, [], reset: true)
-     |> assign(:notification_count, 0)}
   end
 
   defp apply_action(socket, :edit, %{"short_id" => short_id}) do

@@ -57,49 +57,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign_drop(drop)}
   end
 
-  # Successful/skipped placements are acknowledged separately per metric. IDs
-  # originate here and remain stable for retries; client IDs are never accepted.
-  defp record_sponsor_impressions(socket, drop, placements, kind) do
-    measurements = socket.assigns[:sponsor_measurements] || %{}
-    key = {drop.id, kind}
-    state = Map.get(measurements, key, %{seen: [], ids: %{}})
-    {already, pending} = Enum.split_with(placements, &(&1 in state.seen))
-
-    ids = sponsor_event_ids(pending, state.ids)
-    opts = sponsor_impression_options(socket, ids)
-    results = record_sponsor_metric(kind, pending, opts)
-
-    handled = for {placement, status} <- results, status in [:persisted, :skipped], do: placement
-    updated_measurements = Map.put(measurements, key, %{seen: state.seen ++ handled, ids: ids})
-    {already ++ handled, assign(socket, :sponsor_measurements, updated_measurements)}
-  end
-
-  defp sponsor_event_ids(pending, ids) do
-    Enum.reduce(pending, ids, &Map.put_new_lazy(&2, &1, fn -> Sponsors.new_event_id() end))
-  end
-
-  defp sponsor_impression_options(socket, ids) do
-    [
-      user: socket.assigns[:current_user],
-      user_agent: socket.assigns[:sponsor_impression_user_agent],
-      event_ids: ids
-    ]
-  end
-
-  defp record_sponsor_metric("impression", pending, opts),
-    do: Sponsors.record_impression_results(pending, opts)
-
-  defp record_sponsor_metric("visible_impression", pending, opts),
-    do: Sponsors.record_visible_impression_results(pending, opts)
-
-  defp sponsor_placements(%{"placements" => placements}) when is_list(placements) do
-    placements
-    |> Enum.filter(&(&1 in Sponsors.placements()))
-    |> Enum.uniq()
-  end
-
-  defp sponsor_placements(_params), do: []
-
   @impl Phoenix.LiveView
   def handle_event(event, params, socket)
       when event in ["sponsor_impression", "sponsor_visible_impression"] do
@@ -163,19 +120,6 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> stream(:comments, comments)}
   end
 
-  def handle_event(
-        "mark_notifications_as_read",
-        _params,
-        %{assigns: %{current_user: user}} = socket
-      ) do
-    {_integer, nil} = Notifications.mark_all_as_read(user.id)
-
-    {:noreply,
-     socket
-     |> stream(:notifications, [], reset: true)
-     |> assign(:notification_count, 0)}
-  end
-
   def handle_event("load_more_notifications", _params, socket),
     do: NotificationHelpers.load_more(socket)
 
@@ -226,6 +170,49 @@ defmodule ElixirDropsWeb.DropLive.Show do
      |> assign(:notification_count, count + 1)
      |> stream_insert(:notifications, notification, at: 0)}
   end
+
+  # Successful/skipped placements are acknowledged separately per metric. IDs
+  # originate here and remain stable for retries; client IDs are never accepted.
+  defp record_sponsor_impressions(socket, drop, placements, kind) do
+    measurements = socket.assigns[:sponsor_measurements] || %{}
+    key = {drop.id, kind}
+    state = Map.get(measurements, key, %{seen: [], ids: %{}})
+    {already, pending} = Enum.split_with(placements, &(&1 in state.seen))
+
+    ids = sponsor_event_ids(pending, state.ids)
+    opts = sponsor_impression_options(socket, ids)
+    results = record_sponsor_metric(kind, pending, opts)
+
+    handled = for {placement, status} <- results, status in [:persisted, :skipped], do: placement
+    updated_measurements = Map.put(measurements, key, %{seen: state.seen ++ handled, ids: ids})
+    {already ++ handled, assign(socket, :sponsor_measurements, updated_measurements)}
+  end
+
+  defp sponsor_event_ids(pending, ids) do
+    Enum.reduce(pending, ids, &Map.put_new_lazy(&2, &1, fn -> Sponsors.new_event_id() end))
+  end
+
+  defp sponsor_impression_options(socket, ids) do
+    [
+      user: socket.assigns[:current_user],
+      user_agent: socket.assigns[:sponsor_impression_user_agent],
+      event_ids: ids
+    ]
+  end
+
+  defp record_sponsor_metric("impression", pending, opts),
+    do: Sponsors.record_impression_results(pending, opts)
+
+  defp record_sponsor_metric("visible_impression", pending, opts),
+    do: Sponsors.record_visible_impression_results(pending, opts)
+
+  defp sponsor_placements(%{"placements" => placements}) when is_list(placements) do
+    placements
+    |> Enum.filter(&(&1 in Sponsors.placements()))
+    |> Enum.uniq()
+  end
+
+  defp sponsor_placements(_params), do: []
 
   defp create_notifications(
          actor,

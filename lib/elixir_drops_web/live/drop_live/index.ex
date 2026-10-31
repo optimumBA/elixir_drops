@@ -6,7 +6,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   alias ElixirDrops.Search
   alias ElixirDropsWeb.CodeBlockHelper
   alias ElixirDropsWeb.DropComponents
-  alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
   alias ElixirDropsWeb.NotificationHelpers
   alias ElixirDropsWeb.SearchHelper
@@ -25,10 +24,10 @@ defmodule ElixirDropsWeb.DropLive.Index do
      |> assign(:new_drops?, false)
      |> assign(:page, 1)
      |> assign(:page_title, "ElixirDrops")
-     |> assign(:sponsor_feed?, true)
-     |> assign(:seo_attributes, %{canonical_url: url(~p"/")})
      |> assign(:search_query, "")
      |> assign(:searching, false)
+     |> assign(:seo_attributes, %{canonical_url: url(~p"/")})
+     |> assign(:sponsor_feed?, true)
      |> assign(:viewport_height, nil)
      |> assign(:viewport_width, nil)}
   end
@@ -74,26 +73,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("update_viewport", %{"width" => width, "height" => height}, socket) do
-    batch_size = DropsBatchCalculator.calculate_batch_size(width, height)
-
-    {:noreply,
-     socket
-     |> assign(:batch_size, batch_size)
-     |> assign(:viewport_height, height)
-     |> assign(:viewport_width, width)}
-  end
-
-  def handle_event("load_more", %{"layout_complete" => true}, socket) do
-    socket = assign(socket, :loading_more, true)
-    DropsListHelper.load_more(socket, socket.assigns.batch_size)
-  end
-
-  def handle_event("load_more", _params, socket) do
-    socket = assign(socket, :loading_more, true)
-    DropsListHelper.load_more(socket, socket.assigns.batch_size)
-  end
-
   def handle_event("load_more_complete", _params, socket) do
     {:noreply, assign(socket, :loading_more, false)}
   end
@@ -169,9 +148,9 @@ defmodule ElixirDropsWeb.DropLive.Index do
 
   def handle_event("delete_search_history", %{"id" => history_id}, socket) do
     with %{current_user: %{id: user_id}} <- socket.assigns,
-         {:ok, _} <- Search.delete_search_history(history_id, user_id) do
+         {:ok, _history} <- Search.delete_search_history(history_id, user_id) do
       # Re-fetch suggestions like focus does
-      {suggestions, _} = SearchHelper.get_focus_search_suggestions(user_id)
+      {suggestions, _show_suggestions?} = SearchHelper.get_focus_search_suggestions(user_id)
       {:noreply, assign(socket, :search_suggestions, suggestions)}
     else
       _error -> {:noreply, socket}
@@ -218,19 +197,6 @@ defmodule ElixirDropsWeb.DropLive.Index do
     else
       {:noreply, push_patch(socket, to: ~p"/")}
     end
-  end
-
-  def handle_event(
-        "mark_notifications_as_read",
-        _params,
-        %{assigns: %{current_user: user}} = socket
-      ) do
-    {_integer, nil} = Notifications.mark_all_as_read(user.id)
-
-    {:noreply,
-     socket
-     |> stream(:notifications, [], reset: true)
-     |> assign(:notification_count, 0)}
   end
 
   @impl Phoenix.LiveView
