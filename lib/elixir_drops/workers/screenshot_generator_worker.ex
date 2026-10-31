@@ -2,13 +2,17 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   @moduledoc false
 
   use Oban.Worker, queue: :seo_images, max_attempts: 5
-  use ElixirDropsWeb, :verified_routes
+
+  use Phoenix.VerifiedRoutes,
+    endpoint: ElixirDropsWeb.Endpoint,
+    router: ElixirDropsWeb.Router,
+    statics: []
 
   alias ElixirDrops.Drops
   alias ElixirDrops.S3Helper.Client
   alias ElixirDrops.ScreenshotGenerator
   alias ElixirDrops.ScreenshotGeneratorWorkerHelper
-  alias ElixirDrops.Workers.SitemapGeneratorWorker
+  alias ElixirDrops.Workers.ScreenshotCompletionWorker
   alias Wallaby.Browser
 
   @impl Oban.Worker
@@ -25,8 +29,10 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
   defp drop_screenshots(drop, args) do
     case execute_screenshot_generation(drop, args) do
       {:ok, updated_drop} ->
-        enqueue_sitemap_generation(updated_drop)
-        :ok
+        case ScreenshotCompletionWorker.enqueue(updated_drop, args["action"]) do
+          {:ok, _job} -> :ok
+          {:error, error} -> {:error, error}
+        end
 
       {:error, error} ->
         {:error, error}
@@ -145,11 +151,6 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
             }
           })
 
-        # Hack to ensure the image is ready to be served from Tigris
-        :timer.sleep(1500)
-
-        broadcast_drop_screenshot_completion(updated_drop, 100, :completed, %{action: action})
-
         {:ok, updated_drop}
 
       {:error, :ok} ->
@@ -165,11 +166,5 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorker do
 
   defp broadcast_drop_screenshot_completion(drop, progress, status, metadata) do
     Drops.broadcast_drop_screenshot_completion(drop, progress, status, metadata)
-  end
-
-  defp enqueue_sitemap_generation(drop) do
-    %{"drop_id" => drop.id}
-    |> SitemapGeneratorWorker.new()
-    |> Oban.insert()
   end
 end

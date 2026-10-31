@@ -72,6 +72,7 @@ application checks. The model gate requires no database or live integrations.
 ## Operations documentation
 
 - [Shared page events](docs/live-page-events.md) describes feed/notification hooks and resumed-socket verification.
+- [Screenshot completion](docs/screenshot-delivery.md) covers delayed completion, stale-result checks and recovery.
 - [Sponsor tracking and reporting](docs/sponsor-tracking.md) explains what is
   measured, how QA traffic is excluded and how delivery reports are produced.
 - [Search and archive pages](docs/seo.md) describes the complete HTML archive,

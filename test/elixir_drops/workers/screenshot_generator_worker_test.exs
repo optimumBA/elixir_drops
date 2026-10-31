@@ -1,4 +1,5 @@
 defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
+  # Uses global Mox mode for the screenshot worker.
   use ElixirDrops.DataCase, async: false
 
   import ElixirDrops.AccountsFixtures
@@ -8,8 +9,8 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.S3Helper.Client
+  alias ElixirDrops.Workers.ScreenshotCompletionWorker
   alias ElixirDrops.Workers.ScreenshotGeneratorWorker
-  alias ElixirDrops.Workers.SitemapGeneratorWorker
 
   setup :set_mox_global
   setup :verify_on_exit!
@@ -48,7 +49,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       %{drop: drop, user: user}
     end
 
-    test "creates two screenshots for a drop with a code block and enqueues a sitemap job", %{
+    test "creates two screenshots and schedules completion", %{
       drop: drop
     } do
       %{meta_image_url: meta_image_url, internal_image_url: internal_image_url} =
@@ -62,9 +63,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       assert updated_drop.screenshot.internal_url == internal_image_url
 
       assert_enqueued(
-        worker: SitemapGeneratorWorker,
+        worker: ScreenshotCompletionWorker,
         args: %{"drop_id" => updated_drop.id},
-        queue: "seo_sitemap"
+        queue: "seo_images"
       )
     end
 
@@ -135,7 +136,7 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
         perform_job(ScreenshotGeneratorWorker, %{drop_id: drop_id})
     end
 
-    test "creates a screenshot when the code block changes and enqueues a sitemap job", %{
+    test "creates a screenshot when the code block changes and schedules completion", %{
       drop: drop,
       user: user
     } do
@@ -163,9 +164,9 @@ defmodule ElixirDrops.Workers.ScreenshotGeneratorWorkerTest do
       assert updated_drop.screenshot.internal_url == internal_image_url
 
       assert_enqueued(
-        worker: SitemapGeneratorWorker,
+        worker: ScreenshotCompletionWorker,
         args: %{"drop_id" => updated_drop.id},
-        queue: "seo_sitemap"
+        queue: "seo_images"
       )
     end
   end
