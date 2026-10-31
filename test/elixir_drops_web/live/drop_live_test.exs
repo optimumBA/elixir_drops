@@ -1,4 +1,5 @@
 defmodule ElixirDropsWeb.DropLiveTest do
+  # Asserts broadcasts on the shared drops PubSub topic.
   use ElixirDropsWeb.ConnCase, async: false
 
   import ElixirDrops.AccountsFixtures
@@ -220,7 +221,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
         %{action: "new"}
       )
 
-      Process.sleep(100)
+      # The local PubSub dispatch and this system request come from this test process.
+      # Waiting for the reply ensures the LiveView handled the preceding broadcast.
+      :sys.get_state(live.pid)
 
       assert has_element?(live, "#new-drops-indicator")
 
@@ -269,7 +272,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
         %{action: "edit"}
       )
 
-      Process.sleep(100)
+      # The local PubSub dispatch and this system request come from this test process.
+      # Waiting for the reply ensures the LiveView handled the preceding broadcast.
+      :sys.get_state(live.pid)
 
       render(live)
 
@@ -350,7 +355,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
       Drops.broadcast_drop_screenshot_started(drop)
 
-      Process.sleep(100)
+      # The local PubSub dispatch and this system request come from this test process.
+      # Waiting for the reply ensures the LiveView handled the preceding broadcast.
+      :sys.get_state(live.pid)
       render(live)
 
       refute has_element?(live, "#new-drops-indicator")
@@ -445,7 +452,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
                live(conn, ~p"/d/#{short_id}")
     end
 
-    test "Javascript code inside the drop is not executed", %{conn: conn, user: user} do
+    test "javascript code inside the drop is not executed", %{conn: conn, user: user} do
       drop =
         drop_fixture(
           %Drop{},
@@ -731,7 +738,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
   end
 
-  describe "close editor button" do
+  describe "/drops/new close editor button" do
     setup [:create_drops_setup]
 
     test "closing editor navigates to profile page when confirmed",
@@ -754,7 +761,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
     end
   end
 
-  describe "drop card text processing" do
+  describe "/ drop card text processing" do
     setup [:create_drops_setup]
 
     test "preserves underscores in drop descriptions", %{conn: conn, user: user} do
@@ -989,9 +996,9 @@ defmodule ElixirDropsWeb.DropLiveTest do
         })
 
       # Update drops to have completed screenshot status so they appear in search
-      {:ok, _} = Drops.update_drop(phoenix_drop, user, %{screenshot: %{status: :completed}})
-      {:ok, _} = Drops.update_drop(elixir_drop, user, %{screenshot: %{status: :completed}})
-      {:ok, _} = Drops.update_drop(rust_drop, user, %{screenshot: %{status: :completed}})
+      {:ok, _drop} = Drops.update_drop(phoenix_drop, user, %{screenshot: %{status: :completed}})
+      {:ok, _drop} = Drops.update_drop(elixir_drop, user, %{screenshot: %{status: :completed}})
+      {:ok, _drop} = Drops.update_drop(rust_drop, user, %{screenshot: %{status: :completed}})
 
       {:ok, live, _html} = live(conn, ~p"/")
 
@@ -1207,10 +1214,10 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
     test "search suggestions render with correct icons", %{conn: conn, user: user} do
       # Create history and popular searches
-      {:ok, _} =
+      {:ok, _result} =
         ElixirDrops.Search.create_search_history(%{query: "history item", user_id: user.id})
 
-      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("popular item")
+      {:ok, _result} = ElixirDrops.Search.create_or_increment_popular_search("popular item")
 
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/")
@@ -1229,21 +1236,21 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
     test "suggestions update as user types", %{conn: conn, user: user} do
       # Create various search items - need results_count for history
-      {:ok, _} =
+      {:ok, _result} =
         ElixirDrops.Search.create_search_history(%{
           query: "elixir",
           user_id: user.id,
           results_count: 10
         })
 
-      {:ok, _} =
+      {:ok, _result} =
         ElixirDrops.Search.create_search_history(%{
           query: "ecto",
           user_id: user.id,
           results_count: 5
         })
 
-      {:ok, _} =
+      {:ok, _result} =
         ElixirDrops.Search.create_search_history(%{
           query: "phoenix",
           user_id: user.id,
@@ -1329,7 +1336,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
 
     test "navbar search suggestions work on drop show page", %{conn: conn, user: user} do
       # Create some search history for the user
-      {:ok, _} =
+      {:ok, _result} =
         ElixirDrops.Search.create_search_history(%{
           query: "phoenix liveview",
           user_id: user.id,

@@ -13,7 +13,6 @@ defmodule ElixirDropsWeb.MarkdownController do
 
   @type conn :: Plug.Conn.t()
   @type params :: map()
-  @type short_id :: String.t()
 
   @spec index(conn(), params()) :: conn()
   def index(conn, _params) do
@@ -45,7 +44,6 @@ defmodule ElixirDropsWeb.MarkdownController do
 
   # Private functions
 
-  @spec serve_markdown(conn(), String.t()) :: conn()
   defp serve_markdown(conn, content) do
     conn
     |> put_resp_content_type("text/markdown")
@@ -58,7 +56,6 @@ defmodule ElixirDropsWeb.MarkdownController do
     put_resp_header(conn, "link", "<#{canonical_url}>; rel=\"canonical\"")
   end
 
-  @spec handle_cache_miss_for_drop(conn(), short_id()) :: conn()
   defp handle_cache_miss_for_drop(conn, short_id) do
     case Drops.get_drop_by_short_id(short_id) do
       nil ->
@@ -74,7 +71,6 @@ defmodule ElixirDropsWeb.MarkdownController do
     end
   end
 
-  @spec handle_cache_miss_for_index(conn()) :: conn()
   defp handle_cache_miss_for_index(conn) do
     drops = Drops.list_all_drops()
 
@@ -86,7 +82,6 @@ defmodule ElixirDropsWeb.MarkdownController do
     serve_markdown(conn, markdown_content)
   end
 
-  @spec serve_not_found(conn()) :: conn()
   defp serve_not_found(conn) do
     conn
     |> put_resp_content_type("text/plain")

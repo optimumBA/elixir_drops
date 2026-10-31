@@ -1,4 +1,5 @@
 defmodule ElixirDropsWeb.Features.DnsimpleSponsorTest do
+  # Browser sessions observe shared sponsor events and PubSub state.
   use ElixirDropsWeb.FeatureCase, async: false
 
   alias ElixirDrops.Drops.Drop
@@ -158,7 +159,7 @@ defmodule ElixirDropsWeb.Features.DnsimpleSponsorTest do
 
   defp screenshot_data_uri(n) do
     with dir when is_binary(dir) <- System.get_env("DNSIMPLE_ORGANIC_SCREENSHOT_DIR"),
-         [_ | _] = files <-
+         [_first_image | _remaining_images] = files <-
            dir
            |> Path.join("*.png")
            |> Path.wildcard()
@@ -187,7 +188,7 @@ defmodule ElixirDropsWeb.Features.DnsimpleSponsorTest do
     """)
 
     # Allow the patch and masonry re-layout to settle.
-    Process.sleep(300)
+    wait_for_layout(session)
     session
   end
 

@@ -3,14 +3,18 @@ defmodule ElixirDrops.MarkdownFormatter do
   Formats drops as markdown for LLM consumption and Livebook integration.
   """
 
-  use ElixirDropsWeb, :verified_routes
+  use Phoenix.VerifiedRoutes,
+    endpoint: ElixirDropsWeb.Endpoint,
+    router: ElixirDropsWeb.Router,
+    statics: []
 
   alias ElixirDrops.Drops.Drop
 
   @type drop :: Drop.t()
   @type drops :: [Drop.t()]
+  @type markdown :: String.t()
 
-  @spec format_drop(drop()) :: String.t()
+  @spec format_drop(drop()) :: markdown()
   def format_drop(%Drop{} = drop) do
     # Use iolist for efficient string building
     IO.iodata_to_binary([
@@ -32,7 +36,7 @@ defmodule ElixirDrops.MarkdownFormatter do
     ])
   end
 
-  @spec format_index(drops()) :: String.t()
+  @spec format_index(drops()) :: markdown()
   def format_index(drops) do
     header = [
       "# ElixirDrops Index\n\n",

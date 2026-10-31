@@ -4,10 +4,16 @@ defmodule ElixirDrops.SearchFixtures do
   entities via the `ElixirDrops.Search` context.
   """
 
+  @type attrs :: map()
+  @type popular_search :: ElixirDrops.Search.PopularSearch.t()
+  @type query :: String.t()
+  @type search_history :: ElixirDrops.Search.SearchHistory.t()
+
   @doc """
   Generate a search_history.
   """
-  @spec search_history_fixture(map()) :: ElixirDrops.Search.SearchHistory.t()
+
+  @spec search_history_fixture(attrs()) :: search_history()
   def search_history_fixture(attrs \\ %{}) do
     # Create a user if user_id is not provided
     user_id = attrs[:user_id] || ElixirDrops.AccountsFixtures.user_fixture().id
@@ -27,13 +33,13 @@ defmodule ElixirDrops.SearchFixtures do
   @doc """
   Generate a unique popular_search query.
   """
-  @spec unique_popular_search_query() :: String.t()
+  @spec unique_popular_search_query() :: query()
   def unique_popular_search_query, do: "some query#{System.unique_integer([:positive])}"
 
   @doc """
   Generate a popular_search.
   """
-  @spec popular_search_fixture(map()) :: ElixirDrops.Search.PopularSearch.t()
+  @spec popular_search_fixture(attrs()) :: popular_search()
   def popular_search_fixture(attrs \\ %{}) do
     {:ok, popular_search} =
       attrs

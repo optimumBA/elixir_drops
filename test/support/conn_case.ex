@@ -63,11 +63,8 @@ defmodule ElixirDropsWeb.ConnCase do
   def sign_in_user(conn, user) do
     token = Accounts.generate_user_session_token(user)
 
-    conn =
-      conn
-      |> ConnTest.init_test_session(%{user_token: token})
-      |> Plug.Conn.put_session(:user_token, token)
-
     conn
+    |> ConnTest.init_test_session(%{user_token: token})
+    |> Plug.Conn.put_session(:user_token, token)
   end
 end

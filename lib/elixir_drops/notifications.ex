@@ -13,8 +13,8 @@ defmodule ElixirDrops.Notifications do
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
   @type comment :: Comment.t()
+  @type limit :: integer()
   @type notification :: Notification.t()
-  @type notification_id :: Ecto.UUID.t()
   @type user :: User.t()
   @type user_id :: Ecto.UUID.t()
 
@@ -72,7 +72,7 @@ defmodule ElixirDrops.Notifications do
       [%Notification{}, ...]
 
   """
-  @spec list_notifications(map(), integer()) :: [notification()]
+  @spec list_notifications(map(), limit()) :: [notification()]
   def list_notifications(filters, limit \\ 10) do
     filter_query = apply_filters()
 
@@ -94,7 +94,7 @@ defmodule ElixirDrops.Notifications do
       5
 
   """
-  @spec count_user_notifications(user_id) :: non_neg_integer()
+  @spec count_user_notifications(user_id()) :: non_neg_integer()
   def count_user_notifications(user_id) do
     Notification
     |> where([n], n.recipient_id == ^user_id and n.read == false)
@@ -164,10 +164,10 @@ defmodule ElixirDrops.Notifications do
     |> Ecto.Changeset.put_assoc(:actor, actor)
     |> Ecto.Changeset.put_assoc(:recipient, recipient)
     |> Ecto.Changeset.put_assoc(:comment, comment)
-    |> validate_actor_not_recipient(actor, recipient)
+    |> maybe_validate_actor_not_recipient(actor, recipient)
   end
 
-  defp validate_actor_not_recipient(changeset, actor, recipient) do
+  defp maybe_validate_actor_not_recipient(changeset, actor, recipient) do
     if actor.id == recipient.id do
       Ecto.Changeset.add_error(changeset, :recipient, "cannot be the same as the actor")
     else

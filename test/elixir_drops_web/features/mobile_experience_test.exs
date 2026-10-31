@@ -19,9 +19,15 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
 
   alias ElixirDrops.Drops.Drop
 
+  alias PhoenixTest.Playwright.Connection
+  alias PhoenixTest.Playwright.Serialization
+
   @moduletag :feature
 
   describe "mobile visitor browsing experience" do
+    @describetag error_path_exemption:
+                   "Protected access refusals are covered in visitor cannot access protected routes."
+
     setup do
       user = user_fixture(%{github_id: 12_345, github_username: "mobile_creator"})
 
@@ -102,7 +108,8 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> assert_has("main")
 
       # Search should be accessible on mobile
-      |> assert_has("input[placeholder*='Search']")
+      |> click("nav button[phx-click*='search-overlay']")
+      |> assert_has("#search-overlay input[name='query']")
     end
 
     @tag viewport: {375, 667}
@@ -115,14 +122,17 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> assert_has("a", text: "Sign in with GitHub")
 
       # Create drop button should trigger mobile-optimized popup
-      |> assert_has("#create-drop-button")
-      |> click("#create-drop-button")
+      |> assert_has("#create-drop-btn-mobile")
+      |> click("#create-drop-btn-mobile")
       # Sign-in prompt appears for unauthenticated users
       |> assert_has("#signin-popup-message")
     end
   end
 
   describe "mobile user authentication and account flows" do
+    @describetag error_path_exemption:
+                   "Access failures are covered by visitor cannot access protected routes and authorization and ownership checks."
+
     setup do
       user = user_fixture(%{github_id: 67_890, github_username: "mobile_user"})
       %{user: user}
@@ -137,12 +147,11 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       # Sign in through mobile-optimized flow
       |> sign_in_user(user)
       |> assert_path("/")
-
-      # Should see mobile-friendly authenticated state
-      |> assert_has("nav", text: user.github_username)
-
-      # Profile access works on mobile
-      # User's profile is accessible, showing their username
+      |> assert_has("nav img[class*='w-10'][alt='#{user.github_username}']")
+      |> click("nav img[class*='w-10'][alt='#{user.github_username}']")
+      |> click("#view-user-drops-link")
+      |> assert_path("/profile")
+      |> assert_has("section.user-drops")
     end
 
     @tag viewport: {375, 667}
@@ -151,13 +160,17 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> sign_in_user(user)
       |> visit(~p"/")
       |> resize_window(375, 667)
-
-      # Mobile sign out functionality works
-      # User can sign out and return to visitor state
+      |> click("nav img[class*='w-10'][alt='#{user.github_username}']")
+      |> click("#slide-menu a[href='/auth/logout']")
+      |> assert_has("a", text: "Sign in with GitHub")
+      |> refute_has("#slide-menu")
     end
   end
 
   describe "mobile drop creation and management" do
+    @describetag error_path_exemption:
+                   "Invalid submissions are covered in the drop creation form validation feature group."
+
     setup do
       user = user_fixture(%{github_id: 11_111, github_username: "mobile_creator"})
       %{user: user}
@@ -169,10 +182,10 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> sign_in_user(user)
       |> visit(~p"/")
       |> resize_window(375, 667)
-
-      # Mobile floating action button should be accessible
-      # Fixed-positioned element requires special handling
-      # Create button is accessible
+      |> assert_has("#create-drop-btn-mobile")
+      |> click("#create-drop-btn-mobile")
+      |> assert_path("/drops/new")
+      |> assert_has("form#drops-editor-form")
     end
 
     @tag viewport: {375, 667}
@@ -216,7 +229,8 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> resize_window(375, 667)
 
       # Edit button should be touch-friendly
-      |> click("a[href*=\"/edit\"]")
+      |> click("#action-row-menu-btn-#{drop.id}")
+      |> click("#edit-drop-page-#{drop.id}")
       |> assert_path("/drops/#{drop.short_id}/edit")
 
       # Edit form should work on mobile
@@ -229,6 +243,9 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
   end
 
   describe "mobile search and discovery experience" do
+    @describetag error_path_exemption:
+                   "No-result behavior is covered by search handles missing results gracefully in the search UI feature group."
+
     setup do
       user = user_fixture(%{github_id: 22_222, github_username: "mobile_searcher"})
 
@@ -249,7 +266,8 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> resize_window(375, 667)
 
       # Search input should be mobile-friendly
-      |> assert_has("input[placeholder*='Search']")
+      |> click("nav button[phx-click*='search-overlay']")
+      |> assert_has("#search-overlay input[name='query']")
 
       # Search input is available and works on mobile
     end
@@ -277,17 +295,44 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
 
     @tag viewport: {375, 667}
     test "mobile search suggestions are touch-interactive", %{conn: conn, user: user} do
+      {:ok, _search} = ElixirDrops.Search.track_popular_search("Mobile Test")
+
       conn
       |> sign_in_user(user)
       |> visit(~p"/")
       |> resize_window(375, 667)
+      |> click("nav button[phx-click*='search-overlay']")
+      |> click("#search-overlay input[name='query']")
+      |> assert_has("#mobile-search-dropdown", text: "Mobile Test")
+      |> click("#mobile-search-dropdown [phx-value-query='mobile test']")
+      |> then(fn session ->
+        PhoenixTest.Playwright.unwrap(session, fn %{frame_id: frame_id} ->
+          response =
+            Connection.post(
+              guid: frame_id,
+              method: :wait_for_function,
+              params: %{
+                expression:
+                  "() => new URL(window.location.href).searchParams.get('q') === 'mobile test'",
+                is_function: true,
+                arg: Serialization.serialize_arg(nil),
+                timeout: 5000
+              }
+            )
 
-      # Search functionality works on mobile
-      |> visit("/?q=Mobile%20Test")
+          refute Map.has_key?(response, :error)
+        end)
+
+        session
+      end)
+      |> assert_url_contains("q=mobile")
     end
   end
 
   describe "responsive design across mobile devices" do
+    @describetag error_path_exemption:
+                   "These viewport rendering checks have no error return; access and validation failures are covered by the authentication and form features."
+
     @tag viewport: {320, 568}
     test "small mobile phones display content properly", %{conn: conn} do
       user = user_fixture(%{github_id: 33_333, github_username: "small_phone"})
@@ -377,6 +422,9 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
   end
 
   describe "mobile accessibility and touch interactions" do
+    @describetag error_path_exemption:
+                   "These checks cover touch presentation; invalid form behavior is covered by the form validation feature group."
+
     setup do
       user = user_fixture(%{github_id: 77_777, github_username: "accessibility_user"})
       %{user: user}
@@ -391,7 +439,8 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
 
       # All interactive elements should be touch-friendly
       |> assert_has("nav")
-      |> assert_has("input[placeholder*='Search']")
+      |> click("nav button[phx-click*='search-overlay']")
+      |> assert_has("#search-overlay input[name='query']")
 
       # Touch targets are accessible on mobile
     end
@@ -425,6 +474,9 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
   end
 
   describe "mobile performance and user experience" do
+    @describetag error_path_exemption:
+                   "The masonry scroll flash regression separately asserts that appended items do not render unpositioned."
+
     @tag viewport: {375, 667}
     test "mobile infinite scroll provides smooth experience", %{conn: conn} do
       user = user_fixture(%{github_id: 88_888, github_username: "scroll_user"})
@@ -456,19 +508,19 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> resize_window(375, 667)
 
       # User should be authenticated in portrait
-      |> assert_has("nav", text: user.github_username)
+      |> assert_has("nav img[alt='#{user.github_username}']")
 
       # Rotate to landscape
       |> resize_window(667, 375)
 
       # Should maintain authentication state
-      |> assert_has("nav", text: user.github_username)
+      |> assert_has("nav img[alt='#{user.github_username}']")
 
       # Rotate back to portrait
       |> resize_window(375, 667)
 
       # State should persist
-      |> assert_has("nav", text: user.github_username)
+      |> assert_has("nav img[alt='#{user.github_username}']")
     end
   end
 end

@@ -7,8 +7,8 @@ defmodule ElixirDropsWeb.CommentComponents do
   alias ElixirDropsWeb.Comment.FormComponent
   alias ElixirDropsWeb.DropComponents
 
-  @type assigns() :: map()
-  @type rendered() :: Phoenix.LiveView.Rendered.t()
+  @type assigns :: map()
+  @type rendered :: Phoenix.LiveView.Rendered.t()
 
   attr :comment_count, :integer, required: true
   attr :comment_offset, :integer, required: true

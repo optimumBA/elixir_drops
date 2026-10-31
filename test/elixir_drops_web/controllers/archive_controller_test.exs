@@ -1,4 +1,5 @@
 defmodule ElixirDropsWeb.ArchiveControllerTest do
+  # Reads the shared cached Markdown index while asserting its complete contents.
   use ElixirDropsWeb.ConnCase, async: false
 
   import ElixirDrops.AccountsFixtures

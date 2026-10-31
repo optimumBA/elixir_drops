@@ -1,6 +1,7 @@
 defmodule ElixirDrops.Repo.Migrations.RenameFieldUniqueUrlStringToShortId do
   use Ecto.Migration
 
+  @spec up() :: term()
   def up do
     drop_if_exists unique_index(:drops, [:unique_url_string])
 
@@ -9,6 +10,7 @@ defmodule ElixirDrops.Repo.Migrations.RenameFieldUniqueUrlStringToShortId do
     create unique_index(:drops, [:short_id])
   end
 
+  @spec down() :: term()
   def down do
     drop_if_exists unique_index(:drops, [:short_id])
 

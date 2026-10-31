@@ -1,7 +1,9 @@
 defmodule ElixirDrops.SponsorReliabilityTest do
+  # These tests install database triggers and observe application-wide telemetry.
   use ElixirDrops.DataCase, async: false
 
   import ExUnit.CaptureLog
+
   alias ElixirDrops.Sponsors
   alias ElixirDrops.Sponsors.SponsorEvent
   alias ElixirDrops.Sponsors.Telemetry

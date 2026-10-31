@@ -7,13 +7,17 @@ defmodule ElixirDrops.StructuredData do
 
   @dangerous_patterns ~r/(script|javascript|vbscript|alert)/i
   @skipped_words ~w(
-    about above after again against aren't because been before being below between both can't cannot could couldn't didn't does doesn't doing don't down during each from further hadn't hasn't have haven't having how's into isn't it's its itself let's more most mustn't myself once only other ought ours ourselves over same shan't she'd she'll she's should shouldn't some such than that that's the their theirs them themselves then there there's these they they'd they'll they're they've this those through under until very wasn't we'll we're we've were weren't what what's when when's where where's which while who's whom why's with won't would wouldn't you'd you'll you're you've your yours yourself yourselves script javascript vbscript alert
+    about above after again against alert aren't because been before being below between both can't cannot could couldn't didn't does doesn't doing don't down during each from further hadn't hasn't have haven't having how's into isn't it's its itself javascript let's more most mustn't myself once only other ought ours ourselves over same script shan't she'd she'll she's should shouldn't some such than that that's the their theirs them themselves then there there's these they they'd they'll they're they've this those through under until vbscript very wasn't we'll we're we've were weren't what what's when when's where where's which while who's whom why's with won't would wouldn't you'd you'll you're you've your yours yourself yourselves
   )
+
+  @type drop :: Drop.t()
+  @type json :: String.t()
 
   @doc """
   Generates JSON-LD structured data for a drop.
   """
-  @spec generate_drop_json_ld(Drop.t()) :: String.t()
+
+  @spec generate_drop_json_ld(drop()) :: json()
   def generate_drop_json_ld(%Drop{} = drop) do
     image_url =
       (drop.screenshot && drop.screenshot.meta_url) ||

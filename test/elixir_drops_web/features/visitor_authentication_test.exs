@@ -23,6 +23,9 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
   @moduletag :feature
 
   describe "visitor sees authentication options" do
+    @describetag error_path_exemption:
+                   "Protected-route refusals are covered in the adjacent visitor cannot access protected routes group."
+
     test "visitor sees sign in button on homepage", %{conn: conn} do
       conn
       |> visit(~p"/")
@@ -91,6 +94,9 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
   end
 
   describe "visitor can browse public content" do
+    @describetag error_path_exemption:
+                   "Protected-route refusals are covered in the visitor cannot access protected routes group."
+
     setup do
       user = user_fixture(%{github_id: 67_890, github_username: "creator"})
 
@@ -135,14 +141,10 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
 
   # JavaScript popup interaction tests are skipped for now
   # The popup dismiss functionality needs to be implemented
-  # describe "visitor sign-in popup JavaScript interactions" do
-  #   test "sign-in popup can be dismissed with escape key", %{conn: conn} do
-  #   test "sign-in popup can be dismissed by clicking outside", %{conn: conn} do
-  #   test "sign-in popup has close button", %{conn: conn} do
-  #   test "multiple popup interactions work correctly", %{conn: conn} do
-  # end
-
   describe "visitor completes sign-in flow" do
+    @describetag error_path_exemption:
+                   "Access refusals are covered by visitor cannot access protected routes and authorization and ownership checks."
+
     setup do
       user = user_fixture(%{github_id: 11_111, github_username: "newsignin"})
       %{user: user}

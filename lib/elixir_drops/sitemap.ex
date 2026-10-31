@@ -3,10 +3,17 @@ defmodule ElixirDrops.Sitemap do
   Handles sitemap generation for ElixirDrops.
   """
 
-  use ElixirDropsWeb, :verified_routes
+  use Phoenix.VerifiedRoutes,
+    endpoint: ElixirDropsWeb.Endpoint,
+    router: ElixirDropsWeb.Router,
+    statics: []
 
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
+
+  @type drop :: Drop.t()
+  @type error_reason :: String.t()
+  @type path :: String.t()
 
   @doc """
   Regenerates the sitemap from the current public collection.
@@ -15,14 +22,15 @@ defmodule ElixirDrops.Sitemap do
   order and prevents a publication from being appended after older entries.
   Returns {:ok, path} on success or {:error, reason} on failure.
   """
-  @spec generate(Drop.t()) :: {:ok, String.t()} | {:error, String.t()}
+
+  @spec generate(drop()) :: {:ok, path()} | {:error, error_reason()}
   def generate(%Drop{}), do: generate_full()
 
   @doc """
   Generates a full sitemap with all drops.
   Returns {:ok, path} on success or {:error, reason} on failure.
   """
-  @spec generate_full() :: {:ok, String.t()} | {:error, String.t()}
+  @spec generate_full() :: {:ok, path()} | {:error, error_reason()}
   def generate_full do
     sitemap_dir = Path.join([:code.priv_dir(:elixir_drops), "static"])
 

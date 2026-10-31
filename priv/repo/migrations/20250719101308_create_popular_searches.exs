@@ -1,6 +1,7 @@
 defmodule ElixirDrops.Repo.Migrations.CreatePopularSearches do
   use Ecto.Migration
 
+  @spec change() :: term()
   def change do
     create table(:popular_searches, primary_key: false) do
       add :id, :binary_id, primary_key: true

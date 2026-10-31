@@ -22,6 +22,9 @@ defmodule ElixirDropsWeb.Features.UserDropManagementTest do
   @moduletag :feature
 
   describe "user accesses drop management from profile" do
+    @describetag error_path_exemption:
+                   "Unauthorized access is covered in the drop ownership and authorization group."
+
     setup do
       user = user_fixture(%{github_id: 12_345, github_username: "drop_manager"})
 
@@ -91,6 +94,9 @@ defmodule ElixirDropsWeb.Features.UserDropManagementTest do
   end
 
   describe "user edits existing drops" do
+    @describetag error_path_exemption:
+                   "Invalid updates and ownership failures are covered by drop update success and error handling and drop ownership groups."
+
     setup do
       user = user_fixture(%{github_id: 67_890, github_username: "editor"})
 
@@ -292,6 +298,9 @@ defmodule ElixirDropsWeb.Features.UserDropManagementTest do
   end
 
   describe "drop management from profile page" do
+    @describetag error_path_exemption:
+                   "Unauthorized changes are covered by the drop ownership and authorization group."
+
     setup do
       user = user_fixture(%{github_id: 33_333, github_username: "profile_manager"})
 
@@ -480,6 +489,9 @@ defmodule ElixirDropsWeb.Features.UserDropManagementTest do
   end
 
   describe "drop management navigation and user experience" do
+    @describetag error_path_exemption:
+                   "Ownership and update failures are covered by the drop ownership and drop update error handling groups."
+
     setup do
       user = user_fixture(%{github_id: 55_555, github_username: "navigator"})
 
@@ -573,6 +585,9 @@ defmodule ElixirDropsWeb.Features.UserDropManagementTest do
   end
 
   describe "drop content and formatting preservation" do
+    @describetag error_path_exemption:
+                   "Invalid updates and retained form content are covered by update validation errors preserve form content."
+
     setup do
       user = user_fixture(%{github_id: 66_666, github_username: "formatter"})
 

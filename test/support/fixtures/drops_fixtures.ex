@@ -9,13 +9,16 @@ defmodule ElixirDrops.DropsFixtures do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
 
+  @type attrs :: map()
+  @type count :: integer()
   @type drop :: Drop.t()
   @type user :: User.t()
 
   @doc """
   Generate a drop.
   """
-  @spec drop_fixture(drop(), user(), map()) :: drop()
+
+  @spec drop_fixture(drop(), user(), attrs()) :: drop()
   def drop_fixture(drop \\ %Drop{}, %User{} = user, attrs \\ %{}) do
     random_string =
       12
@@ -44,7 +47,7 @@ defmodule ElixirDrops.DropsFixtures do
   @doc """
   Updated a drop inserted at time
   """
-  @spec update_drop_inserted_at(drop(), integer()) :: drop()
+  @spec update_drop_inserted_at(drop(), count()) :: drop()
   def update_drop_inserted_at(drop, seconds_offset) do
     {:ok, updated_drop} =
       drop
@@ -54,7 +57,7 @@ defmodule ElixirDrops.DropsFixtures do
     updated_drop
   end
 
-  @spec create_multiple_drops(user(), integer()) :: list(drop())
+  @spec create_multiple_drops(user(), count()) :: list(drop())
   def create_multiple_drops(user, number_of_drops) do
     for drop <- 1..number_of_drops do
       offset_time = 120 * drop

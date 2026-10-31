@@ -50,7 +50,9 @@ defmodule ElixirDropsWeb.Endpoint do
     event_prefix: [:phoenix, :endpoint],
     log: {__MODULE__, :log_level, []}
 
-  @spec log_level(Plug.Conn.t()) :: false | :info
+  @type conn :: Plug.Conn.t()
+
+  @spec log_level(conn()) :: false | :info
   def log_level(%{path_info: ["health" | _rest]}), do: false
   def log_level(_conn), do: :info
 

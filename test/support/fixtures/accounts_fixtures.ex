@@ -7,16 +7,21 @@ defmodule ElixirDrops.AccountsFixtures do
   alias ElixirDrops.Accounts
   alias ElixirDrops.Accounts.User
 
+  @type attrs :: map()
+  @type email :: String.t()
+  @type user :: User.t()
+
   @doc """
   Generate a unique user email.
   """
-  @spec unique_user_email() :: String.t()
+
+  @spec unique_user_email() :: email()
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
 
   @doc """
   Generate a user.
   """
-  @spec user_fixture(map()) :: User.t()
+  @spec user_fixture(attrs()) :: user()
   def user_fixture(attrs \\ %{}) do
     unique_id = System.unique_integer([:positive])
 

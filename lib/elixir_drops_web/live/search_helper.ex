@@ -8,10 +8,17 @@ defmodule ElixirDropsWeb.SearchHelper do
   alias ElixirDrops.Drops
   alias ElixirDrops.Search
 
+  @type assign_key :: atom()
+  @type filters :: map()
+  @type id :: binary()
+  @type query :: String.t()
+  @type socket :: Phoenix.LiveView.Socket.t()
+  @type suggestion :: map()
+
   @doc """
   Tracks search history and popular searches for a given query.
   """
-  @spec track_search(String.t(), Phoenix.LiveView.Socket.t(), map()) :: :ok
+  @spec track_search(query(), socket(), filters()) :: :ok
   def track_search(query, socket, filters) do
     trimmed_query =
       query
@@ -52,7 +59,7 @@ defmodule ElixirDropsWeb.SearchHelper do
   Gets recent search history suggestions for focus event.
   Returns tuple of {suggestions, show_suggestions_flag}.
   """
-  @spec get_focus_search_suggestions(binary() | nil) :: {list(map()), boolean()}
+  @spec get_focus_search_suggestions(id() | nil) :: {list(suggestion()), boolean()}
   def get_focus_search_suggestions(user_id) do
     # Use get_search_suggestions with empty query to get initial suggestions
     suggestions = Search.get_search_suggestions(user_id, "")
@@ -62,8 +69,8 @@ defmodule ElixirDropsWeb.SearchHelper do
   @doc """
   Handles focus search input event for both authenticated and unauthenticated users.
   """
-  @spec handle_focus_search_input(Phoenix.LiveView.Socket.t(), atom()) ::
-          {:noreply, Phoenix.LiveView.Socket.t()}
+  @spec handle_focus_search_input(socket(), assign_key()) ::
+          {:noreply, socket()}
   def handle_focus_search_input(socket, suggestions_assign_key) do
     if socket.assigns.current_user do
       user_id = socket.assigns.current_user.id
@@ -90,8 +97,8 @@ defmodule ElixirDropsWeb.SearchHelper do
   @doc """
   Handles delete search history event.
   """
-  @spec handle_delete_search_history(String.t(), Phoenix.LiveView.Socket.t(), atom()) ::
-          {:noreply, Phoenix.LiveView.Socket.t()}
+  @spec handle_delete_search_history(id(), socket(), assign_key()) ::
+          {:noreply, socket()}
   def handle_delete_search_history(id, socket, suggestions_assign_key) do
     if socket.assigns.current_user do
       case Search.delete_search_history(id, socket.assigns.current_user.id) do
@@ -112,31 +119,31 @@ defmodule ElixirDropsWeb.SearchHelper do
   @doc """
   Initializes search-related assigns for LiveView mount.
   """
-  @spec initialize_search_assigns(Phoenix.LiveView.Socket.t(), binary() | nil) ::
-          Phoenix.LiveView.Socket.t()
+  @spec initialize_search_assigns(socket(), id() | nil) ::
+          socket()
   def initialize_search_assigns(socket, current_user_id) do
-    {initial_suggestions, _} = get_focus_search_suggestions(current_user_id)
+    {initial_suggestions, _show_suggestions?} = get_focus_search_suggestions(current_user_id)
 
     socket
     |> assign(:navbar_search_query, "")
+    |> assign(:search_suggestions, initial_suggestions)
     |> assign(:searching, false)
     |> assign(:show_suggestions?, false)
-    |> assign(:search_suggestions, initial_suggestions)
   end
 
   @doc """
   Initializes search-related assigns for user profile LiveView mount (includes profile search).
   """
-  @spec initialize_profile_search_assigns(Phoenix.LiveView.Socket.t(), binary() | nil) ::
-          Phoenix.LiveView.Socket.t()
+  @spec initialize_profile_search_assigns(socket(), id() | nil) ::
+          socket()
   def initialize_profile_search_assigns(socket, current_user_id) do
-    {initial_suggestions, _} = get_focus_search_suggestions(current_user_id)
+    {initial_suggestions, _show_suggestions?} = get_focus_search_suggestions(current_user_id)
 
     socket
     |> assign(:navbar_search_query, "")
     |> assign(:profile_search_suggestions, initial_suggestions)
-    |> assign(:searching, false)
     |> assign(:search_suggestions, initial_suggestions)
+    |> assign(:searching, false)
     |> assign(:show_profile_suggestions?, false)
     |> assign(:show_suggestions?, false)
   end

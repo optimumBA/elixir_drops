@@ -1,6 +1,7 @@
 defmodule ElixirDrops.Repo.Migrations.AddUniqueUrlString do
   use Ecto.Migration
 
+  @spec change() :: term()
   def change do
     alter table(:drops) do
       add :unique_url_string, :string, null: false, default: ""

@@ -14,10 +14,16 @@ defmodule ElixirDrops.FeatureHelpers do
   alias PhoenixTest.Playwright.Connection
   alias PhoenixTest.Playwright.Frame
 
+  @type count :: integer()
+  @type distance :: integer()
+  @type drop :: Drops.Drop.t()
   @type key :: String.t()
-  @type phoenix_test_session :: Plug.Conn.t() | session()
+  @type options :: keyword()
+  @type pattern :: Regex.t()
+  @type pixels :: integer()
   @type selector :: String.t()
   @type session :: PhoenixTest.Playwright.t()
+  @type user :: ElixirDrops.Accounts.User.t()
 
   @doc """
   Sign in a user using the dev auth bypass.
@@ -25,7 +31,7 @@ defmodule ElixirDrops.FeatureHelpers do
   Uses the /dev/auth/:user_id route to simulate authentication
   without requiring actual OAuth flow during testing.
   """
-  @spec sign_in_user(session(), ElixirDrops.Accounts.User.t()) :: session()
+  @spec sign_in_user(session(), user()) :: session()
   def sign_in_user(session, user) do
     # Visit the dev auth endpoint and let it handle the redirect
     session
@@ -42,7 +48,7 @@ defmodule ElixirDrops.FeatureHelpers do
 
   Uses Playwright's wait_for_selector functionality for real browser waiting.
   """
-  @spec wait_for_element(session(), selector(), keyword()) ::
+  @spec wait_for_element(session(), selector(), options()) ::
           session()
   def wait_for_element(session, selector, opts \\ []) do
     timeout = Keyword.get(opts, :timeout, 30_000)
@@ -87,7 +93,7 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec click(session(), selector()) :: session()
   def click(session, selector) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} = Frame.click(frame_id, selector)
+      {:ok, _result} = Frame.click(frame_id, selector)
     end)
 
     session
@@ -99,7 +105,7 @@ defmodule ElixirDrops.FeatureHelpers do
   @spec press_key(session(), key()) :: session()
   def press_key(session, key) do
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} = Frame.press(frame_id, "body", key)
+      {:ok, _result} = Frame.press(frame_id, "body", key)
     end)
 
     session
@@ -110,27 +116,21 @@ defmodule ElixirDrops.FeatureHelpers do
 
   Uses Playwright's viewport setting to properly trigger responsive CSS.
   """
-  @spec resize_window(session(), integer(), integer()) ::
+  @spec resize_window(session(), pixels(), pixels()) ::
           session()
   def resize_window(session, width, height) do
-    unwrap(session, fn %{frame_id: frame_id} ->
-      # Use JavaScript to resize and trigger responsive behavior
-      Frame.evaluate(frame_id, """
-        // Set viewport properties that Tailwind CSS can see
-        Object.defineProperty(window, 'innerWidth', { value: #{width} });
-        Object.defineProperty(window, 'innerHeight', { value: #{height} });
+    unwrap(session, fn %{page_id: page_id} ->
+      response =
+        Connection.post(
+          guid: page_id,
+          method: :set_viewport_size,
+          params: %{viewport_size: %{width: width, height: height}}
+        )
 
-        // Trigger resize event to make CSS media queries re-evaluate
-        window.dispatchEvent(new Event('resize'));
-
-        // Also try to set the actual window size if possible
-        if (window.resizeTo) {
-          window.resizeTo(#{width}, #{height});
-        }
-      """)
-
-      # Give time for CSS to update
-      Process.sleep(200)
+      case response do
+        %{error: error} -> raise "Unable to set viewport: #{inspect(error)}"
+        _response -> :ok
+      end
     end)
 
     session
@@ -139,7 +139,7 @@ defmodule ElixirDrops.FeatureHelpers do
   @doc """
   Wait for a specified amount of time.
   """
-  @spec wait_for(session(), keyword()) :: session()
+  @spec wait_for(session(), options()) :: session()
   def wait_for(session, opts) do
     time = Keyword.get(opts, :time, 1)
     Process.sleep(time * 1000)
@@ -167,7 +167,7 @@ defmodule ElixirDrops.FeatureHelpers do
   Polls up to ~8 s; passes an explicit Frame.evaluate `timeout:` larger than the
   in-page poll so the default 500 ms PW_TIMEOUT does not abort it.
   """
-  @spec scroll_down(session(), integer()) :: session()
+  @spec scroll_down(session(), distance()) :: session()
   def scroll_down(session, pixels \\ 300) do
     unwrap(session, fn %{frame_id: frame_id} ->
       Frame.evaluate(
@@ -209,7 +209,7 @@ defmodule ElixirDrops.FeatureHelpers do
   @doc """
   Scroll up by a specified number of pixels using mouse wheel.
   """
-  @spec scroll_up(session(), integer()) :: session()
+  @spec scroll_up(session(), distance()) :: session()
   def scroll_up(session, pixels \\ 300) do
     unwrap(session, fn %{frame_id: frame_id} ->
       _result =
@@ -256,7 +256,7 @@ defmodule ElixirDrops.FeatureHelpers do
   @doc """
   Assert that scroll position is near expected value.
   """
-  @spec assert_scroll_position_near(session(), integer(), keyword()) :: session()
+  @spec assert_scroll_position_near(session(), distance(), options()) :: session()
   def assert_scroll_position_near(session, expected, opts \\ []) do
     tolerance = Keyword.get(opts, :tolerance, 50)
 
@@ -316,7 +316,7 @@ defmodule ElixirDrops.FeatureHelpers do
   @doc """
   Assert that the current path matches a regex pattern.
   """
-  @spec assert_path_matches(session(), Regex.t()) :: session()
+  @spec assert_path_matches(session(), pattern()) :: session()
   def assert_path_matches(session, pattern) do
     path = current_path(session)
 
@@ -335,12 +335,12 @@ defmodule ElixirDrops.FeatureHelpers do
   @doc """
   Type text into an element with realistic character-by-character simulation.
   """
-  @spec type_text(session(), selector(), String.t(), keyword()) :: session()
+  @spec type_text(session(), selector(), String.t(), options()) :: session()
   def type_text(session, selector, text, opts \\ []) do
     delay = Keyword.get(opts, :delay, 50)
 
     unwrap(session, fn %{frame_id: frame_id} ->
-      {:ok, _} = Frame.type(frame_id, selector, text, delay: delay)
+      {:ok, _result} = Frame.type(frame_id, selector, text, delay: delay)
     end)
 
     session
@@ -430,7 +430,7 @@ defmodule ElixirDrops.FeatureHelpers do
   - count: Exact number of elements expected
   - minimum: Minimum number of elements expected
   """
-  @spec assert_element(session(), selector(), keyword()) :: session()
+  @spec assert_element(session(), selector(), options()) :: session()
   def assert_element(session, selector, opts) do
     unwrap(session, fn %{frame_id: frame_id} ->
       element_count =
@@ -518,7 +518,7 @@ defmodule ElixirDrops.FeatureHelpers do
           :ok
 
         # Handle navigation-related context destruction
-        {:error, %{error: %{error: %{message: "Execution context was destroyed" <> _}}}} ->
+        {:error, %{error: %{error: %{message: "Execution context was destroyed" <> _details}}}} ->
           # Click succeeded but caused navigation - this is expected
           :ok
 
@@ -555,7 +555,7 @@ defmodule ElixirDrops.FeatureHelpers do
   def assert_element_exists_and_clickable(session, selector) do
     unwrap(session, fn %{frame_id: frame_id} ->
       # Wait for element to exist in DOM, but don't require visibility
-      {:ok, _} =
+      {:ok, _result} =
         Frame.wait_for_selector(frame_id, %{
           selector: selector,
           timeout: 10_000,
@@ -691,7 +691,7 @@ defmodule ElixirDrops.FeatureHelpers do
   Returns the number of `.masonry-item` nodes observed being visible-but-unpositioned
   (i.e. painted in static flow before Masonry's `layout()` ran for them).
   """
-  @spec read_masonry_flash_count(session()) :: integer()
+  @spec read_masonry_flash_count(session()) :: count()
   def read_masonry_flash_count(session) do
     unwrap(session, fn %{frame_id: frame_id} ->
       result =
@@ -716,7 +716,7 @@ defmodule ElixirDrops.FeatureHelpers do
   This is useful in tests to get the drop that was just created
   after a form submission.
   """
-  @spec get_latest_drop_by_user(ElixirDrops.Accounts.User.t()) :: Drops.Drop.t() | nil
+  @spec get_latest_drop_by_user(user()) :: drop() | nil
   def get_latest_drop_by_user(user) do
     query =
       from(d in Drops.Drop,

@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.DropLiveShowTest do
+defmodule ElixirDropsWeb.DropLive.ShowTest do
   use ElixirDropsWeb.ConnCase, async: true
 
   import ElixirDrops.AccountsFixtures
@@ -407,7 +407,7 @@ defmodule ElixirDropsWeb.DropLiveShowTest do
       user: user
     } do
       for i <- 1..15 do
-        {:ok, _} = Comments.create_comment(drop, user, nil, %{body: "Comment #{i}"})
+        {:ok, _comment} = Comments.create_comment(drop, user, nil, %{body: "Comment #{i}"})
       end
 
       {:ok, view, initial_html} = live(conn, ~p"/d/#{drop.short_id}")

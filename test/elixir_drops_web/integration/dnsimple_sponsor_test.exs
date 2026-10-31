@@ -1,4 +1,5 @@
 defmodule ElixirDropsWeb.DnsimpleSponsorTest do
+  # Sponsor feeds and telemetry share application-wide resources.
   use ElixirDropsWeb.ConnCase, async: false
 
   import ElixirDrops.AccountsFixtures
@@ -55,7 +56,7 @@ defmodule ElixirDropsWeb.DnsimpleSponsorTest do
       |> Regex.scan(html)
       |> Enum.map(&List.last/1)
 
-    assert [_first, "sponsor-dnsimple-homepage-feed", _second | _] = ids
+    assert [_first, "sponsor-dnsimple-homepage-feed", _second | _remaining] = ids
   end
 
   test "a single Drop still gets the card after it; zero Drops gets none", %{
@@ -81,7 +82,7 @@ defmodule ElixirDropsWeb.DnsimpleSponsorTest do
     assert card_count(render(view)) == 1
 
     # A fresh connection (reconnect) renders exactly one as well.
-    {:ok, _view, fresh_html} = live(conn, "/")
+    {:ok, _fresh_view, fresh_html} = live(conn, "/")
     assert card_count(fresh_html) == 1
   end
 

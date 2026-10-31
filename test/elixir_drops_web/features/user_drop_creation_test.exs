@@ -20,6 +20,9 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
   @moduletag :feature
 
   describe "user accesses drop creation" do
+    @describetag error_path_exemption:
+                   "Protected access failures are covered by the visitor cannot access protected routes feature group."
+
     setup do
       user = user_fixture(%{github_id: 12_345, github_username: "creator"})
       %{user: user}
@@ -53,6 +56,9 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
   end
 
   describe "user creates drop with code content" do
+    @describetag error_path_exemption:
+                   "Invalid input is covered in the adjacent drop creation form validation group."
+
     setup do
       user = user_fixture(%{github_id: 67_890, github_username: "coder"})
       %{user: user}
@@ -82,10 +88,6 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
 
       # Should redirect to the drop page
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Drop should be displayed with content
       |> assert_has("h1", text: "Elixir Pattern Matching Example")
@@ -112,10 +114,6 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
       )
       |> click("button[type='submit']")
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
       |> assert_has("h1", text: "JavaScript Async Function")
     end
 
@@ -129,10 +127,6 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
       |> fill_in("Body", with: "Remember to update dependencies and run tests before deployment")
       |> click("button[type='submit']")
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
       |> assert_has("h1", text: "Development Notes")
     end
   end
@@ -192,6 +186,9 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
   end
 
   describe "screenshot generation and progress feedback" do
+    @describetag error_path_exemption:
+                   "Failed screenshot completion is covered by handles screenshot generation failure in the profile LiveView tests."
+
     setup do
       user = user_fixture(%{github_id: 22_222, github_username: "screenshotter"})
       %{user: user}
@@ -214,10 +211,6 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
 
       # Should redirect to the drop page
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Drop should display with title
       |> assert_has("h1", text: "Screenshot Test Drop")
@@ -250,10 +243,6 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
 
       # Should redirect to drop page
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Check that the drop was created with code content
       |> assert_has("h1", text: "Code Block Screenshot Test")
@@ -265,6 +254,9 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
   end
 
   describe "drop-creation experience and sharing" do
+    @describetag error_path_exemption:
+                   "Creation failures are covered in the creation error handling and recovery group."
+
     setup do
       user = user_fixture(%{github_id: 33_333, github_username: "sharer"})
       %{user: user}
@@ -280,10 +272,6 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
 
       # Should be redirected to the drop page
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
       |> assert_has("h1", text: "Immediate View Test")
       |> assert_has(".drop-full-content", text: "def immediate_view")
     end
@@ -298,12 +286,9 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
       |> click("button[type='submit']")
 
       # Wait for redirect to drop page
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Check that the drop appears on the homepage
+      |> assert_has("h1", text: "Public Visibility Test")
       |> visit(~p"/")
 
       # Drop should be visible to all users
@@ -321,12 +306,9 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
 
       # Should redirect to drop page
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Navigate back to home to create another drop
+      |> assert_has("h1", text: "Navigation Test")
       |> visit(~p"/")
       |> click("#create-drop-button")
       |> assert_path("/drops/new")
@@ -379,10 +361,6 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
 
       # Should succeed on second attempt
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
       |> assert_has("h1", text: "Retry Success Test")
     end
 
@@ -406,10 +384,6 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
 
       # Should redirect to drop page
       # Wait for redirect to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Special characters should be properly handled
       |> assert_has("h1", text: "Special Characters: äöü & <script>")
@@ -418,6 +392,9 @@ defmodule ElixirDropsWeb.Features.UserDropCreationTest do
   end
 
   describe "creation form user experience" do
+    @describetag error_path_exemption:
+                   "Validation and retry failures are covered in the drop creation form validation and creation error handling groups."
+
     setup do
       user = user_fixture(%{github_id: 55_555, github_username: "ux_tester"})
       %{user: user}

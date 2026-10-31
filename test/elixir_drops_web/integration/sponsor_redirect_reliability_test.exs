@@ -1,6 +1,9 @@
 defmodule ElixirDropsWeb.SponsorRedirectReliabilityTest do
+  # Sponsor feeds and telemetry share application-wide resources.
   use ElixirDropsWeb.ConnCase, async: false
+
   import ExUnit.CaptureLog
+
   alias ElixirDrops.Repo
   alias ElixirDropsWeb.SponsorRedirectController
 

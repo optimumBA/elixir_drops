@@ -185,7 +185,7 @@ defmodule ElixirDrops.CommentsTest do
       assert comment.body == "**some** body"
       assert comment.drop_id == drop.id
       assert comment.user_id == user.id
-      assert comment.parent_id == nil
+      assert is_nil(comment.parent_id)
     end
 
     test "creates a reply comment with parent", %{drop: drop, user: user} do

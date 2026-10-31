@@ -1,4 +1,4 @@
-defmodule ElixirDrops.GenerateShortIdTest do
+defmodule ElixirDrops.Drops.ShortIdGeneratorTest do
   use ExUnit.Case, async: true
 
   alias ElixirDrops.Drops.ShortIdGenerator

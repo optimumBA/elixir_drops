@@ -4,6 +4,9 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelperTest do
   alias ElixirDrops.ScreenshotGeneratorWorkerHelper
 
   describe "calc_height/1" do
+    @describetag error_path_exemption:
+                   "Missing code is represented by height zero and long content is capped; both boundaries are tested."
+
     test "returns 0 when body has no markdown code block" do
       body = "fjdjdjd\n"
       assert ScreenshotGeneratorWorkerHelper.calc_height(body) == 0

@@ -5,7 +5,9 @@ defmodule ElixirDrops.FactoryHelpers do
 
   alias ElixirDrops.Repo
 
-  @spec update_inserted_at(map(), non_neg_integer()) :: map()
+  @type record :: map()
+
+  @spec update_inserted_at(record(), non_neg_integer()) :: record()
   def update_inserted_at(struct, seconds_offset) do
     {:ok, updated_struct} =
       struct

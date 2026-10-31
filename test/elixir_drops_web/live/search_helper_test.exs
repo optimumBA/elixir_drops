@@ -67,9 +67,6 @@ defmodule ElixirDropsWeb.SearchHelperTest do
       assert :ok = SearchHelper.track_search("", socket, filters)
       assert :ok = SearchHelper.track_search("   ", socket, filters)
 
-      # Give the async task time to complete
-      :timer.sleep(100)
-
       # No search history should be created
       histories = Search.get_user_search_history(user.id, 10)
       assert histories == []
@@ -77,6 +74,10 @@ defmodule ElixirDropsWeb.SearchHelperTest do
   end
 
   describe "get_focus_search_suggestions/1" do
+    test "returns no suggestions for a missing user and empty catalog" do
+      assert SearchHelper.get_focus_search_suggestions(nil) == {[], false}
+    end
+
     test "returns search history suggestions for authenticated user" do
       user = AccountsFixtures.user_fixture()
 

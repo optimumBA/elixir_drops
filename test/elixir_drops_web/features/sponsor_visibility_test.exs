@@ -1,6 +1,9 @@
 defmodule ElixirDropsWeb.Features.SponsorVisibilityTest do
+  # Browser sessions observe shared sponsor events and PubSub state.
   use ElixirDropsWeb.FeatureCase, async: false
+
   import Ecto.Query
+
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
   alias ElixirDrops.Sponsors.SponsorEvent
@@ -19,12 +22,12 @@ defmodule ElixirDropsWeb.Features.SponsorVisibilityTest do
     |> Repo.aggregate(:count)
   end
 
+  defp pause(session, ms),
+    do: evaluate(session, "new Promise(resolve => setTimeout(() => resolve(true), #{ms}))")
+
   defp evaluate(session, js) do
     Frame.evaluate(session.frame_id, js, timeout: 6000)
   end
-
-  defp pause(session, ms),
-    do: evaluate(session, "new Promise(resolve => setTimeout(() => resolve(true), #{ms}))")
 
   defp viewport(session, width, height) do
     unwrap(session, fn %{page_id: page} ->

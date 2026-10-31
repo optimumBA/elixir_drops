@@ -16,12 +16,15 @@ defmodule ElixirDropsWeb.LiveAcceptance do
   `ElixirDropsWeb.ConnCase`), so it is only available once connected.
   """
 
+  @type hook :: atom()
+  @type params :: map()
+  @type session :: map()
   @type socket :: Phoenix.LiveView.Socket.t()
 
   if Application.compile_env(:elixir_drops, :sql_sandbox) do
     import Phoenix.LiveView, only: [connected?: 1, get_connect_info: 2]
 
-    @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
+    @spec on_mount(hook(), params(), session(), socket()) :: {:cont, socket()}
     def on_mount(:default, _params, _session, socket) do
       if connected?(socket), do: allow(get_connect_info(socket, :user_agent))
       {:cont, socket}
@@ -42,7 +45,7 @@ defmodule ElixirDropsWeb.LiveAcceptance do
       DBConnection.OwnershipError -> :ok
     end
   else
-    @spec on_mount(atom(), map(), map(), socket()) :: {:cont, socket()}
+    @spec on_mount(hook(), params(), session(), socket()) :: {:cont, socket()}
     def on_mount(:default, _params, _session, socket), do: {:cont, socket}
 
     @spec allow_sandbox(socket()) :: socket()

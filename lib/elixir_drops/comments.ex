@@ -10,15 +10,16 @@ defmodule ElixirDrops.Comments do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
 
+  @type affected_count :: integer()
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
   @type comment :: Comment.t()
   @type comment_id :: Ecto.UUID.t()
   @type drop :: Drop.t()
   @type drop_id :: Ecto.UUID.t()
+  @type options :: keyword()
   @type parent_comment :: Comment.t() | nil
   @type user :: User.t()
-  @type user_id :: Ecto.UUID.t()
 
   @doc """
   Lists comments for a drop with pagination.
@@ -32,7 +33,7 @@ defmodule ElixirDrops.Comments do
       [%Comment{}, ...]
 
   """
-  @spec list_drop_comments(drop_id, keyword()) :: [comment()]
+  @spec list_drop_comments(drop_id(), options()) :: [comment()]
   def list_drop_comments(drop_id, opts \\ []) do
     limit = Keyword.get(opts, :limit, 10)
     offset = Keyword.get(opts, :offset, 0)
@@ -60,7 +61,7 @@ defmodule ElixirDrops.Comments do
       ** (Ecto.NoResultsError)
 
   """
-  @spec get_comment!(comment_id) :: comment()
+  @spec get_comment!(comment_id()) :: comment()
   def get_comment!(id) do
     Comment
     |> Repo.get!(id)
@@ -76,14 +77,14 @@ defmodule ElixirDrops.Comments do
       5
 
   """
-  @spec count_drop_comments(drop_id) :: non_neg_integer()
+  @spec count_drop_comments(drop_id()) :: non_neg_integer()
   def count_drop_comments(drop_id) do
     Comment
     |> where([c], c.drop_id == ^drop_id)
     |> Repo.aggregate(:count)
   end
 
-  @spec count_drop_top_level_comments(drop_id) :: non_neg_integer()
+  @spec count_drop_top_level_comments(drop_id()) :: non_neg_integer()
   def count_drop_top_level_comments(drop_id) do
     Comment
     |> where([c], c.drop_id == ^drop_id and is_nil(c.parent_id))
@@ -145,7 +146,7 @@ defmodule ElixirDrops.Comments do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_comment(comment_id()) :: {integer(), nil}
+  @spec delete_comment(comment_id()) :: {affected_count(), nil}
   def delete_comment(comment_id) do
     Comment
     |> where([c], c.id == ^comment_id)
@@ -171,20 +172,16 @@ defmodule ElixirDrops.Comments do
     |> Comment.changeset(attrs)
     |> Ecto.Changeset.put_assoc(:drop, drop)
     |> Ecto.Changeset.put_assoc(:user, user)
-    |> verify_parent_comment(parent)
+    |> maybe_verify_parent_comment(parent)
   end
 
-  defp verify_parent_comment(changeset, nil), do: changeset
+  defp maybe_verify_parent_comment(changeset, nil), do: changeset
 
-  defp verify_parent_comment(changeset, %{parent_id: nil} = parent),
+  defp maybe_verify_parent_comment(changeset, %{parent_id: nil} = parent),
     do: Ecto.Changeset.put_assoc(changeset, :parent, parent)
 
-  defp verify_parent_comment(changeset, _parent),
+  defp maybe_verify_parent_comment(changeset, _parent),
     do: Ecto.Changeset.add_error(changeset, :parent_id, "replies cannot have replies")
-
-  defp replies_query do
-    from r in Comment, order_by: [desc: r.inserted_at]
-  end
 
   defp preload_list do
     [
@@ -197,5 +194,9 @@ defmodule ElixirDrops.Comments do
            parent: [:user]
          ]}
     ]
+  end
+
+  defp replies_query do
+    from r in Comment, order_by: [desc: r.inserted_at]
   end
 end

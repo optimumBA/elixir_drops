@@ -9,11 +9,17 @@ defmodule ElixirDrops.CommentsFixtures do
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
 
+  @type attrs :: map()
+  @type comment :: Comment.t()
+  @type drop :: Drop.t()
+  @type user :: User.t()
+
   @doc """
   Generate a comment.
   """
-  @spec comment_fixture(Drop.t(), User.t(), Comment.t() | nil, map()) ::
-          Comment.t()
+
+  @spec comment_fixture(drop(), user(), comment() | nil, attrs()) ::
+          comment()
   def comment_fixture(%Drop{} = drop, %User{} = user, parent \\ nil, attrs \\ %{}) do
     attrs =
       Enum.into(attrs, %{

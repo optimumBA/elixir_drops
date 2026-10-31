@@ -1,6 +1,7 @@
 defmodule ElixirDrops.Repo.Migrations.CreateDrops do
   use Ecto.Migration
 
+  @spec change() :: term()
   def change do
     create table(:drops, primary_key: false) do
       add :id, :binary_id, primary_key: true

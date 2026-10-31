@@ -7,8 +7,14 @@ defmodule ElixirDropsWeb.DropComponents do
   alias ElixirDrops.Drops.Drop
   alias ElixirDropsWeb.Icons
 
+  @hidden_class "hidden"
+  @popup_class "show-pop-up"
+
   @type assigns :: map()
+  @type html :: binary()
+  @type javascript :: Phoenix.LiveView.JS.t()
   @type rendered :: Phoenix.LiveView.Rendered.t()
+  @type selector :: String.t()
 
   attr :current_url, :string
   attr :current_user, User
@@ -1172,24 +1178,24 @@ defmodule ElixirDropsWeb.DropComponents do
     |> JS.dispatch("hide-welcome-message", to: "#welcome-message")
   end
 
-  @spec show_popup(String.t()) :: Phoenix.LiveView.JS.t()
+  @spec show_popup(selector()) :: javascript()
   def show_popup(pop_up_message_id) do
     %JS{}
-    |> JS.remove_class("hidden", to: "##{pop_up_message_id}")
-    |> JS.add_class("show-pop-up", to: ".drops-container")
-    |> JS.add_class("show-pop-up", to: ".drop-form")
+    |> JS.remove_class(@hidden_class, to: "##{pop_up_message_id}")
+    |> JS.add_class(@popup_class, to: ".drops-container")
+    |> JS.add_class(@popup_class, to: ".drop-form")
   end
 
-  @spec hide_popup(String.t()) :: Phoenix.LiveView.JS.t()
+  @spec hide_popup(selector()) :: javascript()
   def hide_popup(pop_up_message_id) do
     %JS{}
-    |> JS.add_class("hidden", to: "##{pop_up_message_id}")
-    |> JS.remove_class("show-pop-up", to: ".drops-container")
-    |> JS.remove_class("show-pop-up", to: ".drop-form")
-    |> JS.add_class("hidden", to: ".drops-editor-overlay")
+    |> JS.add_class(@hidden_class, to: "##{pop_up_message_id}")
+    |> JS.remove_class(@popup_class, to: ".drops-container")
+    |> JS.remove_class(@popup_class, to: ".drop-form")
+    |> JS.add_class(@hidden_class, to: ".drops-editor-overlay")
   end
 
-  @spec to_html(binary()) :: Phoenix.HTML.safe()
+  @spec to_html(html()) :: Phoenix.HTML.safe()
   def to_html(markdown) do
     markdown
     |> MDEx.to_html(
@@ -1254,11 +1260,11 @@ defmodule ElixirDropsWeb.DropComponents do
     else
       markdown
       |> strip_markdown()
-      |> truncate_text(150)
+      |> maybe_truncate_text(150)
     end
   end
 
-  defp truncate_text(text, max_length) do
+  defp maybe_truncate_text(text, max_length) do
     if String.length(text) > max_length do
       String.slice(text, 0, max_length) <> "..."
     else
@@ -1266,13 +1272,8 @@ defmodule ElixirDropsWeb.DropComponents do
     end
   end
 
-  defp maybe_add_ellipsis(text) do
-    if text == "" do
-      text
-    else
-      text <> "..."
-    end
-  end
+  defp maybe_add_ellipsis(""), do: ""
+  defp maybe_add_ellipsis(text), do: text <> "..."
 
   defp strip_markdown(text) do
     text

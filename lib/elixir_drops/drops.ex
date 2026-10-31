@@ -16,6 +16,8 @@ defmodule ElixirDrops.Drops do
 
   @topic inspect(__MODULE__)
 
+  @search_rank_fragment "ts_rank(?, websearch_to_tsquery('english', ?))"
+
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
   @type drop :: Drop.t()
@@ -156,7 +158,6 @@ defmodule ElixirDrops.Drops do
     |> Enum.map(&truncate_body_for_index/1)
   end
 
-  @spec truncate_body_for_index(drop()) :: drop()
   defp truncate_body_for_index(%Drop{body: body} = drop) when byte_size(body) > 500 do
     %{drop | body: binary_part(body, 0, 500)}
   end
@@ -233,7 +234,7 @@ defmodule ElixirDrops.Drops do
     |> select_merge([drop: drop], %{
       relevance_rank:
         fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          @search_rank_fragment,
           drop.search_vector,
           ^search_query
         )
@@ -242,7 +243,7 @@ defmodule ElixirDrops.Drops do
       [drop: drop],
       desc:
         fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          @search_rank_fragment,
           drop.search_vector,
           ^search_query
         )
@@ -300,7 +301,7 @@ defmodule ElixirDrops.Drops do
       [drop: drop],
       ^dynamic and
         fragment(
-          "ts_rank(?, websearch_to_tsquery('english', ?))",
+          @search_rank_fragment,
           drop.search_vector,
           ^search_query
         ) < ^rank

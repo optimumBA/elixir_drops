@@ -29,10 +29,12 @@ defmodule ElixirDrops.Sponsors.Telemetry do
 
   @backend Application.compile_env(:elixir_drops, :sponsor_metrics_backend, Appsignal)
 
+  @type metadata :: map()
+  @type native_time :: integer()
   @type outcome :: :attempted | :persisted | :skipped | :failed
 
   @doc "Counts one event outcome (`:attempted`, `:persisted`, `:skipped`, `:failed`)."
-  @spec event(outcome(), map()) :: :ok
+  @spec event(outcome(), metadata()) :: :ok
   def event(outcome, meta) when outcome in [:attempted, :persisted, :skipped, :failed] do
     tags = tags(Map.put(meta, :outcome, outcome))
     safely(fn -> :telemetry.execute([:elixir_drops, :sponsors, :event], %{count: 1}, tags) end)
@@ -40,17 +42,17 @@ defmodule ElixirDrops.Sponsors.Telemetry do
   end
 
   @doc "Records the duration of one event write, in milliseconds."
-  @spec write_duration(non_neg_integer(), map()) :: :ok
+  @spec write_duration(non_neg_integer(), metadata()) :: :ok
   def write_duration(duration_ms, meta),
     do: duration(:write, "sponsor_event_write_ms", duration_ms, meta)
 
   @doc "Records the duration of one sponsor redirect (including its click write)."
-  @spec redirect_duration(non_neg_integer(), map()) :: :ok
+  @spec redirect_duration(non_neg_integer(), metadata()) :: :ok
   def redirect_duration(duration_ms, meta),
     do: duration(:redirect, "sponsor_redirect_ms", duration_ms, Map.delete(meta, :kind))
 
   @doc "Elapsed milliseconds since a `System.monotonic_time/0` start."
-  @spec elapsed_ms(integer()) :: non_neg_integer()
+  @spec elapsed_ms(native_time()) :: non_neg_integer()
   def elapsed_ms(started),
     do: System.convert_time_unit(System.monotonic_time() - started, :native, :millisecond)
 

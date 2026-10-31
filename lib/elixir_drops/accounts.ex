@@ -8,6 +8,7 @@ defmodule ElixirDrops.Accounts do
   alias ElixirDrops.Accounts.UserToken
   alias ElixirDrops.Repo
 
+  @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
   @type github_id :: Integer
   @type token :: binary()
@@ -43,7 +44,7 @@ defmodule ElixirDrops.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec get_or_create_user(map()) :: {:ok, user()} | {:error, changeset()}
+  @spec get_or_create_user(attrs()) :: {:ok, user()} | {:error, changeset()}
   def get_or_create_user(%{github_id: github_id} = user) do
     case get_user_by_github_id(github_id) do
       {:error, _reason} ->
@@ -86,7 +87,7 @@ defmodule ElixirDrops.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec register_user(map()) :: {:ok, user()} | {:error, changeset()}
+  @spec register_user(attrs()) :: {:ok, user()} | {:error, changeset()}
   def register_user(attrs \\ %{}) do
     %User{}
     |> change_user(attrs)
@@ -105,7 +106,7 @@ defmodule ElixirDrops.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_user(user(), map()) :: {:ok, user()} | {:error, changeset()}
+  @spec update_user(user(), attrs()) :: {:ok, user()} | {:error, changeset()}
   def update_user(%User{} = user, attrs) do
     user
     |> change_user(attrs)
@@ -121,7 +122,7 @@ defmodule ElixirDrops.Accounts do
       %Ecto.Changeset{data: %User{}}
 
   """
-  @spec change_user(user(), map()) :: changeset()
+  @spec change_user(user(), attrs()) :: changeset()
   def change_user(%User{} = user, attrs \\ %{}) do
     User.user_changeset(user, attrs)
   end

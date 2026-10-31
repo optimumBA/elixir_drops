@@ -164,6 +164,9 @@ defmodule ElixirDropsWeb.Features.VisitorBrowsingTest do
   end
 
   describe "visitor browses with infinite scroll" do
+    @describetag error_path_exemption:
+                   "The last-page boundary is covered by infinite scroll handles last page gracefully."
+
     setup do
       user = user_fixture(%{github_id: 67_890, github_username: "prolific_coder"})
 
@@ -247,6 +250,9 @@ defmodule ElixirDropsWeb.Features.VisitorBrowsingTest do
   end
 
   describe "visitor sees real-time drop notifications" do
+    @describetag error_path_exemption:
+                   "Pending screenshot broadcasts leave the indicator absent in screenshot generation started broadcast does not change page state."
+
     setup do
       existing_user = user_fixture(%{github_id: 11_111, github_username: "existing"})
 
@@ -309,6 +315,9 @@ defmodule ElixirDropsWeb.Features.VisitorBrowsingTest do
   end
 
   describe "visitor navigation experience" do
+    @describetag error_path_exemption:
+                   "Missing-resource navigation is covered by the resource not found and navigation errors feature group."
+
     setup do
       user = user_fixture(%{github_id: 44_444, github_username: "navigator"})
 
@@ -373,6 +382,9 @@ defmodule ElixirDropsWeb.Features.VisitorBrowsingTest do
   end
 
   describe "visitor search functionality" do
+    @describetag error_path_exemption:
+                   "No-result behavior is covered by search handles missing results gracefully in the search UI feature group."
+
     setup do
       user = user_fixture(%{github_id: 55_555, github_username: "searchable"})
 

@@ -1,12 +1,14 @@
 defmodule ElixirDrops.Repo.Migrations.CreateObanJobs do
   use Ecto.Migration
 
+  @spec up() :: term()
   def up do
     Oban.Migration.up(version: 12)
   end
 
   # We specify `version: 1` in `down`, ensuring that we'll roll all the way back down if
   # necessary, regardless of which version we've migrated `up` to.
+  @spec down() :: term()
   def down do
     Oban.Migration.down(version: 1)
   end

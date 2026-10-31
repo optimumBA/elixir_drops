@@ -8,22 +8,23 @@ defmodule ElixirDrops.Notifications.Notification do
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Comments.Comment
 
+  @type attrs :: map()
+  @type changeset :: Ecto.Changeset.t()
   @type t :: %__MODULE__{}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "notifications" do
-    field :read, :boolean, default: false
-    field :type, Ecto.Enum, values: [:comment_on_post, :reply_to_comment]
-
     belongs_to :actor, User
     belongs_to :comment, Comment
+    field :read, :boolean, default: false
     belongs_to :recipient, User
+    field :type, Ecto.Enum, values: [:comment_on_post, :reply_to_comment]
 
     timestamps()
   end
 
-  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t(), attrs()) :: changeset()
   def changeset(notification, attrs) do
     notification
     |> cast(attrs, [:read, :type])

@@ -1,6 +1,7 @@
 defmodule ElixirDrops.Repo.Migrations.AddSearchToDrops do
   use Ecto.Migration
 
+  @spec change() :: term()
   def change do
     alter table(:drops) do
       add :search_vector, :tsvector

@@ -8,6 +8,13 @@ defmodule ElixirDrops.DropsSearchTest do
   alias ElixirDrops.Drops.Drop
 
   describe "search functionality" do
+    test "returns an empty list for a missing match" do
+      user = user_fixture()
+      drop_fixture(%Drop{}, user, %{title: "Elixir", body: "Phoenix content"})
+
+      assert Drops.list_drops(%{user_id: user.id, search: "nonexistenttoken"}) == []
+    end
+
     test "filters drops correctly by search query" do
       user = user_fixture()
 

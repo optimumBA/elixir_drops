@@ -8,7 +8,9 @@ defmodule ElixirDrops.Accounts.UserToken do
   alias ElixirDrops.Accounts.User
   alias ElixirDrops.Accounts.UserToken
 
+  @type query :: Ecto.Query.t()
   @type token :: binary()
+  @type user :: User.t()
 
   @type t :: %__MODULE__{
           context: String.t(),
@@ -48,7 +50,7 @@ defmodule ElixirDrops.Accounts.UserToken do
   and devices in the UI and allow users to explicitly expire any
   session they deem invalid.
   """
-  @spec build_session_token(User.t()) :: {any(), any()}
+  @spec build_session_token(user()) :: {any(), any()}
   def build_session_token(%User{} = user) do
     token = :crypto.strong_rand_bytes(@rand_size)
     {token, %UserToken{token: token, context: "session", user_id: user.id}}
@@ -62,7 +64,7 @@ defmodule ElixirDrops.Accounts.UserToken do
   The token is valid if it matches the value in the database and it has
   not expired (after @session_validity_in_days).
   """
-  @spec verify_session_token_query(token()) :: {:ok, Ecto.Query.t()}
+  @spec verify_session_token_query(token()) :: {:ok, query()}
   def verify_session_token_query(token) do
     query =
       from token in token_and_context_query(token, "session"),
@@ -76,7 +78,7 @@ defmodule ElixirDrops.Accounts.UserToken do
   @doc """
   Returns the token struct for the given token value and context.
   """
-  @spec token_and_context_query(binary(), binary()) :: Ecto.Query.t()
+  @spec token_and_context_query(binary(), binary()) :: query()
   def token_and_context_query(token, context) do
     from UserToken, where: [token: ^token, context: ^context]
   end
@@ -84,7 +86,7 @@ defmodule ElixirDrops.Accounts.UserToken do
   @doc """
   Gets all tokens for the given user for the given contexts.
   """
-  @spec user_and_contexts_query(User.t(), :all) :: Ecto.Query.t()
+  @spec user_and_contexts_query(user(), :all) :: query()
   def user_and_contexts_query(user, :all) do
     from t in UserToken, where: t.user_id == ^user.id
   end

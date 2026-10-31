@@ -1,4 +1,5 @@
 defmodule ElixirDropsWeb.Features.SponsorTrackingTest do
+  # Exercises shared LiveView broadcast and impression delivery across browser connections.
   use ElixirDropsWeb.FeatureCase, async: false
 
   import Ecto.Query
@@ -153,12 +154,6 @@ defmodule ElixirDropsWeb.Features.SponsorTrackingTest do
     session
   end
 
-  defp impression_count do
-    SponsorEvent
-    |> where([event], event.kind == "impression")
-    |> Repo.aggregate(:count)
-  end
-
   defp assert_event_count(expected, retries \\ 60)
 
   defp assert_event_count(expected, 0),
@@ -169,5 +164,11 @@ defmodule ElixirDropsWeb.Features.SponsorTrackingTest do
       Process.sleep(50)
       assert_event_count(expected, retries - 1)
     end
+  end
+
+  defp impression_count do
+    SponsorEvent
+    |> where([event], event.kind == "impression")
+    |> Repo.aggregate(:count)
   end
 end

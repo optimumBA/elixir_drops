@@ -9,6 +9,9 @@ defmodule ElixirDrops.MarkdownFormatterTest do
   alias ElixirDropsWeb.Endpoint
 
   describe "format_drop/1" do
+    @describetag error_path_exemption:
+                   "Formats an already persisted drop and returns markdown; input validation belongs to drop creation."
+
     test "formats drop as markdown with title, body, and metadata" do
       user = user_fixture(%{github_username: "testuser"})
 
@@ -66,6 +69,9 @@ defmodule ElixirDrops.MarkdownFormatterTest do
   end
 
   describe "format_index/1" do
+    @describetag error_path_exemption:
+                   "Formats a list of persisted drops and returns markdown, including an empty list."
+
     test "formats drops list as markdown index" do
       user = user_fixture()
       drop1 = drop_fixture(%Drop{}, user, %{title: "Drop 1", body: "First drop content"})

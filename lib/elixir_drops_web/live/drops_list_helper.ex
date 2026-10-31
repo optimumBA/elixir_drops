@@ -14,6 +14,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @type opts :: Keyword.t()
   @type rendered :: Phoenix.LiveView.Rendered.t()
   @type socket :: Phoenix.LiveView.Socket.t()
+  @type text :: String.t()
 
   attr :batch_size, :integer, default: 10
   attr :current_user, :any
@@ -33,7 +34,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   Stream `dom_id` for a feed with an optional sponsor entry (see
   `assign_drops/1`).
   """
-  @spec stream_dom_id(map()) :: String.t()
+  @spec stream_dom_id(assigns()) :: text()
   def stream_dom_id(%{sponsor: "dnsimple"}), do: @sponsor_dom_id
   def stream_dom_id(%{id: id}), do: "drop-#{id}"
 
@@ -165,7 +166,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
     socket
     |> assign_drop_cursor(drops, socket.assigns.search_query)
-    |> Phoenix.LiveView.stream(:drops, with_sponsor(drops, sponsor_feed?), reset: true)
+    |> Phoenix.LiveView.stream(:drops, maybe_with_sponsor(drops, sponsor_feed?), reset: true)
     |> assign(:drops_empty?, Enum.empty?(drops))
     |> assign(:end_of_timeline?, false)
     |> assign(:loading_more, false)
@@ -181,8 +182,8 @@ defmodule ElixirDropsWeb.DropsListHelper do
       drops != []
   end
 
-  defp with_sponsor(drops, true), do: List.insert_at(drops, 1, %{sponsor: "dnsimple"})
-  defp with_sponsor(drops, false), do: drops
+  defp maybe_with_sponsor(drops, true), do: List.insert_at(drops, 1, %{sponsor: "dnsimple"})
+  defp maybe_with_sponsor(drops, false), do: drops
 
   @spec maybe_insert_drops(socket()) :: socket()
   def maybe_insert_drops(socket) do

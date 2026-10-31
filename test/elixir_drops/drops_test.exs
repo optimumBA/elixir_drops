@@ -1,5 +1,6 @@
 defmodule ElixirDrops.DropsTest do
-  use ElixirDrops.DataCase, async: true
+  # Broadcast cases share the app-wide Drops topic with LiveView subscribers.
+  use ElixirDrops.DataCase, async: false
 
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.CommentsFixtures
@@ -8,6 +9,8 @@ defmodule ElixirDrops.DropsTest do
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
+
+  @moduletag serial: :pubsub
 
   @invalid_attrs %{title: nil, body: nil}
   @valid_attrs %{title: "some title", body: "some body"}
@@ -31,10 +34,10 @@ defmodule ElixirDrops.DropsTest do
 
       drop = %Drop{
         body: "This is a new drop.",
-        id: 1,
+        id: Ecto.UUID.generate(),
         short_id: "abc123",
         title: "New Drop",
-        user_id: 1
+        user_id: Ecto.UUID.generate()
       }
 
       assert :ok == Drops.broadcast_drop_creation(drop)
@@ -48,10 +51,10 @@ defmodule ElixirDrops.DropsTest do
 
       drop = %Drop{
         body: "This is a new drop. ```elixir\nIO.puts(\"Hello, world!\")```",
-        id: 1,
+        id: Ecto.UUID.generate(),
         short_id: "abc123",
         title: "New Drop",
-        user_id: 1
+        user_id: Ecto.UUID.generate()
       }
 
       assert :ok == Drops.broadcast_drop_screenshot_started(drop)
@@ -65,10 +68,10 @@ defmodule ElixirDrops.DropsTest do
 
       drop = %Drop{
         body: "This is a new drop. ```elixir\nIO.puts(\"Hello, world!\")```",
-        id: 1,
+        id: Ecto.UUID.generate(),
         short_id: "abc123",
         title: "New Drop",
-        user_id: 1
+        user_id: Ecto.UUID.generate()
       }
 
       assert :ok == Drops.broadcast_drop_screenshot_completion(drop, 100, :completed)
@@ -397,6 +400,9 @@ defmodule ElixirDrops.DropsTest do
   end
 
   describe "list_all_drops/0" do
+    @describetag error_path_exemption:
+                   "Listing returns a list, including an empty list, rather than an error."
+
     test "returns all drops ordered by insertion time (newest first)" do
       user = user_fixture()
 
@@ -426,7 +432,7 @@ defmodule ElixirDrops.DropsTest do
       [drop | _rest] = Drops.list_all_drops()
 
       assert Ecto.assoc_loaded?(drop.user)
-      assert drop.user != nil
+      refute is_nil(drop.user)
     end
 
     test "truncates body field to 500 characters for performance" do
@@ -467,12 +473,12 @@ defmodule ElixirDrops.DropsTest do
       [drop | _rest] = Drops.list_all_drops()
 
       # Should have all standard fields
-      assert drop.id != nil
+      refute is_nil(drop.id)
       assert drop.title == "Test Drop"
-      assert drop.short_id != nil
+      refute is_nil(drop.short_id)
       assert drop.user_id == user.id
-      assert drop.inserted_at != nil
-      assert drop.updated_at != nil
+      refute is_nil(drop.inserted_at)
+      refute is_nil(drop.updated_at)
 
       # User should be preloaded
       assert drop.user.id == user.id

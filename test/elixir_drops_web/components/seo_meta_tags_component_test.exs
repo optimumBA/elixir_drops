@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.SeoMetaTagsComponentsTest do
+defmodule ElixirDropsWeb.SeoMetaTagsComponentTest do
   use ElixirDropsWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
@@ -6,6 +6,9 @@ defmodule ElixirDropsWeb.SeoMetaTagsComponentsTest do
   alias ElixirDropsWeb.SeoMetaTagsComponent
 
   describe "seo_meta_tags/1" do
+    @describetag error_path_exemption:
+                   "Rendering uses defaults when attributes are absent; it does not return an error."
+
     test "renders meta tags with the values passed" do
       assigns = %{
         description: "Test description",

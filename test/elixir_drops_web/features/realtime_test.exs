@@ -27,7 +27,7 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       %{user: user}
     end
 
-    test "drop creation form provides live validation feedback", %{conn: conn, user: user} do
+    test "invalid title provides live validation feedback", %{conn: conn, user: user} do
       conn
       |> sign_in_user(user)
       |> visit(~p"/drops/new")
@@ -50,10 +50,6 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       |> click("button[type='submit']")
 
       # Wait for submission to complete
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Should redirect to the created drop
       |> assert_has("h1", text: "Live Validation Test")
@@ -96,6 +92,9 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
   end
 
   describe "live content updates and synchronization" do
+    @describetag error_path_exemption:
+                   "Update validation failures are covered by update validation errors preserve form content in user drop management."
+
     setup do
       user = user_fixture(%{github_id: 67_890, github_username: "sync_user"})
       %{user: user}
@@ -116,12 +115,9 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       |> click("button[type='submit']")
 
       # Wait for submission
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Navigate back to homepage
+      |> assert_has("h1", text: "Live Sync Test")
       |> visit(~p"/")
 
       # New drop should appear
@@ -167,12 +163,9 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       |> click("button[type='submit']")
 
       # Wait for submission
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Navigate to homepage to see both drops
+      |> assert_has("h1", text: "Second Live Drop")
       |> visit(~p"/")
       |> assert_has(".drop-card", text: "First Live Drop")
       |> assert_has(".drop-card", text: "Second Live Drop")
@@ -226,7 +219,7 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       |> assert_has("form")
     end
 
-    test "form state maintained during connection issues", %{conn: conn, user: user} do
+    test "form state maintained after invalid submission", %{conn: conn, user: user} do
       conn
       |> sign_in_user(user)
       |> visit(~p"/drops/new")
@@ -249,10 +242,6 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       |> click("button[type='submit']")
 
       # Wait for submission
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Should redirect to created drop
       |> assert_has("h1", text: "Connection Test Fixed")
@@ -281,16 +270,12 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       |> click("button[type='submit']")
 
       # Wait for submission
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Should redirect to drop page
       |> assert_has("h1", text: "Screenshot Progress Test")
     end
 
-    test "form submission provides immediate feedback", %{conn: conn, user: user} do
+    test "invalid submission provides immediate feedback", %{conn: conn, user: user} do
       conn
       |> sign_in_user(user)
       |> visit(~p"/drops/new")
@@ -308,10 +293,6 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       |> click("button[type='submit']")
 
       # Wait for submission
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Should redirect to created drop
       |> assert_has("h1", text: "Immediate Feedback Test")
@@ -319,6 +300,9 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
   end
 
   describe "collaborative features and multi-user updates" do
+    @describetag error_path_exemption:
+                   "Cross-user edit refusals are covered by the drop ownership and authorization feature group."
+
     setup do
       user1 = user_fixture(%{github_id: 33_333, github_username: "collab_user1"})
       user2 = user_fixture(%{github_id: 44_444, github_username: "collab_user2"})
@@ -352,12 +336,9 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
       |> click("button[type='submit']")
 
       # Wait for submission
-      |> then(fn session ->
-        Process.sleep(500)
-        session
-      end)
 
       # Navigate to homepage
+      |> assert_has("h1", text: "Collaborative Drop 2")
       |> visit(~p"/")
 
       # Should see both drops
@@ -392,6 +373,9 @@ defmodule ElixirDropsWeb.Features.RealtimeUpdatesTest do
   end
 
   describe "live search and dynamic content filtering" do
+    @describetag error_path_exemption:
+                   "No-result behavior is covered by search handles missing results gracefully in the search UI feature group."
+
     setup do
       user = user_fixture(%{github_id: 55_555, github_username: "filter_user"})
 

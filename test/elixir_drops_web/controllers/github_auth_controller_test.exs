@@ -1,4 +1,4 @@
-defmodule ElixirDropsWeb.GitAuthControllerTest do
+defmodule ElixirDropsWeb.GithubAuthControllerTest do
   use ElixirDropsWeb.ConnCase, async: true
 
   import ElixirDrops.AccountsFixtures
@@ -157,6 +157,9 @@ defmodule ElixirDropsWeb.GitAuthControllerTest do
   end
 
   describe "GET /auth/logout" do
+    @describetag error_path_exemption:
+                   "Logout clears the session and redirects even when no session is present."
+
     test "clears the session", %{conn: conn} do
       conn =
         conn

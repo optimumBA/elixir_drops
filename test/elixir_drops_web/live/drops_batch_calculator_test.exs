@@ -4,6 +4,9 @@ defmodule ElixirDropsWeb.DropsBatchCalculatorTest do
   alias ElixirDropsWeb.DropsBatchCalculator
 
   describe "calculate_batch_size/2" do
+    @describetag error_path_exemption:
+                   "The size calculation clamps small viewports and returns a size rather than an error."
+
     test "returns minimum 6 items for very small viewports" do
       assert DropsBatchCalculator.calculate_batch_size(320, 400) == 6
     end

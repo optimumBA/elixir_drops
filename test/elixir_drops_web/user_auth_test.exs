@@ -19,6 +19,9 @@ defmodule ElixirDropsWeb.UserAuthTest do
   end
 
   describe "log_in_user/3" do
+    @describetag error_path_exemption:
+                   "Signing in accepts an authenticated user; invalid and missing tokens are covered in the on_mount :ensure_authenticated group."
+
     test "stores the user token in the session", %{conn: conn, user: user} do
       conn = UserAuth.log_in_user(conn, user)
       assert token = get_session(conn, :user_token)
@@ -60,6 +63,9 @@ defmodule ElixirDropsWeb.UserAuthTest do
   end
 
   describe "logout_user/1" do
+    @describetag error_path_exemption:
+                   "Logging out is idempotent and explicitly covers an already logged-out user."
+
     test "erases session and cookies", %{conn: conn, user: user} do
       user_token = Accounts.generate_user_session_token(user)
 
@@ -158,7 +164,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
       assert updated_socket.assigns.current_user.id == user.id
     end
 
-    test "assigns nil to current_user assign if there isn't a valid user_token", %{conn: conn} do
+    test "assigns nil to current_user for an invalid user_token", %{conn: conn} do
       user_token = "invalid_token"
 
       session =
@@ -197,7 +203,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
       assert updated_socket.assigns.current_user.id == user.id
     end
 
-    test "redirects to login page if there isn't a valid user_token", %{conn: conn} do
+    test "redirects to login page for an invalid user_token", %{conn: conn} do
       user_token = "invalid_token"
 
       session =
@@ -232,6 +238,9 @@ defmodule ElixirDropsWeb.UserAuthTest do
   end
 
   describe "on_mount :redirect_if_user_is_authenticated" do
+    @describetag error_path_exemption:
+                   "This hook redirects authenticated users and continues for visitors; both branches are covered."
+
     test "redirects if there is an authenticated  user ", %{conn: conn, user: user} do
       user_token = Accounts.generate_user_session_token(user)
 

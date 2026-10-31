@@ -5,6 +5,8 @@ defmodule ElixirDrops.Search.PopularSearch do
 
   import Ecto.Changeset
 
+  @type attrs :: map()
+  @type changeset :: Ecto.Changeset.t()
   @type t :: %__MODULE__{}
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -16,7 +18,7 @@ defmodule ElixirDrops.Search.PopularSearch do
     timestamps(type: :utc_datetime)
   end
 
-  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t(), attrs()) :: changeset()
   def changeset(popular_search, attrs) do
     popular_search
     |> cast(attrs, [:query, :search_count])

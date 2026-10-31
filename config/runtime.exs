@@ -1,8 +1,10 @@
 import Config
 
+sponsor_qa_names = System.get_env("SPONSOR_QA_GITHUB_USERNAMES", "")
+
 config :elixir_drops,
        :sponsor_qa_github_usernames,
-       System.get_env("SPONSOR_QA_GITHUB_USERNAMES", "")
+       sponsor_qa_names
        |> String.split(",", trim: true)
        |> Enum.map(&String.trim/1)
        |> Enum.reject(&(&1 == ""))

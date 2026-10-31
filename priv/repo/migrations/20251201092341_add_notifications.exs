@@ -1,6 +1,7 @@
 defmodule ElixirDrops.Repo.Migrations.AddNotifications do
   use Ecto.Migration
 
+  @spec change() :: term()
   def change do
     create table(:notifications, primary_key: false) do
       add :id, :binary_id, primary_key: true

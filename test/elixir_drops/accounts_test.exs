@@ -75,6 +75,9 @@ defmodule ElixirDrops.AccountsTest do
   end
 
   describe "generate_user_session_token/1" do
+    @describetag error_path_exemption:
+                   "For a persisted user token generation returns a token; validation is performed when the session is read."
+
     setup [:create_user_and_token]
 
     test "generates a token", %{user: user} do
@@ -130,7 +133,8 @@ defmodule ElixirDrops.AccountsTest do
     end
 
     test "doesn't return user for expired token", %{token: token} do
-      {1, nil} = Repo.update_all(UserToken, set: [inserted_at: ~N[2020-01-01 00:00:00]])
+      expired_at = NaiveDateTime.add(NaiveDateTime.utc_now(), -366 * 24 * 60 * 60, :second)
+      {1, nil} = Repo.update_all(UserToken, set: [inserted_at: expired_at])
       refute Accounts.get_user_by_session_token(token)
     end
   end
@@ -148,12 +152,15 @@ defmodule ElixirDrops.AccountsTest do
     end
 
     test "doesn't return user for expired token", %{token: token} do
-      {1, nil} = Repo.update_all(UserToken, set: [inserted_at: ~N[2020-01-01 00:00:00]])
+      expired_at = NaiveDateTime.add(NaiveDateTime.utc_now(), -366 * 24 * 60 * 60, :second)
+      {1, nil} = Repo.update_all(UserToken, set: [inserted_at: expired_at])
       refute Accounts.get_user_by_session_token(token)
     end
   end
 
   describe "delete_user_session_token/1" do
+    @describetag error_path_exemption: "Deleting a session token is idempotent and returns :ok."
+
     setup [:create_user_and_token]
 
     test "deletes the token", %{user: user} do
@@ -166,7 +173,7 @@ defmodule ElixirDrops.AccountsTest do
       token = Accounts.generate_user_session_token(user)
 
       assert Accounts.clear_all_tokens_for_user(user) == :ok
-      assert Accounts.get_user_by_session_token(token) == nil
+      assert is_nil(Accounts.get_user_by_session_token(token))
     end
   end
 
@@ -200,6 +207,11 @@ defmodule ElixirDrops.AccountsTest do
 
   describe "get_or_create_user/1" do
     setup [:create_user_and_token]
+
+    test "returns an error when a new user has invalid attributes" do
+      assert {:error, changeset} = Accounts.get_or_create_user(%{github_id: 98_765_432})
+      assert "can't be blank" in errors_on(changeset).github_username
+    end
 
     test "creates new user with valid params" do
       {:ok, returned_user} =

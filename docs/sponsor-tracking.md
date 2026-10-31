@@ -190,7 +190,7 @@ lost-reply, dwell/background and resize/reconnect regressions (Node's built-in
 runner, no added dependency). Then run the normal project gate and focused tests:
 
 ```sh
-mix test test/elixir_drops/sponsor_reliability_test.exs test/elixir_drops_web/controllers/sponsor_redirect_reliability_test.exs
+mix test test/elixir_drops/integration/sponsor_reliability_test.exs test/elixir_drops_web/integration/sponsor_redirect_reliability_test.exs
 FEATURE_TESTS=true PW_TIMEOUT=5000 mix test --include feature test/elixir_drops_web/features/sponsor_tracking_test.exs test/elixir_drops_web/features/sponsor_visibility_test.exs
 ```
 

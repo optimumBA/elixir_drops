@@ -1,4 +1,5 @@
 defmodule ElixirDrops.MarkdownCacheTest do
+  # Mutates the shared named ETS markdown cache.
   use ElixirDrops.DataCase, async: false
 
   import ElixirDrops.AccountsFixtures
@@ -8,6 +9,17 @@ defmodule ElixirDrops.MarkdownCacheTest do
   alias ElixirDrops.MarkdownCache
 
   describe "get_or_generate/3" do
+    test "propagates generator failures and allows a retry" do
+      user = user_fixture()
+      drop = drop_fixture(%Drop{}, user)
+
+      assert_raise RuntimeError, "generation failed", fn ->
+        MarkdownCache.get_or_generate(:drop, drop, fn -> raise "generation failed" end)
+      end
+
+      assert MarkdownCache.get_or_generate(:drop, drop, fn -> "retry" end) == "retry"
+    end
+
     test "caches formatted content on first call" do
       user = user_fixture()
       drop = drop_fixture(%Drop{}, user)
@@ -167,7 +179,7 @@ defmodule ElixirDrops.MarkdownCacheTest do
     end
   end
 
-  describe "error handling and edge cases" do
+  describe "get_or_generate/3 edge cases" do
     test "lookup_cache handles missing ETS table gracefully" do
       user = user_fixture()
       drop = drop_fixture(%Drop{}, user)

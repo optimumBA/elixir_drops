@@ -1,4 +1,5 @@
 defmodule ElixirDrops.SitemapTest do
+  # Changes the shared sitemap file and directory permissions.
   use ElixirDrops.DataCase, async: false
   use ElixirDropsWeb, :verified_routes
 
@@ -74,7 +75,7 @@ defmodule ElixirDrops.SitemapTest do
         |> String.to_charlist()
         |> :xmerl_scan.string()
 
-      assert element != nil
+      refute is_nil(element)
     end
 
     test "handles file system errors" do
@@ -93,7 +94,7 @@ defmodule ElixirDrops.SitemapTest do
     end
   end
 
-  describe "error handling" do
+  describe "generate/1 error handling" do
     test "handles directory creation failure" do
       user = user_fixture()
       drop = drop_fixture(user)
@@ -124,7 +125,10 @@ defmodule ElixirDrops.SitemapTest do
     end
   end
 
-  describe "regeneration" do
+  describe "generate/1 regeneration" do
+    @describetag error_path_exemption:
+                   "Write failures are covered in the generate/1 error handling group."
+
     test "keeps publications newest first and removes deleted drops" do
       user = user_fixture()
       original_older_drop = drop_fixture(user)

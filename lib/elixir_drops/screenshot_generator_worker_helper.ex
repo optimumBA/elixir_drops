@@ -3,12 +3,15 @@ defmodule ElixirDrops.ScreenshotGeneratorWorkerHelper do
   Helper functions for our screenshot generator worker
   """
 
+  @type body :: String.t()
+  @type height :: integer()
+
   @code_block_pattern ~r/```(?:\w+\n)?(.+?)```/s
   @line_height 19.2
   @logo_offset_height 600
   @max_height 843
 
-  @spec calc_height(String.t()) :: integer()
+  @spec calc_height(body()) :: height()
   def calc_height(body) do
     case Regex.run(@code_block_pattern, body, capture: :first) do
       nil ->

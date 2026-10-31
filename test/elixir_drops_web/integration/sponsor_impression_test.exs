@@ -1,4 +1,5 @@
 defmodule ElixirDropsWeb.SponsorImpressionTest do
+  # Changes shared sponsor QA application configuration.
   use ElixirDropsWeb.ConnCase, async: false
 
   import ElixirDrops.AccountsFixtures

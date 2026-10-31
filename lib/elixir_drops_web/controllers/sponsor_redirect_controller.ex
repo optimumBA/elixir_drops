@@ -4,7 +4,10 @@ defmodule ElixirDropsWeb.SponsorRedirectController do
   alias ElixirDrops.Sponsors
   alias ElixirDrops.Sponsors.Telemetry
 
-  @spec show(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  @type conn :: Plug.Conn.t()
+  @type params :: map()
+
+  @spec show(conn(), params()) :: conn()
   def show(conn, %{"placement" => placement}) do
     conn = put_resp_header(conn, "cache-control", "private, no-store")
 

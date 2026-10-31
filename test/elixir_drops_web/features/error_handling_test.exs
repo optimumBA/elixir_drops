@@ -215,11 +215,7 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
       |> fill_in("Title", with: "Auth Persistence Test")
       |> fill_in("Body", with: "def auth_persistence, do: :maintained")
       |> click("button[type='submit']")
-      |> then(fn session ->
-        # Wait for navigation to complete - the redirect happens after form submission
-        Process.sleep(800)
-        session
-      end)
+      |> assert_has("h1", text: "Auth Persistence Test")
       |> then(fn session ->
         # Assert we're on a drop page (any drop page with short_id format)
         current_path = PhoenixTest.Driver.current_path(session)
@@ -303,10 +299,8 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
       |> fill_in("Title", with: "Navigation Recovery Test")
       |> fill_in("Body", with: "def navigation_recovery, do: :works")
       |> click("button[type='submit']")
+      |> assert_has("h1", text: "Navigation Recovery Test")
       |> then(fn session ->
-        # Wait for redirect to complete
-        Process.sleep(500)
-
         # Get the latest drop for redirect assertion
         new_drop = get_latest_drop_by_user(user)
 
@@ -346,13 +340,13 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
     end
   end
 
-  describe "network connectivity and recovery" do
+  describe "form and search recovery" do
     setup do
       user = user_fixture(%{github_id: 22_222, github_username: "network_user"})
       %{user: user}
     end
 
-    test "form retries work after initial failure", %{conn: conn, user: user} do
+    test "form retries work after invalid submission", %{conn: conn, user: user} do
       conn
       |> sign_in_user(user)
       |> visit(~p"/drops/new")

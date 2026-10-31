@@ -1,6 +1,9 @@
 defmodule ElixirDrops.MixProject do
   use Mix.Project
 
+  @type options :: keyword()
+
+  @spec project() :: options()
   def project do
     [
       app: :elixir_drops,
@@ -52,6 +55,7 @@ defmodule ElixirDrops.MixProject do
   # Configuration for the OTP application.
   #
   # Type `mix help compile.app` for more information.
+  @spec application() :: options()
   def application do
     [
       mod: {ElixirDrops.Application, []},
@@ -61,7 +65,7 @@ defmodule ElixirDrops.MixProject do
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
+  defp elixirc_paths(_env), do: ["lib"]
 
   # Specifies your project dependencies.
   #
@@ -102,8 +106,9 @@ defmodule ElixirDrops.MixProject do
       {:excoveralls, "~> 0.18", only: :test},
       {:faker, "~> 0.18", only: :test},
       {:github_workflows_generator, "~> 0.1", only: :dev, runtime: false},
+      {:kogen_credo, "~> 0.1.0", only: :test, runtime: false},
       {:mix_audit, "~> 2.1", only: :test, runtime: false},
-      {:optimum_credo, "~> 0.1", only: :test, runtime: false},
+      {:optimum_credo, "~> 0.5.0", only: :test, runtime: false},
       {:sobelow, "~> 0.13", only: :test, runtime: false},
       {:tidewave, "~> 0.1", only: :dev}
     ]

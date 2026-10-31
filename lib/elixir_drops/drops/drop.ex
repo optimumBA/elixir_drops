@@ -9,6 +9,7 @@ defmodule ElixirDrops.Drops.Drop do
   alias ElixirDrops.Drops.Screenshot
 
   @type attrs :: map()
+  @type changeset :: Ecto.Changeset.t()
   @type t :: %__MODULE__{}
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -16,8 +17,8 @@ defmodule ElixirDrops.Drops.Drop do
   schema "drops" do
     field :body, :string
     field :comment_count, :integer, virtual: true
-    embeds_one :screenshot, Screenshot, on_replace: :update
     field :relevance_rank, :float, virtual: true
+    embeds_one :screenshot, Screenshot, on_replace: :update
     field :search_vector, :string, load_in_query: false
     field :short_id, :string
     field :title, :string
@@ -27,7 +28,7 @@ defmodule ElixirDrops.Drops.Drop do
     timestamps()
   end
 
-  @spec changeset(t(), attrs()) :: Ecto.Changeset.t()
+  @spec changeset(t(), attrs()) :: changeset()
   def changeset(%__MODULE__{} = drop, attrs \\ %{}) do
     drop
     |> cast(attrs, [:body, :short_id, :title, :user_id])

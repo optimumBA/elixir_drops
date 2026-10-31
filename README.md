@@ -57,6 +57,10 @@ Run the complete project gate before committing:
 make ci
 ```
 
+The test environment uses published OptimumCredo 0.5.x and KogenCredo 0.1.x
+packages. `.credo.exs` selects the project’s review conventions and generated-code
+integrity checks. Run `MIX_ENV=test mix deps.get` before the gate on a fresh checkout.
+
 For a coverage report, run `mix coveralls` or `mix coveralls.html`. Generate the
 Elixir documentation with `mix docs --formatter html --open`.
 

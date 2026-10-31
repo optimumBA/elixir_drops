@@ -4,6 +4,9 @@ defmodule ElixirDropsWeb.CodeBlockHelperTest do
   alias ElixirDropsWeb.CodeBlockHelper
 
   describe "has_code_block?/1" do
+    @describetag error_path_exemption:
+                   "This total predicate returns false when no code block exists; both results are tested."
+
     test "returns true when code block is present" do
       body = "Some text\n```elixir\nIO.puts(\"hello\")\n```\nMore text"
 

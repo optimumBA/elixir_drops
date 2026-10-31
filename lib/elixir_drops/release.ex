@@ -6,6 +6,8 @@ defmodule ElixirDrops.Release do
 
   alias ElixirDrops.Workers.SitemapGeneratorWorker
 
+  @type error_reason :: String.t()
+  @type repo :: Ecto.Repo.t()
   @type response :: {:ok, fun(), any()}
 
   @app :elixir_drops
@@ -27,7 +29,7 @@ defmodule ElixirDrops.Release do
   @doc """
   Rolls back the production DB.
   """
-  @spec rollback(Ecto.Repo.t(), any()) :: response()
+  @spec rollback(repo(), any()) :: response()
   def rollback(repo, version) do
     load_app()
 
@@ -53,7 +55,7 @@ defmodule ElixirDrops.Release do
   Enqueues sitemap generation job.
   This ensures the sitemap is available after deployment on ephemeral filesystems.
   """
-  @spec generate_sitemap() :: :ok | {:error, String.t()}
+  @spec generate_sitemap() :: :ok | {:error, error_reason()}
   def generate_sitemap do
     load_app()
     Application.ensure_all_started(@app)
@@ -61,6 +63,25 @@ defmodule ElixirDrops.Release do
     %{}
     |> SitemapGeneratorWorker.new(schedule_in: 60)
     |> Oban.insert()
+  end
+
+  defp migrate_repo(repo) do
+    # Check if database has application tables
+    if should_restore_sanitized_dump?(repo) do
+      restore_sanitized_dump(repo)
+    end
+
+    # Run normal migrations
+    Ecto.Migrator.run(repo, :up, all: true)
+  end
+
+  defp seed_repo(repo) do
+    # Run the seed script if it exists
+    seed_script = priv_path_for(repo, "seeds.exs")
+
+    if File.exists?(seed_script) do
+      Code.eval_file(seed_script)
+    end
   end
 
   defp repos do
@@ -178,25 +199,6 @@ defmodule ElixirDrops.Release do
          ) do
       {_output, 0} -> :ok
       {error, exit_code} -> raise "Failed to restore dump: #{error} (exit code: #{exit_code})"
-    end
-  end
-
-  defp migrate_repo(repo) do
-    # Check if database has application tables
-    if should_restore_sanitized_dump?(repo) do
-      restore_sanitized_dump(repo)
-    end
-
-    # Run normal migrations
-    Ecto.Migrator.run(repo, :up, all: true)
-  end
-
-  defp seed_repo(repo) do
-    # Run the seed script if it exists
-    seed_script = priv_path_for(repo, "seeds.exs")
-
-    if File.exists?(seed_script) do
-      Code.eval_file(seed_script)
     end
   end
 end

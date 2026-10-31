@@ -11,14 +11,17 @@ defmodule ElixirDrops.NotificationsFixtures do
   alias ElixirDrops.Notifications
   alias ElixirDrops.Notifications.Notification
 
+  @type attrs :: map()
   @type comment :: Comment.t()
+  @type count :: integer()
   @type notification :: Notification.t()
   @type user :: User.t()
 
   @doc """
   Generate a notification.
   """
-  @spec notification_fixture(user(), user(), comment(), map()) :: notification()
+
+  @spec notification_fixture(user(), user(), comment(), attrs()) :: notification()
   def notification_fixture(actor, recipient, comment, attrs \\ %{}) do
     notification_attrs =
       Enum.into(attrs, %{
@@ -35,7 +38,7 @@ defmodule ElixirDrops.NotificationsFixtures do
   @doc """
   Creates multiple notifications.
   """
-  @spec create_multiple_notifications(user(), user(), comment(), integer()) ::
+  @spec create_multiple_notifications(user(), user(), comment(), count()) ::
           list(notification())
   def create_multiple_notifications(actor, recipient, comment, number_of_notifications) do
     for n <- 1..number_of_notifications do

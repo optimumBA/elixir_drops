@@ -9,6 +9,15 @@ defmodule ElixirDrops.Search do
   alias ElixirDrops.Search.PopularSearch
   alias ElixirDrops.Search.SearchHistory
 
+  @type attrs :: map()
+  @type changeset :: Ecto.Changeset.t()
+  @type id :: binary()
+  @type limit :: integer()
+  @type popular_search :: PopularSearch.t()
+  @type query :: String.t()
+  @type search_history :: SearchHistory.t()
+  @type suggestion :: map()
+
   @doc """
   Returns the list of search_histories.
 
@@ -18,7 +27,7 @@ defmodule ElixirDrops.Search do
       [%SearchHistory{}, ...]
 
   """
-  @spec list_search_histories() :: [SearchHistory.t()]
+  @spec list_search_histories() :: [search_history()]
   def list_search_histories do
     Repo.all(SearchHistory)
   end
@@ -37,7 +46,7 @@ defmodule ElixirDrops.Search do
       ** (Ecto.NoResultsError)
 
   """
-  @spec get_search_history!(binary()) :: SearchHistory.t()
+  @spec get_search_history!(id()) :: search_history()
   def get_search_history!(id), do: Repo.get!(SearchHistory, id)
 
   @doc """
@@ -52,7 +61,7 @@ defmodule ElixirDrops.Search do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec create_search_history(map()) :: {:ok, SearchHistory.t()} | {:error, Ecto.Changeset.t()}
+  @spec create_search_history(attrs()) :: {:ok, search_history()} | {:error, changeset()}
   def create_search_history(attrs \\ %{}) do
     %SearchHistory{}
     |> SearchHistory.changeset(attrs)
@@ -71,8 +80,8 @@ defmodule ElixirDrops.Search do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_search_history(SearchHistory.t(), map()) ::
-          {:ok, SearchHistory.t()} | {:error, Ecto.Changeset.t()}
+  @spec update_search_history(search_history(), attrs()) ::
+          {:ok, search_history()} | {:error, changeset()}
   def update_search_history(%SearchHistory{} = search_history, attrs) do
     search_history
     |> SearchHistory.changeset(attrs)
@@ -91,8 +100,8 @@ defmodule ElixirDrops.Search do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_search_history(SearchHistory.t()) ::
-          {:ok, SearchHistory.t()} | {:error, Ecto.Changeset.t()}
+  @spec delete_search_history(search_history()) ::
+          {:ok, search_history()} | {:error, changeset()}
   def delete_search_history(%SearchHistory{} = search_history) do
     Repo.delete(search_history)
   end
@@ -106,7 +115,7 @@ defmodule ElixirDrops.Search do
       %Ecto.Changeset{data: %SearchHistory{}}
 
   """
-  @spec change_search_history(SearchHistory.t(), map()) :: Ecto.Changeset.t()
+  @spec change_search_history(search_history(), attrs()) :: changeset()
   def change_search_history(%SearchHistory{} = search_history, attrs \\ %{}) do
     SearchHistory.changeset(search_history, attrs)
   end
@@ -120,7 +129,7 @@ defmodule ElixirDrops.Search do
       [%PopularSearch{}, ...]
 
   """
-  @spec list_popular_searches() :: [PopularSearch.t()]
+  @spec list_popular_searches() :: [popular_search()]
   def list_popular_searches do
     Repo.all(PopularSearch)
   end
@@ -139,7 +148,7 @@ defmodule ElixirDrops.Search do
       ** (Ecto.NoResultsError)
 
   """
-  @spec get_popular_search!(binary()) :: PopularSearch.t()
+  @spec get_popular_search!(id()) :: popular_search()
   def get_popular_search!(id), do: Repo.get!(PopularSearch, id)
 
   @doc """
@@ -154,7 +163,7 @@ defmodule ElixirDrops.Search do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec create_popular_search(map()) :: {:ok, PopularSearch.t()} | {:error, Ecto.Changeset.t()}
+  @spec create_popular_search(attrs()) :: {:ok, popular_search()} | {:error, changeset()}
   def create_popular_search(attrs \\ %{}) do
     %PopularSearch{}
     |> PopularSearch.changeset(attrs)
@@ -173,8 +182,8 @@ defmodule ElixirDrops.Search do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_popular_search(PopularSearch.t(), map()) ::
-          {:ok, PopularSearch.t()} | {:error, Ecto.Changeset.t()}
+  @spec update_popular_search(popular_search(), attrs()) ::
+          {:ok, popular_search()} | {:error, changeset()}
   def update_popular_search(%PopularSearch{} = popular_search, attrs) do
     popular_search
     |> PopularSearch.changeset(attrs)
@@ -193,8 +202,8 @@ defmodule ElixirDrops.Search do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_popular_search(PopularSearch.t()) ::
-          {:ok, PopularSearch.t()} | {:error, Ecto.Changeset.t()}
+  @spec delete_popular_search(popular_search()) ::
+          {:ok, popular_search()} | {:error, changeset()}
   def delete_popular_search(%PopularSearch{} = popular_search) do
     Repo.delete(popular_search)
   end
@@ -208,7 +217,7 @@ defmodule ElixirDrops.Search do
       %Ecto.Changeset{data: %PopularSearch{}}
 
   """
-  @spec change_popular_search(PopularSearch.t(), map()) :: Ecto.Changeset.t()
+  @spec change_popular_search(popular_search(), attrs()) :: changeset()
   def change_popular_search(%PopularSearch{} = popular_search, attrs \\ %{}) do
     PopularSearch.changeset(popular_search, attrs)
   end
@@ -225,7 +234,7 @@ defmodule ElixirDrops.Search do
       [%SearchHistory{}, ...]
 
   """
-  @spec get_user_search_history(binary() | nil, integer()) :: [SearchHistory.t()]
+  @spec get_user_search_history(id() | nil, limit()) :: [search_history()]
   def get_user_search_history(user_id, limit \\ 100)
   def get_user_search_history(nil, _limit), do: []
 
@@ -250,8 +259,8 @@ defmodule ElixirDrops.Search do
       {:error, :not_found}
 
   """
-  @spec delete_search_history(binary(), binary()) ::
-          {:ok, SearchHistory.t()} | {:error, :not_found}
+  @spec delete_search_history(id(), id()) ::
+          {:ok, search_history()} | {:error, :not_found}
   def delete_search_history(search_history_id, user_id) do
     case SearchHistory
          |> where([sh], sh.id == ^search_history_id and sh.user_id == ^user_id)
@@ -292,8 +301,8 @@ defmodule ElixirDrops.Search do
       {:ok, %PopularSearch{query: "phoenix", count: 2}}
 
   """
-  @spec create_or_increment_popular_search(binary()) ::
-          {:ok, PopularSearch.t()} | {:error, term()}
+  @spec create_or_increment_popular_search(query()) ::
+          {:ok, popular_search()} | {:error, term()}
   def create_or_increment_popular_search(query) when is_binary(query) do
     track_popular_search(query)
   end
@@ -307,8 +316,8 @@ defmodule ElixirDrops.Search do
       {:ok, %PopularSearch{}}
 
   """
-  @spec track_popular_search(String.t()) ::
-          {:ok, PopularSearch.t()} | {:error, Ecto.Changeset.t()}
+  @spec track_popular_search(query()) ::
+          {:ok, popular_search()} | {:error, changeset()}
   def track_popular_search(query) when is_binary(query) and query != "" do
     normalized_query =
       query
@@ -333,14 +342,11 @@ defmodule ElixirDrops.Search do
       [%{query: "phoenix", type: :history}, %{query: "phoenix liveview", type: :popular}]
 
   """
-  @spec get_search_suggestions(binary() | nil, String.t()) :: [map()]
-  def get_search_suggestions(user_id, query_prefix)
-      when is_binary(query_prefix) or is_nil(query_prefix) do
-    if is_nil(query_prefix) do
-      []
-    else
-      get_search_suggestions_impl(query_prefix, user_id)
-    end
+  @spec get_search_suggestions(id() | nil, query() | nil) :: [suggestion()]
+  def get_search_suggestions(_user_id, nil), do: []
+
+  def get_search_suggestions(user_id, query_prefix) when is_binary(query_prefix) do
+    get_search_suggestions_impl(query_prefix, user_id)
   end
 
   defp get_search_suggestions_impl(query_prefix, user_id) when is_binary(query_prefix) do
@@ -442,14 +448,12 @@ defmodule ElixirDrops.Search do
       [%{query: "phoenix", type: :popular}, %{query: "phoenix liveview", type: :popular}]
 
   """
-  @spec get_popular_search_suggestions(String.t(), integer()) :: [map()]
+  @spec get_popular_search_suggestions(query() | nil, limit()) :: [suggestion()]
   def get_popular_search_suggestions(query_prefix, limit \\ 5)
-      when is_binary(query_prefix) or is_nil(query_prefix) do
-    if is_nil(query_prefix) do
-      []
-    else
-      get_popular_search_suggestions_impl(query_prefix, limit)
-    end
+  def get_popular_search_suggestions(nil, _limit), do: []
+
+  def get_popular_search_suggestions(query_prefix, limit) when is_binary(query_prefix) do
+    get_popular_search_suggestions_impl(query_prefix, limit)
   end
 
   defp get_popular_search_suggestions_impl(query_prefix, limit) when is_binary(query_prefix) do

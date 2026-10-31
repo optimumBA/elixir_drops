@@ -1,4 +1,5 @@
 defmodule ElixirDrops.SponsorsTest do
+  # Changes shared sponsor QA application configuration.
   use ElixirDrops.DataCase, async: false
 
   alias ElixirDrops.Accounts.User

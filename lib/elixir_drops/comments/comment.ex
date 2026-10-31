@@ -9,24 +9,25 @@ defmodule ElixirDrops.Comments.Comment do
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
 
+  @type attrs :: map()
+  @type changeset :: Ecto.Changeset.t()
   @type t :: %__MODULE__{}
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "comments" do
     field :body, :string
+    belongs_to :drop, Drop
     field :edited_at, :utc_datetime_usec
 
-    belongs_to :drop, Drop
     belongs_to :parent, Comment
-    belongs_to :user, User
-
     has_many :replies, Comment, foreign_key: :parent_id
+    belongs_to :user, User
 
     timestamps()
   end
 
-  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t(), attrs()) :: changeset()
   def changeset(comment, attrs) do
     comment
     |> cast(attrs, [:body, :edited_at])

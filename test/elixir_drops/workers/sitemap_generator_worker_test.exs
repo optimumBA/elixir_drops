@@ -1,4 +1,5 @@
 defmodule ElixirDrops.Workers.SitemapGeneratorWorkerTest do
+  # Changes the shared sitemap file and directory permissions.
   use ElixirDrops.DataCase, async: false
 
   import ElixirDrops.AccountsFixtures

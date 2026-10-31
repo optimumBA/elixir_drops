@@ -5,7 +5,10 @@ defmodule ElixirDropsWeb.ArchiveController do
 
   @archive_description "Browse every Elixir, Phoenix, and OTP tip published on ElixirDrops."
 
-  @spec index(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  @type conn :: Plug.Conn.t()
+  @type params :: map()
+
+  @spec index(conn(), params()) :: conn()
   def index(conn, _params) do
     archive_url = url(~p"/archive")
 

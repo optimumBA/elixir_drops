@@ -1,10 +1,8 @@
 defmodule ElixirDrops.S3Helper.Client do
   @moduledoc false
 
-  alias ElixirDrops.Drops.Drop
   alias ElixirDrops.S3Helper.Http
 
-  @type drop :: Drop.t()
   @type filename :: binary()
   @type image :: binary()
   @type type :: binary()

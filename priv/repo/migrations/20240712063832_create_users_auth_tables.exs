@@ -1,6 +1,7 @@
 defmodule ElixirDrops.Repo.Migrations.CreateUsersAuthTables do
   use Ecto.Migration
 
+  @spec change() :: term()
   def change do
     execute "CREATE EXTENSION IF NOT EXISTS citext", ""
 

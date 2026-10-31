@@ -51,6 +51,8 @@ config :elixir_drops, :dev_auth_bypass, true
 config :elixir_drops, dev_routes: true
 
 # PhoenixTest.Playwright configuration
+pw_timeout = System.get_env("PW_TIMEOUT", "500")
+
 config :phoenix_test,
   driver: PhoenixTest.Playwright,
   endpoint: ElixirDropsWeb.Endpoint,
@@ -61,7 +63,7 @@ config :phoenix_test,
     headless: System.get_env("PW_HEADLESS", "true") == "true",
     js_logger: false,
     screenshot: System.get_env("PW_SCREENSHOT", "false") == "true",
-    timeout: System.get_env("PW_TIMEOUT", "500") |> String.to_integer(),
+    timeout: String.to_integer(pw_timeout),
     trace: System.get_env("PW_TRACE", "false") == "true"
   ]
 

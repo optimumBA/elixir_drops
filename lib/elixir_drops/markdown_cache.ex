@@ -11,7 +11,7 @@ defmodule ElixirDrops.MarkdownCache do
   @ttl_minutes 5
   @ttl_ms @ttl_minutes * 60 * 1000
 
-  @type cache_key :: {:drop, String.t(), integer()} | {:index, non_neg_integer()}
+  @type cache_kind :: atom()
   @type content :: String.t()
 
   @doc """
@@ -23,7 +23,7 @@ defmodule ElixirDrops.MarkdownCache do
       "# Drop Title\\n\\nContent..."
       
   """
-  @spec get_or_generate(atom(), term(), function()) :: content()
+  @spec get_or_generate(cache_kind(), term(), function()) :: content()
   def get_or_generate(type, key_data, generator_fn) do
     cache_key = build_cache_key(type, key_data)
     ensure_cache_table()

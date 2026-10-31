@@ -17,9 +17,10 @@ defmodule ElixirDrops.Sponsors do
   require Logger
 
   @type impression_status :: :persisted | :skipped | :failed
-  @type kind :: String.t()
+  @type interval_time :: DateTime.t()
   @type opts :: keyword()
   @type placement :: String.t()
+  @type placements :: list()
 
   @sponsor "appsignal"
   @placements ["drop-banner", "drop-sidebar"]
@@ -34,6 +35,7 @@ defmodule ElixirDrops.Sponsors do
   # cannot hold up the redirect much beyond that (scheduler and network time
   # are outside this budget).
   @impression_timeout 1_000
+  @click_kind "click"
   @click_timeout 250
 
   # Matches common bots, crawlers, headless browsers and link-preview /
@@ -78,7 +80,7 @@ defmodule ElixirDrops.Sponsors do
       bot filtering and never persisted
 
   """
-  @spec record_impressions(list(), opts()) :: {:ok, non_neg_integer()} | :skipped
+  @spec record_impressions(placements(), opts()) :: {:ok, non_neg_integer()} | :skipped
   def record_impressions(placements, opts \\ [])
 
   def record_impressions(placements, opts) when is_list(placements) do
@@ -119,7 +121,7 @@ defmodule ElixirDrops.Sponsors do
   server-generated UUID (see `new_event_id/0`) used as the row's primary key
   with `ON CONFLICT DO NOTHING`. Never pass client-supplied IDs.
   """
-  @spec record_impression_results(list(), opts()) :: %{placement() => impression_status()}
+  @spec record_impression_results(placements(), opts()) :: %{placement() => impression_status()}
   def record_impression_results(placements, opts \\ []) do
     case impression_results(@sponsor, placements, opts) do
       {:results, results} -> results
@@ -128,7 +130,9 @@ defmodule ElixirDrops.Sponsors do
   end
 
   @doc "Records a separate visible-impression estimate, using server-owned event IDs."
-  @spec record_visible_impression_results(list(), opts()) :: map()
+  @spec record_visible_impression_results(placements(), opts()) :: %{
+          placement() => impression_status()
+        }
   def record_visible_impression_results(placements, opts \\ []) do
     case impression_results(@sponsor, placements, opts, "visible_impression") do
       {:results, results} -> results
@@ -211,7 +215,7 @@ defmodule ElixirDrops.Sponsors do
   defp do_record_click(sponsor, placement, opts) do
     case skip_reason(opts) do
       nil ->
-        case persist(sponsor, placement, "click", new_event_id(),
+        case persist(sponsor, placement, @click_kind, new_event_id(),
                timeout: @click_timeout,
                queue: false
              ) do
@@ -220,7 +224,7 @@ defmodule ElixirDrops.Sponsors do
         end
 
       reason ->
-        Telemetry.event(:skipped, meta(sponsor, placement, "click", reason))
+        Telemetry.event(:skipped, meta(sponsor, placement, @click_kind, reason))
         :skipped
     end
   end
@@ -238,7 +242,7 @@ defmodule ElixirDrops.Sponsors do
 
   Raises `ArgumentError` if `from` is not strictly before `to`.
   """
-  @spec report(DateTime.t(), DateTime.t()) :: %{
+  @spec report(interval_time(), interval_time()) :: %{
           placement() => %{
             impressions: non_neg_integer(),
             clicks: non_neg_integer(),
@@ -255,7 +259,7 @@ defmodule ElixirDrops.Sponsors do
     Map.new(@placements, fn placement ->
       placement_counts = Map.get(counts, placement, %{})
       impressions = Map.get(placement_counts, "impression", 0)
-      clicks = Map.get(placement_counts, "click", 0)
+      clicks = Map.get(placement_counts, @click_kind, 0)
 
       {placement, %{impressions: impressions, clicks: clicks, ctr: ctr(clicks, impressions)}}
     end)
@@ -267,7 +271,9 @@ defmodule ElixirDrops.Sponsors do
   Before deployment of visibility tracking, these counts are unavailable rather
   than evidence of zero exposure; use only intervals with recorded coverage.
   """
-  @spec visibility_report(DateTime.t(), DateTime.t()) :: map()
+  @spec visibility_report(interval_time(), interval_time()) :: %{
+          placement() => %{visible_impressions: non_neg_integer()}
+        }
   def visibility_report(%DateTime{} = from, %DateTime{} = to) do
     if DateTime.compare(from, to) != :lt,
       do: raise(ArgumentError, "from must be strictly before to")
@@ -363,8 +369,8 @@ defmodule ElixirDrops.Sponsors do
              [row],
              [on_conflict: :nothing, conflict_target: :id] ++ db_opts
            ) do
-        {1, _} -> :ok
-        {0, _} -> verify_existing(attrs, id, db_opts)
+        {1, _returned_rows} -> :ok
+        {0, _returned_rows} -> verify_existing(attrs, id, db_opts)
       end
     else
       {:error, :invalid_event}

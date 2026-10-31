@@ -258,8 +258,9 @@ defmodule ElixirDropsWeb.CoreComponents do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
 
     assigns
-    |> assign(field: nil, id: assigns.id || field.id)
     |> assign(:errors, Enum.map(errors, &translate_error(&1)))
+    |> assign(:field, nil)
+    |> assign(:id, assigns.id || field.id)
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
     |> input()
@@ -432,7 +433,7 @@ defmodule ElixirDropsWeb.CoreComponents do
   def table(assigns) do
     assigns =
       with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
-        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
+        assign(assigns, :row_id, assigns.row_id || fn {id, _item} -> id end)
       end
 
     ~H"""
@@ -612,7 +613,7 @@ defmodule ElixirDropsWeb.CoreComponents do
   @doc """
   Translates an error message using gettext.
   """
-  def translate_error({msg, opts}) do
+  def translate_error({message, opts}) do
     # When using gettext, we typically pass the strings we want
     # to translate as a static argument:
     #
@@ -624,9 +625,9 @@ defmodule ElixirDropsWeb.CoreComponents do
     # with our gettext backend as first argument. Translations are
     # available in the errors.po file (as we use the "errors" domain).
     if count = opts[:count] do
-      Gettext.dngettext(ElixirDropsWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(ElixirDropsWeb.Gettext, "errors", message, message, count, opts)
     else
-      Gettext.dgettext(ElixirDropsWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(ElixirDropsWeb.Gettext, "errors", message, opts)
     end
   end
 
@@ -634,6 +635,6 @@ defmodule ElixirDropsWeb.CoreComponents do
   Translates the errors for a field from a keyword list of errors.
   """
   def translate_errors(errors, field) when is_list(errors) do
-    for {^field, {msg, opts}} <- errors, do: translate_error({msg, opts})
+    for {^field, {message, opts}} <- errors, do: translate_error({message, opts})
   end
 end

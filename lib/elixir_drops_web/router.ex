@@ -42,10 +42,6 @@ defmodule ElixirDropsWeb.Router do
     plug :put_resp_content_type, "text/markdown"
   end
 
-  # pipeline :api do
-  #   plug :accepts, ["json"]
-  # end
-
   # Markdown pipeline for .md requests only
   scope "/", ElixirDropsWeb do
     pipe_through :markdown

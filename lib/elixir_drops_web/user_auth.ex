@@ -9,7 +9,12 @@ defmodule ElixirDropsWeb.UserAuth do
   alias ElixirDrops.Accounts
   alias ElixirDrops.Accounts.User
 
+  @type hook :: atom()
+  @type params :: map()
   @type plug_conn :: Plug.Conn.t()
+  @type session :: map()
+  @type socket :: Phoenix.LiveView.Socket.t()
+  @type user :: User.t()
 
   @max_age 60 * 60 * 24 * 60
   @remember_me_cookie "_elixir_drops_web_user_remember_me"
@@ -27,7 +32,7 @@ defmodule ElixirDropsWeb.UserAuth do
   disconnected on log out. The line can be safely removed
   if you are not using LiveView.
   """
-  @spec log_in_user(plug_conn(), User.t(), map()) :: plug_conn()
+  @spec log_in_user(plug_conn(), user(), params()) :: plug_conn()
   def log_in_user(conn, user, params \\ %{}) do
     token = Accounts.generate_user_session_token(user)
     user_return_to = get_session(conn, :user_return_to)
@@ -94,7 +99,7 @@ defmodule ElixirDropsWeb.UserAuth do
   Authenticates the user by looking into the session
   and remember me token.
   """
-  @spec fetch_current_user(plug_conn(), map()) :: plug_conn()
+  @spec fetch_current_user(plug_conn(), params()) :: plug_conn()
   def fetch_current_user(conn, _opts) do
     {user_token, conn} = ensure_user_token(conn)
     user = user_token && Accounts.get_user_by_session_token(user_token)
@@ -151,7 +156,7 @@ defmodule ElixirDropsWeb.UserAuth do
       end
   """
 
-  @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t()) ::
+  @spec on_mount(hook(), params(), session(), socket()) ::
           {:cont, Phoenix.LiveView.Socket.t()}
           | {:halt, Phoenix.LiveView.Socket.t()}
   def on_mount(:assign_current_user, _params, session, socket) do
@@ -194,7 +199,7 @@ defmodule ElixirDropsWeb.UserAuth do
   @doc """
   Used for routes that require the user to not be authenticated.
   """
-  @spec redirect_if_user_is_authenticated(plug_conn(), map()) :: plug_conn()
+  @spec redirect_if_user_is_authenticated(plug_conn(), params()) :: plug_conn()
   def redirect_if_user_is_authenticated(conn, _opts) do
     if conn.assigns[:current_user] do
       conn
@@ -211,7 +216,7 @@ defmodule ElixirDropsWeb.UserAuth do
   If you want to enforce the user email is confirmed before
   they use the application at all, here would be a good place.
   """
-  @spec require_authenticated_user(plug_conn(), map()) :: plug_conn()
+  @spec require_authenticated_user(plug_conn(), params()) :: plug_conn()
   def require_authenticated_user(conn, _opts) do
     if conn.assigns[:current_user] do
       conn

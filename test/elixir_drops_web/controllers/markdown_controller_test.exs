@@ -1,4 +1,5 @@
 defmodule ElixirDropsWeb.MarkdownControllerTest do
+  # Clears the shared named ETS markdown cache.
   use ElixirDropsWeb.ConnCase, async: false
 
   import ElixirDrops.AccountsFixtures
@@ -96,6 +97,9 @@ defmodule ElixirDropsWeb.MarkdownControllerTest do
   end
 
   describe "index/2" do
+    @describetag error_path_exemption:
+                   "An empty collection renders an empty index; the missing-drop response is tested separately."
+
     test "returns markdown index of all drops", %{conn: conn} do
       user = user_fixture()
       drop1 = drop_fixture(%Drop{}, user)

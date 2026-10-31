@@ -2,7 +2,6 @@ defmodule ElixirDropsWeb.CodeBlockHelper do
   @moduledoc false
 
   @type body :: String.t()
-  @type code_block :: String.t()
 
   @markdown_regex ~r/```(?:\w+\n)?(.+?)```/s
 

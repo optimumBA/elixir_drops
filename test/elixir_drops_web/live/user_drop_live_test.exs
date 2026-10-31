@@ -296,8 +296,6 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
-      Process.sleep(50)
-
       html = render(live)
 
       assert html =~ "Generating Code Screenshots..."
@@ -365,7 +363,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
                ~r|<ul><li>Some list item</li><li>Another list item</li></ul>|
     end
 
-    test "Javascript code inside the drop is not executed in the preview", %{
+    test "javascript code inside the drop is not executed in the preview", %{
       conn: conn,
       user: user
     } do
@@ -834,7 +832,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
   end
 
-  describe "search functionality" do
+  describe "/profile search functionality" do
     setup [:create_drops_setup]
 
     test "profile search submits to /profile?q=query not /?q=query", %{conn: conn, user: user} do
@@ -890,9 +888,14 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "search suggestions show unique terms without duplicates", %{conn: conn, user: user} do
       # Create search history with duplicates
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "wallaby", user_id: user.id})
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "wallaby", user_id: user.id})
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "phoenix", user_id: user.id})
+      {:ok, _result} =
+        ElixirDrops.Search.create_search_history(%{query: "wallaby", user_id: user.id})
+
+      {:ok, _result} =
+        ElixirDrops.Search.create_search_history(%{query: "wallaby", user_id: user.id})
+
+      {:ok, _result} =
+        ElixirDrops.Search.create_search_history(%{query: "phoenix", user_id: user.id})
 
       # Create popular searches to ensure we have both history and popular suggestions
       # These popular searches should NOT overlap with the search history
@@ -970,7 +973,8 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "separate dropdown states for navbar and profile search", %{conn: conn, user: user} do
       # Create some search history
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "test", user_id: user.id})
+      {:ok, _result} =
+        ElixirDrops.Search.create_search_history(%{query: "test", user_id: user.id})
 
       conn = sign_in_user(conn, user)
       {:ok, live, html} = live(conn, ~p"/profile")
@@ -1032,9 +1036,11 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       user: user
     } do
       # Create search history
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "elixir", user_id: user.id})
+      {:ok, _result} =
+        ElixirDrops.Search.create_search_history(%{query: "elixir", user_id: user.id})
+
       # Create popular search
-      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("phoenix")
+      {:ok, _result} = ElixirDrops.Search.create_or_increment_popular_search("phoenix")
 
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/profile")
@@ -1050,8 +1056,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
 
     test "navbar and profile search have separate event handlers", %{conn: conn, user: user} do
       # Create search history and popular search for testing
-      {:ok, _} = ElixirDrops.Search.create_search_history(%{query: "test", user_id: user.id})
-      {:ok, _} = ElixirDrops.Search.create_or_increment_popular_search("testing")
+      {:ok, _result} =
+        ElixirDrops.Search.create_search_history(%{query: "test", user_id: user.id})
+
+      {:ok, _result} = ElixirDrops.Search.create_or_increment_popular_search("testing")
 
       conn = sign_in_user(conn, user)
       {:ok, live, _html} = live(conn, ~p"/profile")
@@ -1144,7 +1152,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
   end
 
-  describe "screenshot generation broadcasts" do
+  describe "/profile screenshot generation broadcasts" do
     setup [:create_drops_setup]
 
     test "handles screenshot generation failure", %{conn: conn, user: user} do
@@ -1198,7 +1206,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
   end
 
-  describe "error handling" do
+  describe "/drops/:short_id/edit error handling" do
     setup [:create_drops_setup]
 
     test "navigating to non-existent drop redirects to profile", %{conn: conn, user: user} do
@@ -1210,7 +1218,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
     end
   end
 
-  describe "drop card markdown menu" do
+  describe "/profile drop card markdown menu" do
+    @describetag error_path_exemption:
+                   "Missing Markdown targets return 404 in the markdown controller test returns 404 for non-existent drop."
+
     setup [:create_drops_setup]
 
     test "displays markdown menu in drop card menus", %{conn: conn, drop: drop, user: user} do

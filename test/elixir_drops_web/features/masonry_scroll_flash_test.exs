@@ -16,11 +16,14 @@ defmodule ElixirDropsWeb.Features.MasonryScrollFlashTest do
   Pass: flashed == 0.
   """
 
+  # Measures paint timing while browser rendering and scrolling are active.
   use ElixirDropsWeb.FeatureCase, async: false
 
   import ElixirDrops.FeatureHelpers
 
+  alias PhoenixTest.Playwright.Connection
   alias PhoenixTest.Playwright.Frame
+  alias PhoenixTest.Playwright.Serialization
 
   @moduletag :feature
   @moduletag timeout: 120_000
@@ -46,7 +49,7 @@ defmodule ElixirDropsWeb.Features.MasonryScrollFlashTest do
 
       # 2. Wait for initial batch to render and masonry to settle
       ready_session = wait_for_element(session, ".masonry-item")
-      Process.sleep(2000)
+      assert wait_for_masonry_layout(ready_session)
 
       # 3. Arm the flash counter AFTER initial masonry-ready so already-positioned
       #    items (carrying inline left/top) don't register as flashes.
@@ -57,8 +60,8 @@ defmodule ElixirDropsWeb.Features.MasonryScrollFlashTest do
 
       scrolled_session = scroll_until_more_items(armed_session, initial_count, 15, 3000)
 
-      # 5. Let the append path + imagesLoaded + layout + rAF reveal finish.
-      Process.sleep(2500)
+      # 5. Wait until the appended items are positioned and revealed.
+      assert wait_for_masonry_layout(scrolled_session)
 
       # 6. PRIMARY ASSERTION: no item was visible-but-unpositioned at append time.
       flashed = read_masonry_flash_count(scrolled_session)
@@ -107,6 +110,53 @@ defmodule ElixirDropsWeb.Features.MasonryScrollFlashTest do
 
   # --- Private helpers -------------------------------------------------------
 
+  defp scroll_until_more_items(_session, _initial, 0, _px) do
+    raise "load_more never fired after repeated scrolling — " <>
+            "seed more drops or increase scroll attempts"
+  end
+
+  defp scroll_until_more_items(session, initial_count, attempts, px) do
+    session = scroll_down(session, px)
+
+    if wait_for_browser_condition(
+         session,
+         "() => document.querySelectorAll('.masonry-item').length > #{initial_count}",
+         1000
+       ) do
+      session
+    else
+      scroll_until_more_items(session, initial_count, attempts - 1, px)
+    end
+  end
+
+  defp wait_for_masonry_layout(session) do
+    wait_for_browser_condition(
+      session,
+      "() => [...document.querySelectorAll('.masonry-item')].every(item => item.style.left && item.style.top && !item.classList.contains('masonry-item-pending'))",
+      10_000
+    )
+  end
+
+  defp wait_for_browser_condition(session, expression, timeout) do
+    unwrap(session, fn %{frame_id: frame_id} ->
+      response =
+        Connection.post(
+          guid: frame_id,
+          method: :wait_for_function,
+          params: %{
+            expression: expression,
+            is_function: true,
+            arg: Serialization.serialize_arg(nil),
+            timeout: timeout
+          }
+        )
+
+      Process.put(:__condition_met__, not Map.has_key?(response, :error))
+    end)
+
+    Process.get(:__condition_met__)
+  end
+
   defp count_masonry_items(session) do
     unwrap(session, fn %{frame_id: frame_id} ->
       result =
@@ -121,24 +171,6 @@ defmodule ElixirDropsWeb.Features.MasonryScrollFlashTest do
     end)
 
     Process.get(:__item_count__, 0)
-  end
-
-  defp scroll_until_more_items(_session, _initial, 0, _px) do
-    raise "load_more never fired after repeated scrolling — " <>
-            "seed more drops or increase scroll attempts"
-  end
-
-  defp scroll_until_more_items(session, initial_count, attempts, px) do
-    session = scroll_down(session, px)
-    Process.sleep(1000)
-
-    current = count_masonry_items(session)
-
-    if current > initial_count do
-      session
-    else
-      scroll_until_more_items(session, initial_count, attempts - 1, px)
-    end
   end
 
   defp evaluate_js(session, js) do

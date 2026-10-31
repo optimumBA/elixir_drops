@@ -219,5 +219,5 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
     |> JS.toggle(to: "#reply-form-#{parent.id}")
   end
 
-  defp notify_parent(msg), do: send(self(), msg)
+  defp notify_parent(message), do: send(self(), message)
 end

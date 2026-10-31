@@ -6,6 +6,7 @@ defmodule ElixirDrops.Drops.Screenshot do
   import Ecto.Changeset
 
   @type attrs :: map()
+  @type changeset :: Ecto.Changeset.t()
   @type t :: %__MODULE__{}
 
   @primary_key false
@@ -15,7 +16,7 @@ defmodule ElixirDrops.Drops.Screenshot do
     field :status, Ecto.Enum, values: [:pending, :completed, :failed, :skipped], default: :skipped
   end
 
-  @spec changeset(t(), attrs()) :: Ecto.Changeset.t()
+  @spec changeset(t(), attrs()) :: changeset()
   def changeset(%__MODULE__{} = screenshot, attrs \\ %{}) do
     screenshot
     |> cast(attrs, [:internal_url, :meta_url, :status])

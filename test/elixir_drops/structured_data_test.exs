@@ -8,6 +8,9 @@ defmodule ElixirDrops.StructuredDataTest do
   alias ElixirDrops.StructuredData
 
   describe "generate_drop_json_ld/1" do
+    @describetag error_path_exemption:
+                   "This formatter accepts a persisted drop and returns JSON; text edge cases are covered below."
+
     setup do
       user = user_fixture()
       drop = drop_fixture(user)
