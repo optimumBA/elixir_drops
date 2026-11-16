@@ -1,0 +1,34 @@
+version: 1
+# Toolchain: mise exec runs the versions pinned in .tool-versions (OTP 27.3, Elixir 1.18.3,
+# Node 20.19.0). MIX_ARCHIVES keeps their Hex and rebar apart from archives built by other
+# OTP releases. Tests: PGPORT selects the test Postgres (superuser postgres, see
+# config/test.exs); the Kogen build hosts run a private one on 127.0.0.1:65410.
+commands:
+  setup:
+    - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix local.hex --force --if-missing'
+    - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix local.rebar --force --if-missing'
+    - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix deps.get'
+    - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix assets.setup'
+  fix:
+    - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix format'
+  checks:
+    - name: format
+      run: 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix format --check-formatted'
+    - name: compile
+      run: 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix compile --warnings-as-errors'
+    - name: credo
+      run: 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix credo --strict'
+    - name: sobelow
+      run: 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix sobelow --config .sobelow-conf --compact --quiet'
+    - name: unused-deps
+      run: 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix deps.unlock --check-unused'
+    - name: test
+      run: 'PGPORT="${PGPORT:-65410}" MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix test --warnings-as-errors'
+  acceptance:
+    run: 'NODE_PATH="$KOGEN_CUCUMBER" "$KOGEN_NODE" "$KOGEN_CUCUMBER/@cucumber/cucumber/bin/cucumber.js" --strict --require ''features/steps/*.js'' --format "message:$KOGEN_ACCEPTANCE_REPORT" "$KOGEN_ACCEPTANCE_FEATURES"'
+    steps_dir: 'features/steps'
+protect:
+  - '.formatter.exs'
+  - '.credo.exs'
+  - '.sobelow-conf'
+  - '.dialyzer_ignore.exs'

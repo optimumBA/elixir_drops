@@ -69,3 +69,4 @@ priv/repo/*.dump
 # Local Quint tool installation; models and locked tool versions remain tracked.
 /quint/node_modules/
 /scripts/__pycache__/
+.kogen/local/
