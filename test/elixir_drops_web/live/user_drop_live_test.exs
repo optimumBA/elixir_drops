@@ -1257,20 +1257,13 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       conn = sign_in_user(conn, user)
       {:ok, _live, html} = live(conn, ~p"/profile")
 
-      # Check for proper CSS classes and structure
-      # Header color
-      assert html =~ "text-[#8e8e8e]"
-      # Menu item color
-      assert html =~ "text-[#4f4f4f]"
-      # Hover color
-      assert html =~ "hover:text-[#5947F1]"
-      # Hover background
-      assert html =~ "hover:bg-gray-50"
-      assert html =~ "cursor-pointer"
-
-      # Check for proper gap and spacing
-      assert html =~ "gap-3"
-      assert html =~ "gap-2"
+      # The shared role classes carry the heading, row and separator styling
+      # (see docs/ui-design-system.md); no per-menu color utilities remain.
+      assert html =~ ~r/class="menu-heading[^"]*"/
+      assert html =~ ~r/class="menu-row[^"]*"/
+      assert html =~ ~r/class="menu-separator[^"]*"/
+      refute html =~ "text-[#8e8e8e]"
+      refute html =~ "top-[7.5rem]"
     end
 
     test "markdown menu clipboard integration is properly configured", %{

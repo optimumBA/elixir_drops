@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
 @import 'tailwindcss';
 @import './components/masonry.css';
@@ -24,6 +24,13 @@
   --color-blue_primary: #2f19ee;
   --color-purple_primary: #efe8f9;
   --color-purple_seconday: #eae8fd;
+}
+
+/* Code surface: the dark background every code block sits on. It is a step
+   darker than the "onedark" theme's own #282c34 so highlighted tokens keep
+   4.5:1 contrast; the pre rules apply it over the theme's inline background. */
+:root {
+  --code-surface: #21252b;
 }
 
 /* Add variants based on LiveView classes */
@@ -147,15 +154,6 @@ blockquote {
 
 blockquote *:last-child {
   margin-bottom: 0;
-}
-
-/* Nav */
-.nav-list-border {
-  --bg-color: #b2b2b2;
-
-  background: var(--bg-color);
-  height: 0.05em;
-  width: 100%;
 }
 
 /* Markdown Body */
@@ -310,6 +308,23 @@ blockquote *:last-child {
 .drop-full-content pre,
 .drop-preview pre {
   @apply text-xs md:text-sm p-4 overflow-x-scroll;
+  background-color: var(--code-surface) !important;
+  font-family: var(--font-jetBrains);
+}
+
+/* The theme's comment color (#5c6370) is 2.5:1 on the code surface; raise it. */
+.comment-body pre span[style*='5c6370' i],
+.drop-body pre span[style*='5c6370' i],
+.drop-full-content pre span[style*='5c6370' i],
+.drop-preview pre span[style*='5c6370' i] {
+  color: #9aa1ad !important;
+}
+
+.comment-body code,
+.drop-body code,
+.drop-full-content code,
+.drop-preview code {
+  font-family: var(--font-jetBrains);
 }
 
 .copy-prompt {
@@ -470,12 +485,144 @@ blockquote *:last-child {
   line-height: 1.6;
 }
 
-.remove-outline:focus {
-  outline-style: none;
+/* Inputs that draw their own focus border drop only the pointer-focus outline;
+   keyboard focus keeps the shared :focus-visible indicator below. */
+.remove-outline:focus:not(:focus-visible) {
+  outline: 0;
 }
 
 .notification-shadow {
   box-shadow:
     0px 3px 14px rgba(19, 0, 33, 0.12),
     0px 5px 5px rgba(19, 0, 33, 0.2);
+}
+
+/* Shared focus indicator: 2px action-color outline, 3:1 or better against the
+   white canvas (8.4:1). Surfaces that are dark switch to a white outline. */
+:where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--color-blue_primary);
+  outline-offset: 2px;
+}
+
+.welcome-message :focus-visible,
+.copy-prompt :focus-visible,
+.screenshot-wrapper :focus-visible {
+  outline-color: #ffffff;
+}
+
+/* Actionable controls show a pointer. Kept in the base layer so a specific
+   utility such as cursor-help still wins. */
+@layer base {
+  a[href],
+  button:not(:disabled),
+  summary,
+  [role='button'],
+  [role='option'] {
+    cursor: pointer;
+  }
+}
+
+/* Menu roles (see docs/ui-design-system.md) */
+.menu-panel {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  font-size: 0.875rem;
+  min-width: 12.5rem;
+  max-width: calc(100vw - 2rem);
+  width: max-content;
+  padding: 0.5rem;
+}
+
+.menu-heading {
+  color: #6b6b6b;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 0.5rem 0.5rem 0.25rem;
+}
+
+.menu-row {
+  align-items: center;
+  border-radius: 0.375rem;
+  color: #4f4f4f;
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  text-align: left;
+  width: 100%;
+}
+
+.menu-row:hover {
+  background: #f9fafb;
+  color: #5947f1;
+}
+
+.menu-row:active {
+  background: #eae8fd;
+  color: #5947f1;
+}
+
+.menu-separator {
+  background: #e5e7eb;
+  height: 1px;
+  margin: 0.25rem 0;
+}
+
+.menu-tooltip {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  color: #252525;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  padding: 0.5rem 0.75rem;
+}
+
+/* An open card menu overflows its card: lift the card and masonry item above
+   their neighbours so the menu is neither clipped nor covered. The trigger's
+   aria-expanded state is the open flag, because the menu is shown with inline
+   display styles rather than a class. */
+.drop-card:has(.card-menu-anchor > button[aria-expanded='true']) {
+  overflow: visible;
+  z-index: 30;
+}
+
+.masonry-item:has(.card-menu-anchor > button[aria-expanded='true']) {
+  z-index: 30;
+}
+
+/* Reduced motion: no animation, transitions, smooth scrolling or hover travel. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+
+  .drop-card:hover,
+  .drop-card.animation-complete:hover {
+    transform: none;
+  }
+
+  .progress-bar,
+  .percentage,
+  .transition-opacity {
+    transition: none;
+  }
+
+  .animate-spin {
+    animation: none;
+  }
 }

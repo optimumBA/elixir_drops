@@ -131,11 +131,11 @@ defmodule ElixirDropsWeb.DropComponents do
               alt="DNSimple"
               class="h-10 w-10 shrink-0 object-contain"
             />
-            <span class="rounded border border-[#d1d5db] bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-medium leading-4 text-[#6b7280]">
+            <span class="rounded border border-[#d1d5db] bg-[#f3f4f6] px-1.5 py-0.5 text-[10px] font-medium leading-4 text-[#4b5563]">
               Sponsored
             </span>
           </div>
-          <h3 class="drop-title">Making dns_erlang Fast: Binary Tricks for the BEAM</h3>
+          <h2 class="drop-title">Making dns_erlang Fast: Binary Tricks for the BEAM</h2>
           <div class="drop-body">
             Binary parsing and encoding patterns from DNSimple’s Erlang DNS library.
           </div>
@@ -148,7 +148,7 @@ defmodule ElixirDropsWeb.DropComponents do
               alt=""
               class="user-avatar"
             />
-            <p class="text-xs text-[#868686]">DNSimple · Sponsor</p>
+            <p class="text-xs text-[#6b6b6b]">DNSimple · Sponsor</p>
           </div>
         </div>
       </div>
@@ -183,14 +183,14 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
 
       <div class="drop-content">
-        <h3 class="drop-title">
+        <h2 class="drop-title">
           <.link
             navigate={~p"/d/#{@drop.short_id}"}
-            class="after:absolute after:inset-0 after:content-[''] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5947F1]"
+            class="after:absolute after:inset-0 after:content-['']"
           >
             {@drop.title}
           </.link>
-        </h3>
+        </h2>
         <div class="drop-body">
           {@text}
         </div>
@@ -199,11 +199,11 @@ defmodule ElixirDropsWeb.DropComponents do
           <div class="drop-meta">
             <img src={@drop.user.avatar} alt="" class="user-avatar" />
             <p>{@drop.user.github_username}</p>
-            <p class="text-[#868686] text-xs before:content-['•'] before:mr-1">
+            <p class="text-[#6b6b6b] text-xs before:content-['•'] before:mr-1">
               <.created_at drop={@drop} />
             </p>
 
-            <div class="flex items-center gap-2 text-[#868686] text-xs before:content-['•'] before:mr-1">
+            <div class="flex items-center gap-2 text-[#6b6b6b] text-xs before:content-['•'] before:mr-1">
               <div class="w-5 h-5">
                 <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-full h-full object-cover" />
               </div>
@@ -212,30 +212,35 @@ defmodule ElixirDropsWeb.DropComponents do
           </div>
 
           <%= if @show_card_menu? do %>
-            <button
-              class="text-[#797979] hover:text-[#5947F1] relative z-10 p-2"
-              id={"drop-card-menu-btn-#{@drop.id}"}
-              aria-label={"Drop options for #{@drop.title}"}
-              aria-expanded="false"
-              aria-controls={"drop-card-menu-#{@drop.id}"}
-              phx-click={
-                JS.toggle(to: "#drop-card-menu-#{@drop.id}")
-                |> JS.toggle_attribute({"aria-expanded", "true", "false"},
-                  to: "#drop-card-menu-btn-#{@drop.id}"
-                )
-              }
-              phx-stop-propagation="true"
-              type="button"
-            >
-              <Icons.three_dots_icon class="h-5 w-5 pointer-events-none" />
-            </button>
+            <div class="card-menu-anchor relative z-10">
+              <button
+                class="text-[#6b6b6b] hover:text-[#5947F1] cursor-pointer p-2"
+                id={"drop-card-menu-btn-#{@drop.id}"}
+                aria-label={"Drop options for #{@drop.title}"}
+                aria-expanded="false"
+                aria-controls={"drop-card-menu-#{@drop.id}"}
+                phx-click={
+                  JS.toggle(to: "#drop-card-menu-#{@drop.id}")
+                  |> JS.toggle_attribute({"aria-expanded", "true", "false"},
+                    to: "#drop-card-menu-btn-#{@drop.id}"
+                  )
+                }
+                phx-stop-propagation="true"
+                type="button"
+              >
+                <Icons.three_dots_icon class="h-5 w-5 pointer-events-none" />
+              </button>
+              <.drop_card_menu
+                author?={@drop.user_id == @user_id}
+                id={@drop.id}
+                short_id={@drop.short_id}
+              />
+            </div>
           <% else %>
             <.drop_card_action_default id={"#{@drop.id}-main"} short_id={@drop.short_id} />
           <% end %>
         </div>
       </div>
-
-      <.drop_card_menu author?={@drop.user_id == @user_id} id={@drop.id} short_id={@drop.short_id} />
     </div>
     """
   end
@@ -278,7 +283,7 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
         <!-- Action row below author's name -->
         <div class="flex items-center justify-between py-4 border-b border-gray-200">
-          <div class="flex items-center gap-2 text-[#8E8E8E]">
+          <div class="flex items-center gap-2 text-[#6b6b6b]">
             <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-5 h-5" />
             <span class="inline text-sm">
               {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}
@@ -289,7 +294,7 @@ defmodule ElixirDropsWeb.DropComponents do
             <!-- Copy link button -->
             <button
               type="button"
-              class="flex items-center gap-2 text-[#8E8E8E] hover:text-[#5947F1] cursor-pointer"
+              class="flex items-center gap-2 text-[#6b6b6b] hover:text-[#5947F1] cursor-pointer"
               id={"single-drop-copy-link-#{@drop.id}"}
               aria-label="Copy link"
               data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
@@ -298,24 +303,32 @@ defmodule ElixirDropsWeb.DropComponents do
               <.icon name="hero-link" class="h-5 w-5" />
               <span class="hidden md:inline text-sm">Copy link</span>
             </button>
-            <!-- Three dots menu button -->
-            <button
-              class="text-[#797979] hover:text-[#5947F1] p-2"
-              id={"action-row-menu-btn-#{@drop.id}"}
-              aria-label="Drop options"
-              aria-expanded="false"
-              aria-controls={"drop-menu-#{@drop.id}"}
-              phx-click={
-                JS.toggle(to: "#drop-menu-#{@drop.id}")
-                |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
-                |> JS.toggle_attribute({"aria-expanded", "true", "false"},
-                  to: "#action-row-menu-btn-#{@drop.id}"
-                )
-              }
-              type="button"
-            >
-              <Icons.three_dots_icon class="h-5 w-5" />
-            </button>
+            <!-- Three dots menu button and its menu, anchored to the trigger -->
+            <div class="relative">
+              <button
+                class="text-[#6b6b6b] hover:text-[#5947F1] cursor-pointer p-2"
+                id={"action-row-menu-btn-#{@drop.id}"}
+                aria-label="Drop options"
+                aria-expanded="false"
+                aria-controls={"drop-menu-#{@drop.id}"}
+                phx-click={
+                  JS.toggle(to: "#drop-menu-#{@drop.id}")
+                  |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
+                  |> JS.toggle_attribute({"aria-expanded", "true", "false"},
+                    to: "#action-row-menu-btn-#{@drop.id}"
+                  )
+                }
+                type="button"
+              >
+                <Icons.three_dots_icon class="h-5 w-5" />
+              </button>
+              <!-- Three-dots dropdown menu -->
+              <.drop_page_menu
+                id={@drop.id}
+                author?={@current_user && @current_user.id == @drop.user_id}
+                short_id={@drop.short_id}
+              />
+            </div>
           </div>
         </div>
 
@@ -361,12 +374,6 @@ defmodule ElixirDropsWeb.DropComponents do
         >
           {to_html(@drop.body)}
         </div>
-        <!-- Three-dots dropdown menu -->
-        <.drop_page_menu
-          id={@drop.id}
-          author?={@current_user && @current_user.id == @drop.user_id}
-          short_id={@drop.short_id}
-        />
 
         <.copy_prompt />
       </div>
@@ -413,7 +420,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       :if={@condition}
-      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-4 pb-6 full-width welcome-message px-12"
+      class="text-[#EAE8FD] text-sm bg-gradient-to-r from-[#4b37f0] via-[#5444f1] to-[#5f4ef2] py-4 pb-6 full-width welcome-message px-12"
       id="welcome-message"
       phx-hook="WelcomeMessage"
     >
@@ -449,7 +456,7 @@ defmodule ElixirDropsWeb.DropComponents do
   def user_drops_header(assigns) do
     ~H"""
     <div class="full-width" phx-mounted={JS.remove_class("shadow-md shadow-[#c4c0c8]", to: ".header")}>
-      <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 md:pl-6">
+      <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5444f1] to-[#5f4ef2] py-6 md:pl-6">
         <div class="flex flex-col md:flex-row items-center gap-x-3 breakout md:pl-6">
           <div>
             <img src={@current_user.avatar} alt="" class="w-16 h-16 rounded-full object-fill" />
@@ -523,12 +530,12 @@ defmodule ElixirDropsWeb.DropComponents do
                           <.icon
                             :if={suggestion.type == :history}
                             name="hero-clock"
-                            class="h-4 w-4 text-gray-400"
+                            class="h-4 w-4 text-gray-500"
                           />
                           <.icon
                             :if={suggestion.type == :popular}
                             name="hero-magnifying-glass"
-                            class="h-4 w-4 text-gray-400"
+                            class="h-4 w-4 text-gray-500"
                           />
                           <span class="text-sm text-gray-900">{suggestion.query}</span>
                         </div>
@@ -540,7 +547,7 @@ defmodule ElixirDropsWeb.DropComponents do
                             JS.push("delete_search_history", value: %{id: suggestion.id})
                             |> JS.show(to: "#profile-search-dropdown")
                           }
-                          class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-1 text-gray-400 hover:text-gray-600"
+                          class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-1 text-gray-500 hover:text-gray-600"
                         >
                           <.icon name="hero-trash" class="h-3 w-3" />
                         </button>
@@ -658,7 +665,7 @@ defmodule ElixirDropsWeb.DropComponents do
       role="status"
       aria-live="polite"
       class={[
-        "sr-only text-[#eae8fd] text-xs bg-[#9666d9] rounded-lg drop-shadow-sm px-3 py-3 flex items-center gap-x-1 z-[1000]",
+        "sr-only text-[#eae8fd] text-xs bg-[#6d3fc0] rounded-lg drop-shadow-sm px-3 py-3 flex items-center gap-x-1 z-[1000]",
         "fixed bottom-12 left-[50%] translate-x-[-50%] translate-y-[50%]"
       ]}
     >
@@ -797,35 +804,28 @@ defmodule ElixirDropsWeb.DropComponents do
   def markdown_menu(assigns) do
     ~H"""
     <!-- Markdown Section Divider -->
-    <div :if={@show_separator} class="border-t border-gray-200 my-3"></div>
+    <div :if={@show_separator} class="menu-separator" role="separator"></div>
 
     <!-- Markdown Section Header with Info Icon -->
-    <div class="mb-2 px-2">
+    <div class="menu-heading relative group">
       <div class="flex items-center gap-2">
-        <span class="text-[#8e8e8e] text-sm">Markdown</span>
-        <div class="relative group">
-          <button
-            type="button"
-            class="flex items-center rounded"
-            aria-label="About Markdown"
-            aria-describedby={"markdown-help-#{@short_id}"}
-          >
-            <.icon name="hero-information-circle" class="h-5 w-5 text-[#8e8e8e] cursor-help" />
-          </button>
-          <!-- Tooltip -->
-          <div
-            id={"markdown-help-#{@short_id}"}
-            role="tooltip"
-            class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none z-[100001]"
-          >
-            <div class="bg-[#FFFFFF] text-[#000000] text-xs rounded-lg py-2 px-4 w-[240px] font-roboto font-normal leading-[15px] border border-gray-200 shadow-md">
-              View this Drop in Markdown format or copy Markdown URL for your AI workflow
-              <!-- Tooltip arrow -->
-              <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-[#FFFFFF]">
-              </div>
-            </div>
-          </div>
-        </div>
+        <span>Markdown</span>
+        <button
+          type="button"
+          class="flex items-center rounded cursor-help"
+          aria-label="About Markdown"
+          aria-describedby={"markdown-help-#{@short_id}"}
+        >
+          <.icon name="hero-information-circle" class="h-5 w-5" />
+        </button>
+      </div>
+      <!-- Tooltip, anchored to the menu heading so it stays inside the menu width -->
+      <div
+        id={"markdown-help-#{@short_id}"}
+        role="tooltip"
+        class="menu-tooltip absolute bottom-full left-0 right-0 mb-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none z-[100001]"
+      >
+        View this Drop in Markdown format or copy Markdown URL for your AI workflow
       </div>
     </div>
 
@@ -833,7 +833,7 @@ defmodule ElixirDropsWeb.DropComponents do
     <.link
       href={"/d/#{@short_id}.md"}
       target="_blank"
-      class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center justify-between px-2 py-2 rounded hover:bg-gray-50 gap-3"
+      class="menu-row justify-between"
     >
       <div class="flex items-center gap-2">
         <Icons.markdown_icon class="h-5 w-5" />
@@ -845,7 +845,7 @@ defmodule ElixirDropsWeb.DropComponents do
     <!-- Copy Markdown URL -->
     <button
       type="button"
-      class="w-full text-left text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+      class="menu-row"
       id={"copy-markdown-#{@short_id}"}
       data-clipboard-text={url(~p"/d/#{@short_id}") <> ".md"}
       phx-hook="CopyToClipboard"
@@ -982,7 +982,7 @@ defmodule ElixirDropsWeb.DropComponents do
           />
           <span
             :if={@notification_count > 0}
-            class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px]"
+            class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#c53030] rounded-full absolute right-[-5px] top-[-4px]"
           >
             <span id="notifications-count">{@notification_count}</span>
           </span>
@@ -1016,7 +1016,7 @@ defmodule ElixirDropsWeb.DropComponents do
           />
           <span
             :if={@notification_count > 0}
-            class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px]"
+            class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#c53030] rounded-full absolute right-[-5px] top-[-4px]"
           >
             <span id="notifications-count-large">{@notification_count}</span>
           </span>
@@ -1044,20 +1044,22 @@ defmodule ElixirDropsWeb.DropComponents do
   defp drop_page_menu(assigns) do
     ~H"""
     <div
-      class="text-sm hidden opacity-0 absolute right-0 top-12 py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] transition-opacity duration-200"
+      class="menu-panel hidden opacity-0 absolute right-0 top-full mt-1 z-[100000] transition-opacity duration-200"
       id={"drop-menu-#{@id}"}
       phx-click-away={
         JS.hide(to: "#drop-menu-#{@id}")
         |> JS.add_class("opacity-0", to: "#drop-menu-#{@id}")
+        |> JS.set_attribute({"aria-expanded", "false"}, to: "#action-row-menu-btn-#{@id}")
       }
     >
       <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} show_separator={false} />
 
+      <div :if={@author?} class="menu-separator" role="separator"></div>
       <.link
         :if={@author?}
         navigate={~p"/drops/#{@short_id}/edit"}
-        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 mt-3 rounded hover:bg-gray-50 border-t border-gray-200"
+        class="menu-row"
         id={"edit-drop-page-#{@id}"}
       >
         <.icon name="hero-pencil" class="h-5 w-5" />
@@ -1076,7 +1078,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       id="notifications-container"
-      class="w-full pb-40 h-screen bg-[#FFFFFF] flex flex-col py-4 absolute top-0 right-0 sm:top-16 z-[100] notification-shadow overflow-y-auto hidden sm:w-[26rem] sm:h-[55vh] sm:right-[20%] sm:border-[0.5px] sm:border-[#CBCBCB] sm:rounded-xl"
+      class="w-full pb-40 h-screen bg-[#FFFFFF] flex flex-col py-4 absolute top-0 right-0 sm:top-16 z-[100] notification-shadow overflow-y-auto hidden sm:w-[26rem] sm:h-[55vh] sm:max-h-[calc(100vh-5rem)] sm:max-w-[calc(100%-1rem)] sm:right-2 md:right-4 sm:border-[0.5px] sm:border-[#CBCBCB] sm:rounded-xl"
     >
       <section class="w-[90%] mx-auto flex justify-between">
         <div class="flex justify-between gap-2 items-stretch">
@@ -1119,7 +1121,7 @@ defmodule ElixirDropsWeb.DropComponents do
                 alt=""
               />
             </div>
-            <div class="roboto-regular text-center text-[#8E8E8E] leading-7">
+            <div class="roboto-regular text-center text-[#6b6b6b] leading-7">
               No new notifications at the moment
             </div>
           </section>
@@ -1181,7 +1183,7 @@ defmodule ElixirDropsWeb.DropComponents do
             {@comment.drop.title}
           </a>
         </p>
-        <p class="text-xs text-[#8E8E8E] leading-4">
+        <p class="text-xs text-[#6b6b6b] leading-4">
           {Timex.format!(@time_created, "{relative}", :relative)}
         </p>
       </section>
@@ -1192,13 +1194,16 @@ defmodule ElixirDropsWeb.DropComponents do
   defp drop_card_menu(assigns) do
     ~H"""
     <div
-      class="drop-card-menu text-sm absolute right-2 top-[7.5rem] md:top-[8.5rem] py-4 px-4 rounded-lg bg-white shadow-lg border border-gray-200 z-[100000] min-w-[200px] hidden"
+      class="drop-card-menu menu-panel absolute right-0 bottom-full mb-1 z-[100000] hidden"
       id={"drop-card-menu-#{@id}"}
-      phx-click-away={JS.hide(to: "#drop-card-menu-#{@id}")}
+      phx-click-away={
+        JS.hide(to: "#drop-card-menu-#{@id}")
+        |> JS.set_attribute({"aria-expanded", "false"}, to: "#drop-card-menu-btn-#{@id}")
+      }
       onclick="event.stopPropagation()"
     >
       <!-- Sharing Section Header -->
-      <div class="text-[#8e8e8e] text-base leading-[28px] mb-2 px-2">
+      <div class="menu-heading">
         Sharing
       </div>
 
@@ -1207,7 +1212,7 @@ defmodule ElixirDropsWeb.DropComponents do
         id={"card-copy-link-menu-#{@id}"}
         data-clipboard-text={url(~p"/d/#{@short_id}")}
         phx-hook="CopyToClipboard"
-        class="w-full text-left text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+        class="menu-row"
       >
         <.icon name="hero-link" class="h-5 w-5" />
         <span>Copy Drop link</span>
@@ -1215,10 +1220,11 @@ defmodule ElixirDropsWeb.DropComponents do
       <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} />
 
+      <div :if={@author?} class="menu-separator" role="separator"></div>
       <.link
         :if={@author?}
         navigate={~p"/drops/#{@short_id}/edit"}
-        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 mt-3 rounded hover:bg-gray-50 border-t border-gray-200"
+        class="menu-row"
         id={"edit-drop-#{@id}"}
       >
         <.icon name="hero-pencil" class="h-5 w-5" />
@@ -1248,20 +1254,16 @@ defmodule ElixirDropsWeb.DropComponents do
       </div>
       <p class="text-base mx-auto mt-1 cursor-default">{@current_user.github_username}</p>
 
-      <ul class="mt-10 grid gap-y-6">
-        <li class="px-5">
-          <.link
-            href={~p"/profile"}
-            class="text-sm flex gap-x-2 hover:text-[#5947F1]"
-            id="view-user-drops-link"
-          >
+      <ul class="mt-6 grid px-3">
+        <li>
+          <.link href={~p"/profile"} class="menu-row" id="view-user-drops-link">
             <span><Icons.drops_icon /></span>
             <span> My drops </span>
           </.link>
         </li>
-        <li class="nav-list-border full-bleed"></li>
-        <li class="px-5">
-          <.link href={~p"/auth/logout"} class="text-sm flex gap-x-2 hover:text-[#5947F1]">
+        <li class="menu-separator" aria-hidden="true"></li>
+        <li>
+          <.link href={~p"/auth/logout"} class="menu-row">
             <span><Icons.sign_out_icon /></span>
             <span>Sign out</span>
           </.link>
@@ -1285,7 +1287,7 @@ defmodule ElixirDropsWeb.DropComponents do
       data-clipboard-text={url(~p"/d/#{@short_id}")}
       phx-hook="CopyToClipboard"
       class={[
-        "relative z-10 text-[#797979] hover:text-[#5947F1]",
+        "relative z-10 text-[#6b6b6b] hover:text-[#5947F1]",
         @inner_text && "flex items-center justify-center gap-x-2"
       ]}
     >
@@ -1452,22 +1454,22 @@ defmodule ElixirDropsWeb.DropComponents do
           aria-expanded={to_string(@show_suggestions? and @search_suggestions != [])}
           class={[
             "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
-            "remove-outline border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
+            "remove-outline border border-gray-500 focus:border-[#5947F1]",
             "placeholder-gray-500 text-sm"
           ]}
         />
         <.icon
           name="hero-magnifying-glass"
-          class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+          class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"
         />
         <button
           :if={@search_query != ""}
           type="button"
           aria-label="Clear search"
           phx-click="clear_search"
-          class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded cursor-pointer"
         >
-          <.icon name="hero-x-mark" class="h-4 w-4 text-gray-400 hover:text-gray-600" />
+          <.icon name="hero-x-mark" class="h-4 w-4 text-gray-500 hover:text-gray-600" />
         </button>
       </form>
       <!-- Search Suggestions Dropdown -->
@@ -1496,12 +1498,12 @@ defmodule ElixirDropsWeb.DropComponents do
                 <.icon
                   :if={suggestion.type == :history}
                   name="hero-clock"
-                  class="h-4 w-4 text-gray-400"
+                  class="h-4 w-4 text-gray-500"
                 />
                 <.icon
                   :if={suggestion.type == :popular}
                   name="hero-magnifying-glass"
-                  class="h-4 w-4 text-gray-400"
+                  class="h-4 w-4 text-gray-500"
                 />
                 <span class="text-sm text-gray-800">{suggestion.query}</span>
               </div>
@@ -1574,23 +1576,23 @@ defmodule ElixirDropsWeb.DropComponents do
               aria-expanded={to_string(@show_suggestions? and @search_suggestions != [])}
               class={[
                 "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
-                "border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
+                "border border-gray-500 focus:border-[#5947F1]",
                 "placeholder-gray-500 text-base"
               ]}
               autofocus
             />
             <.icon
               name="hero-magnifying-glass"
-              class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+              class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500"
             />
             <button
               :if={@search_query != ""}
               type="button"
               aria-label="Clear search"
               phx-click="clear_search"
-              class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+              class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded cursor-pointer"
             >
-              <.icon name="hero-x-mark" class="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              <.icon name="hero-x-mark" class="h-5 w-5 text-gray-500 hover:text-gray-600" />
             </button>
           </form>
         </div>
@@ -1616,12 +1618,12 @@ defmodule ElixirDropsWeb.DropComponents do
                 <.icon
                   :if={suggestion.type == :history}
                   name="hero-clock"
-                  class="h-5 w-5 text-gray-400"
+                  class="h-5 w-5 text-gray-500"
                 />
                 <.icon
                   :if={suggestion.type == :popular}
                   name="hero-magnifying-glass"
-                  class="h-5 w-5 text-gray-400"
+                  class="h-5 w-5 text-gray-500"
                 />
                 <span class="text-base text-gray-800">{suggestion.query}</span>
               </div>
@@ -1695,10 +1697,10 @@ defmodule ElixirDropsWeb.DropComponents do
         <div class="w-full flex flex-col items-center gap-8">
           <!-- Main Message -->
           <div class="w-full min-w-full text-center">
-            <p class="font-normal text-[28px] leading-[40px] text-[#797979] tracking-[0.07px] mb-0">
+            <p class="font-normal text-[28px] leading-[40px] text-[#6b6b6b] tracking-[0.07px] mb-0">
               Sorry we couldn't find any results for this search.
             </p>
-            <p class="font-normal text-[28px] leading-[40px] text-[#797979] tracking-[0.07px]">
+            <p class="font-normal text-[28px] leading-[40px] text-[#6b6b6b] tracking-[0.07px]">
               Try searching any of these.
             </p>
           </div>

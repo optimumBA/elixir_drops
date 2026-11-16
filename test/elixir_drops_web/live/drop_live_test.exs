@@ -135,7 +135,7 @@ defmodule ElixirDropsWeb.DropLiveTest do
       refute card_html =~ ~s(role="link")
 
       live
-      |> element("#drop-#{drop.id} h3 a[href='/d/#{drop.short_id}']")
+      |> element("#drop-#{drop.id} h2 a[href='/d/#{drop.short_id}']")
       |> render_click()
 
       {path, _flash} = assert_redirect(live)

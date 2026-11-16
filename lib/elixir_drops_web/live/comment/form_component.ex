@@ -22,13 +22,13 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
           <.custom_input
             id={@field_id}
             class={[
-              "border-[1px] border-gray-200 focus-within:border-[#2F19EE] px-2 py-3 ",
+              "border-[1px] border-gray-500 focus-within:border-[#2F19EE] px-2 py-3 ",
               "rounded-lg transition-colors duration-100"
             ]}
             input_field_class={[
               "border-0 py-0 block w-full",
               "text-[#252525] focus:ring-0 sm:text-sm sm:leading-6",
-              "placeholder:italic placeholder:text-[#9D9D9D]"
+              "placeholder:italic placeholder:text-[#6b6b6b]"
             ]}
             field={@form[:body]}
             type="textarea"

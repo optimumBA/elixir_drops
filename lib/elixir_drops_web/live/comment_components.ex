@@ -22,9 +22,9 @@ defmodule ElixirDropsWeb.CommentComponents do
     ~H"""
     <div>
       <div class="mt-8 border-y border-gray-200 py-8">
-        <h3 class="text-lg font-semibold mb-6 text-gray-700">
+        <h2 class="text-lg font-semibold mb-6 text-gray-700">
           Comments ({@comment_count})
-        </h3>
+        </h2>
         <.live_component
           :if={@current_user}
           class=""
@@ -157,7 +157,7 @@ defmodule ElixirDropsWeb.CommentComponents do
         >
           {@comment.user.name}
         </p>
-        <p class="text-[#8E8E8E] roboto-regular flex items-center gap-x-2">
+        <p class="text-[#6b6b6b] roboto-regular flex items-center gap-x-2">
           <span class="hidden sm:inline-block w-1 h-1 rounded-full bg-gray-500"></span>
           <span class="text-sm">{Timex.format!(@comment.inserted_at, "{relative}", :relative)}</span>
           <span

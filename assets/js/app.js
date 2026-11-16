@@ -108,7 +108,11 @@ const liveSocket = new LiveSocket('/live', Socket, {
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: '#29d' }, shadowColor: 'rgba(0, 0, 0, .3)' })
-window.addEventListener('phx:page-loading-start', (_info) => topbar.show(300))
+// The animated bar is skipped when the visitor asks for reduced motion.
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+window.addEventListener('phx:page-loading-start', (_info) => {
+  if (!reducedMotion.matches) topbar.show(300)
+})
 window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide())
 
 // Initialize Masonry eagerly on DOMContentLoaded for dead-render drops

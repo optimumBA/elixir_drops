@@ -28,7 +28,7 @@ defmodule ElixirDropsWeb.DropComponentsTest do
   test "the card title is a native link to the Drop", %{conn: conn, drop: drop} do
     {:ok, live, _html} = live(conn, ~p"/")
 
-    assert has_element?(live, "#drop-#{drop.id} h3.drop-title a[href='/d/#{drop.short_id}']")
+    assert has_element?(live, "#drop-#{drop.id} h2.drop-title a[href='/d/#{drop.short_id}']")
     refute has_element?(live, "#drop-#{drop.id}[role='link']")
     refute has_element?(live, "#drop-#{drop.id} a.hidden")
   end

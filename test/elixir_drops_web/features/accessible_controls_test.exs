@@ -115,9 +115,9 @@ defmodule ElixirDropsWeb.Features.AccessibleControlsTest do
     } do
       conn
       |> visit("/")
-      |> wait_for_element(".drop-card h3 a")
+      |> wait_for_element(".drop-card h2 a")
       |> assert_page("card link", """
-      const link = document.querySelector('.drop-card h3 a');
+      const link = document.querySelector('.drop-card h2 a');
       const item = link.closest('.masonry-item');
       if (link.getAttribute('href') !== '/d/#{drop.short_id}') return 'wrong href ' + link.getAttribute('href');
       if (link.textContent.trim() !== 'Native link drop') return 'link is not named by the title';
@@ -135,12 +135,12 @@ defmodule ElixirDropsWeb.Features.AccessibleControlsTest do
          %{conn: conn, drop: drop} do
       conn
       |> visit("/")
-      |> wait_for_element(".drop-card h3 a")
-      |> click_with(".drop-card h3 a", modifiers: ["Control"])
+      |> wait_for_element(".drop-card h2 a")
+      |> click_with(".drop-card h2 a", modifiers: ["Control"])
       |> assert_on_root("control-click stays on the list")
-      |> click_with(".drop-card h3 a", modifiers: ["Meta"])
+      |> click_with(".drop-card h2 a", modifiers: ["Meta"])
       |> assert_on_root("meta-click stays on the list")
-      |> click_with(".drop-card h3 a", button: "middle")
+      |> click_with(".drop-card h2 a", button: "middle")
       |> assert_on_root("middle-click stays on the list")
       # The card body is covered by the link's stretched hit area, so a pointer
       # click on it (forced, as the target is the link overlay) opens the Drop.
@@ -152,9 +152,9 @@ defmodule ElixirDropsWeb.Features.AccessibleControlsTest do
     test "keyboard activation opens the Drop", %{conn: conn, drop: drop} do
       conn
       |> visit("/")
-      |> wait_for_element(".drop-card h3 a")
+      |> wait_for_element(".drop-card h2 a")
       |> assert_page("focus link", """
-      const link = document.querySelector('.drop-card h3 a');
+      const link = document.querySelector('.drop-card h2 a');
       link.focus();
       return document.activeElement === link ? 'ok' : 'link is not focusable';
       """)
@@ -206,7 +206,7 @@ defmodule ElixirDropsWeb.Features.AccessibleControlsTest do
     } do
       conn
       |> visit("/")
-      |> wait_for_element(".drop-card h3 a")
+      |> wait_for_element(".drop-card h2 a")
       |> assert_page("home names", @names_check)
       |> visit("/d/#{drop.short_id}")
       |> wait_for_element("#drop-body")
