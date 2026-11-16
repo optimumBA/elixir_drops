@@ -65,7 +65,7 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
       |> visit(~p"/profile")
       # Should redirect to homepage with flash message
       |> assert_path("/")
-      |> assert_has("main", text: "You must log in to access this page")
+      |> assert_has("main", text: "Sign in to access this page")
     end
 
     test "visitor cannot access drop creation page", %{conn: conn} do
@@ -73,7 +73,7 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
       |> visit(~p"/drops/new")
       # Should redirect to homepage with flash message
       |> assert_path("/")
-      |> assert_has("main", text: "You must log in to access this page")
+      |> assert_has("main", text: "Sign in to access this page")
     end
 
     test "visitor cannot access drop edit page", %{conn: conn, drop: drop} do
@@ -81,7 +81,7 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
       |> visit(~p"/drops/#{drop.short_id}/edit")
       # Should redirect to homepage with flash message
       |> assert_path("/")
-      |> assert_has("main", text: "You must log in to access this page")
+      |> assert_has("main", text: "Sign in to access this page")
     end
 
     test "visitor gets appropriate flash messages for protected routes", %{conn: conn} do
@@ -89,7 +89,7 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
       |> visit(~p"/profile")
       |> assert_path("/")
       # Should see clear explanation of why redirect happened
-      |> assert_has("main", text: "You must log in")
+      |> assert_has("main", text: "Sign in to access this page")
     end
   end
 
@@ -354,7 +354,7 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
       |> visit(~p"/drops/#{owned_drop.short_id}/edit")
       # Should redirect away from edit page
       |> assert_path("/")
-      |> assert_has("main", text: "You can only edit your own drops")
+      |> assert_has("main", text: "This Drop was not found, or you can only edit your own Drops.")
     end
 
     test "edit URLs for non-owned drops show appropriate error", %{
@@ -367,7 +367,7 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
       |> visit(~p"/drops/#{owned_drop.short_id}/edit")
       |> assert_path("/")
       # Should see clear authorization message
-      |> assert_has("main", text: "You can only edit your own drops")
+      |> assert_has("main", text: "This Drop was not found, or you can only edit your own Drops.")
     end
   end
 end

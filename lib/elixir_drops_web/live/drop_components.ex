@@ -389,9 +389,7 @@ defmodule ElixirDropsWeb.DropComponents do
       </h2>
 
       <p class="breakout md:ml-3 text-[16px] tracking-wide leading-[24px]">
-        Hello there and welcome to the ultimate hub for the Elixir community!
-        Whether you're a seasoned developer or just starting your journey, ElixirDrops is the perfect place to discover, share, and discuss the best tips and tricks for mastering Elixir.
-        Sign in to explore, learn and become a contributor on this platform.
+        ElixirDrops is a collection of short, practical Elixir, Phoenix and OTP tips. Sign in with GitHub to share your own Drops and join the discussion.
       </p>
     </div>
     """
@@ -595,7 +593,7 @@ defmodule ElixirDropsWeb.DropComponents do
       ]}
     >
       <.icon name="hero-check-circle-solid bg-[#b2b2b2]" class="h-4 w-4 fill-[#eae8fd] bg-[#eae8fd]" />
-      <span>copied to clipboard</span>
+      <span id="copy-confirm-text">Link copied to clipboard</span>
     </p>
     """
   end

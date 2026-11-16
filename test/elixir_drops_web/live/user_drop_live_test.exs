@@ -63,7 +63,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
               }} =
                live(conn, ~p"/profile")
 
-      assert flash["error"] == "You must log in to access this page."
+      assert flash["error"] == "Sign in to access this page."
       assert path == ~p"/"
     end
 
@@ -327,7 +327,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       assert {:error, {:redirect, %{to: path, flash: flash}}} = live(conn, ~p"/drops/new")
 
       assert path == ~p"/"
-      assert flash["error"] == "You must log in to access this page."
+      assert flash["error"] == "Sign in to access this page."
     end
 
     test "parses Markdown in drop body and renders it in the Preview section", %{
@@ -759,7 +759,7 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
                live(conn, ~p"/drops/#{drop.short_id}/edit")
 
       assert path == ~p"/"
-      assert flash["error"] == "You must log in to access this page."
+      assert flash["error"] == "Sign in to access this page."
     end
 
     test "one is redirected if drop doesn't exist", %{conn: conn, user: user} do

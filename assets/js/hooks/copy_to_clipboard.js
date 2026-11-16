@@ -5,19 +5,32 @@ let CopyToClipboardHooks = {}
 CopyToClipboardHooks.CopyToClipboard = {
   mounted() {
     const copyLink = this.el
-    let copyConfirmElement = document.querySelector(`#copy-confirm-message`)
+    const copyConfirmElement = document.querySelector(`#copy-confirm-message`)
+    const copyConfirmText = document.querySelector(`#copy-confirm-text`)
+    let hideTimeout = null
 
-    new ClipboardJS(copyLink)
+    const showMessage = (text) => {
+      if (!copyConfirmElement) return
+
+      if (copyConfirmText) copyConfirmText.textContent = text
+      copyConfirmElement.classList.remove('hidden')
+
+      clearTimeout(hideTimeout)
+      hideTimeout = setTimeout(() => {
+        copyConfirmElement.classList.add('hidden')
+      }, 500)
+    }
+
+    const clipboard = new ClipboardJS(copyLink)
+
+    clipboard.on('success', () => showMessage('Link copied to clipboard'))
+    clipboard.on('error', () =>
+      showMessage('Copy failed. Select the link and copy it manually.')
+    )
 
     copyLink.addEventListener('click', (event) => {
       event.preventDefault()
       event.stopPropagation()
-
-      copyConfirmElement.classList.remove('hidden')
-
-      setTimeout(() => {
-        copyConfirmElement.classList.add('hidden')
-      }, 500)
     })
   },
 }

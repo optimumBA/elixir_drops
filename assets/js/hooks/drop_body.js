@@ -30,11 +30,11 @@ DropBodyHooks.DropBodyContainer = {
 
       codeBlock.insertAdjacentElement('beforebegin', copyPrompt)
 
-      new ClipboardJS(copyPrompt, {
+      const clipboard = new ClipboardJS(copyPrompt, {
         text: () => codeBlock.querySelector('code').textContent,
       })
 
-      copyPrompt.addEventListener('click', () => {
+      clipboard.on('success', () => {
         copyPrompt.querySelector('.copy-svg').classList.add('hidden')
         copyPrompt.querySelector('.copied-svg').classList.remove('hidden')
 

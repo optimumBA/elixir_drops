@@ -151,17 +151,17 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
 
       # Should redirect with helpful message
       |> assert_path("/")
-      |> assert_has("[role='alert']", text: "You must log in to access this page")
+      |> assert_has("[role='alert']", text: "Sign in to access this page")
 
       # Try drop creation
       |> visit(~p"/drops/new")
       |> assert_path("/")
-      |> assert_has("[role='alert']", text: "You must log in to access this page")
+      |> assert_has("[role='alert']", text: "Sign in to access this page")
 
       # Try drop editing
       |> visit(~p"/drops/#{user_drop.short_id}/edit")
       |> assert_path("/")
-      |> assert_has("[role='alert']", text: "You must log in to access this page")
+      |> assert_has("[role='alert']", text: "Sign in to access this page")
     end
 
     test "unauthorized users cannot edit others' drops", %{conn: conn, user_drop: user_drop} do
@@ -173,7 +173,7 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
 
       # Should redirect with authorization error
       |> assert_path("/")
-      |> assert_has("main", text: "You can only edit your own drops")
+      |> assert_has("main", text: "This Drop was not found, or you can only edit your own Drops.")
     end
 
     test "session expiration handles gracefully", %{conn: conn, user: user} do
@@ -190,7 +190,7 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
       # Try to access protected resource again
       |> visit(~p"/profile")
       |> assert_path("/")
-      |> assert_has("[role='alert']", text: "You must log in to access this page")
+      |> assert_has("[role='alert']", text: "Sign in to access this page")
 
       # User should be able to sign in again
       |> sign_in_user(user)

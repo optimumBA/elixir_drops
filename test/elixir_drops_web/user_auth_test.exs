@@ -219,7 +219,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
       {:halt, updated_socket} = UserAuth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert {:redirect, %{to: "/"}} = updated_socket.redirected
       refute updated_socket.assigns.current_user
-      assert updated_socket.assigns.flash["error"] == "You must log in to access this page."
+      assert updated_socket.assigns.flash["error"] == "Sign in to access this page."
     end
 
     test "redirects to login page if there isn't a user_token", %{conn: conn} do
@@ -233,7 +233,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
       {:halt, updated_socket} = UserAuth.on_mount(:ensure_authenticated, %{}, session, socket)
       assert {:redirect, %{to: "/"}} = updated_socket.redirected
       refute updated_socket.assigns.current_user
-      assert updated_socket.assigns.flash["error"] == "You must log in to access this page."
+      assert updated_socket.assigns.flash["error"] == "Sign in to access this page."
     end
   end
 
@@ -298,7 +298,7 @@ defmodule ElixirDropsWeb.UserAuthTest do
 
       assert conn.halted
 
-      assert conn.assigns.flash["error"] == "You must log in to access this page."
+      assert conn.assigns.flash["error"] == "Sign in to access this page."
       assert redirected_to(conn) == ~p"/"
     end
 

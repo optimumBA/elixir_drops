@@ -267,7 +267,7 @@ defmodule ElixirDropsWeb.Features.UserDropManagementTest do
 
       # Should redirect to homepage with error message
       |> assert_path("/")
-      |> assert_has("main", text: "You can only edit your own drops")
+      |> assert_has("main", text: "This Drop was not found, or you can only edit your own Drops.")
     end
 
     test "unauthenticated user cannot access edit URL", %{conn: conn, owned_drop: owned_drop} do
@@ -276,7 +276,7 @@ defmodule ElixirDropsWeb.Features.UserDropManagementTest do
 
       # Should redirect to homepage with auth error
       |> assert_path("/")
-      |> assert_has("main", text: "You must log in to access this page")
+      |> assert_has("main", text: "Sign in to access this page")
     end
 
     test "owner can edit their own drops successfully", %{

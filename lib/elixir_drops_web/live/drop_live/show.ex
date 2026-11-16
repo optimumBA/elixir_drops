@@ -147,7 +147,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
          |> stream_insert(:comments, top_level_comment, at: 0)}
 
       {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to add your comment")}
+        {:noreply, put_flash(socket, :error, "Your comment was not saved. Try again.")}
     end
   end
 
@@ -157,7 +157,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
         {:noreply, stream_insert(socket, :comments, get_top_level_comment(comment))}
 
       {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to update comment")}
+        {:noreply, put_flash(socket, :error, "Your changes were not saved. Try again.")}
     end
   end
 

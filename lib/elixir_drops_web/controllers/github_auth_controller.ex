@@ -31,7 +31,7 @@ defmodule ElixirDropsWeb.GithubAuthController do
   @spec callback(conn(), params()) :: conn()
   def callback(%{assigns: %{ueberauth_failure: _fails}} = conn, _params) do
     conn
-    |> put_flash(:error, "User authentication failed!")
+    |> put_flash(:error, "GitHub sign-in did not complete. Try signing in again.")
     |> redirect(to: ~p"/")
   end
 

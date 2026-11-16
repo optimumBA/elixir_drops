@@ -47,7 +47,9 @@ defmodule ElixirDropsWeb.GithubAuthControllerTest do
 
       refute get_session(conn, :user_token)
       assert redirected_to(conn) == "/"
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "User authentication failed!"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "GitHub sign-in did not complete. Try signing in again."
     end
 
     test "when user exists it logs them in", %{conn: conn} do

@@ -68,29 +68,31 @@ defmodule ElixirDropsWeb.Layouts do
   def flash_group(assigns) do
     ~H"""
     <div id={@id}>
-      <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
-      <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
+      <.flash kind={:info} title={gettext("Success")} flash={@flash} />
+      <.flash kind={:error} title={gettext("Error")} flash={@flash} />
       <.flash
         id="client-error"
+        phx-no-format
         kind={:error}
-        title={gettext("We can't find the internet")}
+        title={gettext("Connection lost")}
         phx-disconnected={show(".phx-client-error #client-error")}
         phx-connected={hide("#client-error")}
         hidden
       >
-        {gettext("Attempting to reconnect")}
+        {gettext("Reconnecting. If you just saved something, check that it saved before trying again.")}
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
 
       <.flash
         id="server-error"
+        phx-no-format
         kind={:error}
-        title={gettext("Something went wrong!")}
+        title={gettext("Server error")}
         phx-disconnected={show(".phx-server-error #server-error")}
         phx-connected={hide("#server-error")}
         hidden
       >
-        {gettext("Hang in there while we get back on track")}
+        {gettext("Reconnecting to the server. If you just saved something, check that it saved before trying again.")}
         <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
       </.flash>
     </div>
