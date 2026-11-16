@@ -13,11 +13,11 @@ CopyToClipboardHooks.CopyToClipboard = {
       if (!copyConfirmElement) return
 
       if (copyConfirmText) copyConfirmText.textContent = text
-      copyConfirmElement.classList.remove('hidden')
+      copyConfirmElement.classList.remove('sr-only')
 
       clearTimeout(hideTimeout)
       hideTimeout = setTimeout(() => {
-        copyConfirmElement.classList.add('hidden')
+        copyConfirmElement.classList.add('sr-only')
       }, 500)
     }
 

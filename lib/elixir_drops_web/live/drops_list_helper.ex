@@ -96,9 +96,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
           <div
             :for={{dom_id, item} <- @drops}
             id={dom_id}
-            phx-click={match?(%Drop{}, item) && JS.navigate(~p"/d/#{item.short_id}")}
             class={["masonry-item relative", match?(%Drop{}, item) && "cursor-pointer"]}
-            role={match?(%Drop{}, item) && "link"}
           >
             <div :if={match?(%{sponsor: "dnsimple"}, item)} class="relative">
               <DropComponents.dnsimple_sponsor_card />

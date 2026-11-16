@@ -120,7 +120,7 @@ defmodule ElixirDropsWeb.Features.VisitorAuthenticationTest do
       |> assert_has(".drop-card", text: "Public Drop Content")
 
       # Should be able to view individual drops
-      |> click_element_with_text(".drop-card", public_drop.title)
+      |> click_element_with_text(".drop-card h3 a", public_drop.title)
       |> assert_path("/d/#{public_drop.short_id}")
       |> assert_has("h1", text: public_drop.title)
       |> assert_has("main", text: "public_content")

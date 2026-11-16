@@ -64,6 +64,22 @@ let params = {
   _csrf_token: csrfToken,
 }
 
+// Keep aria-expanded on disclosure buttons in step with the element they
+// control when it is shown or hidden by JS.show/hide/toggle (including
+// click-away), without each caller having to update the button itself.
+const syncAriaExpanded = (event) => {
+  const el = event.target
+  if (!el || !el.id) return
+  const visible = window.getComputedStyle(el).display !== 'none'
+  document
+    .querySelectorAll(`[aria-controls="${el.id}"][aria-expanded]`)
+    .forEach((trigger) =>
+      trigger.setAttribute('aria-expanded', visible ? 'true' : 'false')
+    )
+}
+window.addEventListener('phx:show-end', syncAriaExpanded, true)
+window.addEventListener('phx:hide-end', syncAriaExpanded, true)
+
 const liveSocket = new LiveSocket('/live', Socket, {
   hooks: Hooks,
   longPollFallbackMs: 2500,

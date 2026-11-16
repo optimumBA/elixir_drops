@@ -8,6 +8,23 @@ ScreenshotProgressHooks.ScreenshotProgress = {
     let animationStarted = false
     let currentProgress = 0
 
+    // The popup is a modal dialog: remember what had focus, move focus into
+    // it, and hand focus back when it is closed (the hide_popup commands add
+    // the "hidden" class).
+    const returnFocusTo = document.activeElement
+    const closeButton = this.el.querySelector('#close-screenshot-progress')
+    if (closeButton) closeButton.focus()
+
+    const closeObserver = new MutationObserver(() => {
+      if (!this.el.classList.contains('hidden')) return
+      closeObserver.disconnect()
+      if (returnFocusTo && returnFocusTo.isConnected) returnFocusTo.focus()
+    })
+    closeObserver.observe(this.el, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+
     if (!progressCircle || !percentageText) {
       console.error('Could not find required elements for progress circle')
       return

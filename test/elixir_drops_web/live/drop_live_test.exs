@@ -129,8 +129,13 @@ defmodule ElixirDropsWeb.DropLiveTest do
     test "user can navigate to view a drop", %{conn: conn, drop: drop} do
       {:ok, live, _html} = live(conn, ~p"/")
 
+      # The card is a native link, so modifier-click, middle-click and the
+      # context menu work; the card itself carries no scripted click target.
+      card_html = render(element(live, "#drop-#{drop.id}"))
+      refute card_html =~ ~s(role="link")
+
       live
-      |> element("#drop-#{drop.id}")
+      |> element("#drop-#{drop.id} h3 a[href='/d/#{drop.short_id}']")
       |> render_click()
 
       {path, _flash} = assert_redirect(live)

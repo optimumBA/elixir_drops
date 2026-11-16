@@ -48,8 +48,16 @@ defmodule ElixirDropsWeb.DropComponents do
           <div class="flex items-center gap-x-4">
             <!-- Mobile/Tablet Search Icon -->
             <button
+              type="button"
+              id="search-trigger"
               class="lg:hidden p-2 text-[#4F4F4F] hover:text-[#5947F1]"
-              phx-click={JS.toggle(to: "#search-overlay")}
+              aria-label="Search drops"
+              aria-expanded="false"
+              aria-controls="search-overlay"
+              phx-click={
+                JS.toggle(to: "#search-overlay")
+                |> JS.toggle_attribute({"aria-expanded", "true", "false"}, to: "#search-trigger")
+              }
             >
               <.icon name="hero-magnifying-glass" class="h-5 w-5" />
             </button>
@@ -62,17 +70,29 @@ defmodule ElixirDropsWeb.DropComponents do
 
             <%= if @current_user do %>
               <div
-                class="flex items-center gap-x-3 cursor-pointer"
-                phx-click={JS.toggle_class("hidden", to: "#slide-menu")}
+                class="flex items-center gap-x-3"
+                phx-click-away={
+                  JS.add_class("hidden", to: "#slide-menu")
+                  |> JS.set_attribute({"aria-expanded", "false"}, to: "#account-menu-trigger")
+                }
               >
-                <img
-                  src={@current_user.avatar}
-                  alt={@current_user.github_username}
-                  class="w-10 h-10 rounded-full"
-                />
-                <p class="hidden md:block">{@current_user.github_username}</p>
-                <button class="hidden md:block">
-                  <.icon name="hero-chevron-down" class="text-[#4F4F4F]" />
+                <button
+                  type="button"
+                  id="account-menu-trigger"
+                  class="flex items-center gap-x-3 cursor-pointer"
+                  aria-label={"Account menu for #{@current_user.github_username}"}
+                  aria-expanded="false"
+                  aria-controls="slide-menu"
+                  phx-click={
+                    JS.toggle_class("hidden", to: "#slide-menu")
+                    |> JS.toggle_attribute({"aria-expanded", "true", "false"},
+                      to: "#account-menu-trigger"
+                    )
+                  }
+                >
+                  <img src={@current_user.avatar} alt="" class="w-10 h-10 rounded-full" />
+                  <span class="hidden md:block">{@current_user.github_username}</span>
+                  <.icon name="hero-chevron-down" class="hidden md:block text-[#4F4F4F]" />
                 </button>
                 <.slide_menu current_user={@current_user} />
               </div>
@@ -156,21 +176,28 @@ defmodule ElixirDropsWeb.DropComponents do
         <img
           :if={@drop.screenshot && @drop.screenshot.internal_url}
           src={@drop.screenshot.internal_url}
+          alt={"Screenshot preview of #{@drop.title}"}
           class="screenshot-image"
           id={"drop-image:#{@drop.id}"}
         />
       </div>
 
       <div class="drop-content">
-        <h3 class="drop-title">{@drop.title}</h3>
+        <h3 class="drop-title">
+          <.link
+            navigate={~p"/d/#{@drop.short_id}"}
+            class="after:absolute after:inset-0 after:content-[''] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#5947F1]"
+          >
+            {@drop.title}
+          </.link>
+        </h3>
         <div class="drop-body">
           {@text}
         </div>
 
         <div class="flex justify-between">
           <div class="drop-meta">
-            <img src={@drop.user.avatar} alt={@drop.user.github_username} class="user-avatar" />
-            <a href={~p"/d/#{@drop.short_id}"} class="hidden"></a>
+            <img src={@drop.user.avatar} alt="" class="user-avatar" />
             <p>{@drop.user.github_username}</p>
             <p class="text-[#868686] text-xs before:content-['•'] before:mr-1">
               <.created_at drop={@drop} />
@@ -180,15 +207,23 @@ defmodule ElixirDropsWeb.DropComponents do
               <div class="w-5 h-5">
                 <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-full h-full object-cover" />
               </div>
-              <div>{@drop.comment_count}</div>
+              <div><span class="sr-only">Comments: </span>{@drop.comment_count}</div>
             </div>
           </div>
 
           <%= if @show_card_menu? do %>
             <button
-              class="text-[#797979] hover:text-[#5947F1] relative p-2"
+              class="text-[#797979] hover:text-[#5947F1] relative z-10 p-2"
               id={"drop-card-menu-btn-#{@drop.id}"}
-              phx-click={JS.toggle(to: "#drop-card-menu-#{@drop.id}")}
+              aria-label={"Drop options for #{@drop.title}"}
+              aria-expanded="false"
+              aria-controls={"drop-card-menu-#{@drop.id}"}
+              phx-click={
+                JS.toggle(to: "#drop-card-menu-#{@drop.id}")
+                |> JS.toggle_attribute({"aria-expanded", "true", "false"},
+                  to: "#drop-card-menu-btn-#{@drop.id}"
+                )
+              }
               phx-stop-propagation="true"
               type="button"
             >
@@ -233,11 +268,7 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
 
         <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
-          <img
-            src={@drop.user.avatar}
-            alt={@drop.user.github_username}
-            class="rounded-full h-12 w-12 object-cover"
-          />
+          <img src={@drop.user.avatar} alt="" class="rounded-full h-12 w-12 object-cover" />
           <div>
             <p class="mb-1">{@drop.user.github_username}</p>
             <p class="text-[#696969] text-xs">
@@ -256,22 +287,30 @@ defmodule ElixirDropsWeb.DropComponents do
           <!-- Right side: Action buttons -->
           <div class="flex items-center gap-4">
             <!-- Copy link button -->
-            <div
+            <button
+              type="button"
               class="flex items-center gap-2 text-[#8E8E8E] hover:text-[#5947F1] cursor-pointer"
               id={"single-drop-copy-link-#{@drop.id}"}
+              aria-label="Copy link"
               data-clipboard-text={url(~p"/d/#{@drop.short_id}")}
               phx-hook="CopyToClipboard"
             >
               <.icon name="hero-link" class="h-5 w-5" />
               <span class="hidden md:inline text-sm">Copy link</span>
-            </div>
+            </button>
             <!-- Three dots menu button -->
             <button
               class="text-[#797979] hover:text-[#5947F1] p-2"
               id={"action-row-menu-btn-#{@drop.id}"}
+              aria-label="Drop options"
+              aria-expanded="false"
+              aria-controls={"drop-menu-#{@drop.id}"}
               phx-click={
                 JS.toggle(to: "#drop-menu-#{@drop.id}")
                 |> JS.toggle_class("opacity-0", to: "#drop-menu-#{@drop.id}")
+                |> JS.toggle_attribute({"aria-expanded", "true", "false"},
+                  to: "#action-row-menu-btn-#{@drop.id}"
+                )
               }
               type="button"
             >
@@ -379,7 +418,12 @@ defmodule ElixirDropsWeb.DropComponents do
       phx-hook="WelcomeMessage"
     >
       <div class="w-full flex justify-end items-center">
-        <button class="ml-auto breakout" phx-click={hide_welcome_message()}>
+        <button
+          type="button"
+          class="ml-auto breakout"
+          aria-label="Dismiss welcome message"
+          phx-click={hide_welcome_message()}
+        >
           <.icon name="hero-x-mark-solid" class="h-8 w-8 border" />
         </button>
       </div>
@@ -408,11 +452,7 @@ defmodule ElixirDropsWeb.DropComponents do
       <div class="text-[#EAE8FD] text-xl bg-gradient-to-r from-[#4b37f0] via-[#5f4ef2] to-[#6e5ff3] py-6 md:pl-6">
         <div class="flex flex-col md:flex-row items-center gap-x-3 breakout md:pl-6">
           <div>
-            <img
-              src={@current_user.avatar}
-              alt={@current_user.github_username}
-              class="w-16 h-16 rounded-full object-fill"
-            />
+            <img src={@current_user.avatar} alt="" class="w-16 h-16 rounded-full object-fill" />
           </div>
           <p>
             {@current_user.github_username}
@@ -444,6 +484,12 @@ defmodule ElixirDropsWeb.DropComponents do
                     value={@search_query}
                     placeholder="Search drops"
                     phx-change="load_suggestions"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-controls="profile-search-dropdown"
+                    aria-expanded={
+                      to_string(@show_profile_suggestions? and @profile_search_suggestions != [])
+                    }
                     class={[
                       "pl-10 pr-4 py-2 bg-transparent border-0",
                       "focus:outline-none focus:ring-0 placeholder-gray-500 text-sm",
@@ -460,11 +506,13 @@ defmodule ElixirDropsWeb.DropComponents do
                     "max-h-80 overflow-y-auto min-w-[200px]"
                   ]}
                 >
-                  <div class="py-2">
+                  <div class="py-2" role="listbox" aria-label="Search suggestions">
                     <div
-                      :for={suggestion <- @profile_search_suggestions}
+                      :for={{suggestion, index} <- Enum.with_index(@profile_search_suggestions)}
+                      id={"profile-search-option-#{index}"}
                       class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
-                      tabindex="0"
+                      role="option"
+                      aria-selected="false"
                       phx-click={
                         JS.push("search_submit", value: %{query: suggestion.query})
                         |> JS.hide(to: "#profile-search-dropdown")
@@ -487,12 +535,12 @@ defmodule ElixirDropsWeb.DropComponents do
                         <button
                           :if={suggestion.type == :history}
                           type="button"
-                          tabindex="0"
+                          aria-label={"Delete search history entry: #{suggestion.query}"}
                           phx-click={
                             JS.push("delete_search_history", value: %{id: suggestion.id})
                             |> JS.show(to: "#profile-search-dropdown")
                           }
-                          class="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600"
+                          class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-1 text-gray-400 hover:text-gray-600"
                         >
                           <.icon name="hero-trash" class="h-3 w-3" />
                         </button>
@@ -514,29 +562,41 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <div
       id="signin-popup-message"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="signin-popup-title"
       class={[
         "hidden bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
         "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
         "w-[95%] md:w-[40%] py-4 md:py-6 px-4"
       ]}
       phx-click-away={hide_popup("signin-popup-message")}
+      phx-window-keydown={hide_popup("signin-popup-message")}
+      phx-key="escape"
     >
-      <button class="ml-auto" phx-click={hide_popup("signin-popup-message")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5" />
-      </button>
-      <div class="mx-auto mb-4">
-        <img src={~p"/images/logo.png"} />
-      </div>
-      <p class="text-sm md:text-base mx-auto mb-6">
-        Take a moment to sign in to continue on ElixirDrops!
-      </p>
-      <.link
-        href={~p"/auth/github"}
-        class="font-semibold text-[#eae8fd] text-sm md:text-base bg-blue_primary hover:opacity-80 w-[55%] md:w-[45%] py-2 md:py-2 mx-auto rounded-lg flex justify-center items-center gap-x-2"
-      >
-        <span><Icons.github_icon /></span>
-        <span> Sign in with GitHub</span>
-      </.link>
+      <.focus_wrap id="signin-popup-focus-wrap" class="grid">
+        <button
+          type="button"
+          class="ml-auto"
+          aria-label="Close sign-in dialog"
+          phx-click={hide_popup("signin-popup-message")}
+        >
+          <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+        </button>
+        <div class="mx-auto mb-4">
+          <img src={~p"/images/logo.png"} alt="" />
+        </div>
+        <p id="signin-popup-title" class="text-sm md:text-base mx-auto mb-6">
+          Take a moment to sign in to continue on ElixirDrops!
+        </p>
+        <.link
+          href={~p"/auth/github"}
+          class="font-semibold text-[#eae8fd] text-sm md:text-base bg-blue_primary hover:opacity-80 w-[55%] md:w-[45%] py-2 md:py-2 mx-auto rounded-lg flex justify-center items-center gap-x-2"
+        >
+          <span><Icons.github_icon /></span>
+          <span> Sign in with GitHub</span>
+        </.link>
+      </.focus_wrap>
     </div>
     """
   end
@@ -547,17 +607,25 @@ defmodule ElixirDropsWeb.DropComponents do
     <div
       :if={@current_user}
       id="edit-form-cancel-confirm"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="edit-form-cancel-title"
+      aria-describedby="edit-form-cancel-description"
       class={[
         "hidden bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid",
         "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]",
         "w-[95%] md:w-[60%] py-4 md:py-8 px-4 md:px-6"
       ]}
       phx-click-away={hide_popup("edit-form-cancel-confirm")}
+      phx-window-keydown={hide_popup("edit-form-cancel-confirm")}
+      phx-key="escape"
     >
-      <div class="grid gap-y-2">
+      <.focus_wrap id="edit-form-cancel-focus-wrap" class="grid gap-y-2">
         <.icon name="hero-exclamation-triangle" class="text-[#efd343] h-8 w-8 mx-auto" />
-        <h3 class="font-semibold text-xl text-[#252525] mx-auto">Wait a minute!</h3>
-        <p class="mx-auto">
+        <h3 id="edit-form-cancel-title" class="font-semibold text-xl text-[#252525] mx-auto">
+          Wait a minute!
+        </h3>
+        <p id="edit-form-cancel-description" class="mx-auto">
           Are you sure you want to leave this page? All changes you've made will be lost.
         </p>
         <div class="flex justify-center items-center gap-x-3 mx-auto w-full">
@@ -577,7 +645,7 @@ defmodule ElixirDropsWeb.DropComponents do
             Continue writing
           </button>
         </div>
-      </div>
+      </.focus_wrap>
     </div>
     """
   end
@@ -587,8 +655,10 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <p
       id="copy-confirm-message"
+      role="status"
+      aria-live="polite"
       class={[
-        "hidden text-[#eae8fd] text-xs bg-[#9666d9] rounded-lg drop-shadow-sm px-3 py-3 flex items-center gap-x-1 z-[1000]",
+        "sr-only text-[#eae8fd] text-xs bg-[#9666d9] rounded-lg drop-shadow-sm px-3 py-3 flex items-center gap-x-1 z-[1000]",
         "fixed bottom-12 left-[50%] translate-x-[-50%] translate-y-[50%]"
       ]}
     >
@@ -606,6 +676,7 @@ defmodule ElixirDropsWeb.DropComponents do
     ~H"""
     <.link
       id="create-drop-btn-mobile"
+      aria-label="Create Drop"
       phx-hook="CreateDropButtonMobile"
       class={[
         "bg-[#2f19ee] h-10 w-10 rounded-full fixed bottom-4 right-3 z-[10000] md:hidden flex items-center justify-center hover:opacity-80",
@@ -635,73 +706,86 @@ defmodule ElixirDropsWeb.DropComponents do
       :if={@screenshot.status != :skipped}
       class="bg-white absolute rounded-lg shadow-md shadow-[#b2b2b2] z-[10000] grid top-[48%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[90%] md:w-[80%] lg:max-w-[45em]"
       id={@id}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Generating code screenshots"
       phx-click-away={hide_popup(@id)}
+      phx-window-keydown={hide_popup(@id)}
+      phx-key="escape"
       phx-hook="ScreenshotProgress"
       phx-target={@target}
     >
-      <button id="close-screenshot-progress" class="bg-black" phx-click={hide_popup(@id)}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
-      </button>
-      <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[200px] md:min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
-        <p
-          :if={@screenshot.status != :completed}
-          class="w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2 font-light"
+      <.focus_wrap id="screenshot-progress-focus-wrap" class="grid">
+        <button
+          id="close-screenshot-progress"
+          type="button"
+          class="bg-black"
+          aria-label="Close screenshot progress"
+          phx-click={hide_popup(@id)}
         >
-          Your drop is almost ready! You can close this modal—your drop will continue processing in the background.
-        </p>
-        <p
-          :if={@screenshot.status == :completed}
-          class="text-gray-700 font-normal text-lg md:text-xl lg:text-2xl mx-auto"
-        >
-          Here's your screenshot!
-          <span class="text-sm md:text-base lg:text-lg block font-light">
-            You can now view and share your drop
-          </span>
-        </p>
-
-        <div class={[
-          "pt-8 min-w-[80%] mx-auto",
-          @screenshot.status != :completed &&
-            "flex h-[80%] bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2] my-auto"
-        ]}>
-          <div
+          <.icon name="hero-x-mark-solid" class="h-5 w-5 text-gray-600 absolute top-2 right-2" />
+        </button>
+        <div class="bg-white rounded-lg py-8 text-sm md:text-base text-black text-center mx-auto min-h-[200px] md:min-h-[500px] min-w-[300px] flex flex-col justify-between items-center">
+          <p
             :if={@screenshot.status != :completed}
-            class="mx-auto text-white rounded-lg flex flex-col items-center justify-center space-y-4"
+            class="w-[75%] text-sm md:text-base lg:text-lg mx-auto mb-2 font-light"
           >
-            <.progress_loader />
-            <p class="text-base md:text-lg lg:text-xl text-white mx-auto mt-4 mb-6">
-              Generating Code Screenshots...
-            </p>
-          </div>
-          <img
+            Your drop is almost ready! You can close this modal—your drop will continue processing in the background.
+          </p>
+          <p
             :if={@screenshot.status == :completed}
-            src={"#{@screenshot.url}?t=#{System.os_time(:millisecond)}"}
-            class="max-w-[80%] rounded-xl mx-auto"
-            alt="Generated code screenshot"
-          />
+            class="text-gray-700 font-normal text-lg md:text-xl lg:text-2xl mx-auto"
+          >
+            Here's your screenshot!
+            <span class="text-sm md:text-base lg:text-lg block font-light">
+              You can now view and share your drop
+            </span>
+          </p>
 
-          <div
-            :if={@screenshot.status == :completed}
-            class="text-xs md:text-sm flex justify-center gap-x-4 mt-4"
-          >
-            <.link
-              type="button"
-              class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
-              phx-click={hide_popup("generating-screenshots-popup")}
-              navigate={~p"/drops/#{@screenshot.drop_short_id}/edit"}
+          <div class={[
+            "pt-8 min-w-[80%] mx-auto",
+            @screenshot.status != :completed &&
+              "flex h-[80%] bg-gradient-to-b rounded-lg from-[#4f42d2] to-[#8149d2] my-auto"
+          ]}>
+            <div
+              :if={@screenshot.status != :completed}
+              class="mx-auto text-white rounded-lg flex flex-col items-center justify-center space-y-4"
             >
-              Edit drop
-            </.link>
-            <.link
-              type="button"
-              class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
-              navigate={~p"/profile"}
+              <.progress_loader />
+              <p class="text-base md:text-lg lg:text-xl text-white mx-auto mt-4 mb-6">
+                Generating Code Screenshots...
+              </p>
+            </div>
+            <img
+              :if={@screenshot.status == :completed}
+              src={"#{@screenshot.url}?t=#{System.os_time(:millisecond)}"}
+              class="max-w-[80%] rounded-xl mx-auto"
+              alt="Generated code screenshot"
+            />
+
+            <div
+              :if={@screenshot.status == :completed}
+              class="text-xs md:text-sm flex justify-center gap-x-4 mt-4"
             >
-              View drops
-            </.link>
+              <.link
+                type="button"
+                class="text-[#4f4f4f] rounded-lg py-2 px-4 bg-[#eeeeee] hover:bg-[#eae8fd]"
+                phx-click={hide_popup("generating-screenshots-popup")}
+                navigate={~p"/drops/#{@screenshot.drop_short_id}/edit"}
+              >
+                Edit drop
+              </.link>
+              <.link
+                type="button"
+                class="text-[#d3cffb] rounded-lg py-2 px-4 bg-blue_primary hover:opacity-80"
+                navigate={~p"/profile"}
+              >
+                View drops
+              </.link>
+            </div>
           </div>
         </div>
-      </div>
+      </.focus_wrap>
     </div>
     """
   end
@@ -720,9 +804,20 @@ defmodule ElixirDropsWeb.DropComponents do
       <div class="flex items-center gap-2">
         <span class="text-[#8e8e8e] text-sm">Markdown</span>
         <div class="relative group">
-          <.icon name="hero-information-circle" class="h-5 w-5 text-[#8e8e8e] cursor-help" />
+          <button
+            type="button"
+            class="flex items-center rounded"
+            aria-label="About Markdown"
+            aria-describedby={"markdown-help-#{@short_id}"}
+          >
+            <.icon name="hero-information-circle" class="h-5 w-5 text-[#8e8e8e] cursor-help" />
+          </button>
           <!-- Tooltip -->
-          <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-[100001]">
+          <div
+            id={"markdown-help-#{@short_id}"}
+            role="tooltip"
+            class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 pointer-events-none z-[100001]"
+          >
             <div class="bg-[#FFFFFF] text-[#000000] text-xs rounded-lg py-2 px-4 w-[240px] font-roboto font-normal leading-[15px] border border-gray-200 shadow-md">
               View this Drop in Markdown format or copy Markdown URL for your AI workflow
               <!-- Tooltip arrow -->
@@ -748,15 +843,16 @@ defmodule ElixirDropsWeb.DropComponents do
     </.link>
 
     <!-- Copy Markdown URL -->
-    <div
-      class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+    <button
+      type="button"
+      class="w-full text-left text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
       id={"copy-markdown-#{@short_id}"}
       data-clipboard-text={url(~p"/d/#{@short_id}") <> ".md"}
       phx-hook="CopyToClipboard"
     >
       <Icons.clipboard_copy_icon class="h-5 w-5" />
       <span>Copy Markdown URL</span>
-    </div>
+    </button>
     """
   end
 
@@ -859,62 +955,90 @@ defmodule ElixirDropsWeb.DropComponents do
   defp view_notifications_component(assigns) do
     ~H"""
     <section :if={@current_user} class="hover:cursor-pointer">
-      <div
-        phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#main-page-body")}
-        class="flex shrink-0 sm:hidden"
+      <button
+        type="button"
+        id="notifications-trigger-mobile"
+        class="notifications-trigger flex shrink-0 sm:hidden"
+        aria-label={notifications_label(@notification_count)}
+        aria-expanded="false"
+        aria-controls="notifications-container"
+        phx-click={toggle_notifications(true)}
       >
-        <div class="relative group w-5 h-5">
+        <span class="relative group block w-5 h-5">
           <img
             src={~p"/images/default_notification.svg"}
             class="group-hover:hidden group-active:hidden object-cover"
-            alt="notification icon"
+            alt=""
           />
           <img
             src={~p"/images/hover_notification.svg"}
             class="hidden group-active:hidden group-hover:block object-cover"
-            alt="notification icon"
+            alt=""
           />
           <img
             src={~p"/images/active_notification.svg"}
             class="hidden group-active:block object-cover"
-            alt="notification icon"
+            alt=""
           />
-          <section
+          <span
             :if={@notification_count > 0}
             class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px]"
           >
-            <p id="notifications-count">{@notification_count}</p>
-          </section>
-        </div>
-      </div>
+            <span id="notifications-count">{@notification_count}</span>
+          </span>
+        </span>
+      </button>
 
-      <div phx-click={JS.toggle(to: "#notifications-container")} class="hidden shrink-0 sm:flex">
-        <div class="relative group w-5 h-5">
+      <button
+        type="button"
+        id="notifications-trigger"
+        class="notifications-trigger hidden shrink-0 sm:flex"
+        aria-label={notifications_label(@notification_count)}
+        aria-expanded="false"
+        aria-controls="notifications-container"
+        phx-click={toggle_notifications(false)}
+      >
+        <span class="relative group block w-5 h-5">
           <img
             src={~p"/images/default_notification.svg"}
             class="group-hover:hidden group-active:hidden object-cover"
-            alt="notification icon"
+            alt=""
           />
           <img
             src={~p"/images/hover_notification.svg"}
             class="hidden group-active:hidden group-hover:block object-cover"
-            alt="notification icon"
+            alt=""
           />
           <img
             src={~p"/images/active_notification.svg"}
             class="hidden group-active:block object-cover"
-            alt="notification icon"
+            alt=""
           />
-          <section
+          <span
             :if={@notification_count > 0}
             class="flex justify-center text-[#FFFFFF] text-[10px] w-4 h-4 bg-[#D84141] rounded-full absolute right-[-5px] top-[-4px]"
           >
-            <p id="notifications-count-large">{@notification_count}</p>
-          </section>
-        </div>
-      </div>
+            <span id="notifications-count-large">{@notification_count}</span>
+          </span>
+        </span>
+      </button>
     </section>
     """
+  end
+
+  defp notifications_label(0), do: "Notifications"
+  defp notifications_label(count), do: "Notifications, #{count} unread"
+
+  # Opens or closes the notifications panel and keeps aria-expanded on both the
+  # mobile and desktop triggers in step with it. On small screens the panel
+  # replaces the page body.
+  defp toggle_notifications(replace_page_body?) do
+    js =
+      %JS{}
+      |> JS.toggle(to: "#notifications-container")
+      |> JS.toggle_attribute({"aria-expanded", "true", "false"}, to: ".notifications-trigger")
+
+    if replace_page_body?, do: JS.toggle(js, to: "#main-page-body"), else: js
   end
 
   defp drop_page_menu(assigns) do
@@ -956,26 +1080,30 @@ defmodule ElixirDropsWeb.DropComponents do
     >
       <section class="w-[90%] mx-auto flex justify-between">
         <div class="flex justify-between gap-2 items-stretch">
-          <div
-            phx-click={JS.toggle(to: "#notifications-container") |> JS.toggle(to: "#main-page-body")}
+          <button
+            type="button"
+            id="close-notifications"
+            aria-label="Close notifications"
+            phx-click={toggle_notifications(true)}
             class="w-[25%] shrink-0 flex items-center hover:cursor-pointer sm:hidden"
           >
-            <img src={~p"/images/back_btn.svg"} alt="Back button" />
-          </div>
+            <img src={~p"/images/back_btn.svg"} alt="" />
+          </button>
 
           <div class="roboto-medium text-[#252525] leading-7 tracking-[0.5%]">
             Notifications
           </div>
         </div>
-        <div
+        <button
           :if={@notification_count > 0}
+          type="button"
           id="mark-notifications-as-read"
           phx-click={JS.push("mark_notifications_as_read")}
           class="flex items-center gap-2 hover:cursor-pointer"
         >
-          <p class="roboto-regular text-sm text-[#4F4F4F] leading-4">Mark all as read</p>
-          <p><img src={~p"/images/mark.svg"} alt="Mark as read" class="w-4 h-4" /></p>
-        </div>
+          <span class="roboto-regular text-sm text-[#4F4F4F] leading-4">Mark all as read</span>
+          <img src={~p"/images/mark.svg"} alt="" class="w-4 h-4" />
+        </button>
       </section>
       <section class="border-b-[0.5px] border-[#CBCBCB] mt-4"></section>
       <section>
@@ -988,7 +1116,7 @@ defmodule ElixirDropsWeb.DropComponents do
               <img
                 src={~p"/images/notification.svg"}
                 class="w-full h-full object-cover"
-                alt="showing the notifications"
+                alt=""
               />
             </div>
             <div class="roboto-regular text-center text-[#8E8E8E] leading-7">
@@ -1033,7 +1161,7 @@ defmodule ElixirDropsWeb.DropComponents do
       <section class="shrink-0 pt-1 md:pt-0">
         <img
           src={@actor.avatar || ~p"/images/default-avatar.svg"}
-          alt={@actor.name}
+          alt=""
           class="w-11 h-11 rounded-full"
         />
       </section>
@@ -1074,15 +1202,16 @@ defmodule ElixirDropsWeb.DropComponents do
         Sharing
       </div>
 
-      <div
+      <button
+        type="button"
         id={"card-copy-link-menu-#{@id}"}
         data-clipboard-text={url(~p"/d/#{@short_id}")}
         phx-hook="CopyToClipboard"
-        class="text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
+        class="w-full text-left text-[#4f4f4f] hover:text-[#5947F1] flex items-center gap-x-2 px-2 py-2 rounded hover:bg-gray-50 cursor-pointer"
       >
         <.icon name="hero-link" class="h-5 w-5" />
         <span>Copy Drop link</span>
-      </div>
+      </button>
       <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} />
 
@@ -1113,14 +1242,9 @@ defmodule ElixirDropsWeb.DropComponents do
     <div
       class="hidden w-[100%] md:w-[25%] shadow-md shadow-[#c4c1c8] md:rounded-b-md pt-10 pb-4 absolute top-[101%] right-0 md:right-[2rem] grid z-[10000] bg-white"
       id="slide-menu"
-      phx-click-away={JS.toggle_class("hidden", to: "#slide-menu")}
     >
       <div class="mx-auto cursor-default">
-        <img
-          src={@current_user.avatar}
-          alt={@current_user.github_username}
-          class="w-16 h-16 rounded-full"
-        />
+        <img src={@current_user.avatar} alt="" class="w-16 h-16 rounded-full" />
       </div>
       <p class="text-base mx-auto mt-1 cursor-default">{@current_user.github_username}</p>
 
@@ -1154,18 +1278,20 @@ defmodule ElixirDropsWeb.DropComponents do
 
   defp drop_card_action_default(assigns) do
     ~H"""
-    <div
+    <button
+      type="button"
       id={"card-copy-link-#{@id}"}
+      aria-label="Copy Drop link"
       data-clipboard-text={url(~p"/d/#{@short_id}")}
       phx-hook="CopyToClipboard"
       class={[
-        "text-[#797979] hover:text-[#5947F1]",
+        "relative z-10 text-[#797979] hover:text-[#5947F1]",
         @inner_text && "flex items-center justify-center gap-x-2"
       ]}
     >
       <.icon name="hero-link-solid" class="h-4 w-4 md:h-6 md:w-6" />
       {render_slot(@inner_text)}
-    </div>
+    </button>
     """
   end
 
@@ -1179,9 +1305,11 @@ defmodule ElixirDropsWeb.DropComponents do
   @spec show_popup(selector()) :: javascript()
   def show_popup(pop_up_message_id) do
     %JS{}
+    |> JS.push_focus()
     |> JS.remove_class(@hidden_class, to: "##{pop_up_message_id}")
     |> JS.add_class(@popup_class, to: ".drops-container")
     |> JS.add_class(@popup_class, to: ".drop-form")
+    |> JS.focus_first(to: "##{pop_up_message_id}")
   end
 
   @spec hide_popup(selector()) :: javascript()
@@ -1191,6 +1319,7 @@ defmodule ElixirDropsWeb.DropComponents do
     |> JS.remove_class(@popup_class, to: ".drops-container")
     |> JS.remove_class(@popup_class, to: ".drop-form")
     |> JS.add_class(@hidden_class, to: ".drops-editor-overlay")
+    |> JS.pop_focus()
   end
 
   @spec to_html(html()) :: Phoenix.HTML.safe()
@@ -1317,6 +1446,10 @@ defmodule ElixirDropsWeb.DropComponents do
           value={@search_query}
           placeholder="Search drops"
           phx-change="load_navbar_suggestions"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls="navbar-search-dropdown"
+          aria-expanded={to_string(@show_suggestions? and @search_suggestions != [])}
           class={[
             "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
             "remove-outline border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
@@ -1330,6 +1463,7 @@ defmodule ElixirDropsWeb.DropComponents do
         <button
           :if={@search_query != ""}
           type="button"
+          aria-label="Clear search"
           phx-click="clear_search"
           class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
         >
@@ -1345,11 +1479,13 @@ defmodule ElixirDropsWeb.DropComponents do
           "max-h-80 overflow-y-auto"
         ]}
       >
-        <div class="py-2">
+        <div class="py-2" role="listbox" aria-label="Search suggestions">
           <div
-            :for={suggestion <- @search_suggestions}
+            :for={{suggestion, index} <- Enum.with_index(@search_suggestions)}
+            id={"navbar-search-option-#{index}"}
             class="px-4 py-2 hover:bg-gray-50 cursor-pointer group"
-            tabindex="0"
+            role="option"
+            aria-selected="false"
             phx-click={
               JS.push("navbar_search_submit", value: %{query: suggestion.query})
               |> JS.hide(to: "#navbar-search-dropdown")
@@ -1372,8 +1508,8 @@ defmodule ElixirDropsWeb.DropComponents do
               <button
                 :if={suggestion.type == :history}
                 type="button"
-                tabindex="0"
-                class="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
+                aria-label={"Delete search history entry: #{suggestion.query}"}
+                class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-1 hover:bg-gray-200 rounded"
                 phx-click={
                   JS.push("delete_navbar_search_history", value: %{id: suggestion.id})
                   |> JS.show(to: "#navbar-search-dropdown")
@@ -1410,6 +1546,9 @@ defmodule ElixirDropsWeb.DropComponents do
           phx-hook="SearchSuggestions"
         >
           <button
+            type="button"
+            id="search-overlay-close"
+            aria-label="Close search"
             class="p-1 text-gray-600 hover:text-gray-900"
             phx-click={JS.hide(to: "#search-overlay")}
           >
@@ -1428,6 +1567,11 @@ defmodule ElixirDropsWeb.DropComponents do
               phx-change="load_suggestions"
               phx-focus="focus_search_input"
               phx-blur="blur_search_input"
+              aria-label="Search drops"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-controls="mobile-search-dropdown"
+              aria-expanded={to_string(@show_suggestions? and @search_suggestions != [])}
               class={[
                 "w-full px-4 py-2 pl-10 pr-10 bg-white rounded-lg",
                 "border border-gray-200 focus:border-[#5947F1] focus:ring-1 focus:ring-[#5947F1]",
@@ -1442,6 +1586,7 @@ defmodule ElixirDropsWeb.DropComponents do
             <button
               :if={@search_query != ""}
               type="button"
+              aria-label="Clear search"
               phx-click="clear_search"
               class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
             >
@@ -1453,12 +1598,16 @@ defmodule ElixirDropsWeb.DropComponents do
         <div
           :if={@show_suggestions? and @search_suggestions != []}
           id="mobile-search-dropdown"
+          role="listbox"
+          aria-label="Search suggestions"
           class="absolute top-full left-0 right-0 bg-white border-t border-gray-200 max-h-80 overflow-y-auto"
         >
           <div
-            :for={suggestion <- @search_suggestions}
+            :for={{suggestion, index} <- Enum.with_index(@search_suggestions)}
+            id={"mobile-search-option-#{index}"}
             class="px-4 py-3 hover:bg-gray-50 cursor-pointer group"
-            tabindex="0"
+            role="option"
+            aria-selected="false"
             phx-click="search_submit"
             phx-value-query={suggestion.query}
           >
@@ -1479,8 +1628,8 @@ defmodule ElixirDropsWeb.DropComponents do
               <button
                 :if={suggestion.type == :history}
                 type="button"
-                tabindex="0"
-                class="opacity-0 group-hover:opacity-100 p-2 hover:bg-gray-200 rounded"
+                aria-label={"Delete search history entry: #{suggestion.query}"}
+                class="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 p-2 hover:bg-gray-200 rounded"
                 phx-click="delete_search_history"
                 phx-value-id={suggestion.id}
                 phx-stop-propagation="true"

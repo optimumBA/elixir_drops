@@ -147,8 +147,8 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       # Sign in through mobile-optimized flow
       |> sign_in_user(user)
       |> assert_path("/")
-      |> assert_has("nav img[class*='w-10'][alt='#{user.github_username}']")
-      |> click("nav img[class*='w-10'][alt='#{user.github_username}']")
+      |> assert_has("nav #account-menu-trigger")
+      |> click("nav #account-menu-trigger")
       |> click("#view-user-drops-link")
       |> assert_path("/profile")
       |> assert_has("section.user-drops")
@@ -160,7 +160,7 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> sign_in_user(user)
       |> visit(~p"/")
       |> resize_window(375, 667)
-      |> click("nav img[class*='w-10'][alt='#{user.github_username}']")
+      |> click("nav #account-menu-trigger")
       |> click("#slide-menu a[href='/auth/logout']")
       |> assert_has("a", text: "Sign in with GitHub")
       |> refute_has("#slide-menu")
@@ -508,19 +508,19 @@ defmodule ElixirDropsWeb.Features.MobileUserExperienceTest do
       |> resize_window(375, 667)
 
       # User should be authenticated in portrait
-      |> assert_has("nav img[alt='#{user.github_username}']")
+      |> assert_has("nav #account-menu-trigger")
 
       # Rotate to landscape
       |> resize_window(667, 375)
 
       # Should maintain authentication state
-      |> assert_has("nav img[alt='#{user.github_username}']")
+      |> assert_has("nav #account-menu-trigger")
 
       # Rotate back to portrait
       |> resize_window(375, 667)
 
       # State should persist
-      |> assert_has("nav img[alt='#{user.github_username}']")
+      |> assert_has("nav #account-menu-trigger")
     end
   end
 end

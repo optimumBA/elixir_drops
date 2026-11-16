@@ -181,7 +181,7 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
       conn
       |> sign_in_user(user)
       |> visit(~p"/")
-      |> assert_has("p", text: user.github_username)
+      |> assert_has("nav", text: user.github_username)
 
       # Simulate session expiration by signing out
       # Sign out by visiting logout directly
@@ -195,7 +195,7 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
       # User should be able to sign in again
       |> sign_in_user(user)
       |> visit(~p"/")
-      |> assert_has("p", text: user.github_username)
+      |> assert_has("nav", text: user.github_username)
     end
 
     test "authentication state persists across form submissions", %{conn: conn, user: user} do
@@ -677,7 +677,7 @@ defmodule ElixirDropsWeb.Features.ErrorHandlingTest do
 
       # Can navigate away from error state
       |> visit(~p"/")
-      |> assert_has("p", text: user.github_username)
+      |> assert_has("nav", text: user.github_username)
 
       # Can return to form
       |> visit(~p"/drops/new")

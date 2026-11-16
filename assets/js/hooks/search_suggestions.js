@@ -59,6 +59,8 @@ export default {
 
       // Handle focus to show suggestions
       this.handleFocus = (e) => {
+        // Refocusing the field after Escape must not reopen the list.
+        if (this.keepClosed) return
         checkIfActive()
         if (!this.isActive) return
 
@@ -111,21 +113,112 @@ export default {
       }
       this.input.addEventListener('blur', this.handleBlur)
 
-      // Simple Escape key handler for mobile
+      const dropdownSelector = () => {
+        if (this.el.id === 'profile-search-input')
+          return '#profile-search-dropdown'
+        if (this.el.id === 'mobile-search-input')
+          return '#mobile-search-dropdown'
+        return '#navbar-search-dropdown'
+      }
+
+      const getDropdown = () => document.querySelector(dropdownSelector())
+
+      const getOptions = () => {
+        const dropdown = getDropdown()
+        return dropdown
+          ? Array.from(dropdown.querySelectorAll('[role="option"]'))
+          : []
+      }
+
+      const activeIndex = (options) =>
+        options.findIndex((o) => o.getAttribute('aria-selected') === 'true')
+
+      // Select one option (or none with -1): the input keeps DOM focus and
+      // points at the selected row with aria-activedescendant.
+      const setActive = (options, index) => {
+        options.forEach((option, i) => {
+          const selected = i === index
+          option.setAttribute('aria-selected', selected ? 'true' : 'false')
+          option.classList.toggle('bg-gray-100', selected)
+        })
+
+        if (index >= 0 && options[index]) {
+          this.input.setAttribute('aria-activedescendant', options[index].id)
+          options[index].scrollIntoView({ block: 'nearest' })
+        } else {
+          this.input.removeAttribute('aria-activedescendant')
+        }
+      }
+
+      const closeSuggestions = () => {
+        this.pushEvent('close_search_overlay')
+      }
+
+      // Arrow Up/Down move the selection, Enter activates it, Escape closes.
       this.handleKeydown = (e) => {
-        if (e.key === 'Escape') {
-          this.pushEvent('close_search_overlay')
-          this.input.blur()
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          const options = getOptions()
+          if (options.length === 0) {
+            // Nothing to select: ArrowDown asks for the suggestions again,
+            // for example after Escape closed the list.
+            if (e.key === 'ArrowDown') this.handleFocus(e)
+            return
+          }
+
+          e.preventDefault()
+          const current = activeIndex(options)
+          let next
+          if (e.key === 'ArrowDown') {
+            next = current + 1 >= options.length ? 0 : current + 1
+          } else {
+            next = current <= 0 ? options.length - 1 : current - 1
+          }
+          setActive(options, next)
+        } else if (e.key === 'Enter') {
+          const options = getOptions()
+          const current = activeIndex(options)
+          if (current >= 0) {
+            e.preventDefault()
+            options[current].click()
+          }
+        } else if (e.key === 'Escape') {
+          closeSuggestions()
+          this.input.removeAttribute('aria-activedescendant')
+
+          if (this.el.id === 'mobile-search-input') {
+            this.input.blur()
+            const close = document.querySelector('#search-overlay-close')
+            if (close) close.click()
+            const trigger = document.querySelector('#search-trigger')
+            if (trigger) trigger.focus()
+          }
         }
       }
 
       this.input.addEventListener('keydown', this.handleKeydown)
+
+      // Escape inside the list (for example on a history delete button)
+      // closes it and returns focus to the search field.
+      this.handleListKeydown = (e) => {
+        if (e.key !== 'Escape') return
+        const dropdown = getDropdown()
+        if (!dropdown || !dropdown.contains(e.target)) return
+
+        e.preventDefault()
+        closeSuggestions()
+        this.keepClosed = true
+        this.input.focus()
+        this.keepClosed = false
+      }
+
+      document.addEventListener('keydown', this.handleListKeydown)
 
       // Remove all manual dropdown manipulation - let Phoenix LiveView handle it via show_suggestions? state
     },
 
     destroyed() {
       clearTimeout(this.debounceTimer)
+      document.removeEventListener('keydown', this.handleListKeydown)
       window.removeEventListener('resize', this.handleResize)
       window.removeEventListener(
         'search-overlay-opened',

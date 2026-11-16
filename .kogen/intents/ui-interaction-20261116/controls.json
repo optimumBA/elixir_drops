@@ -1,0 +1,1 @@
+{"deferred":"The correct implementation spans the Drop card, header, search, dialog and image markup in two large component modules plus two browser hooks and their tests, so a faithful correct overlay would duplicate most of the Build; the Build writes it."}

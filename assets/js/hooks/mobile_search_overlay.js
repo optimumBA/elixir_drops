@@ -30,6 +30,20 @@ export default {
       }
 
       document.addEventListener('keydown', this.handleEscape)
+
+      // The overlay is shown and hidden with JS.toggle/JS.hide, which change
+      // the inline display rather than a class: move focus into the search
+      // field when it opens and back to the trigger when it closes.
+      this.handleShown = () => {
+        const input = this.el.querySelector('input[type="text"]')
+        if (input) input.focus()
+      }
+      this.handleHidden = () => {
+        const trigger = document.querySelector('#search-trigger')
+        if (trigger && this.el.contains(document.activeElement)) trigger.focus()
+      }
+      this.el.addEventListener('phx:show-end', this.handleShown)
+      this.el.addEventListener('phx:hide-end', this.handleHidden)
     },
 
     destroyed() {
@@ -37,6 +51,8 @@ export default {
         this.observer.disconnect()
       }
       document.removeEventListener('keydown', this.handleEscape)
+      this.el.removeEventListener('phx:show-end', this.handleShown)
+      this.el.removeEventListener('phx:hide-end', this.handleHidden)
     },
   },
 }

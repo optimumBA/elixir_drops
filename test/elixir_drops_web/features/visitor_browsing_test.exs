@@ -113,7 +113,7 @@ defmodule ElixirDropsWeb.Features.VisitorBrowsingTest do
       conn
       |> visit(~p"/")
       # Click on the specific Elixir drop card
-      |> click_element_with_text(".drop-card", elixir_drop.title)
+      |> click_element_with_text(".drop-card h3 a", elixir_drop.title)
       |> wait_for(time: 1)
       # Should navigate to drop view page
       |> assert_path("/d/#{elixir_drop.short_id}")
@@ -346,7 +346,7 @@ defmodule ElixirDropsWeb.Features.VisitorBrowsingTest do
       # Check if drops are visible first
       |> assert_has(".drop-card")
       # Navigate to first drop
-      |> click_element_with_text(".drop-card", drop1.title)
+      |> click_element_with_text(".drop-card h3 a", drop1.title)
       |> assert_path("/d/#{drop1.short_id}")
       |> assert_has("h1", text: drop1.title)
 
@@ -356,7 +356,7 @@ defmodule ElixirDropsWeb.Features.VisitorBrowsingTest do
       |> assert_path("/")
 
       # Navigate to second drop
-      |> click_element_with_text(".drop-card", drop2.title)
+      |> click_element_with_text(".drop-card h3 a", drop2.title)
       |> wait_for(time: 1)
       |> assert_path("/d/#{drop2.short_id}")
       |> assert_has("h1", text: drop2.title)
