@@ -18,6 +18,7 @@ CopyToClipboardHooks.CopyToClipboard = {
       clearTimeout(hideTimeout)
       hideTimeout = setTimeout(() => {
         copyConfirmElement.classList.add('sr-only')
+        if (copyConfirmText) copyConfirmText.textContent = ''
       }, 500)
     }
 

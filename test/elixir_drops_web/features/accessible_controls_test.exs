@@ -234,6 +234,7 @@ defmodule ElixirDropsWeb.Features.AccessibleControlsTest do
       |> assert_page("copy button + live region", """
       const b = document.querySelector('#{button}');
       const live = document.querySelector('#copy-confirm-message');
+      if (!window.liveSocket || !window.liveSocket.isConnected() || !document.querySelector('[data-phx-main].phx-connected')) return 'LiveView not connected yet';
       if (b.tagName !== 'BUTTON' || b.type !== 'button') return 'copy action is not <button type=button>';
       if (!b.getAttribute('aria-label')) return 'copy button has no name';
       if (live.getAttribute('role') !== 'status' || live.getAttribute('aria-live') !== 'polite') return 'not a polite live region';
@@ -250,6 +251,105 @@ defmodule ElixirDropsWeb.Features.AccessibleControlsTest do
       const seen = window.__copySeen.join('|');
       return /Link copied to clipboard|Copy failed/.test(seen) ? 'ok' : 'no feedback shown: ' + seen;
       """)
+    end
+  end
+
+  describe "copy status starts empty and follows the real clipboard result" do
+    @describetag error_path_exemption:
+                   "Authorization refusals and sign-in failures are unchanged and covered by visitor_authentication_test."
+
+    setup do
+      user = user_fixture()
+      %{drop: drop_fixture(%Drop{}, user, %{title: "Copy status", body: @body})}
+    end
+
+    for {width, height} <- [{1440, 900}, {390, 844}] do
+      @tag viewport: {width, height}
+      test "the status is empty until a real copy result at #{width}px", %{
+        conn: conn,
+        drop: drop
+      } do
+        button = "#single-drop-copy-link-#{drop.id}"
+
+        conn
+        |> visit("/d/#{drop.short_id}")
+        |> wait_for_element(button)
+        |> assert_page("status is an empty polite live region before any event", """
+        if (!window.liveSocket || !window.liveSocket.isConnected() || !document.querySelector('[data-phx-main].phx-connected')) return 'LiveView not connected yet';
+        const live = document.querySelector('#copy-confirm-message');
+        const text = document.querySelector('#copy-confirm-text');
+        if (!live || !text) return 'status or text span missing';
+        if (live.getAttribute('role') !== 'status' || live.getAttribute('aria-live') !== 'polite') return 'not a polite live region';
+        if (live.hasAttribute('hidden') || live.closest('[hidden], [aria-hidden="true"]')) return 'status is hidden from assistive technology';
+        if (getComputedStyle(live).display === 'none') return 'status is display:none';
+        if (!live.classList.contains('sr-only')) return 'idle status is not visually hidden';
+        if (text.textContent !== '') return 'status has text before any copy: ' + text.textContent;
+        if (live.textContent.trim() !== '') return 'status exposes text before any copy: ' + live.textContent.trim();
+        window.__copySeen = [];
+        window.__copyObserver = new MutationObserver(() => {
+          window.__copySeen.push({text: text.textContent, shown: !live.classList.contains('sr-only')});
+        });
+        window.__copyObserver.observe(live, {attributes: true, childList: true, subtree: true, characterData: true});
+        return 'ok';
+        """)
+        |> assert_page_after("the status stays empty with no copy event", 300, """
+        return document.querySelector('#copy-confirm-text').textContent === '' && window.__copySeen.length === 0
+          ? 'ok' : 'status changed without a copy event: ' + JSON.stringify(window.__copySeen);
+        """)
+        |> click_with(button, [])
+        |> assert_page("a real success callback reports success", """
+        const live = document.querySelector('#copy-confirm-message');
+        const shown = window.__copySeen.some((e) => e.text === 'Link copied to clipboard' && e.shown);
+        return shown && !live.hasAttribute('hidden') ? 'ok' : 'success not shown: ' + JSON.stringify(window.__copySeen);
+        """)
+        |> assert_page("the status returns to empty after the visual lifecycle", """
+        const live = document.querySelector('#copy-confirm-message');
+        return document.querySelector('#copy-confirm-text').textContent === '' && live.classList.contains('sr-only')
+          ? 'ok' : 'status not idle: ' + JSON.stringify(window.__copySeen);
+        """)
+        |> assert_page("the clipboard outcome is made to fail", """
+        window.__copySeen = [];
+        // ClipboardJS reports an error when the link to copy is empty.
+        document.querySelector('#single-drop-copy-link-#{drop.id}').setAttribute('data-clipboard-text', '');
+        return 'ok';
+        """)
+        |> click_with(button, [])
+        |> assert_page("a real error callback reports failure, never the earlier success", """
+        const live = document.querySelector('#copy-confirm-message');
+        const failure = 'Copy failed. Select the link and copy it manually.';
+        if (window.__copySeen.some((e) => e.text.includes('Link copied'))) return 'success text shown for a failed copy: ' + JSON.stringify(window.__copySeen);
+        const shown = window.__copySeen.some((e) => e.text === failure && e.shown);
+        return shown ? 'ok' : 'failure not shown: ' + JSON.stringify(window.__copySeen);
+        """)
+        |> assert_page("the status is empty again after the failure", """
+        const live = document.querySelector('#copy-confirm-message');
+        return document.querySelector('#copy-confirm-text').textContent === '' && live.classList.contains('sr-only')
+          ? 'ok' : 'status not idle after failure';
+        """)
+        |> assert_page("a failure right after a success replaces the success", """
+        window.__copySeen = [];
+        document.querySelector('#single-drop-copy-link-#{drop.id}').setAttribute('data-clipboard-text', 'https://example.test/copy');
+        return 'ok';
+        """)
+        |> click_with(button, [])
+        |> assert_page("success is shown first", """
+        return window.__copySeen.some((e) => e.text === 'Link copied to clipboard')
+          ? 'ok' : 'success not shown: ' + JSON.stringify(window.__copySeen);
+        """)
+        |> assert_page("the next outcome is a failure", """
+        document.querySelector('#single-drop-copy-link-#{drop.id}').setAttribute('data-clipboard-text', '');
+        return 'ok';
+        """)
+        |> click_with(button, [])
+        |> assert_page("the latest result is the failure", """
+        const nonEmpty = window.__copySeen.map((e) => e.text).filter((t) => t !== '');
+        return nonEmpty[nonEmpty.length - 1] === 'Copy failed. Select the link and copy it manually.'
+          ? 'ok' : 'latest result is not the failure: ' + JSON.stringify(nonEmpty);
+        """)
+        |> assert_page("the status ends empty", """
+        return document.querySelector('#copy-confirm-text').textContent === '' ? 'ok' : 'status not empty';
+        """)
+      end
     end
   end
 

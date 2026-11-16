@@ -663,7 +663,7 @@ defmodule ElixirDropsWeb.DropComponents do
       ]}
     >
       <.icon name="hero-check-circle-solid bg-[#b2b2b2]" class="h-4 w-4 fill-[#eae8fd] bg-[#eae8fd]" />
-      <span id="copy-confirm-text">Link copied to clipboard</span>
+      <span id="copy-confirm-text"></span>
     </p>
     """
   end
