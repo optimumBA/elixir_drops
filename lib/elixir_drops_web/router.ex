@@ -102,13 +102,22 @@ defmodule ElixirDropsWeb.Router do
     end
   end
 
+  # Only providers configured for Ueberauth are routed; any other /auth/* path
+  # matches no route and gets the normal 404 page.
+  @auth_providers :ueberauth
+                  |> Application.compile_env(Ueberauth)
+                  |> Keyword.fetch!(:providers)
+                  |> Keyword.keys()
+
   scope "/auth", ElixirDropsWeb do
     pipe_through :browser
 
     get "/logout", GithubAuthController, :logout
 
-    get "/:provider", GithubAuthController, :request
-    get "/:provider/callback", GithubAuthController, :callback
+    for provider <- @auth_providers do
+      get "/#{provider}", GithubAuthController, :request
+      get "/#{provider}/callback", GithubAuthController, :callback
+    end
   end
 
   # Other scopes may use custom stacks.

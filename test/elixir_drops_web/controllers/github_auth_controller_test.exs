@@ -186,4 +186,88 @@ defmodule ElixirDropsWeb.GithubAuthControllerTest do
       assert redirected_to(conn, 302)
     end
   end
+
+  describe "GET /auth/:provider (unsupported)" do
+    @describetag error_path_exemption:
+                   "Unsupported providers are not routed, so no controller or database work runs."
+
+    @unsupported_providers ["google", "login", "not-a-provider"]
+
+    test "initiate paths answer 404", %{conn: conn} do
+      for provider <- @unsupported_providers do
+        conn = get(conn, "/auth/#{provider}")
+        assert html_response(conn, 404), "GET /auth/#{provider}"
+      end
+    end
+
+    test "callback paths answer 404", %{conn: conn} do
+      for provider <- @unsupported_providers do
+        conn = get(conn, "/auth/#{provider}/callback")
+        assert html_response(conn, 404), "GET /auth/#{provider}/callback"
+      end
+    end
+
+    test "the router does not dispatch them" do
+      for provider <- @unsupported_providers, suffix <- ["", "/callback"] do
+        assert Phoenix.Router.route_info(
+                 ElixirDropsWeb.Router,
+                 "GET",
+                 "/auth/#{provider}#{suffix}",
+                 ""
+               ) == :error
+      end
+    end
+  end
+
+  describe "GET /auth/github" do
+    setup do
+      previous = Application.fetch_env(:ueberauth, Ueberauth.Strategy.Github.OAuth)
+
+      Application.put_env(:ueberauth, Ueberauth.Strategy.Github.OAuth,
+        client_id: "test-client-id",
+        client_secret: "test-client-secret"
+      )
+
+      on_exit(fn ->
+        case previous do
+          {:ok, value} ->
+            Application.put_env(:ueberauth, Ueberauth.Strategy.Github.OAuth, value)
+
+          :error ->
+            Application.delete_env(:ueberauth, Ueberauth.Strategy.Github.OAuth)
+        end
+      end)
+    end
+
+    test "redirects to github.com and keeps return_to", %{conn: conn} do
+      conn = get(conn, "/auth/github?return_to=%2Fd%2Fabc")
+
+      assert redirected_to(conn, 302) =~ "https://github.com/login/oauth/authorize"
+      assert get_session(conn, :user_return_to) == "/d/abc"
+    end
+  end
+
+  describe "GET /auth routes" do
+    test "are exactly logout plus the configured providers" do
+      auth_paths =
+        ElixirDropsWeb.Router
+        |> Phoenix.Router.routes()
+        |> Enum.filter(&(&1.plug == GithubAuthController and &1.verb == :get))
+        |> Enum.map(& &1.path)
+        |> Enum.sort()
+
+      providers =
+        :ueberauth
+        |> Application.fetch_env!(Ueberauth)
+        |> Keyword.fetch!(:providers)
+        |> Keyword.keys()
+
+      expected =
+        ["/auth/logout"] ++
+          Enum.flat_map(providers, &["/auth/#{&1}", "/auth/#{&1}/callback"])
+
+      assert auth_paths == Enum.sort(expected)
+      assert auth_paths == ["/auth/github", "/auth/github/callback", "/auth/logout"]
+    end
+  end
 end
