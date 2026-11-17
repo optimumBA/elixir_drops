@@ -65,7 +65,9 @@ it. An edit preserves author, Drop and parent, and records `edited_at`. Physical
 parent deletion cascades to direct replies and all notifications referencing them;
 reply deletion leaves its parent. The total displayed count includes replies; the
 pagination count includes top-level comments only. There is no soft-delete state
-or implicit moderator override. Server authorization is currently missing (G01).
+or implicit moderator override. Deletion is authorized on the server: the current
+user must be the author and the comment must belong to the Drop being viewed, else
+nothing changes. Server edit authorization is currently missing (G01).
 
 **C03 — reading (baseline).** Top-level comments are ordered by insertion time then
 ID, newest first, in pages of 10 using offset. Each root preloads its replies,

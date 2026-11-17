@@ -10,7 +10,6 @@ defmodule ElixirDrops.Comments do
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Repo
 
-  @type affected_count :: integer()
   @type attrs :: map()
   @type changeset :: Ecto.Changeset.t()
   @type comment :: Comment.t()
@@ -135,22 +134,45 @@ defmodule ElixirDrops.Comments do
   end
 
   @doc """
-  Deletes a comment.
+  Deletes a comment written by `user` on `drop`.
+
+  The comment ID is matched together with both the author and the Drop, so any
+  other ID (another author's comment, a comment of another Drop, an unknown or
+  malformed ID) deletes nothing and returns `{:error, :not_found}`. Replies of a
+  deleted top-level comment are removed by the database cascade.
 
   ## Examples
 
-      iex> delete_comment(comment_id)
-      {:ok, %Comment{deleted_at: ~U[2023-01-01 00:00:00Z]}}
+      iex> delete_comment(%User{}, %Drop{}, comment_id)
+      {:ok, %Comment{}}
 
-      iex> delete_comment(comment_id)
-      {:error, %Ecto.Changeset{}}
+      iex> delete_comment(%User{}, %Drop{}, other_comment_id)
+      {:error, :not_found}
 
   """
-  @spec delete_comment(comment_id()) :: {affected_count(), nil}
-  def delete_comment(comment_id) do
-    Comment
-    |> where([c], c.id == ^comment_id)
-    |> Repo.delete_all()
+  @spec delete_comment(user(), drop(), comment_id()) :: {:ok, comment()} | {:error, :not_found}
+  def delete_comment(%User{id: user_id}, %Drop{id: drop_id}, comment_id) do
+    case Ecto.UUID.cast(comment_id) do
+      {:ok, comment_id} ->
+        Comment
+        |> where([c], c.id == ^comment_id and c.user_id == ^user_id and c.drop_id == ^drop_id)
+        |> delete_scoped_comment()
+
+      :error ->
+        {:error, :not_found}
+    end
+  end
+
+  defp delete_scoped_comment(scope) do
+    comment =
+      scope
+      |> preload(^preload_list())
+      |> Repo.one()
+
+    case comment && Repo.delete_all(scope) do
+      {1, _rows} -> {:ok, comment}
+      _no_match -> {:error, :not_found}
+    end
   end
 
   @doc """

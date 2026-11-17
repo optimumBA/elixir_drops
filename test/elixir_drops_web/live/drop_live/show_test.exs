@@ -399,6 +399,47 @@ defmodule ElixirDropsWeb.DropLive.ShowTest do
       render_hook(view, :delete_comment, %{comment_id: comment.id})
 
       refute render(view) =~ "Delete me"
+      assert Comments.count_drop_comments(drop.id) == 0
+    end
+
+    test "a guest cannot delete a comment", %{drop: drop, user: user} do
+      {:ok, comment} = Comments.create_comment(drop, user, nil, %{body: "Guest target"})
+
+      {:ok, view, _html} = live(build_conn(), ~p"/d/#{drop.short_id}")
+      render_hook(view, :delete_comment, %{comment_id: comment.id})
+
+      assert Process.alive?(view.pid)
+      assert Comments.get_comment!(comment.id)
+      assert render(view) =~ "Guest target"
+    end
+
+    test "a user cannot delete another author's comment", %{conn: conn, drop: drop} do
+      other = user_fixture()
+      {:ok, comment} = Comments.create_comment(drop, other, nil, %{body: "Not yours"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+      render_hook(view, :delete_comment, %{comment_id: comment.id})
+
+      assert Process.alive?(view.pid)
+      assert Comments.get_comment!(comment.id)
+      assert Comments.count_drop_comments(drop.id) == 1
+      assert render(view) =~ "Not yours"
+    end
+
+    test "a user cannot delete a comment of another drop through this page", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      other_drop = drop_fixture(%Drop{}, user)
+      {:ok, comment} = Comments.create_comment(other_drop, user, nil, %{body: "Elsewhere"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+      render_hook(view, :delete_comment, %{comment_id: comment.id})
+
+      assert Process.alive?(view.pid)
+      assert Comments.get_comment!(comment.id)
+      assert Comments.count_drop_comments(other_drop.id) == 1
     end
 
     test "user can load more comments", %{

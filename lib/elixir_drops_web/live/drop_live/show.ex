@@ -1,9 +1,11 @@
 defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
+  alias ElixirDrops.Accounts.User
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops
+  alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Notifications
   alias ElixirDrops.Sponsors
   alias ElixirDrops.StructuredData
@@ -87,21 +89,24 @@ defmodule ElixirDropsWeb.DropLive.Show do
   def handle_event(
         "delete_comment",
         %{"comment_id" => comment_id},
-        %{assigns: %{drop: drop}} = socket
+        %{assigns: %{current_user: %User{} = user, drop: %Drop{} = drop}} = socket
       ) do
-    comment = Comments.get_comment!(comment_id)
-    Comments.delete_comment(comment_id)
-    comment_count = Comments.count_drop_comments(drop.id)
+    case Comments.delete_comment(user, drop, comment_id) do
+      {:ok, comment} ->
+        socket = assign(socket, :comment_count, Comments.count_drop_comments(drop.id))
 
-    socket = assign(socket, :comment_count, comment_count)
+        if comment.parent_id do
+          {:noreply, stream_insert(socket, :comments, get_top_level_comment(comment))}
+        else
+          {:noreply, stream_delete(socket, :comments, comment)}
+        end
 
-    if comment.parent_id do
-      comment = get_top_level_comment(comment)
-      {:noreply, stream_insert(socket, :comments, comment)}
-    else
-      {:noreply, stream_delete(socket, :comments, comment)}
+      {:error, :not_found} ->
+        {:noreply, socket}
     end
   end
+
+  def handle_event("delete_comment", _params, socket), do: {:noreply, socket}
 
   def handle_event(
         "load_more",

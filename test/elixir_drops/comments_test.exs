@@ -281,12 +281,13 @@ defmodule ElixirDrops.CommentsTest do
     end
   end
 
-  describe "delete_comment/1" do
+  describe "delete_comment/3" do
     setup [:create_drop_setup]
 
-    test "permanently deletes a comment", %{drop: drop, user: user} do
+    test "permanently deletes the user's comment on the drop", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
-      assert {1, nil} = Comments.delete_comment(comment.id)
+      assert {:ok, %{id: id}} = Comments.delete_comment(user, drop, comment.id)
+      assert id == comment.id
 
       assert_raise Ecto.NoResultsError, fn ->
         Comments.get_comment!(comment.id)
@@ -296,8 +297,47 @@ defmodule ElixirDrops.CommentsTest do
     test "deleted comment is excluded from count", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
       assert Comments.count_drop_comments(drop.id) == 1
-      Comments.delete_comment(comment.id)
+      assert {:ok, _comment} = Comments.delete_comment(user, drop, comment.id)
       assert Comments.count_drop_comments(drop.id) == 0
+    end
+
+    test "deleting a top-level comment removes its replies", %{drop: drop, user: user} do
+      comment = comment_fixture(drop, user)
+      reply = comment_fixture(drop, user, comment)
+
+      assert {:ok, _comment} = Comments.delete_comment(user, drop, comment.id)
+      assert Comments.count_drop_comments(drop.id) == 0
+      assert_raise Ecto.NoResultsError, fn -> Comments.get_comment!(reply.id) end
+    end
+
+    test "deleting a reply keeps its parent", %{drop: drop, user: user} do
+      comment = comment_fixture(drop, user)
+      reply = comment_fixture(drop, user, comment)
+
+      assert {:ok, _comment} = Comments.delete_comment(user, drop, reply.id)
+      assert Comments.get_comment!(comment.id)
+      assert Comments.count_drop_comments(drop.id) == 1
+    end
+
+    test "does not delete another author's comment", %{drop: drop, user: user} do
+      other = user_fixture()
+      comment = comment_fixture(drop, user)
+
+      assert {:error, :not_found} = Comments.delete_comment(other, drop, comment.id)
+      assert Comments.get_comment!(comment.id)
+    end
+
+    test "does not delete a comment of another drop", %{drop: drop, user: user} do
+      other_drop = drop_fixture(%Drop{}, user)
+      comment = comment_fixture(other_drop, user)
+
+      assert {:error, :not_found} = Comments.delete_comment(user, drop, comment.id)
+      assert Comments.get_comment!(comment.id)
+    end
+
+    test "returns not found for unknown or malformed ids", %{drop: drop, user: user} do
+      assert {:error, :not_found} = Comments.delete_comment(user, drop, Ecto.UUID.generate())
+      assert {:error, :not_found} = Comments.delete_comment(user, drop, "not-a-uuid")
     end
   end
 
