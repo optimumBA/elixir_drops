@@ -10,6 +10,7 @@ commands:
     - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix local.rebar --force --if-missing'
     - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix deps.get'
     - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix assets.setup'
+    - 'mise exec -- npm ci --prefix quint --ignore-scripts'
   fix:
     - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix format'
   checks:
@@ -25,6 +26,8 @@ commands:
       run: 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix deps.unlock --check-unused'
     - name: test
       run: 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix test --warnings-as-errors'
+    - name: spec
+      run: 'mise exec -- make spec'
   acceptance:
     run: 'NODE_PATH="$KOGEN_CUCUMBER" "$KOGEN_NODE" "$KOGEN_CUCUMBER/@cucumber/cucumber/bin/cucumber.js" --strict --require ''features/steps/*.js'' --format "message:$KOGEN_ACCEPTANCE_REPORT" "$KOGEN_ACCEPTANCE_FEATURES"'
     steps_dir: 'features/steps'
