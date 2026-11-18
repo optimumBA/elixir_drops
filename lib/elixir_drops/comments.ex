@@ -114,23 +114,40 @@ defmodule ElixirDrops.Comments do
   end
 
   @doc """
-  Updates a comment.
+  Edits a comment written by `user` on `drop`.
+
+  The comment ID is matched together with both the author and the Drop, so any
+  other ID (another author's comment, a comment of another Drop, an unknown or
+  malformed ID) changes nothing and returns `{:error, :not_found}`. On success
+  the body is saved and `edited_at` is set to the current time.
 
   ## Examples
 
-      iex> update_comment(%Comment{}, %{content: "Updated content"})
+      iex> edit_comment(%User{}, %Drop{}, comment_id, %{"body" => "Updated"})
       {:ok, %Comment{}}
 
-      iex> update_comment(%Comment{}, %{content: nil})
+      iex> edit_comment(%User{}, %Drop{}, comment_id, %{"body" => ""})
       {:error, %Ecto.Changeset{}}
 
+      iex> edit_comment(%User{}, %Drop{}, other_comment_id, %{"body" => "Updated"})
+      {:error, :not_found}
+
   """
-  @spec update_comment(comment(), attrs()) ::
-          {:ok, comment()} | {:error, changeset()}
-  def update_comment(%Comment{} = comment, attrs) do
-    comment
-    |> Comment.changeset(attrs)
-    |> Repo.update()
+  @spec edit_comment(user(), drop(), comment_id() | nil, attrs()) ::
+          {:ok, comment()} | {:error, changeset()} | {:error, :not_found}
+  def edit_comment(%User{id: user_id}, %Drop{id: drop_id}, comment_id, attrs) do
+    with {:ok, comment_id} <- Ecto.UUID.cast(comment_id),
+         %Comment{} = comment <-
+           Comment
+           |> where([c], c.id == ^comment_id and c.user_id == ^user_id and c.drop_id == ^drop_id)
+           |> Repo.one() do
+      comment
+      |> Comment.changeset(attrs)
+      |> Ecto.Changeset.put_change(:edited_at, DateTime.utc_now())
+      |> Repo.update()
+    else
+      _no_match -> {:error, :not_found}
+    end
   end
 
   @doc """
@@ -199,8 +216,13 @@ defmodule ElixirDrops.Comments do
 
   defp maybe_verify_parent_comment(changeset, nil), do: changeset
 
-  defp maybe_verify_parent_comment(changeset, %{parent_id: nil} = parent),
-    do: Ecto.Changeset.put_assoc(changeset, :parent, parent)
+  defp maybe_verify_parent_comment(changeset, %{parent_id: nil, drop_id: drop_id} = parent) do
+    if drop_id == Ecto.Changeset.get_field(changeset, :drop).id do
+      Ecto.Changeset.put_assoc(changeset, :parent, parent)
+    else
+      Ecto.Changeset.add_error(changeset, :parent_id, "must belong to the same drop")
+    end
+  end
 
   defp maybe_verify_parent_comment(changeset, _parent),
     do: Ecto.Changeset.add_error(changeset, :parent_id, "replies cannot have replies")

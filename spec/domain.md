@@ -58,7 +58,7 @@ reconnect reloads persistent state and must not rely on replay of past PubSub ev
 **C01 — creation (baseline plus access intent).** Signed-in users can write comments
 of 1–1000 characters on an existing Drop. They can reply to an existing top-level
 comment on the same Drop. Replies cannot have replies. Cross-Drop parents are rejected
-by the contract even though current context code only checks depth (G02).
+by the contract and by `Comments.create_comment/4` (G02: the page still loads the supplied parent ID with `get_comment!/1`).
 
 **C02 — edits/deletion (baseline intent).** Only the comment author can edit or delete
 it. An edit preserves author, Drop and parent, and records `edited_at`. Physical
@@ -67,7 +67,7 @@ reply deletion leaves its parent. The total displayed count includes replies; th
 pagination count includes top-level comments only. There is no soft-delete state
 or implicit moderator override. Deletion is authorized on the server: the current
 user must be the author and the comment must belong to the Drop being viewed, else
-nothing changes. Server edit authorization is currently missing (G01).
+nothing changes. Edits are authorized the same way by `Comments.edit_comment/4` (G01: `change_edit_comment_form` still loads a supplied ID with `get_comment!/1`).
 
 **C03 — reading (baseline).** Top-level comments are ordered by insertion time then
 ID, newest first, in pages of 10 using offset. Each root preloads its replies,

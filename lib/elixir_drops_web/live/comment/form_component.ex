@@ -8,107 +8,104 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
   @impl Phoenix.LiveComponent
   def render(assigns) do
     ~H"""
-    <div>
-      <.form
-        class={@class}
-        for={@form}
-        id={@id}
-        phx-change="validate_comment"
-        phx-hook="CommentForm"
-        phx-submit={submit_form(@comment, @parent, @comment_type)}
-        phx-target={@myself}
-      >
-        <div class="group">
-          <.custom_input
-            id={@field_id}
-            class={[
-              "border-[1px] border-gray-500 focus-within:border-[#2F19EE] px-2 py-3 ",
-              "rounded-lg transition-colors duration-100"
-            ]}
-            input_field_class={[
-              "border-0 py-0 block w-full",
-              "text-[#252525] focus:ring-0 sm:text-sm sm:leading-6",
-              "placeholder:italic placeholder:text-[#6b6b6b]"
-            ]}
-            field={@form[:body]}
-            type="textarea"
-            placeholder={
-              if @comment_type == :comment,
-                do: "What are your thoughts?",
-                else: "Replying to #{@parent.user.name}"
-            }
-            aria-label={if @comment_type == :comment, do: "Add a comment", else: "Add a reply"}
-            phx-debounce="100"
-          >
-            <:extra_content>
-              <div
-                :if={!@comment and @comment_type == :comment}
-                class={[
-                  "flex justify-end gap-x-4 mt-12 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-hover:pointer-events-auto",
-                  "opacity-0"
-                ]}
+    <form
+      class={@class}
+      id={@id}
+      phx-change="validate_comment"
+      phx-hook="CommentForm"
+      phx-submit={submit_form(@comment, @parent, @comment_type)}
+      phx-target={@myself}
+    >
+      <div class="group">
+        <.custom_input
+          id={@field_id}
+          class={[
+            "border-[1px] border-gray-500 focus-within:border-[#2F19EE] px-2 py-3 ",
+            "rounded-lg transition-colors duration-100"
+          ]}
+          input_field_class={[
+            "border-0 py-0 block w-full",
+            "text-[#252525] focus:ring-0 sm:text-sm sm:leading-6",
+            "placeholder:italic placeholder:text-[#6b6b6b]"
+          ]}
+          field={@form[:body]}
+          type="textarea"
+          placeholder={
+            if @comment_type == :comment,
+              do: "What are your thoughts?",
+              else: "Replying to #{@parent.user.name}"
+          }
+          aria-label={if @comment_type == :comment, do: "Add a comment", else: "Add a reply"}
+          phx-debounce="100"
+        >
+          <:extra_content>
+            <div
+              :if={!@comment and @comment_type == :comment}
+              class={[
+                "flex justify-end gap-x-4 mt-12 pointer-events-none group-focus-within:opacity-100 group-focus-within:pointer-events-auto group-hover:pointer-events-auto",
+                "opacity-0"
+              ]}
+            >
+              <button
+                id={"#{@id}-cancel-btn"}
+                phx-click="cancel_new_comment"
+                phx-target={@myself}
+                type="button"
+                class="hover:opacity-80"
               >
-                <button
-                  id={"#{@id}-cancel-btn"}
-                  phx-click="cancel_new_comment"
-                  phx-target={@myself}
-                  type="button"
-                  class="hover:opacity-80"
-                >
-                  Cancel
-                </button>
-                <button
-                  id={"submit-button-#{@id}"}
-                  class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
-                  type="submit"
-                  onclick="event.stopPropagation()"
-                  disabled
-                >
-                  <span>Comment</span>
-                </button>
-              </div>
-              <div
-                :if={@comment || @comment_type == :response}
-                class={[
-                  "justify-end gap-x-4 mt-16 flex"
-                ]}
+                Cancel
+              </button>
+              <button
+                id={"submit-button-#{@id}"}
+                class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
+                type="submit"
+                onclick="event.stopPropagation()"
+                disabled
               >
-                <button
-                  phx-click={
-                    if @comment,
-                      do: JS.toggle_class("hidden", to: "##{@id}"),
-                      else: JS.hide(to: "##{@id}")
-                  }
-                  type="button"
-                  class="hover:opacity-80"
-                >
-                  Cancel
-                </button>
-                <button
-                  id={"submit-button-#{@id}"}
-                  class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
-                  type="submit"
-                  disabled
-                >
-                  <span :if={!@comment && @comment_type == :comment}>Comment</span>
-                  <span :if={!@comment && @comment_type == :response}>Reply</span>
-                  <span :if={@comment}>Save</span>
-                </button>
-              </div>
-            </:extra_content>
-          </.custom_input>
-        </div>
-        <div class="text-xs text-gray-500 flex justify-between items-center mt-2">
-          <p>
-            Supports basic Markdown<span class="hidden sm:inline-block">: **bold**, *italic*, and [links](url)</span>.
-          </p>
-          <p>
-            <span class="hidden sm:inline-block">Max 1000 characters</span>
-            (<span id={"#{@id}-char-count"}>0</span>/1000)
-          </p>
-        </div>
-      </.form>
-    </div>
+                <span>Comment</span>
+              </button>
+            </div>
+            <div
+              :if={@comment || @comment_type == :response}
+              class={[
+                "justify-end gap-x-4 mt-16 flex"
+              ]}
+            >
+              <button
+                phx-click={
+                  if @comment,
+                    do: JS.toggle_class("hidden", to: "##{@id}"),
+                    else: JS.hide(to: "##{@id}")
+                }
+                type="button"
+                class="hover:opacity-80"
+              >
+                Cancel
+              </button>
+              <button
+                id={"submit-button-#{@id}"}
+                class="bg-blue-500 text-white text-sm px-4 py-2 rounded-md hover:opacity-70 disabled:bg-[#BFB8FA] disabled:cursor-not-allowed"
+                type="submit"
+                disabled
+              >
+                <span :if={!@comment && @comment_type == :comment}>Comment</span>
+                <span :if={!@comment && @comment_type == :response}>Reply</span>
+                <span :if={@comment}>Save</span>
+              </button>
+            </div>
+          </:extra_content>
+        </.custom_input>
+      </div>
+      <div class="text-xs text-gray-500 flex justify-between items-center mt-2">
+        <p>
+          Supports basic Markdown<span class="hidden sm:inline-block">: **bold**, *italic*, and [links](url)</span>.
+        </p>
+        <p>
+          <span class="hidden sm:inline-block">Max 1000 characters</span>
+          (<span id={"#{@id}-char-count"}>0</span>/1000)
+        </p>
+      </div>
+    </form>
     """
   end
 
@@ -165,9 +162,7 @@ defmodule ElixirDropsWeb.Comment.FormComponent do
         %{"comment" => comment_params, "comment_id" => comment_id},
         socket
       ) do
-    comment_params = Map.merge(comment_params, %{"edited_at" => DateTime.utc_now()})
-    comment = Comments.get_comment!(comment_id)
-    notify_parent({:update_comment, comment, comment_params})
+    notify_parent({:update_comment, comment_id, comment_params})
     {:noreply, socket}
   end
 

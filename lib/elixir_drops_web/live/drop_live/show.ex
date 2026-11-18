@@ -156,14 +156,24 @@ defmodule ElixirDropsWeb.DropLive.Show do
     end
   end
 
-  def handle_info({:update_comment, comment, params}, socket) do
-    case Comments.update_comment(comment, params) do
+  def handle_info(
+        {:update_comment, comment_id, params},
+        %{assigns: %{current_user: %User{} = user, drop: %Drop{} = drop}} = socket
+      ) do
+    case Comments.edit_comment(user, drop, comment_id, params) do
       {:ok, comment} ->
         {:noreply, stream_insert(socket, :comments, get_top_level_comment(comment))}
 
-      {:error, _changeset} ->
+      {:error, :not_found} ->
+        {:noreply, put_flash(socket, :error, "That comment could not be edited.")}
+
+      {:error, %Ecto.Changeset{}} ->
         {:noreply, put_flash(socket, :error, "Your changes were not saved. Try again.")}
     end
+  end
+
+  def handle_info({:update_comment, _comment_id, _params}, socket) do
+    {:noreply, put_flash(socket, :error, "That comment could not be edited.")}
   end
 
   def handle_info(

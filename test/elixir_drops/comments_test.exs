@@ -238,46 +238,112 @@ defmodule ElixirDrops.CommentsTest do
     end
   end
 
-  describe "update_comment/2" do
+  describe "edit_comment/4" do
     setup [:create_drop_setup]
 
-    test "updates comment with valid data", %{drop: drop, user: user} do
+    test "saves the body and sets edited_at for the author on the drop", %{
+      drop: drop,
+      user: user
+    } do
       comment = comment_fixture(drop, user)
-      update_attrs = %{body: "some updated body"}
+      assert is_nil(comment.edited_at)
 
-      assert {:ok, %Comment{} = updated_comment} = Comments.update_comment(comment, update_attrs)
-      assert updated_comment.body == "some updated body"
-      assert updated_comment.id == comment.id
+      assert {:ok, %Comment{} = edited} =
+               Comments.edit_comment(user, drop, comment.id, %{body: "some updated body"})
+
+      assert edited.body == "some updated body"
+      assert edited.id == comment.id
+      assert %DateTime{} = edited.edited_at
+      assert Comments.get_comment!(comment.id).body == "some updated body"
+    end
+
+    test "ignores a client-supplied edited_at", %{drop: drop, user: user} do
+      comment = comment_fixture(drop, user)
+
+      assert {:ok, edited} =
+               Comments.edit_comment(user, drop, comment.id, %{
+                 "body" => "changed",
+                 "edited_at" => "2000-01-01T00:00:00Z"
+               })
+
+      assert DateTime.compare(edited.edited_at, ~U[2001-01-01 00:00:00Z]) == :gt
     end
 
     test "returns error changeset with invalid data", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
 
-      assert {:error, %Ecto.Changeset{}} = Comments.update_comment(comment, @invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} =
+               Comments.edit_comment(user, drop, comment.id, @invalid_attrs)
 
       original_comment = Comments.get_comment!(comment.id)
       assert comment.body == original_comment.body
+      assert is_nil(original_comment.edited_at)
     end
 
-    test "validates body length on update", %{drop: drop, user: user} do
+    test "validates body length on edit", %{drop: drop, user: user} do
       comment = comment_fixture(drop, user)
       long_body = String.duplicate("a", 1001)
-      update_attrs = %{body: long_body}
 
       assert {:error, %Ecto.Changeset{} = changeset} =
-               Comments.update_comment(comment, update_attrs)
+               Comments.edit_comment(user, drop, comment.id, %{body: long_body})
 
       assert "should be at most 1000 character(s)" in errors_on(changeset).body
     end
 
-    test "preloads associations in returned comment", %{drop: drop, user: user} do
-      comment = comment_fixture(drop, user)
-      update_attrs = %{body: "updated body"}
+    test "does not edit another author's comment", %{drop: drop, user: user} do
+      other = user_fixture()
+      comment = comment_fixture(drop, other)
 
-      assert {:ok, updated_comment} = Comments.update_comment(comment, update_attrs)
+      assert {:error, :not_found} =
+               Comments.edit_comment(user, drop, comment.id, %{body: "forged"})
 
-      assert Ecto.assoc_loaded?(updated_comment.user)
-      assert Ecto.assoc_loaded?(updated_comment.drop)
+      assert Comments.get_comment!(comment.id).body == comment.body
+      assert is_nil(Comments.get_comment!(comment.id).edited_at)
+    end
+
+    test "does not edit a comment of another drop", %{drop: drop, user: user} do
+      other_drop = drop_fixture(%Drop{}, user)
+      comment = comment_fixture(other_drop, user)
+
+      assert {:error, :not_found} =
+               Comments.edit_comment(user, drop, comment.id, %{body: "forged"})
+
+      assert Comments.get_comment!(comment.id).body == comment.body
+      assert is_nil(Comments.get_comment!(comment.id).edited_at)
+    end
+
+    test "returns not found for unknown, malformed and nil ids", %{drop: drop, user: user} do
+      attrs = %{body: "forged"}
+
+      assert {:error, :not_found} = Comments.edit_comment(user, drop, Ecto.UUID.generate(), attrs)
+      assert {:error, :not_found} = Comments.edit_comment(user, drop, "not-a-uuid", attrs)
+      assert {:error, :not_found} = Comments.edit_comment(user, drop, nil, attrs)
+    end
+  end
+
+  describe "create_comment/4 parent scope" do
+    setup [:create_drop_setup]
+
+    test "refuses a parent comment of another drop", %{drop: drop, user: user} do
+      other_drop = drop_fixture(%Drop{}, user)
+      foreign_parent = comment_fixture(other_drop, user)
+      count = Comments.count_drop_comments(drop.id)
+
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Comments.create_comment(drop, user, foreign_parent, %{body: "misplaced"})
+
+      assert "must belong to the same drop" in errors_on(changeset).parent_id
+      assert Comments.count_drop_comments(drop.id) == count
+      assert Comments.count_drop_comments(other_drop.id) == 1
+    end
+
+    test "still accepts a top-level parent of the same drop", %{drop: drop, user: user} do
+      parent = comment_fixture(drop, user)
+
+      assert {:ok, %Comment{parent_id: parent_id}} =
+               Comments.create_comment(drop, user, parent, %{body: "proper reply"})
+
+      assert parent_id == parent.id
     end
   end
 

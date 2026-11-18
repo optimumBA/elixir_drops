@@ -322,6 +322,74 @@ defmodule ElixirDropsWeb.DropLive.ShowTest do
       assert html =~ "Edited"
     end
 
+    test "a forged update_comment event for another author's comment changes nothing", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      other = user_fixture()
+      {:ok, comment} = Comments.create_comment(drop, other, nil, %{body: "Not yours"})
+      {:ok, own} = Comments.create_comment(drop, user, nil, %{body: "Mine"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> with_target("#edit-comment-form-#{own.id}")
+      |> render_hook("update_comment", %{
+        "comment" => %{"body" => "Hijacked"},
+        "comment_id" => comment.id
+      })
+
+      html = render(view)
+      assert Process.alive?(view.pid)
+      assert html =~ "That comment could not be edited."
+      assert html =~ "Not yours"
+      refute html =~ "Hijacked"
+      stored = Comments.get_comment!(comment.id)
+      assert stored.body == "Not yours"
+      assert is_nil(stored.edited_at)
+    end
+
+    test "a forged update_comment event for a comment of another drop changes nothing", %{
+      conn: conn,
+      drop: drop,
+      user: user
+    } do
+      other_drop = drop_fixture(%Drop{}, user)
+      {:ok, comment} = Comments.create_comment(other_drop, user, nil, %{body: "Elsewhere"})
+      {:ok, own} = Comments.create_comment(drop, user, nil, %{body: "Mine"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> with_target("#edit-comment-form-#{own.id}")
+      |> render_hook("update_comment", %{
+        "comment" => %{"body" => "Hijacked"},
+        "comment_id" => comment.id
+      })
+
+      assert Process.alive?(view.pid)
+      assert render(view) =~ "That comment could not be edited."
+      assert Comments.get_comment!(comment.id).body == "Elsewhere"
+    end
+
+    test "invalid edit keeps the not-saved flash", %{conn: conn, drop: drop, user: user} do
+      {:ok, comment} = Comments.create_comment(drop, user, nil, %{body: "Some content"})
+
+      {:ok, view, _html} = live(conn, ~p"/d/#{drop.short_id}")
+
+      view
+      |> with_target("#edit-comment-form-#{comment.id}")
+      |> render_hook("update_comment", %{
+        "comment" => %{"body" => String.duplicate("a", 1001)},
+        "comment_id" => comment.id
+      })
+
+      html = render(view)
+      assert html =~ "Your changes were not saved. Try again."
+      assert Comments.get_comment!(comment.id).body == "Some content"
+    end
+
     test "empty comment edit causes submit button to be disabled", %{
       conn: conn,
       drop: drop,
