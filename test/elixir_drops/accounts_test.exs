@@ -249,6 +249,17 @@ defmodule ElixirDrops.AccountsTest do
     end
   end
 
+  describe "get_public_user/1" do
+    test "returns the user for an existing id and nil otherwise" do
+      user = user_fixture()
+
+      assert Accounts.get_public_user(user.id).id == user.id
+      assert is_nil(Accounts.get_public_user(Ecto.UUID.generate()))
+      assert is_nil(Accounts.get_public_user("not-a-uuid"))
+      assert is_nil(Accounts.get_public_user(nil))
+    end
+  end
+
   describe "update_user/2" do
     setup [:create_user_and_token]
 

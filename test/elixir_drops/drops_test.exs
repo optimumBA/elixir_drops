@@ -22,6 +22,21 @@ defmodule ElixirDrops.DropsTest do
     %{drop: drop, user: user}
   end
 
+  describe "count_user_drops/1 and fetch_drops/2" do
+    test "count only the author's stored Drops and fetch returns a tagged list" do
+      author = user_fixture()
+      other = user_fixture()
+      drop_fixture(%Drop{}, author)
+      drop_fixture(%Drop{}, author)
+      drop_fixture(%Drop{}, other)
+
+      assert Drops.count_user_drops(author.id) == 2
+      assert Drops.count_user_drops(Ecto.UUID.generate()) == 0
+      assert {:ok, drops} = Drops.fetch_drops(%{user_id: author.id}, 10)
+      assert length(drops) == 2
+    end
+  end
+
   describe "subscribe/0" do
     test "returns :ok and subscribes caller to the drops topic" do
       assert :ok == Drops.subscribe()

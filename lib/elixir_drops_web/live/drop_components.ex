@@ -207,7 +207,7 @@ defmodule ElixirDropsWeb.DropComponents do
               <div class="w-5 h-5">
                 <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-full h-full object-cover" />
               </div>
-              <div><span class="sr-only">Comments: </span>{@drop.comment_count}</div>
+              <div><span class="sr-only">Comment count: </span>{@drop.comment_count}</div>
             </div>
           </div>
 
@@ -1259,6 +1259,16 @@ defmodule ElixirDropsWeb.DropComponents do
           <.link href={~p"/profile"} class="menu-row" id="view-user-drops-link">
             <span><Icons.drops_icon /></span>
             <span> My drops </span>
+          </.link>
+        </li>
+        <li>
+          <.link
+            href={~p"/u/#{@current_user.id}"}
+            class="menu-row"
+            id="view-public-profile-link"
+          >
+            <span><.icon name="hero-user-circle" class="h-6 w-6" /></span>
+            <span>View public profile</span>
           </.link>
         </li>
         <li class="menu-separator" aria-hidden="true"></li>

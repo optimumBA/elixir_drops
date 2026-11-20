@@ -19,6 +19,7 @@ defmodule ElixirDrops.Comments do
   @type options :: keyword()
   @type parent_comment :: Comment.t() | nil
   @type user :: User.t()
+  @type user_id :: Ecto.UUID.t()
 
   @doc """
   Lists comments for a drop with pagination.
@@ -80,6 +81,16 @@ defmodule ElixirDrops.Comments do
   def count_drop_comments(drop_id) do
     Comment
     |> where([c], c.drop_id == ^drop_id)
+    |> Repo.aggregate(:count)
+  end
+
+  @doc """
+  Counts every stored comment and reply written by a user.
+  """
+  @spec count_user_comments(user_id()) :: non_neg_integer()
+  def count_user_comments(user_id) do
+    Comment
+    |> where([c], c.user_id == ^user_id)
     |> Repo.aggregate(:count)
   end
 

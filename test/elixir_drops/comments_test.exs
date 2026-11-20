@@ -8,6 +8,7 @@ defmodule ElixirDrops.CommentsTest do
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
+  alias ElixirDrops.Repo
 
   @invalid_attrs %{body: nil}
 
@@ -161,6 +162,25 @@ defmodule ElixirDrops.CommentsTest do
       comment_fixture(drop, user, parent_comment)
 
       assert Comments.count_drop_comments(drop.id) == 2
+    end
+  end
+
+  describe "count_user_comments/1" do
+    test "counts the user's comments and replies, not other users' or deleted Drops'" do
+      author = user_fixture()
+      other = user_fixture()
+      drop = drop_fixture(%Drop{}, author)
+      doomed = drop_fixture(%Drop{}, author)
+
+      parent = comment_fixture(drop, other, nil)
+      comment_fixture(drop, other, parent)
+      comment_fixture(drop, author, nil)
+      comment_fixture(doomed, other, nil)
+      Repo.delete!(doomed)
+
+      assert Comments.count_user_comments(other.id) == 2
+      assert Comments.count_user_comments(author.id) == 1
+      assert Comments.count_user_comments(Ecto.UUID.generate()) == 0
     end
   end
 

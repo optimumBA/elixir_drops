@@ -18,6 +18,13 @@ defmodule ElixirDropsWeb.LiveHelpers do
 
   alias ElixirDropsWeb.NotificationHelpers
 
+  @feed_views [
+    ElixirDropsWeb.DropLive.Index,
+    ElixirDropsWeb.DropLive.Show,
+    ElixirDropsWeb.UserDropLive.Index,
+    ElixirDropsWeb.ProfileLive.Show
+  ]
+
   @type hook :: atom()
   @type params :: map()
   @type session :: map()
@@ -47,11 +54,7 @@ defmodule ElixirDropsWeb.LiveHelpers do
   def on_mount(:assign_notifications, _params, _session, socket) do
     assigned_socket = NotificationHelpers.assign_notifications(socket)
 
-    if assigned_socket.view in [
-         ElixirDropsWeb.DropLive.Index,
-         ElixirDropsWeb.DropLive.Show,
-         ElixirDropsWeb.UserDropLive.Index
-       ] do
+    if assigned_socket.view in @feed_views do
       {:cont,
        attach_hook(assigned_socket, :shared_page_events, :handle_event, &handle_shared_event/3)}
     else
@@ -73,7 +76,11 @@ defmodule ElixirDropsWeb.LiveHelpers do
   end
 
   defp handle_shared_event("update_viewport", %{"width" => width, "height" => height}, socket)
-       when socket.view in [ElixirDropsWeb.DropLive.Index, ElixirDropsWeb.UserDropLive.Index] do
+       when socket.view in [
+              ElixirDropsWeb.DropLive.Index,
+              ElixirDropsWeb.UserDropLive.Index,
+              ElixirDropsWeb.ProfileLive.Show
+            ] do
     batch_size = DropsBatchCalculator.calculate_batch_size(width, height)
 
     {:halt,

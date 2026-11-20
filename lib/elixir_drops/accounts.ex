@@ -32,6 +32,27 @@ defmodule ElixirDrops.Accounts do
   def get_user!(id), do: Repo.get!(User, id)
 
   @doc """
+  Gets a single user by ID, or `nil` when no such user exists (including a
+  malformed ID).
+
+  ## Examples
+
+      iex> get_public_user("550e8400-e29b-41d4-a716-446655440000")
+      %User{}
+
+      iex> get_public_user("not-a-uuid")
+      nil
+
+  """
+  @spec get_public_user(term()) :: user() | nil
+  def get_public_user(id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, uuid} -> Repo.get(User, uuid)
+      :error -> nil
+    end
+  end
+
+  @doc """
   Gets or creates a single user.
   Returns the single user if user exists or creates the one instead.
 

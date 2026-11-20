@@ -98,6 +98,9 @@ defmodule ElixirDropsWeb.Router do
         ) do
       live "/", DropLive.Index, :index
       live "/d/:short_id", DropLive.Show, :show
+      live "/u/:user_id", ProfileLive.Show, :index
+      live "/u/:user_id/drops", ProfileLive.Show, :drops
+      live "/u/:user_id/comments", ProfileLive.Show, :comments
       get "/d/:id/code_snippet", CodeSnippetController, :index
     end
   end

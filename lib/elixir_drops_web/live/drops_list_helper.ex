@@ -21,6 +21,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   attr :drops, :list, required: true
   attr :drops_empty?, :boolean, required: true
   attr :end_of_timeline?, :boolean
+  attr :feed_state, :string, default: nil
   attr :id, :string, required: true
   attr :loading_more, :boolean, default: false
   attr :page, :integer
@@ -52,7 +53,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
       |> assign(:is_search_no_results, is_search_no_results)
 
     ~H"""
-    <div class="mt-12">
+    <div class="mt-12" data-feed-state={assigns[:feed_state]}>
       <!-- No search results component -->
       <div :if={@is_search_no_results}>
         <DropComponents.no_results
@@ -182,6 +183,79 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
   defp maybe_with_sponsor(drops, true), do: List.insert_at(drops, 1, %{sponsor: "dnsimple"})
   defp maybe_with_sponsor(drops, false), do: drops
+
+  @doc """
+  Loads the first batch of a feed synchronously (stream reset, cursor, page 1).
+
+  Unlike `assign_drops/1` it also marks the feed as ended when the batch is
+  shorter than the batch size, so a caller can tell an exhausted feed from one
+  with more batches.
+  """
+  @spec assign_first_batch(socket()) :: socket()
+  def assign_first_batch(socket) do
+    batch_size = Map.get(socket.assigns, :batch_size, 15)
+    drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
+
+    socket
+    |> assign_drop_cursor(drops, socket.assigns.search_query)
+    |> Phoenix.LiveView.stream(:drops, drops, reset: true)
+    |> assign(:drops_empty?, Enum.empty?(drops))
+    |> assign(:end_of_timeline?, Enum.count(drops) < batch_size)
+    |> assign(:loading_more, false)
+    |> assign(:page, 1)
+  end
+
+  @doc """
+  Filters and size of the next batch, for a caller that fetches it itself
+  (asynchronously). The cursor is only moved by `apply_batch/3`, so a failed
+  fetch can be requested again without skipping or repeating an entry.
+  """
+  @spec next_batch_request(socket()) :: {filters(), pos_integer()}
+  def next_batch_request(%{assigns: assigns}) do
+    batch_size = Map.get(assigns, :batch_size, 15)
+
+    filters =
+      if assigns.search_query != "" do
+        assigns.drop_filters
+      else
+        Map.put(assigns.drop_filters, :older_than, assigns.last_drop)
+      end
+
+    {filters, batch_size}
+  end
+
+  @doc """
+  Appends a fetched batch to the feed and moves the cursor past it.
+  """
+  @spec apply_batch(socket(), [drop()], pos_integer()) :: socket()
+  def apply_batch(socket, drops, batch_size) do
+    socket
+    |> maybe_advance_cursor(drops)
+    |> Phoenix.LiveView.stream(:drops, drops)
+    |> assign(:end_of_timeline?, Enum.count(drops) < batch_size)
+    |> assign(:loading_more, false)
+    |> assign(:page, socket.assigns.page + 1)
+  end
+
+  defp maybe_advance_cursor(socket, []), do: socket
+
+  defp maybe_advance_cursor(socket, drops) do
+    last_drop = List.last(drops)
+    search_query = socket.assigns.search_query
+
+    if search_query != "" do
+      filters =
+        Map.put(
+          socket.assigns.drop_filters,
+          :relevance_rank,
+          {last_drop.relevance_rank, search_query}
+        )
+
+      assign(socket, :drop_filters, filters)
+    else
+      assign(socket, :last_drop, last_drop)
+    end
+  end
 
   @spec maybe_insert_drops(socket()) :: socket()
   def maybe_insert_drops(socket) do

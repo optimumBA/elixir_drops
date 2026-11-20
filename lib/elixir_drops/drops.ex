@@ -28,6 +28,7 @@ defmodule ElixirDrops.Drops do
   @type short_id :: String.t()
   @type status :: atom()
   @type user :: User.t()
+  @type user_id :: Ecto.UUID.t()
 
   @doc """
   Subscribes to drops events.
@@ -185,6 +186,23 @@ defmodule ElixirDrops.Drops do
       {:ok, results} -> results
       {:error, _reason} -> []
     end
+  end
+
+  @doc """
+  Like `list_drops/2`, but reports a failed query instead of an empty list so a
+  caller can tell a failed batch from the end of a collection.
+  """
+  @spec fetch_drops(filters(), limit()) :: {:ok, [drop()]} | {:error, atom()}
+  def fetch_drops(filters, limit), do: safe_list_drops(filters, limit)
+
+  @doc """
+  Counts the stored Drops of an author.
+  """
+  @spec count_user_drops(user_id()) :: non_neg_integer()
+  def count_user_drops(user_id) do
+    Drop
+    |> where([d], d.user_id == ^user_id)
+    |> Repo.aggregate(:count)
   end
 
   defp safe_list_drops(filters, limit) do
