@@ -24,8 +24,11 @@ collection view; it is a consistency choice and makes no search-ranking claim.
 ## Discovery
 
 `robots.txt` advertises `/sitemap.xml`, which includes `/archive` and every
-public Drop. The archive exposes ordinary HTML links to those Drops. The header
-has no archive link, per the owner’s design preference; no hidden link is used.
+public Drop. The archive exposes ordinary HTML links to those Drops. The homepage
+body links to the archive with a visible "Browse all Drops" link just above the
+Latest Drops feed, so the archive is reachable from the initial HTML without
+JavaScript. The header has no archive link, per the owner’s design preference; no
+hidden link is used.
 An `Allow: /archive` directive would control crawl permission, not request
 discovery, so it is unnecessary with the current robots rules. Sitemap discovery
 is a hint and does not guarantee crawling or indexing.
