@@ -205,6 +205,26 @@ defmodule ElixirDrops.Drops do
     |> Repo.aggregate(:count)
   end
 
+  @doc """
+  Fetches stored Drops by id, returned in the order of `ids`, with the same
+  author and comment count as `list_drops/2`. Used to restore a previously
+  loaded profile feed; ids that no longer exist are absent from the result.
+  """
+  @spec list_drops_by_ids([Ecto.UUID.t()]) :: [drop()]
+  def list_drops_by_ids(ids) do
+    positions =
+      ids
+      |> Enum.with_index()
+      |> Map.new()
+
+    drop_query()
+    |> where([d], d.id in ^ids)
+    |> merge_comment_count()
+    |> preload([:user])
+    |> Repo.all()
+    |> Enum.sort_by(&Map.fetch!(positions, &1.id))
+  end
+
   defp safe_list_drops(filters, limit) do
     search_filters =
       case Map.get(filters, :search) do

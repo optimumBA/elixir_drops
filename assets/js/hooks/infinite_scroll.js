@@ -14,6 +14,7 @@ InfiniteScrollHooks.InfiniteScroll = {
     // Expose hook reference on the element for introspection (e.g. test support).
     this.el._infiniteScrollHook = this
 
+    this.wasHidden = this.isHidden()
     this.connectObserver()
 
     // Check immediately: if not scrollable yet, load more to fill the page.
@@ -32,6 +33,14 @@ InfiniteScrollHooks.InfiniteScroll = {
   },
 
   updated() {
+    const hidden = this.isHidden()
+    // A feed that was hidden (e.g. an inactive profile tab) and just became
+    // visible gets the same fill check a freshly mounted marker gets.
+    if (this.wasHidden && !hidden && !this.pending) {
+      setTimeout(() => this.checkAndLoad(), 200)
+    }
+    this.wasHidden = hidden
+
     if (!this.pending) {
       this.connectObserver()
     }
@@ -39,6 +48,12 @@ InfiniteScrollHooks.InfiniteScroll = {
 
   destroyed() {
     this.disconnectObserver()
+  },
+
+  // Markers of hidden feeds (inactive profile tab) have no layout; they must
+  // not trigger loads for the feed that is currently shown.
+  isHidden() {
+    return this.el.offsetParent === null
   },
 
   connectObserver() {
@@ -67,7 +82,7 @@ InfiniteScrollHooks.InfiniteScroll = {
     // state (transition-based: does not re-fire on repeated scrolls into an
     // already-visible zone).
     this._scrollListener = () => {
-      if (this.pending) return
+      if (this.pending || this.isHidden()) return
       const scrollBottom = window.scrollY + window.innerHeight
       const docHeight = document.documentElement.scrollHeight
       // Trigger when within 400px of page bottom (larger than rootMargin so
@@ -96,6 +111,7 @@ InfiniteScrollHooks.InfiniteScroll = {
   //   2. Marker is already visible in viewport or near-viewport zone — load now.
   checkAndLoad() {
     if (this.pending) return
+    if (this.isHidden()) return
     if (this.el.dataset.endOfTimeline === 'true') return
 
     const scrollHeight = document.documentElement.scrollHeight
@@ -116,6 +132,7 @@ InfiniteScrollHooks.InfiniteScroll = {
 
   async loadMore() {
     if (this.pending) return
+    if (this.isHidden()) return
 
     if (this.el.dataset.endOfTimeline === 'true') return
 

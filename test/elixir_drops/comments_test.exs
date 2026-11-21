@@ -1,6 +1,7 @@
 defmodule ElixirDrops.CommentsTest do
   use ElixirDrops.DataCase, async: true
 
+  import Ecto.Query
   import ElixirDrops.AccountsFixtures
   import ElixirDrops.CommentsFixtures
   import ElixirDrops.DropsFixtures
@@ -17,6 +18,17 @@ defmodule ElixirDrops.CommentsTest do
     drop = drop_fixture(%Drop{}, user)
 
     %{drop: drop, user: user}
+  end
+
+  defp at(comment, ts) do
+    query = from(c in Comment, where: c.id == ^comment.id)
+    Repo.update_all(query, set: [inserted_at: ts])
+    %{comment | inserted_at: ts}
+  end
+
+  defp base do
+    now = NaiveDateTime.utc_now()
+    NaiveDateTime.truncate(now, :second)
   end
 
   describe "list_drop_comments/2" do
@@ -181,6 +193,24 @@ defmodule ElixirDrops.CommentsTest do
       assert Comments.count_user_comments(other.id) == 2
       assert Comments.count_user_comments(author.id) == 1
       assert Comments.count_user_comments(Ecto.UUID.generate()) == 0
+    end
+
+    test "counts the user's comments and replies and follows deletions" do
+      author = user_fixture()
+      rival = user_fixture()
+      drop = drop_fixture(%Drop{}, rival)
+      doomed = drop_fixture(%Drop{}, rival)
+      parent = comment_fixture(drop, rival, nil, %{body: "parent"})
+      _reply = comment_fixture(drop, author, parent, %{body: "reply"})
+      _top = comment_fixture(drop, author, nil, %{body: "top"})
+      _gone = comment_fixture(doomed, author, nil, %{body: "gone"})
+      _rival = comment_fixture(drop, rival, nil, %{body: "rival"})
+
+      assert Comments.count_user_comments(author.id) == 3
+      Repo.delete!(doomed)
+      assert Comments.count_user_comments(author.id) == 2
+      Repo.delete!(parent)
+      assert Comments.count_user_comments(author.id) == 1
     end
   end
 
@@ -472,6 +502,108 @@ defmodule ElixirDrops.CommentsTest do
       assert %Ecto.Changeset{} = changeset
       refute changeset.valid?
       assert "should be at most 1000 character(s)" in errors_on(changeset).body
+    end
+  end
+
+  describe "list_user_comments/2" do
+    setup do
+      author = user_fixture()
+      rival = user_fixture()
+      drop = drop_fixture(%Drop{}, rival)
+      %{author: author, rival: rival, drop: drop}
+    end
+
+    test "lists only the user's comments and replies, newest first", %{
+      author: author,
+      rival: rival,
+      drop: drop
+    } do
+      start = base()
+      old_row = comment_fixture(drop, author, nil, %{body: "old"})
+      old = at(old_row, start)
+      parent = comment_fixture(drop, rival, nil, %{body: "parent"})
+      reply_row = comment_fixture(drop, author, parent, %{body: "reply"})
+      reply = at(reply_row, NaiveDateTime.add(start, 60))
+      newest_row = comment_fixture(drop, author, nil, %{body: "newest"})
+      newest = at(newest_row, NaiveDateTime.add(start, 120))
+      _rival = comment_fixture(drop, rival, nil, %{body: "rival"})
+
+      listed =
+        author.id
+        |> Comments.list_user_comments()
+        |> Enum.map(& &1.id)
+
+      assert listed == [newest.id, reply.id, old.id]
+    end
+
+    test "breaks equal timestamps by descending id and pages without repeats or skips", %{
+      author: author,
+      drop: drop
+    } do
+      ts = base()
+
+      tied =
+        for _n <- 1..5 do
+          comment = comment_fixture(drop, author)
+          at(comment, ts)
+        end
+
+      expected =
+        tied
+        |> Enum.sort_by(& &1.id, :desc)
+        |> Enum.map(& &1.id)
+
+      {ids, cursor} =
+        Enum.reduce_while(1..10, {[], nil}, fn _round, {acc, cursor} ->
+          case Comments.list_user_comments(author.id, limit: 2, older_than: cursor) do
+            [] -> {:halt, {acc, cursor}}
+            batch -> {:cont, {acc ++ Enum.map(batch, & &1.id), List.last(batch)}}
+          end
+        end)
+
+      assert ids == expected
+      refute is_nil(cursor)
+    end
+
+    test "preloads the drop and the parent author for replies", %{
+      author: author,
+      rival: rival,
+      drop: drop
+    } do
+      parent = comment_fixture(drop, rival, nil, %{body: "parent"})
+      reply = comment_fixture(drop, author, parent, %{body: "reply"})
+
+      [entry] = Comments.list_user_comments(author.id, limit: 1)
+      assert entry.id == reply.id
+      assert entry.drop.id == drop.id
+      assert entry.parent.id == parent.id
+      assert entry.parent.user.id == rival.id
+    end
+
+    test "returns no entries for a user without comments or an unknown user", %{author: author} do
+      assert Comments.list_user_comments(author.id) == []
+      assert Comments.list_user_comments(Ecto.UUID.generate()) == []
+    end
+  end
+
+  describe "list_user_comments_by_ids/2" do
+    test "returns the user's rows in the requested order, omitting unknown and foreign ids" do
+      author = user_fixture()
+      rival = user_fixture()
+      drop = drop_fixture(%Drop{}, rival)
+      a = comment_fixture(drop, author, nil, %{body: "a"})
+      b = comment_fixture(drop, author, nil, %{body: "b"})
+      foreign = comment_fixture(drop, rival, nil, %{body: "foreign"})
+
+      ids = [b.id, Ecto.UUID.generate(), a.id, foreign.id]
+
+      restored =
+        author.id
+        |> Comments.list_user_comments_by_ids(ids)
+        |> Enum.map(& &1.id)
+
+      assert restored == [b.id, a.id]
+      assert Comments.list_user_comments_by_ids(author.id, []) == []
     end
   end
 end

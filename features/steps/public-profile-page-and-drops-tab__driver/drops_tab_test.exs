@@ -50,12 +50,14 @@ defmodule PublicProfilePageAndDropsTab.DropsTabTest do
     end
   end
 
-  # The feed container exposes its state as the one attribute whose value is one of
-  # the five state words; exactly one such attribute must be rendered.
+  # The Drops feed container exposes its state as the one attribute whose value
+  # is one of the five state words; exactly one such attribute must be rendered
+  # inside it (the Comments tab keeps its own container and state alongside).
   defp state(html) do
     values =
       html
       |> Floki.parse_document!()
+      |> Floki.find("#profile-drops-feed")
       |> elements()
       |> Enum.flat_map(fn {_t, attrs, _c} -> for {_n, v} <- attrs, v in @states, do: v end)
 

@@ -94,6 +94,105 @@ defmodule ElixirDrops.Comments do
     |> Repo.aggregate(:count)
   end
 
+  @doc """
+  Lists the stored comments and replies written by a user, newest first, in
+  cursor-paged batches for the public profile activity feed.
+
+  `:older_than` takes the last comment of the previous batch; equal timestamps
+  are broken by descending id so every entry appears exactly once across
+  batches. Each entry carries its Drop and, for a reply, its parent comment
+  with the parent's author.
+
+  ## Examples
+
+      iex> list_user_comments(user_id, limit: 10)
+      [%Comment{}, ...]
+
+      iex> list_user_comments(user_id, limit: 10, older_than: last_comment)
+      [%Comment{}, ...]
+
+  """
+  @spec list_user_comments(user_id(), options()) :: [comment()]
+  def list_user_comments(user_id, opts \\ []) do
+    limit = Keyword.get(opts, :limit, 10)
+
+    Comment
+    |> where([c], c.user_id == ^user_id)
+    |> maybe_user_comments_cursor(Keyword.get(opts, :older_than))
+    |> order_by([c], desc: c.inserted_at, desc: c.id)
+    |> limit(^limit)
+    |> preload([:drop, parent: [:user]])
+    |> Repo.all()
+  end
+
+  defp maybe_user_comments_cursor(query, nil), do: query
+
+  defp maybe_user_comments_cursor(query, %Comment{inserted_at: inserted_at, id: id}) do
+    where(
+      query,
+      [c],
+      c.inserted_at < ^inserted_at or (c.inserted_at == ^inserted_at and c.id < ^id)
+    )
+  end
+
+  @doc """
+  Fetches a user's stored comments by id, returned in the order of `ids`.
+
+  Used to restore a previously loaded profile activity feed; ids that no
+  longer exist are simply absent from the result.
+  """
+  @spec list_user_comments_by_ids(user_id(), [comment_id()]) :: [comment()]
+  def list_user_comments_by_ids(user_id, ids) do
+    positions =
+      ids
+      |> Enum.with_index()
+      |> Map.new()
+
+    Comment
+    |> where([c], c.user_id == ^user_id and c.id in ^ids)
+    |> preload([:drop, parent: [:user]])
+    |> Repo.all()
+    |> Enum.sort_by(&Map.fetch!(positions, &1.id))
+  end
+
+  @doc """
+  Gets a single comment without preloads, or `nil` for an unknown or malformed id.
+  """
+  @spec get_comment(comment_id() | nil) :: comment() | nil
+  def get_comment(id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, id} -> Repo.get(Comment, id)
+      :error -> nil
+    end
+  end
+
+  @doc """
+  Position of a comment's top-level thread in a Drop's newest-first
+  conversation: the number of top-level comments ordered before it, using the
+  same `inserted_at`/id ordering as `list_drop_comments/2`. For a reply, the
+  position of its parent.
+  """
+  @spec thread_offset(comment()) :: non_neg_integer()
+  def thread_offset(%Comment{parent_id: nil} = comment), do: newer_top_level_count(comment)
+
+  def thread_offset(%Comment{parent_id: parent_id}) do
+    case Repo.get(Comment, parent_id) do
+      nil -> 0
+      parent -> newer_top_level_count(parent)
+    end
+  end
+
+  defp newer_top_level_count(%Comment{} = comment) do
+    Comment
+    |> where([c], c.drop_id == ^comment.drop_id and is_nil(c.parent_id))
+    |> where(
+      [c],
+      c.inserted_at > ^comment.inserted_at or
+        (c.inserted_at == ^comment.inserted_at and c.id > ^comment.id)
+    )
+    |> Repo.aggregate(:count)
+  end
+
   @spec count_drop_top_level_comments(drop_id()) :: non_neg_integer()
   def count_drop_top_level_comments(drop_id) do
     Comment

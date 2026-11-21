@@ -49,7 +49,7 @@ defmodule ElixirDropsWeb.CommentComponents do
           to join the discussion
         </p>
       </div>
-      <div id="comments" phx-update="stream" class="last:mb-10">
+      <div id="comments" phx-update="stream" phx-hook="CommentSection" class="last:mb-10">
         <div :for={{dom_id, comment} <- @comments} id={dom_id} class="border-b border-gray-200 py-2">
           <.comment
             author?={@current_user && @current_user.id == comment.user_id}

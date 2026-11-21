@@ -177,10 +177,11 @@ defmodule PublicProfilePageAndDropsTab.ProfilePageTest do
       assert_public_page(drops_html, owner, 3, 2, private)
 
       {:ok, _view, comments_html} = live(viewer_conn, comments_href)
-      assert notice?(comments_html)
-      refute feed?(comments_html)
+      assert feed?(comments_html)
+      refute notice?(comments_html)
       assert_public_page(comments_html, owner, 3, 2, private)
-      refute comments_html =~ "owner comment on other piece"
+      assert comments_html =~ "owner comment on other piece"
+      assert comments_html =~ "owner comment on own piece"
       refute comments_html =~ "owner comment on deleted piece"
 
       {:ok, _view, other_html} = live(viewer_conn, other_href)
@@ -188,9 +189,9 @@ defmodule PublicProfilePageAndDropsTab.ProfilePageTest do
 
       {:ok, _view, commenter_html} = live(viewer_conn, commenter_href)
       assert_public_page(commenter_html, commenter, 0, 3, private)
-      assert notice?(commenter_html), "default tab for a commenter without Drops must be Comments"
-      refute feed?(commenter_html)
-      refute commenter_html =~ "commenter top-level body"
+      assert feed?(commenter_html), "default tab for a commenter without Drops must be Comments"
+      refute notice?(commenter_html)
+      assert commenter_html =~ "commenter top-level body"
     end
 
     # Account menu of a signed-in viewer links to that viewer's own profile; anonymous has none.

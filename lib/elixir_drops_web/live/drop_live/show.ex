@@ -56,7 +56,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
      socket
      |> assign(:end_of_notifications_timeline?, false)
      |> assign(:show_user_drops?, false)
-     |> assign_drop(drop)}
+     |> assign_drop(drop, comment_id)}
   end
 
   @impl Phoenix.LiveView
@@ -284,13 +284,13 @@ defmodule ElixirDropsWeb.DropLive.Show do
     )
   end
 
-  defp assign_drop(socket, nil) do
+  defp assign_drop(socket, nil, _comment_id) do
     socket
     |> assign(:drop, nil)
     |> push_patch(to: ~p"/")
   end
 
-  defp assign_drop(socket, drop) do
+  defp assign_drop(socket, drop, comment_id) do
     title =
       drop.title
       |> Phoenix.HTML.html_escape()
@@ -300,19 +300,31 @@ defmodule ElixirDropsWeb.DropLive.Show do
     |> assign(:drop, drop)
     |> assign(:page_title, title)
     |> assign_seo_attributes()
-    |> assign_comments(drop)
+    |> assign_comments(drop, comment_id)
   end
 
-  defp assign_comments(socket, drop) do
+  defp assign_comments(socket, drop, comment_id) do
     top_level_comment_count = Comments.count_drop_top_level_comments(drop.id)
-
-    comments = Comments.list_drop_comments(drop.id)
+    limit = discussion_limit(comment_id)
+    comments = Comments.list_drop_comments(drop.id, limit: limit)
 
     socket
     |> assign(:comment_count, drop.comment_count)
-    |> assign(:comment_offset, 10)
+    |> assign(:comment_offset, limit)
     |> assign(:top_level_comment_count, top_level_comment_count)
     |> stream(:comments, comments, reset: true)
+  end
+
+  # A "View in discussion" link may point at a comment older than the first
+  # batch the page loads; load the conversation through its thread so the
+  # show_comment hook finds the element in the DOM.
+  defp discussion_limit(nil), do: 10
+
+  defp discussion_limit(comment_id) do
+    case Comments.get_comment(comment_id) do
+      nil -> 10
+      comment -> max(10, Comments.thread_offset(comment) + 1)
+    end
   end
 
   defp assign_seo_attributes(socket) do

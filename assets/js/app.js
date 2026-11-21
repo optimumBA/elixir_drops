@@ -28,11 +28,13 @@ import Masonry from 'masonry-layout'
 import imagesLoaded from 'imagesloaded'
 import CommentFormHooks from './hooks/comment_form'
 import CommentModalHooks from './hooks/comment_modal'
+import CommentSectionHooks from './hooks/comment_section'
 import CopyToClipboardHooks from './hooks/copy_to_clipboard'
 import DropBodyHooks from './hooks/drop_body'
 import DropsContainerHooks from './hooks/drops_container'
 import InfiniteScrollHooks from './hooks/infinite_scroll'
 import MasonryHooks from './hooks/masonry'
+import ProfileFeedHooks from './hooks/profile_feed'
 import MobileSearchOverlayHooks from './hooks/mobile_search_overlay'
 import ScreenshotProgressHooks from './hooks/screenshot_progress'
 import SearchSuggestionsHooks from './hooks/search_suggestions'
@@ -43,12 +45,14 @@ import WelcomeMessageHooks from './hooks/welcome_message'
 let Hooks = {
   ...CommentFormHooks,
   ...CommentModalHooks,
+  ...CommentSectionHooks,
   ...CopyToClipboardHooks,
   ...DropBodyHooks,
   ...DropsContainerHooks,
   ...InfiniteScrollHooks,
   ...MasonryHooks,
   ...MobileSearchOverlayHooks,
+  ...ProfileFeedHooks,
   ...ScreenshotProgressHooks,
   ...SearchSuggestionsHooks,
   ...SponsorImpressionHooks,
@@ -80,6 +84,41 @@ const syncAriaExpanded = (event) => {
 window.addEventListener('phx:show-end', syncAriaExpanded, true)
 window.addEventListener('phx:hide-end', syncAriaExpanded, true)
 
+// Long profile comments expand/collapse presentationally. The toggle itself
+// runs from an inline handler so it works on the static render before this
+// bundle executes; here we re-apply the expanded state when LiveView replaces
+// stream entries (join, tab restore) so an expanded entry stays expanded.
+const profileCommentList = document.getElementById('profile-comments-list')
+if (profileCommentList) {
+  const applyCommentExpand = (body) => {
+    body.classList.remove('max-h-48', 'overflow-hidden')
+    const button = document.querySelector(
+      `[data-profile-expand][aria-controls="${body.id}"]`
+    )
+    if (!button) return
+    button.setAttribute('aria-expanded', 'true')
+    const more = button.querySelector('[data-comment-more]')
+    const less = button.querySelector('[data-comment-less]')
+    if (more) more.classList.add('hidden')
+    if (less) less.classList.remove('hidden')
+  }
+  new MutationObserver((mutations) => {
+    const expanded = window.__expandedComments
+    if (!expanded) return
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType !== 1) continue
+        const bodies = node.id?.startsWith('profile-comment-body-')
+          ? [node]
+          : [...node.querySelectorAll('[id^="profile-comment-body-"]')]
+        for (const body of bodies) {
+          if (expanded.has(body.id)) applyCommentExpand(body)
+        }
+      }
+    }
+  }).observe(profileCommentList, { childList: true, subtree: true })
+}
+
 const liveSocket = new LiveSocket('/live', Socket, {
   hooks: Hooks,
   longPollFallbackMs: 2500,
@@ -101,6 +140,20 @@ const liveSocket = new LiveSocket('/live', Socket, {
         fromEl.classList.contains('masonry-ready')
       ) {
         toEl.classList.add('masonry-ready')
+      }
+      // Preserve client-side comment expand state across morphdom patches.
+      if (fromEl.matches?.('[data-profile-expand]')) {
+        toEl.setAttribute('aria-expanded', fromEl.getAttribute('aria-expanded'))
+      }
+      if (fromEl.id?.startsWith('profile-comment-body-')) {
+        toEl.classList.toggle('max-h-48', fromEl.classList.contains('max-h-48'))
+        toEl.classList.toggle(
+          'overflow-hidden',
+          fromEl.classList.contains('overflow-hidden')
+        )
+      }
+      if (fromEl.matches?.('[data-comment-more], [data-comment-less]')) {
+        toEl.classList.toggle('hidden', fromEl.classList.contains('hidden'))
       }
     },
   },

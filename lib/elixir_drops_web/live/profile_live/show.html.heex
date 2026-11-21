@@ -111,7 +111,13 @@
           </nav>
         </div>
 
-        <div :if={@tab == :drops} id="profile-drops-feed">
+        <div
+          id="profile-drops-feed"
+          hidden={@tab != :drops}
+          phx-hook="ProfileFeed"
+          data-feed-tab="drops"
+          data-profile-user-id={@user.id}
+        >
           <DropsListHelper.drops_list
             batch_size={@batch_size}
             current_user={@current_user}
@@ -150,8 +156,110 @@
           </div>
         </div>
 
-        <div :if={@tab == :comments} id="profile-comments" class="px-6 md:px-8 lg:px-12 py-12">
-          <p class="text-[#656565] text-lg">The comment activity list is not available yet.</p>
+        <div
+          id="profile-comments"
+          hidden={@tab != :comments}
+          class="px-6 md:px-8 lg:px-12 py-12"
+          phx-hook="ProfileFeed"
+          data-feed-tab="comments"
+          data-profile-user-id={@user.id}
+        >
+          {raw(comment_expand_script())}
+          <div class="max-w-3xl mx-auto" data-feed-state={comments_feed_state(assigns)}>
+            <div id="profile-comments-list" phx-update="stream" class="flex flex-col">
+              <div
+                :for={{dom_id, comment} <- @streams.comment_activity}
+                id={dom_id}
+                data-feed-entry
+                class="border-b border-gray-200 py-4"
+              >
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <.link
+                    navigate={~p"/d/#{comment.drop.short_id}"}
+                    class="font-medium text-[#2F19EE] hover:opacity-80"
+                  >
+                    {comment.drop.title}
+                  </.link>
+                  <span class="text-[#6b6b6b]">{comment_date(comment.inserted_at)}</span>
+                </div>
+                <p :if={comment.parent_id} class="text-sm text-[#6b6b6b] mt-1">
+                  Replying to
+                  <DropComponents.contributor_link user={comment.parent.user} class="font-medium">
+                    {comment.parent.user && comment.parent.user.name}
+                  </DropComponents.contributor_link>
+                  <span class="italic">{maybe_parent_excerpt(comment.parent.body)}</span>
+                </p>
+                <div
+                  id={"profile-comment-body-#{comment.id}"}
+                  class={[
+                    "prose my-2 break-words text-[#575757] prose-pre:overflow-x-auto",
+                    long_comment?(comment.body) && "max-h-48 overflow-hidden"
+                  ]}
+                >
+                  {DropComponents.to_html(comment.body)}
+                </div>
+                <button
+                  :if={long_comment?(comment.body)}
+                  type="button"
+                  id={"profile-comment-toggle-#{comment.id}"}
+                  data-profile-expand
+                  aria-expanded="false"
+                  aria-controls={"profile-comment-body-#{comment.id}"}
+                  class="text-sm text-[#2F19EE] hover:opacity-80 mr-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5947F1]"
+                >
+                  <span data-comment-more>Show more</span>
+                  <span data-comment-less class="hidden">Show less</span>
+                </button>
+                <.link
+                  navigate={discussion_path(comment)}
+                  class="text-sm text-[#6b6b6b] hover:text-[#5947F1]"
+                >
+                  View in discussion
+                </.link>
+              </div>
+            </div>
+
+            <p
+              :if={@comments_loaded? and @comments_empty?}
+              id="profile-comments-empty"
+              class="text-[#656565] text-lg text-center py-8"
+            >
+              No comments to show yet.
+            </p>
+
+            <div
+              :if={@comments_status == :loading or not @comments_loaded?}
+              class="flex items-center justify-center gap-x-2 py-6 text-[#656565]"
+            >
+              <div class="w-4 h-4 border-2 border-gray-300 border-t-[#5947F1] rounded-full animate-spin">
+              </div>
+              <span>Loading {@comments_batch_size} more...</span>
+            </div>
+
+            <div
+              :if={@comments_status == :failed}
+              id="profile-comments-retry"
+              role="alert"
+              class="flex flex-col items-center gap-y-2 py-6 text-[#4f4f4f]"
+            >
+              <p>We could not load more comments.</p>
+              <button
+                type="button"
+                phx-click="retry_load_more"
+                class="text-[#eae8fd] text-sm bg-blue_primary hover:opacity-80 px-4 py-2 rounded-lg"
+              >
+                Retry
+              </button>
+            </div>
+
+            <div
+              data-end-of-timeline={if @comments_end?, do: "true", else: "false"}
+              id="profile-comments-scroll-marker"
+              phx-hook="InfiniteScroll"
+              class="h-3 w-full"
+            >
+            </div>
+          </div>
         </div>
       </section>
 
