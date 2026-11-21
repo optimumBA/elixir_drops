@@ -156,6 +156,39 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :class, :string, default: nil
+  attr :decorative, :boolean, default: false
+  attr :user, :any, default: nil
+  slot :inner_block, required: true
+
+  @doc """
+  Links a contributor's avatar or name to that contributor's public profile.
+
+  A missing or unresolvable user (no id) renders a plain, unlinked wrapper so no
+  empty or placeholder link is emitted. A `decorative` link repeats a sibling link
+  to the same profile and is hidden from keyboard and assistive technology.
+  """
+  @spec contributor_link(assigns()) :: rendered()
+  def contributor_link(assigns) do
+    assigns = assign(assigns, :profile_id, profile_id(assigns.user))
+
+    ~H"""
+    <a
+      :if={@profile_id}
+      href={~p"/u/#{@profile_id}"}
+      class={["hover:text-[#5947F1]", @class]}
+      tabindex={@decorative && "-1"}
+      aria-hidden={@decorative && "true"}
+    >
+      {render_slot(@inner_block)}
+    </a>
+    <span :if={!@profile_id} class={@class}>{render_slot(@inner_block)}</span>
+    """
+  end
+
+  defp profile_id(%{id: id}) when is_binary(id) and id != "", do: id
+  defp profile_id(_user), do: nil
+
   attr :drop, Drop, required: true
   attr :open_menus, :map, default: %{}
   attr :show_card_menu?, :boolean, default: false
@@ -197,8 +230,15 @@ defmodule ElixirDropsWeb.DropComponents do
 
         <div class="flex justify-between">
           <div class="drop-meta">
-            <img src={@drop.user.avatar} alt="" class="user-avatar" />
-            <p>{@drop.user.github_username}</p>
+            <.contributor_link user={@drop.user} class="relative z-10 flex items-center gap-2">
+              <img
+                :if={@drop.user && @drop.user.avatar}
+                src={@drop.user.avatar}
+                alt=""
+                class="user-avatar"
+              />
+              <span :if={@drop.user}>{@drop.user.github_username}</span>
+            </.contributor_link>
             <p class="text-[#6b6b6b] text-xs before:content-['•'] before:mr-1">
               <.created_at drop={@drop} />
             </p>
@@ -273,9 +313,20 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
 
         <div class="flex gap-x-3 items-center border-b-[2.5px] border-b-[#ececec] py-5">
-          <img src={@drop.user.avatar} alt="" class="rounded-full h-12 w-12 object-cover" />
+          <.contributor_link user={@drop.user} decorative>
+            <img
+              :if={@drop.user && @drop.user.avatar}
+              src={@drop.user.avatar}
+              alt={@drop.user.github_username}
+              class="rounded-full h-12 w-12 object-cover"
+            />
+          </.contributor_link>
           <div>
-            <p class="mb-1">{@drop.user.github_username}</p>
+            <p class="mb-1">
+              <.contributor_link user={@drop.user}>
+                {@drop.user && @drop.user.github_username}
+              </.contributor_link>
+            </p>
             <p class="text-[#696969] text-xs">
               <.created_at drop={@drop} />
             </p>

@@ -101,11 +101,14 @@ defmodule ElixirDropsWeb.CommentComponents do
     ~H"""
     <div class="flex gap-4 comment font-roboto" id={@id}>
       <div class="shrink-0">
-        <img
-          src={@comment.user.avatar || "/images/default-avatar.svg"}
-          alt={@comment.user.name}
-          class="w-11 h-11 rounded-full border border-gray-200 flex-shrink-0"
-        />
+        <DropComponents.contributor_link user={@comment.user} decorative class="block">
+          <img
+            :if={@comment.user}
+            src={@comment.user.avatar || "/images/default-avatar.svg"}
+            alt={@comment.user.name}
+            class="w-11 h-11 rounded-full border border-gray-200 flex-shrink-0"
+          />
+        </DropComponents.contributor_link>
       </div>
       <div class="grow min-w-0">
         <.comment_header
@@ -153,9 +156,11 @@ defmodule ElixirDropsWeb.CommentComponents do
       <div class="flex items-center gap-x-2 md:gap-x-3 text-xs md:text-sm">
         <p
           class="font-medium text-gray-900 max-w-[10ch] md:max-w-[100%] truncate"
-          title={@comment.user.name}
+          title={@comment.user && @comment.user.name}
         >
-          {@comment.user.name}
+          <DropComponents.contributor_link user={@comment.user}>
+            {@comment.user && @comment.user.name}
+          </DropComponents.contributor_link>
         </p>
         <p class="text-[#6b6b6b] roboto-regular flex items-center gap-x-2">
           <span class="hidden sm:inline-block w-1 h-1 rounded-full bg-gray-500"></span>
