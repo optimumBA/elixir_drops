@@ -3,6 +3,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
 
   use ElixirDropsWeb, :html
 
+  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Search
@@ -15,6 +16,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @type rendered :: Phoenix.LiveView.Rendered.t()
   @type socket :: Phoenix.LiveView.Socket.t()
   @type text :: String.t()
+  @type uuid :: Ecto.UUID.t()
 
   attr :batch_size, :integer, default: 10
   attr :current_user, :any
@@ -140,6 +142,22 @@ defmodule ElixirDropsWeb.DropsListHelper do
     """
   end
 
+  @doc """
+  Sets the saved state of each Drop for the viewer of the socket in one query;
+  a signed-out viewer has saved nothing.
+  """
+  @spec mark_saved([drop()], socket()) :: [drop()]
+  def mark_saved(drops, socket) do
+    Bookmarks.maybe_mark_bookmarked(drops, viewer_id(socket))
+  end
+
+  @doc """
+  The id of the signed-in viewer of the socket, `nil` for a visitor.
+  """
+  @spec viewer_id(socket()) :: uuid() | nil
+  def viewer_id(%{assigns: %{current_user: %{id: id}}}), do: id
+  def viewer_id(_socket), do: nil
+
   # Helper function to get suggested searches for no results
   defp get_suggested_searches do
     # Get top popular searches from database ordered by search count, fallback to hardcoded list if empty
@@ -160,7 +178,12 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @spec assign_drops(socket()) :: socket()
   def assign_drops(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
-    drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
+
+    drops =
+      socket.assigns.drop_filters
+      |> Drops.list_drops(batch_size)
+      |> mark_saved(socket)
+
     sponsor_feed? = sponsor_feed?(socket, drops)
 
     socket
@@ -194,7 +217,11 @@ defmodule ElixirDropsWeb.DropsListHelper do
   @spec assign_first_batch(socket()) :: socket()
   def assign_first_batch(socket) do
     batch_size = Map.get(socket.assigns, :batch_size, 15)
-    drops = Drops.list_drops(socket.assigns.drop_filters, batch_size)
+
+    drops =
+      socket.assigns.drop_filters
+      |> Drops.list_drops(batch_size)
+      |> mark_saved(socket)
 
     socket
     |> assign_drop_cursor(drops, socket.assigns.search_query)
@@ -229,6 +256,8 @@ defmodule ElixirDropsWeb.DropsListHelper do
   """
   @spec apply_batch(socket(), [drop()], pos_integer()) :: socket()
   def apply_batch(socket, drops, batch_size) do
+    drops = mark_saved(drops, socket)
+
     socket
     |> maybe_advance_cursor(drops)
     |> Phoenix.LiveView.stream(:drops, drops)
@@ -262,7 +291,11 @@ defmodule ElixirDropsWeb.DropsListHelper do
     search_query = socket.assigns.search_query
     drop_filters = socket.assigns.drop_filters
     batch_size = Map.get(socket.assigns, :batch_size, 15)
-    drops = Drops.list_drops(drop_filters, batch_size)
+
+    drops =
+      drop_filters
+      |> Drops.list_drops(batch_size)
+      |> mark_saved(socket)
 
     relevance_rank =
       if Enum.empty?(drops) do
@@ -296,6 +329,7 @@ defmodule ElixirDropsWeb.DropsListHelper do
       filters
       |> Map.merge(socket.assigns.drop_filters)
       |> Drops.list_drops(batch_size)
+      |> mark_saved(socket)
 
     last_drop = List.last(drops)
 

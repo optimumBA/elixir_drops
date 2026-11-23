@@ -272,8 +272,10 @@ defmodule ElixirDropsWeb.DropComponents do
               </button>
               <.drop_card_menu
                 author?={@drop.user_id == @user_id}
+                bookmarked={@drop.bookmarked}
                 id={@drop.id}
                 short_id={@drop.short_id}
+                signed_in?={@user_id != nil}
               />
             </div>
           <% else %>
@@ -293,6 +295,7 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :bookmark_count, :integer, default: 0
   attr :comment_count, :integer
   attr :current_user, User, default: nil
   attr :drop, Drop, required: true
@@ -334,11 +337,19 @@ defmodule ElixirDropsWeb.DropComponents do
         </div>
         <!-- Action row below author's name -->
         <div class="flex items-center justify-between py-4 border-b border-gray-200">
-          <div class="flex items-center gap-2 text-[#6b6b6b]">
-            <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-5 h-5" />
-            <span class="inline text-sm">
-              {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}
-            </span>
+          <div class="flex items-center gap-4 text-[#6b6b6b]">
+            <div class="flex items-center gap-2">
+              <.icon name="hero-chat-bubble-oval-left-ellipsis" class="w-5 h-5" />
+              <span class="inline text-sm">
+                {@comment_count} {if @comment_count == 1, do: "comment", else: "comments"}
+              </span>
+            </div>
+            <div :if={@bookmark_count > 0} id="drop-bookmark-count" class="flex items-center gap-2">
+              <.icon name="hero-bookmark" class="w-5 h-5" />
+              <span class="inline text-sm">
+                {@bookmark_count} {if @bookmark_count == 1, do: "bookmark", else: "bookmarks"}
+              </span>
+            </div>
           </div>
           <!-- Right side: Action buttons -->
           <div class="flex items-center gap-4">
@@ -354,6 +365,13 @@ defmodule ElixirDropsWeb.DropComponents do
               <.icon name="hero-link" class="h-5 w-5" />
               <span class="hidden md:inline text-sm">Copy link</span>
             </button>
+            <.bookmark_button
+              bookmarked={@drop.bookmarked}
+              drop_id={@drop.id}
+              id={"single-drop-bookmark-#{@drop.id}"}
+              signed_in?={@current_user != nil}
+              variant={:page}
+            />
             <!-- Three dots menu button and its menu, anchored to the trigger -->
             <div class="relative">
               <button
@@ -497,11 +515,13 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :active, :atom, values: [:drops, :bookmarks], default: :drops
   attr :current_user, User, required: true
   attr :profile_search_suggestions, :list, default: []
   attr :search_query, :string, default: ""
   attr :search_suggestions, :list, default: []
   attr :show_profile_suggestions?, :boolean, default: false
+  attr :show_search?, :boolean, default: true
 
   @spec user_drops_header(assigns()) :: rendered()
   def user_drops_header(assigns) do
@@ -520,15 +540,27 @@ defmodule ElixirDropsWeb.DropComponents do
 
       <nav class="md:pl-20 bg-[#f6f6f6] shadow-md shadow-[#cfcdd2] nav-secondary">
         <div class="flex items-center px-4 md:px-0">
-          <ul class="flex items-center" id="secondary-nav-links">
-            <li class="min-h-full py-4 border-b-2 border-b-[#887ce1] flex items-center mr-8">
+          <ul class="flex w-full items-center" id="secondary-nav-links">
+            <li class={secondary_nav_class(@active == :drops)}>
               <.link href={~p"/profile"}>
                 My drops
               </.link>
             </li>
+            <li class={secondary_nav_class(@active == :bookmarks)}>
+              <.link href={~p"/bookmarks"}>
+                Bookmarks
+              </.link>
+            </li>
             <!-- User Profile Search Input -->
-            <li class="min-h-full py-4 border-b-2 border-b-transparent hover:border-b-gray-300 flex items-center">
-              <div id="profile-search-input" class="relative" phx-hook="SearchSuggestions">
+            <li
+              :if={@show_search?}
+              class="min-h-full min-w-0 flex-1 md:flex-none py-4 border-b-2 border-b-transparent hover:border-b-gray-300 flex items-center"
+            >
+              <div
+                id="profile-search-input"
+                class="relative w-full min-w-0 md:w-auto"
+                phx-hook="SearchSuggestions"
+              >
                 <form
                   phx-submit={JS.push("search_submit") |> JS.hide(to: "#profile-search-dropdown")}
                   class="relative flex items-center"
@@ -551,7 +583,7 @@ defmodule ElixirDropsWeb.DropComponents do
                     class={[
                       "pl-10 pr-4 py-2 bg-transparent border-0",
                       "focus:outline-none focus:ring-0 placeholder-gray-500 text-sm",
-                      "min-w-[200px]"
+                      "min-w-0 w-full md:w-auto md:min-w-[200px]"
                     ]}
                   />
                 </form>
@@ -613,6 +645,13 @@ defmodule ElixirDropsWeb.DropComponents do
       </nav>
     </div>
     """
+  end
+
+  defp secondary_nav_class(active?) do
+    [
+      "min-h-full py-4 border-b-2 flex items-center mr-4 md:mr-8",
+      (active? && "border-b-[#887ce1]") || "border-b-transparent hover:border-b-gray-300"
+    ]
   end
 
   @spec signin_popup_message(assigns()) :: rendered()
@@ -1242,6 +1281,12 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :author?, :boolean, required: true
+  attr :bookmarked, :boolean, default: false
+  attr :id, :string, required: true
+  attr :short_id, :string, required: true
+  attr :signed_in?, :boolean, default: false
+
   defp drop_card_menu(assigns) do
     ~H"""
     <div
@@ -1251,7 +1296,6 @@ defmodule ElixirDropsWeb.DropComponents do
         JS.hide(to: "#drop-card-menu-#{@id}")
         |> JS.set_attribute({"aria-expanded", "false"}, to: "#drop-card-menu-btn-#{@id}")
       }
-      onclick="event.stopPropagation()"
     >
       <!-- Sharing Section Header -->
       <div class="menu-heading">
@@ -1268,6 +1312,14 @@ defmodule ElixirDropsWeb.DropComponents do
         <.icon name="hero-link" class="h-5 w-5" />
         <span>Copy Drop link</span>
       </button>
+      <.bookmark_button
+        bookmarked={@bookmarked}
+        close={close_card_menu(@id)}
+        drop_id={@id}
+        id={"card-bookmark-#{@id}"}
+        signed_in?={@signed_in?}
+        variant={:menu}
+      />
       <!-- Markdown Section -->
       <.markdown_menu short_id={@short_id} />
 
@@ -1310,6 +1362,12 @@ defmodule ElixirDropsWeb.DropComponents do
           <.link href={~p"/profile"} class="menu-row" id="view-user-drops-link">
             <span><Icons.drops_icon /></span>
             <span> My drops </span>
+          </.link>
+        </li>
+        <li>
+          <.link href={~p"/bookmarks"} class="menu-row" id="view-bookmarks-link">
+            <span><.icon name="hero-bookmark" class="h-6 w-6" /></span>
+            <span>Bookmarks</span>
           </.link>
         </li>
         <li>
@@ -1358,6 +1416,56 @@ defmodule ElixirDropsWeb.DropComponents do
     """
   end
 
+  attr :bookmarked, :boolean, default: false
+  attr :close, JS, default: %JS{}
+  attr :drop_id, :string, required: true
+  attr :id, :string, required: true
+  attr :signed_in?, :boolean, default: false
+  attr :variant, :atom, values: [:menu, :page], required: true
+
+  @doc """
+  The private Bookmark control, shared by the Drop card menu and the Drop page.
+
+  It is a toggle button: `aria-pressed` is `true` when the viewer has saved the
+  Drop. A signed-in viewer's click pushes `toggle_bookmark` (handled by
+  `ElixirDropsWeb.LiveHelpers`); a visitor's click opens the sign-in dialog and
+  saves nothing.
+  """
+  @spec bookmark_button(assigns()) :: rendered()
+  def bookmark_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      id={@id}
+      aria-pressed={to_string(@bookmarked)}
+      aria-label={@variant == :page && "Bookmark"}
+      phx-click={bookmark_click(@signed_in?, @drop_id, @bookmarked, @close)}
+      class={
+        if @variant == :menu,
+          do: "menu-row",
+          else: "flex items-center gap-2 text-[#6b6b6b] hover:text-[#5947F1] cursor-pointer"
+      }
+    >
+      <.icon
+        name={if @bookmarked, do: "hero-bookmark-solid", else: "hero-bookmark"}
+        class="h-5 w-5"
+      />
+      <span class={@variant == :page && "hidden md:inline text-sm"}>Bookmark</span>
+    </button>
+    """
+  end
+
+  defp bookmark_click(false, _drop_id, _bookmarked, close),
+    do: show_popup(close, "signin-popup-message")
+
+  defp bookmark_click(true, drop_id, bookmarked, close),
+    do: JS.push(close, "toggle_bookmark", value: %{drop_id: drop_id, saved: !bookmarked})
+
+  defp close_card_menu(id) do
+    menu = JS.hide(%JS{}, to: "#drop-card-menu-#{id}")
+    JS.set_attribute(menu, {"aria-expanded", "false"}, to: "#drop-card-menu-btn-#{id}")
+  end
+
   defp hide_welcome_message do
     %JS{}
     |> JS.hide(to: "#welcome-message")
@@ -1365,9 +1473,9 @@ defmodule ElixirDropsWeb.DropComponents do
     |> JS.dispatch("hide-welcome-message", to: "#welcome-message")
   end
 
-  @spec show_popup(selector()) :: javascript()
-  def show_popup(pop_up_message_id) do
-    %JS{}
+  @spec show_popup(javascript(), selector()) :: javascript()
+  def show_popup(js \\ %JS{}, pop_up_message_id) do
+    js
     |> JS.push_focus()
     |> JS.remove_class(@hidden_class, to: "##{pop_up_message_id}")
     |> JS.add_class(@popup_class, to: ".drops-container")

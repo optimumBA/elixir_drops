@@ -13,6 +13,7 @@ defmodule ElixirDropsWeb.LiveHelpers do
   import Phoenix.LiveView, only: [attach_hook: 4, stream: 4]
 
   alias ElixirDrops.Notifications
+  alias ElixirDropsWeb.BookmarkEvents
   alias ElixirDropsWeb.DropsBatchCalculator
   alias ElixirDropsWeb.DropsListHelper
 
@@ -22,7 +23,8 @@ defmodule ElixirDropsWeb.LiveHelpers do
     ElixirDropsWeb.DropLive.Index,
     ElixirDropsWeb.DropLive.Show,
     ElixirDropsWeb.UserDropLive.Index,
-    ElixirDropsWeb.ProfileLive.Show
+    ElixirDropsWeb.ProfileLive.Show,
+    ElixirDropsWeb.BookmarkLive.Index
   ]
 
   @type hook :: atom()
@@ -79,7 +81,8 @@ defmodule ElixirDropsWeb.LiveHelpers do
        when socket.view in [
               ElixirDropsWeb.DropLive.Index,
               ElixirDropsWeb.UserDropLive.Index,
-              ElixirDropsWeb.ProfileLive.Show
+              ElixirDropsWeb.ProfileLive.Show,
+              ElixirDropsWeb.BookmarkLive.Index
             ] do
     batch_size = DropsBatchCalculator.calculate_batch_size(width, height)
 
@@ -99,6 +102,20 @@ defmodule ElixirDropsWeb.LiveHelpers do
 
     {:halt, updated_socket}
   end
+
+  # The one Bookmark action of every Drop card and of the Drop page. Only a
+  # signed-in viewer saves anything; a visitor is prompted to sign in by the
+  # control itself, so a stray event from one changes nothing.
+  defp handle_shared_event(
+         "toggle_bookmark",
+         %{"drop_id" => drop_id, "saved" => saved?},
+         %{assigns: %{current_user: %{id: user_id}}} = socket
+       )
+       when is_binary(drop_id) and is_boolean(saved?) do
+    {:halt, BookmarkEvents.apply(socket, user_id, drop_id, saved?)}
+  end
+
+  defp handle_shared_event("toggle_bookmark", _params, socket), do: {:halt, socket}
 
   defp handle_shared_event(_event, _params, socket), do: {:cont, socket}
 end

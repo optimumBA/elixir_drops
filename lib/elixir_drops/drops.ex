@@ -6,6 +6,7 @@ defmodule ElixirDrops.Drops do
   import Ecto.Query
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Bookmarks.Bookmark
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Drops.ShortIdGenerator
@@ -223,6 +224,50 @@ defmodule ElixirDrops.Drops do
     |> preload([:user])
     |> Repo.all()
     |> Enum.sort_by(&Map.fetch!(positions, &1.id))
+  end
+
+  @doc """
+  Lists the Drops an account has saved, most recently saved first (ties broken by
+  the bookmark id), as `fetch_drops/2` does: with author and comment count, in one
+  bounded set of queries however many bookmarks the account has.
+
+  Every returned Drop is `bookmarked` and carries its save position
+  (`bookmarked_at`, `bookmark_id`); pass the last one of a batch as `older_than`
+  to get the next batch.
+  """
+  @spec list_bookmarked_drops(user_id(), limit(), drop() | nil) :: [drop()]
+  def list_bookmarked_drops(user_id, limit, older_than \\ nil) do
+    query =
+      from(drop in Drop,
+        as: :drop,
+        join: b in Bookmark,
+        as: :bookmark,
+        on: b.drop_id == drop.id,
+        where: b.user_id == ^user_id,
+        order_by: [desc: b.inserted_at, desc: b.id],
+        limit: ^limit
+      )
+
+    query
+    |> maybe_bookmarked_before(older_than)
+    |> select_merge([bookmark: b], %{
+      bookmarked: true,
+      bookmarked_at: b.inserted_at,
+      bookmark_id: b.id
+    })
+    |> merge_comment_count()
+    |> preload([:user])
+    |> Repo.all()
+  end
+
+  defp maybe_bookmarked_before(query, nil), do: query
+
+  defp maybe_bookmarked_before(query, %Drop{bookmarked_at: at, bookmark_id: id}) do
+    where(
+      query,
+      [bookmark: b],
+      b.inserted_at < ^at or (b.inserted_at == ^at and b.id < ^id)
+    )
   end
 
   defp safe_list_drops(filters, limit) do

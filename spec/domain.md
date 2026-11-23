@@ -22,8 +22,8 @@ Multiple browsers can retain old cookie bytes but cannot authenticate new reques
 with revoked tokens. Token entropy, signing, CSRF and TLS are platform contracts.
 
 **A03 — access boundary (baseline intent).** Visitors can read public content and
-search. A valid authenticated principal is required for `/profile`, new/edit Drop
-flows, comment writes, private history deletion and marking notifications read.
+search. A valid authenticated principal is required for `/profile`, `/bookmarks`, new/edit Drop
+flows, comment writes, bookmark saves and removals, private history deletion and marking notifications read.
 Identity is server-derived. Never accept an actor/owner from client form fields.
 Application entry points must enforce these checks; hidden controls are not checks.
 The model validates a token at command admission; existing warm LiveView revocation
@@ -74,6 +74,21 @@ ID, newest first, in pages of 10 using offset. Each root preloads its replies,
 newest first. A reply deep link opens the parent container and locates the comment.
 Concurrent inserts can move offset page boundaries; snapshot pagination for comments
 is not claimed. Deleting a root requires updating both total and root counts (G11).
+
+## Bookmarks
+
+**K01 — private saves (intent).** A signed-in account can save and remove a Drop with
+the Bookmark action in every Drop card menu and on the Drop page. A bookmark is one
+row per account and Drop, created with its save time; saving a saved Drop or removing an
+unsaved one changes nothing, and deleting a Drop or account removes its bookmarks. The
+action has one shared handler, so every list and the Drop page agree on saved state. A
+visitor sees the same control, is prompted to sign in when selecting it and saves nothing.
+
+**K02 — privacy and list (intent).** `/bookmarks` lists exactly the viewing account's
+saved Drops, latest save first (a re-saved Drop returns to the top), in batches on
+`load_more`, with a "No bookmarks yet" empty state. Only the Drop page shows an
+aggregate bookmark count, publicly when above zero. No page, markup or route reveals who
+bookmarked a Drop or another account's list, and the public profile exposes no bookmarks.
 
 ## Notifications
 

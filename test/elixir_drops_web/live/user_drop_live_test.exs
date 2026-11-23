@@ -296,6 +296,10 @@ defmodule ElixirDropsWeb.UserDropLiveTest do
       )
       |> render_submit()
 
+      # The started broadcast reaches the LiveView before the submit returns, but it
+      # reaches the form component through send_update, which is queued after any
+      # call already waiting. The first render settles it; the second shows the popup.
+      _settled = render(live)
       html = render(live)
 
       assert html =~ "Generating Code Screenshots..."

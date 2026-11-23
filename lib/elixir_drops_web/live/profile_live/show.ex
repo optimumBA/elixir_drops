@@ -226,7 +226,12 @@ defmodule ElixirDropsWeb.ProfileLive.Show do
         %{assigns: %{tab: :drops, search_query: ""}} = socket
       ) do
     row_ids = cast_ids(ids)
-    drops = Drops.list_drops_by_ids(row_ids)
+
+    drops =
+      row_ids
+      |> Drops.list_drops_by_ids()
+      |> DropsListHelper.mark_saved(socket)
+
     restored_count = length(drops)
     last_drop = List.last(drops)
     page = restored_page(restored_count, socket.assigns.batch_size)

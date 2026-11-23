@@ -426,7 +426,7 @@ defmodule ElixirDropsWeb.Features.UiVisualTest do
         const problem = inside(menu, false) || noOverflow();
         if (problem) return problem;
         const rows = menu.querySelectorAll('.menu-row');
-        if (rows.length !== 2) return 'rows ' + rows.length;
+        if (rows.length !== 4) return 'rows ' + rows.length;
         for (const row of rows) if (row.getBoundingClientRect().height < 44) return 'row below the 44px action height';
         if (!menu.querySelector('.menu-separator')) return 'separator role missing';
         return 'ok';

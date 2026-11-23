@@ -2,6 +2,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
   use ElixirDropsWeb, :live_view
 
   alias ElixirDrops.Accounts.User
+  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Comments
   alias ElixirDrops.Comments.Comment
   alias ElixirDrops.Drops
@@ -50,7 +51,12 @@ defmodule ElixirDropsWeb.DropLive.Show do
         socket
       end
 
-    drop = Drops.get_drop_by_short_id(short_id)
+    user = socket.assigns.current_user
+
+    drop =
+      short_id
+      |> Drops.get_drop_by_short_id()
+      |> Bookmarks.mark_bookmarked_drop(user && user.id)
 
     {:noreply,
      socket
@@ -297,6 +303,7 @@ defmodule ElixirDropsWeb.DropLive.Show do
       |> Phoenix.HTML.safe_to_string()
 
     socket
+    |> assign(:bookmark_count, Bookmarks.count_drop_bookmarks(drop.id))
     |> assign(:drop, drop)
     |> assign(:page_title, title)
     |> assign_seo_attributes()

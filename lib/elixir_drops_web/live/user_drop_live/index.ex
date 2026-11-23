@@ -1,6 +1,7 @@
 defmodule ElixirDropsWeb.UserDropLive.Index do
   use ElixirDropsWeb, :live_view
 
+  alias ElixirDrops.Bookmarks
   alias ElixirDrops.Drops
   alias ElixirDrops.Drops.Drop
   alias ElixirDrops.Notifications
@@ -271,7 +272,7 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
     # someone else returns nil and is ignored.
     case Drops.get_drop(%{drop_id: drop.id, user_id: user_id}) do
       nil -> {:noreply, socket}
-      reloaded -> {:noreply, stream_insert(socket, :drops, reloaded)}
+      reloaded -> {:noreply, stream_insert(socket, :drops, mark_saved(reloaded, user_id))}
     end
   end
 
@@ -295,4 +296,6 @@ defmodule ElixirDropsWeb.UserDropLive.Index do
   def handle_info(_message, socket) do
     {:noreply, socket}
   end
+
+  defp mark_saved(drop, user_id), do: Bookmarks.mark_bookmarked_drop(drop, user_id)
 end
