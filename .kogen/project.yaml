@@ -9,7 +9,9 @@ commands:
     - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix local.hex --force --if-missing'
     - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix local.rebar --force --if-missing'
     - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix deps.get'
-    - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix assets.setup'
+    - 'MIX_ENV=test MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix assets.setup'
+    - 'MIX_ENV=test MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix compile'
+    - 'mise exec -- node assets/node_modules/playwright/cli.js install chromium'
     - 'mise exec -- npm ci --prefix quint --ignore-scripts'
   fix:
     - 'MIX_ARCHIVES="${MIX_ARCHIVES:-${MIX_HOME:-$HOME/.mix}/archives-otp27}" mise exec -- mix format'
